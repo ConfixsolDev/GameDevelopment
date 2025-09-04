@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jQuery Bonsai.js: A Tree Plugin</title>
+<link href="https://www.jqueryscript.net/css/jquerysctipttop.css" rel="stylesheet" type="text/css">
+<link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<link href="jquery.bonsai.css" rel="stylesheet" type="text/css">
+<style>
+body { background-color: #E6E9ED; }
+.container { margin-top: 150px; }
+</style>
+</head>
+
+<body>
+  <div id="jquery-script-menu">
+<div class="jquery-script-center">
+<ul>
+<li><a href="https://www.jqueryscript.net/other/Tree-Generator-jQuery-Bonsai.html">Download This Plugin</a></li>
+<li><a href="https://www.jqueryscript.net/">Back To jQueryScript.Net</a></li>
+</ul>
+<div class="jquery-script-ads"><script type="text/javascript"><!--
+google_ad_client = "ca-pub-2783044520727903";
+/* jQuery_demo */
+google_ad_slot = "2780937993";
+google_ad_width = 728;
+google_ad_height = 90;
+//-->
+</script>
+<script type="text/javascript"
+src="https://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script></div>
+<div class="jquery-script-clear"></div>
+</div>
+</div>
+  <div class="container">
+    <h1>jQuery Bonsai.js: A Tree Plugin</h1>
+    <div class="row">
+      <div class="col-lg-6">
+    <h2>Basic</h2>
+    <ul id="tea" class="demo1">
+  <li>Coffee</li>
+  <li>Tea
+    <ul>
+    <li>Black tea</li>
+    <li>Green tea</li>
+    </ul>
+  </li>
+  <li>Milk</li>
+</ul>
+</div>
+<div class="col-lg-6">
+<h2>With Checkbox</h2>
+<ol id="auto-checkboxes" data-name="foo">
+  <li class="expanded" data-value="0">All
+    <ol>
+      <li data-value="1">Coffee</li>
+      <li data-value="2" data-id="2">
+        Tea
+        <ol>
+          <li data-name="blacktea" data-value="3">Black tea</li>
+          <li data-value="4">Green tea</li>
+        </ol>
+      </li>
+      <li data-value="5">Milk</li>
+    </ol>
+  </li>
+</ol>
+</div>
+<div class="col-lg-6">
+<h2>With Radio Buttons</h2>
+<ol id="auto-radio-buttons" data-name="foo">
+  <li class="expanded" data-value="0">All
+    <ol>
+      <li data-value="1">Coffee</li>
+      <li data-value="2" data-id="2">
+        Tea
+        <ol>
+          <li data-name="blacktea" data-value="3">Black tea</li>
+          <li data-value="4">Green tea</li>
+        </ol>
+      </li>
+      <li data-value="5">Milk</li>
+    </ol>
+  </li>
+</ol>
+</div>
+<div class="col-lg-6">
+<h2>With JSON Data</h2>
+<div id="from-JSON"></div>
+</div>
+</div>
+  </div>
+
+<script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+<script src="jquery.qubit.js"></script>
+<script src="jquery.json-list.js"></script>
+<script src="jquery.bonsai.js"></script>
+<script>
+  $('.demo1').bonsai();
+$('#auto-checkboxes').bonsai({
+  expandAll: true,
+  checkboxes: true, // depends on jquery.qubit plugin
+  createInputs: 'checkbox' // takes values from data-name and data-value, and data-name is inherited
+});
+  $('#auto-radio-buttons').bonsai({
+  expandAll: true,
+  createInputs: 'radio'
+});
+$('#from-JSON').jsonList({
+          url: 'json.js',
+          type: 'groupedItems',
+          groups: 'locationGroups',
+          items: 'locations',
+          // onListItem: called for each list item created from the JSON
+          onListItem: function(event, listItem, data, isGroup) {
+            if (!isGroup) {
+              // set the id into a data value so that Bonsai createInputs
+              // can set the checkbox value
+              listItem.attr('data-value', data.id);
+            }
+          },
+          // success: called after the list is created
+          onSuccess: function(event, jsonList) {
+            // turn the list into a tree
+            $(this.el).find('> ol').bonsai({
+              checkboxes: true,
+              createInputs: 'checkbox',
+              handleDuplicateCheckboxes: true,
+              expandAll: true
+            });
+          }
+        });
+</script>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-36251023-1']);
+  _gaq.push(['_setDomainName', 'jqueryscript.net']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+</body>
+</html>

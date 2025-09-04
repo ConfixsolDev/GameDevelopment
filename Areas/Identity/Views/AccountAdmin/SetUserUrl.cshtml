@@ -1,0 +1,61 @@
+﻿@using TechWebSol.Areas.Identity
+@using TechWebSol.Services
+@model ApplicationUserApp
+@inject IUserSessionService _userSessionService;
+@{
+    var currentUser = _userSessionService.GetCurrentUser();
+}
+
+<div class="card card-shadow">
+    <div class="card-body">
+        <hr class="mt-2 mb-4">
+        <!--Past here create code-->
+        <form asp-area="Identity" asp-controller="AccountAdmin" asp-action="SetUserUrl" method="post" class="row g-3">
+            <input type="hidden" asp-for="Id" value="@currentUser.ApplicationUserId" />
+            @* <input type="hidden" asp-for="leaveReturnURL" /> *@
+
+            <div class="col-md-2">
+                <label class="control-label">Home URL</label>
+                <select asp-for="HomeUrl" class="form-select">
+                    <option value="" disabled selected>Select</option>
+
+                    <option value="/Home/Index">Home</option>
+
+                    <secure-content asp-area="" asp-controller="Home" asp-action="AdminDashboard">
+                        <option value="/Home/AdminDashboard">Dashboard</option>
+                    </secure-content>
+
+                    <secure-content asp-area="" asp-controller="FML" asp-action="Index">
+                        <option value="/FML/Index">FML List</option>
+                    </secure-content>
+
+                    <secure-content asp-area="" asp-controller="Attendance" asp-action="Index">
+                        <option value="/Attendance/Index">Attendance</option>
+                    </secure-content>
+
+                    <secure-content asp-area="" asp-controller="Leave" asp-action="Index">
+                        <option value="/Leave/Index">Leave</option>
+                    </secure-content>
+
+                    <secure-content asp-area="" asp-controller="VehicleRecords" asp-action="Index">
+                        <option value="/VehicleRecords/Index">Vehicle Management</option>
+                    </secure-content>
+                    <secure-content asp-area="" asp-controller="Expense" asp-action="Index">
+                        <option value="/Expense/Index">Expense</option>
+                    </secure-content>
+
+                    <secure-content asp-area="" asp-controller="Ticket" asp-action="Index">
+                        <option value="/Ticket/Index">Ticket</option>
+                    </secure-content>
+                    <secure-content asp-area="" asp-controller="Todo" asp-action="Index">
+                        <option value="/Todo/Index">Todo</option>
+                    </secure-content>
+                </select>
+            </div>
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+        <!--End here create code-->
+    </div>
+</div>

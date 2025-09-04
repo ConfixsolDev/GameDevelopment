@@ -1,0 +1,104 @@
+﻿@model TechWebSol.ViewModels.RegisterViewModel
+
+<div class="site-action" data-plugin="actionBtn">
+    <a href="#" onclick="location.href = document.referrer; return false;" class="btn drp-icon btn-rounded btn-primary dropdown-toggle">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+</div>
+<div class="card">
+    <div class="card-header  card-header-primary">
+        <h4 class="card-title ">Create User</h4>
+        @* <p class="card-category">Create User</p> *@
+    </div>
+    <div class="card-body e-panel">
+        <form asp-action="Register" method="post" enctype="multipart/form-data" style="margin-bottom:10px">
+            @* <label class="control-label">User Information</label> *@
+            <div class="panel-body row">
+                <div class="form-group col-md-4">
+                    <label  class="control-label">Employee Details</label>
+                    <select class="select2 form-select" asp-for="ApplicationUserID">
+                        <option disabled selected value="">Select Employee</option>
+                        @foreach (var item in ViewBag.SystemUser as List<ShortUserViewModel>)
+                        {
+                            <option date-Designation="@item.Designation" date-firstName="@item.FirstName" date-LastName="@item.LastName" date-Email="@item.Email" value="@item.Id">@item.Email</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group col-md-4">
+                    <label asp-for="UserName" class="control-label"></label>
+                    <input required  asp-for="UserName" id="UserName" class="form-control" placeholder="User Name" onblur="checkValue()" />
+                    <span asp-validation-for="UserName" class="text-danger"></span>
+                    <span id="spandanger" class="text-danger"></span>
+                    <span id="spanSuccess" class="text-success"></span>
+                </div>
+
+                <div class="form-group col-md-4">
+                    <label class="control-label">First Name</label>
+                    <input required asp-for="FirstName" class="form-control" placeholder="First Name" />
+                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                </div>
+                <div class="form-group col-md-4">
+                    <label class="control-label">Last Name</label>
+                    <input required asp-for="LastName" class="form-control" placeholder="Last Name" />
+                    <span asp-validation-for="LastName" class="text-danger"></span>
+                </div>
+                <div class="form-group col-md-4">
+                    <label class="control-label">Designation</label>
+                    <input required asp-for="Designation" class="form-control" placeholder="Designation" />
+                    <span asp-validation-for="Designation" class="text-danger"></span>
+                </div>
+                <div class="form-group col-md-4">
+                    <label asp-for="Role" class="control-label"></label>
+                    <select required asp-for="Role" class="form-control" asp-items="@(new SelectList(Model.RoleList, "Name", "Name"))">
+                        <option value="" selected>Select</option>
+                    </select>
+                    <span asp-validation-for="Role" class="text-danger"></span>
+                </div>
+            </div>
+            <hr />
+            <div class="row">
+                <div class="form-group col-md-4 ">
+                    <label asp-for="Password" class="control-label"></label>
+                    <input required asp-for="Password" class="form-control" value="Admin@123" placeholder="Password" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                <div class="form-group col-md-4">
+                    <label asp-for="ConfirmPassword" class="control-label"></label>
+                    <input required asp-for="ConfirmPassword" class="form-control" value="Admin@123" placeholder="Confirm Password" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group" id="buttonDiv">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<br />
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+<script>
+    function checkValue() {
+        var UserName = $("#UserName").val();
+        if (UserName != "") {
+            $.ajax({
+                type: 'POST',
+                url: "/Account/CheckUser?id=" + UserName,
+                success: function (data) {
+                    if (data == "false") {
+                        $('#spanSuccess').html('Username valid');
+                        $('#spandanger').html('');
+                    }
+                    else {
+                        $('#spandanger').html('<a href="/Account/EditRegister?Type=Edit&id=' + data + '">Username Already Exists.  Click here to Edit</a>');
+                        $('#spanSuccess').html('');
+                        $("#buttonDiv").addClass('hide');
+                    }
+                }
+            });
+        }
+    }
+</script>

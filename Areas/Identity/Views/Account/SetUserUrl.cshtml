@@ -1,0 +1,46 @@
+﻿@using TechWebSol.Areas.Identity
+@using TechWebSol.Services
+@model ApplicationUserApp
+@inject IUserSessionService _userSessionService;
+@{
+    var currentUser = _userSessionService.GetCurrentUser();
+}
+
+<div class="card card-shadow">
+    <div class="card-body">
+        <hr class="mt-2 mb-4">
+        <!--Past here create code-->
+        <form asp-area="Identity" asp-controller="Account" asp-action="SetUserUrl" method="post" class="row g-3">
+            <input type="hidden" asp-for="Id" value="@currentUser.ApplicationUserId" />
+            @* <input type="hidden" asp-for="leaveReturnURL" /> *@
+
+            <div class="col-md-2">
+                <label class="control-label">Home URL</label>
+                <select asp-for="HomeUrl" class="form-select">
+                    <option value="" selected>Select</option>
+                    <option value="/Home/Index">Home</option>
+                    <option value="/Recruitment/Index">Recruitment</option>
+                    @*<option value="/FML/Index">Employees</option> *@
+                    <option value="/Attendance/Index">Attendance</option>
+                    <option value="/Leave/Index">Leave</option>
+                    <option value="/Award/Index">Award</option>
+                    <option value="/VehicleRecords/Index">Vehicle Management</option>
+                    <option value="/Information/Index">Notification</option>
+                    <option value="/Expense/Index">Expense</option>
+                    <option value="/Loan/Index">Loan</option>
+                    <option value="/Payroll/Index">Payroll</option>
+                    <option value="/Appraisal/Index">Appraisal</option>
+                    <option value="/Ticket/Index">Ticket</option>
+                    <option value="/Todo/Index">Todo</option>
+                    <option value="/Config/Index">Settings</option>
+                    <option value="/Mail/WorkFlowDefinations/Index">Workflow</option>
+                    @* <option value="/Identity/Role/UpdateAppRoles">Update Role</option> *@
+                </select>
+            </div>
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+        <!--End here create code-->
+    </div>
+</div>

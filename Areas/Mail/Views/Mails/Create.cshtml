@@ -1,0 +1,94 @@
+﻿@model TechWebSol.Areas.Mail.Models.MailMessage
+@{
+    ViewData["Title"] = "Create";
+    int Width = 0;
+    Width =  @Model.WorkFlowSteps.Count();
+}
+<div class="modal-header">
+    <h4 class="modal-title" id="agencyModalLabel">Forward</h4>
+</div>
+<link rel="stylesheet" href="~/css/style.css" asp-append-version="true">
+
+<style>
+    .multi_step_form #msform #progressbar li {
+        width: calc(100%/@Width);
+    }
+</style>
+
+<div class="card card-shadow">
+    <div class="card-body">
+        @if (Model.WorkFlowStepId != null)
+        {
+            <div class="col-md-12 text-center">
+                <div class="tittle center">
+                    <h2>Steps to Complete the Workflow</h2>
+                </div>
+                <section class="multi_step_form">
+                    <div id="msform">
+                        <ul id="progressbar">
+
+                            @{
+                                bool currentStep = true;
+                                var CheckIf = Model.WorkFlowSteps.Where(x => x.CurrentStep == true).Count();
+                            }
+                            @foreach (var item in Model.WorkFlowSteps)
+                            {
+                                if (item.CurrentStep)
+                                {
+                                    currentStep = false;
+                                }
+                                if ((CheckIf > 0 && currentStep) || item.CurrentStep)
+                                {
+                                    <li class="active">@item.Name <br /> @item.FullName</li>
+                                }
+                                else
+                                {
+                                <li>@item.Name <br />  @item.FullName <br /> @item.Designation </li>
+                                }
+                            }
+                        </ul>
+                    </div>
+                </section>
+            </div>
+        }
+
+    <form asp-area="Mail" asp-action="Create" asp-controller="Mails" class="frmSubmit" method="post">
+        <input type="hidden" name="URL" value="@Model.MailEntity?.URL" />
+        <input type="hidden" name="WorkFlowDefinationId" value="@Model.MailEntity?.WorkFlowDefinationId" />
+        @if (Model.SentTo != null)
+        {
+            <input type="hidden" asp-for="SentTo" />
+            <input type="hidden" asp-for="WorkFlowStepId" />
+            <input type="hidden" asp-for="MailEntityId" />
+        }
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="hidden" name="Id" value="@Model.Id" />
+
+        <div class="col-md-12">
+            <div class="form-group">
+                <label asp-for="Message" class="form-label"></label>
+                <input asp-for="Message" type="text" class="form-control">
+            </div>
+        </div>
+
+        @if (Model.SentTo == null)
+        {
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label asp-for="SentTo" class="control-label">User</label>
+                    <select asp-for="SentTo" class="form-control select2" asp-items="ViewBag.AppUserId"></select>
+                </div>
+            </div>
+        }
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Forward</button>
+        </div>
+    </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

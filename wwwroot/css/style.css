@@ -1,0 +1,158 @@
+/*font Variables*/
+/*Color Variables*/
+@import url("https://fonts.googleapis.com/css?family=Roboto:300i,400,400i,500,700,900");
+.multi_step_form {
+  background: #f6f9fb;
+  display: block;
+  overflow-x: hidden;
+}
+    .multi_step_form #msform {
+        text-align: center;
+        position: relative;
+        padding-top: 50px;
+        padding-bottom: 50px;
+        min-height: 50px;
+        height: auto;
+        margin: 0 auto;
+        background: #ffffff;
+        z-index: 1;
+    }
+
+        .multi_step_form #msform #progressbar li:before {
+            font-family: 'FontAwesome'; /* Sets the font family to FontAwesome */
+            display: inline-block; /* Makes the pseudo-element inline-block */
+            margin-right: 8px; /* Adds some space between the icon and text */
+            width: auto; /* Adjust width as needed */
+            height: auto; /* Adjust height as needed */
+            content: '\f00c'; /* Default icon, check mark */
+        }
+
+.multi_step_form #msform .tittle {
+  text-align: center;
+  padding-bottom: 55px;
+}
+.multi_step_form #msform .tittle h2 {
+  font: 500 24px/35px "Roboto", sans-serif;
+  color: #3f4553;
+  padding-bottom: 5px;
+}
+.multi_step_form #msform .tittle p {
+  font: 400 16px/28px "Roboto", sans-serif;
+  color: #5f6771;
+}
+
+.multi_step_form #msform fieldset .fg_2, .multi_step_form #msform fieldset .fg_3 {
+  padding-top: 10px;
+  display: block;
+  overflow: hidden;
+}
+.multi_step_form #msform fieldset .fg_3 {
+  padding-bottom: 70px;
+}
+.multi_step_form #msform fieldset .form-control, .multi_step_form #msform fieldset .product_select {
+  border-radius: 3px;
+  border: 1px solid #d8e1e7;
+  padding: 0 20px;
+  height: auto;
+  font: 400 15px/48px "Roboto", sans-serif;
+  color: #5f6771;
+  box-shadow: none;
+  outline: none;
+  width: 100%;
+}
+
+.multi_step_form #msform fieldset .file_added li a {
+  color: #5cb85c;
+  font-weight: 500;
+  display: inline-block;
+  position: relative;
+  padding-left: 15px;
+}
+
+.multi_step_form #msform fieldset .file_added li a i {
+  font-size: 22px;
+  padding-right: 8px;
+  position: absolute;
+  left: 0;
+  transform: rotate(20deg);
+}
+
+.multi_step_form #msform #progressbar {
+  margin-bottom: 30px;
+  overflow: hidden;
+}
+
+.multi_step_form #msform #progressbar li {
+  list-style-type: none;
+  color: #99a2a8;
+  font-size: 9px;
+  float: left;
+  position: relative;
+  font: 500 13px/1 "Roboto", sans-serif;
+}
+
+.multi_step_form #msform #progressbar li:nth-child(2):before {
+  content: "\f12f";
+}
+
+.multi_step_form #msform #progressbar li:nth-child(3):before {
+  content: "\f457";
+}
+.multi_step_form #msform #progressbar li:before {
+  content: "\f1fa";
+  font: normal normal normal 30px/50px Ionicons;
+  width: 50px;
+  height: 50px;
+  line-height: 50px;
+  display: block;
+  background: #eaf0f4;
+  border-radius: 50%;
+  margin: 0 auto 10px auto;
+}
+.multi_step_form #msform #progressbar li:after {
+  content: '';
+  width: 100%;
+  height: 10px;
+  background: #eaf0f4;
+  position: absolute;
+  left: -50%;
+  top: 21px;
+  z-index: -1;
+}
+.multi_step_form #msform #progressbar li:last-child:after {
+  width: 150%;
+}
+.multi_step_form #msform #progressbar li.active {
+  color: #5cb85c;
+}
+.multi_step_form #msform #progressbar li.active:before, .multi_step_form #msform #progressbar li.active:after {
+  background: #5cb85c;
+  color: white;
+}
+.multi_step_form #msform .action-button {
+  background: #5cb85c;
+  color: white;
+  border: 0 none;
+  border-radius: 5px;
+  cursor: pointer;
+  min-width: 130px;
+  font: 700 14px/40px "Roboto", sans-serif;
+  border: 1px solid #5cb85c;
+  margin: 0 5px;
+  text-transform: uppercase;
+  display: inline-block;
+}
+.multi_step_form #msform .action-button:hover, .multi_step_form #msform .action-button:focus {
+  background: #405867;
+  border-color: #405867;
+}
+.multi_step_form #msform .previous_button {
+  background: transparent;
+  color: #99a2a8;
+  border-color: #99a2a8;
+}
+.multi_step_form #msform .previous_button:hover, .multi_step_form #msform .previous_button:focus {
+  background: #405867;
+  border-color: #405867;
+  color: #fff;
+}

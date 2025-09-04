@@ -1,0 +1,144 @@
+﻿@{
+    ViewData["Title"] = "System Configuration";
+}
+<div class="card card-shadow">
+    <div class="card-body">
+        <div class="row">
+            <div class="row">
+                <secure-content asp-area="" asp-controller="Country" asp-action="Index">
+                    <div class="col-md-6 col-lg-3 col-xxl-3 mb-4">
+                        <a asp-controller="Country" asp-action="Index" class="info-block">
+                            <i class="fas fa-flag"></i>
+                            <div class="info-block-content">
+                                <h4>Country</h4>
+                            </div>
+                        </a>
+                    </div>
+                </secure-content>
+                <secure-content asp-area="" asp-controller="Province" asp-action="Index">
+                    <div class="col-md-6 col-lg-3 col-xxl-3 mb-4">
+                        <a asp-controller="Province" asp-action="Index" class="info-block">
+                            <i class="fas fa-landmark"></i>
+                            <div class="info-block-content">
+                                <h4>Province</h4>
+                            </div>
+                        </a>
+                    </div>
+                </secure-content>
+                <secure-content asp-area="" asp-controller="District" asp-action="Index">
+                    <div class="col-md-6 col-lg-3 col-xxl-3 mb-4">
+                        <a asp-controller="District" asp-action="Index" class="info-block">
+                            <i class="fas fa-map"></i>
+                            <div class="info-block-content">
+                                <h4>District</h4>
+                            </div>
+                        </a>
+                    </div>
+                </secure-content>
+                <secure-content asp-area="" asp-controller="Religion" asp-action="Index">
+                    <div class="col-md-6 col-lg-3 col-xxl-3 mb-4">
+                        <a asp-controller="Religion" asp-action="Index" class="info-block">
+                            <i class="fas fa-star-and-crescent"></i>
+                            <div class="info-block-content">
+                                <h4>Religion</h4>
+                            </div>
+                        </a>
+                    </div>
+                </secure-content>
+                <secure-content asp-area="" asp-controller="Sect" asp-action="Index">
+                    <div class="col-md-6 col-lg-3 col-xxl-3 mb-4">
+                        <a asp-controller="Sect" asp-action="Index" class="info-block">
+                            <i class="fas fa-mosque"></i>
+                            <div class="info-block-content">
+                                <h4>Sect</h4>
+                            </div>
+                        </a>
+                    </div>
+                </secure-content>
+                <secure-content asp-area="" asp-controller="Caste" asp-action="Index">
+                    <div class="col-md-6 col-lg-3 col-xxl-3 mb-4">
+                        <a asp-controller="Caste" asp-action="Index" class="info-block">
+                            <i class="fas fa-people-arrows"></i>
+                            <div class="info-block-content">
+                                <h4>Caste</h4>
+                            </div>
+                        </a>
+                    </div>
+                </secure-content>
+                <secure-content asp-area="" asp-controller="DegreeType" asp-action="Index">
+                    <div class="col-md-6 col-lg-3 col-xxl-3 mb-4">
+                        <a asp-controller="DegreeType" asp-action="Index" class="info-block">
+                            <i class="fas fa-graduation-cap"></i>
+                            <div class="info-block-content">
+                                <h4>Degree</h4>
+                            </div>
+                        </a>
+                    </div>
+                </secure-content>
+                <secure-content asp-area="" asp-controller="Relation" asp-action="Index">
+                    <div class="col-md-6 col-lg-3 col-xxl-3 mb-4">
+                        <a asp-controller="Relation" asp-action="Index" class="info-block">
+                            <i class="fas fa-link"></i>
+                            <div class="info-block-content">
+                                <h4>Relation</h4>
+                            </div>
+                        </a>
+                    </div>
+                </secure-content>
+                <secure-content asp-area="" asp-controller="AssetType" asp-action="Index">
+                    <div class="col-md-6 col-lg-3 col-xxl-3 mb-4">
+                        <a asp-controller="AssetType" asp-action="Index" class="info-block">
+                            <i class="fas fa-cube"></i>
+                            <div class="info-block-content">
+                                <h4>Asset Type</h4>
+                            </div>
+                        </a>
+                    </div>
+                </secure-content>
+               @*  <div class="col-md-6 col-lg-3 col-xxl-3 mb-4">
+                    <secure-content asp-area="Mail" asp-controller="WorkFlowDefinations" asp-action="Index">
+                        <a href="@Pages.WorkFlowDef.UrlDefault" class="info-block">
+                            <i class="fas fa-calendar-alt"></i>
+                            <div class="info-block-content">
+                                <h4>@Pages.WorkFlowDef.NavigationName</h4>
+                            </div>
+                        </a>
+                    </secure-content>
+                </div> *@
+            </div>
+            <div class="col-md-6 col-lg-4 col-xxl-3 mb-4">
+                <div class="info-block-content">
+                    <h4>User's Settings</h4>
+                </div>
+            </div>
+            <div class="row">
+                <secure-content asp-area="Identity" asp-controller="Role" asp-action="Index">
+                    <div class="col-md-6 col-lg-4 col-xxl-3 mb-4">
+                        <a asp-area="Identity" asp-controller="Role" asp-action="Index" class="info-block">
+                            <i class="fas fa-house-user"></i>
+                            <div class="info-block-content">
+                                <h4>User's Role</h4>
+                            </div>
+                        </a>
+                    </div>
+                </secure-content>
+                <secure-content asp-area="Identity" asp-controller="AccountAdmin" asp-action="Index">
+                    <div class="col-md-6 col-lg-4 col-xxl-3 mb-4">
+                        <a asp-area="Identity" asp-controller="AccountAdmin" asp-action="Index" class="info-block">
+                            <i class="fas fa-house-user"></i>
+                            <div class="info-block-content">
+                                <h4>User's List</h4>
+                            </div>
+                        </a>
+                    </div>
+                </secure-content>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Breadcrump {
+    <li class="breadcrumb-item"><a asp-action="Index" asp-controller="Home">Home</a></li>
+    <li class="breadcrumb-item active">List</li>
+}

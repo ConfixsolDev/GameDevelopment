@@ -1,0 +1,121 @@
+
+@font-face {
+    font-family: 'Calibri';
+}
+
+body, td, th {
+    font-family: 'Calibri', sans-serif;
+    font-size: 12pt;
+}
+
+
+@media print {
+    /* General Page Styles */
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Calibri', Arial, sans-serif;
+        font-size: 12pt;
+        line-height: 1.6;
+        color: #000000;
+        word-spacing: 0.3em;
+        letter-spacing: 0.7px;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12pt;
+        border: 1px solid black;
+    }
+
+    th, td {
+        border: 1px solid black;
+        padding: 6px 8px;
+        text-align: left;
+        font-size: 12pt;
+        word-spacing: 0.3em;
+        letter-spacing: 0.7px;
+    }
+
+    th {
+        background-color: #ff645b;
+        color: white;
+        font-weight: bold;
+    }
+
+    td {
+        width: auto;
+    }
+
+    thead {
+        display: table-header-group;
+    }
+
+    tr {
+        page-break-inside: avoid;
+    }
+
+    h1 {
+        font-size: 16pt;
+        word-spacing: 0.3em;
+        letter-spacing: 0.6px;
+    }
+
+    h2 {
+        font-size: 12pt;
+        word-spacing: 0.3em;
+        letter-spacing: 0.6px;
+    }
+
+    h3 {
+        font-size: 12pt;
+        word-spacing: 0.3em;
+        letter-spacing: 0.6px;
+    }
+
+    h4, h5, h6 {
+        font-size: 12pt;
+        word-spacing: 0.3em;
+        letter-spacing: 0.6px;
+    }
+
+    p {
+        font-size: 12pt;
+        margin-bottom: 12px;
+        word-spacing: 0.3em;
+        letter-spacing: 0.6px;
+    }
+
+    blockquote, pre {
+        border: 1px solid gray;
+        padding: 8px;
+        font-size: 12pt;
+        word-spacing: 0.3em;
+        letter-spacing: 0.6px;
+    }
+
+    /* List Styling */
+    ul, ol {
+        margin: 12px 0;
+        padding-left: 22px;
+        font-size: 12pt;
+        word-spacing: 0.3em;
+        letter-spacing: 0.6px;
+    }
+
+    li {
+        margin-bottom: 6px;
+    }
+
+    /* Ensure text is not congested */
+    td, th, p, span, div {
+        word-spacing: 0.3em;
+        letter-spacing: 0.7px;
+    }
+
+    /* Remove elements that shouldn't appear in print */
+    .no-print {
+        display: none;
+    }
+}

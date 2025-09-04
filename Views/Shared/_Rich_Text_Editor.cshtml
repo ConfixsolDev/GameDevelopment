@@ -1,0 +1,40 @@
+@model string
+
+<link rel="stylesheet" href="/richtexteditor/rte_theme_default.css" />
+<script type="text/javascript" src="/richtexteditor/rte.js"></script>
+<script type="text/javascript" src='/richtexteditor/plugins/all_plugins.js'></script>
+<script src="~/assets/js/tinymce_5.5.1/tinymce.min.js"></script>
+
+<div id="Create_rte-edit-view_@Model" class="richtexteditor" style="margin:0 auto;">
+</div>
+
+<script>
+    $(document).ready(function () {
+        tinymce.init({
+            selector: '#Create_rte-edit-view_@Model',
+            plugins: 'table print preview fullscreen directionality image',
+            menubar: false,
+            image_title: true,
+            file_picker_types: 'image',
+            toolbar: 'undo redo | link image | bold italic underline | fontselect fontsizeselect | forecolor backcolor | alignleft aligncenter alignright alignjustify | table | fullscreen preview print | ltr rtl',
+            height: 150,
+            forced_root_block: '', // Prevent TinyMCE from wrapping content in <p> tags
+            setup: function (editor) {
+                editor.on('init', function () {
+                    // Define the getHTMLCode function within the editor's setup
+                    window["getHTMLCode_@Model"] = function () {
+                        return tinymce.get("Create_rte-edit-view_@Model").getContent();
+                    };
+
+                    // Set initial content if needed
+                    var initialContent = document.getElementById('@Model').value;
+                    tinymce.get("Create_rte-edit-view_@Model").setContent(initialContent);
+                });
+
+                editor.on('change', function () {
+                    document.getElementById('@Model').value = editor.getContent();
+                });
+            }
+        });
+    });
+</script>

@@ -1,0 +1,106 @@
+﻿@using TechWebSol
+@using TechWebSol.Models
+@model IEnumerable<ApplicationUser>
+@{await Html.RenderPartialAsync("_TableStylePartial"); }
+
+<div class="card">
+    <div class="card-header  card-header-primary">
+        <h4 class="card-title">Users</h4>
+    </div>
+    <div class="card-body e-panel">
+        <div class="modal-body panel">
+            <div class="panel-body table table-responsive">
+                <table class=" table table-bordered dataTable table-hover table-striped w-full" id="TableIndex">
+                    <thead>
+                        <tr>
+                            <th width="10%">
+                                User Name
+                            </th>
+                            <th width="10%">
+                                Full Name
+                            </th>
+                            <th width="10%">
+                                Online
+                            </th>
+                            <th width="10%">
+                                Last Login
+                            </th>
+                            <th width="10%">
+                                Login Count
+                            </th>
+                            <th width="10%">
+                                Status
+                            </th>
+                            <th style="text-align:center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+
+                            <tr>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.UserName)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.FullName)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.IsOnline)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.LastLoginDate)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.LoginCount)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.IsActive)
+                                </td>
+                                <td>
+                                    <div class="btn-group" aria-label="Basic Basic example" role="group">
+                                        <a asp-action="EditRegister" class="btn btn-icon btn-primary waves-effect waves-classic " asp-route-id="@item.Id">Edit</a>
+                                        @*<a asp-action="details" class="btn btn-icon btn-danger waves-effect waves-classic " asp-route-id="@item.Id">Details</a>*@
+                                        <a asp-action="PasswordResetAdmin" class="btn btn-icon btn-danger waves-effect waves-classic " asp-route-id="@item.Id">Password Reset</a>
+                                        <a asp-action="Delete" class="btn btn-icon btn-danger waves-effect waves-classic " asp-route-id="@item.Id">Delete</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th width="10%">
+                                User Name
+                            </th>
+                            <th width="10%">
+                                Full Name
+                            </th>
+                            <th width="10%">
+                                Online
+                            </th>
+                            <th width="10%">
+                                Last Login
+                            </th>
+                            <th width="10%">
+                                Login Count
+                            </th>
+                            <th width="10%">
+                                Status
+                            </th>
+                            <th style="text-align:center">Actions</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<partial name="_TableScriptsPartial" />
+
+<div class="btn-group">
+    <a asp-action="Register" class="btn btn-primary ">
+        <i class="material-icons">library_add</i>
+        Create
+    </a>
+</div>

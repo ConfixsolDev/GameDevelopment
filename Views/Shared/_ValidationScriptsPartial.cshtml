@@ -1,0 +1,64 @@
+﻿<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+<script src="~/assets/css/bootstrap-datepicker.js"></script>
+<script src="https://momentjs.com/downloads/moment-with-locales.min.js"></script>
+
+<!-- Bootstrap Datepicker JavaScript -->
+@* <script src="https://cdn.jsdelivr.net/npm/bootstrap-datepicker"></script> *@
+
+<script>
+
+    $(document).ready(function () {
+        $('.datepicker').datepicker({
+            format: 'dd/mm/yyyy',
+            autoclose: true
+        });
+        // //initiate all datepickeryearmonth class
+        $('.datepickeryearmonth').datepicker({
+            startView: "months",
+            format: "yyyy-mm",
+            minViewMode: "months",
+            autoclose: true
+        });
+
+        $('.select2-multiple').select2();
+        $('.select2').select2({
+            search: true,
+            width: '100%',
+            placeholder: "Select",
+            allowClear: true,
+        });
+        $(function () {
+            var dateFormat = "dd/mm/yy";
+
+            $("#from").datepicker({
+                defaultDate: "+1w",
+                changeMonth: true,
+                numberOfMonths: 1,
+                dateFormat: dateFormat,
+                onSelect: function (selectedDate) {
+                    $("#to").datepicker("option", "minDate", selectedDate);
+                }
+            });
+
+            $("#to").datepicker({
+                defaultDate: "+1w",
+                changeMonth: true,
+                numberOfMonths: 1,
+                dateFormat: dateFormat,
+                onSelect: function (selectedDate) {
+                    $("#from").datepicker("option", "maxDate", selectedDate);
+                }
+            });
+        });
+
+    });
+
+
+</script>
+
+
+@section Styles {
+    <!-- Bootstrap Datepicker CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css">
+}

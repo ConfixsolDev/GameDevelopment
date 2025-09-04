@@ -1,0 +1,222 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> _userManager
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="apple-touch-icon" sizes="76x76" href="~/creativeassets/img/apple-icon.png">
+    <link rel="icon" type="image/png" href="~/creativeassets/img/favicon.png">
+    <title>
+        Fauji Meat Limited
+    </title>
+
+    <!--     Fonts and icons     -->
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900|Roboto+Slab:400,700" />
+   
+    <!-- Nucleo Icons -->
+    <link href="~/creativeassets/css/nucleo-icons.css" rel="stylesheet" />
+    <link href="~/creativeassets/css/nucleo-svg.css" rel="stylesheet" />
+    <!-- Font Awesome Icons -->
+    @* <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script> *@
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet">
+
+
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <!-- CSS Files -->
+    <link href="~/creativeassets/css/material-kit-pro.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    <link href="~/cdn_local/daterangepicker.css" rel="stylesheet" />
+    @* <link id="pagestyle" href="~/creativeassets/css/material-dashboard.css?v=3.1.0" rel="stylesheet" /> *@
+  
+    <style>
+        .dataTable-wrapper .dataTable-top {
+            padding: 0.30rem !important;
+        }
+        .Brudcrum {
+            display: flex;
+            align-items: start; /* Align items to the start of the flex container */
+            width: 100%; /* Use the full width of the container */
+        }
+
+        .page-title-box {
+            flex-grow: 1; /* Allows the box to grow and use available space */
+            min-width: 0; /* Prevents overflow issues */
+        }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+
+
+<body class="g-sidenav-show  bg-gray-100">
+    @await Component.InvokeAsync("Sidebar")
+    <main class="main-content border-radius-lg ">
+        <!-- Navbar -->
+
+        <nav class="navbar navbar-main navbar-expand-lg position-sticky mt-4 top-1 px-0 mx-4 shadow-none border-radius-xl z-index-sticky" id="navbarBlur" data-scroll="true">
+            <div class="container-fluid">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+                            @RenderSection("Breadcrump", false)
+                    </ol>
+                    <h6>@ViewData["Title"]</h6>
+                </nav>
+               @*  <div class="sidenav-toggler sidenav-toggler-inner d-xl-block d-none ">
+                    <a href="javascript:;" class="nav-link text-body p-0">
+                        <div class="sidenav-toggler-inner">
+                            <i class="sidenav-toggler-line"></i>
+                            <i class="sidenav-toggler-line"></i>
+                            <i class="sidenav-toggler-line"></i>
+                        </div>
+                    </a>
+                </div> *@
+                <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
+                    <div class="ms-md-auto pe-md-3 d-flex align-items-center">
+                       @*  <div class="input-group input-group-outline">
+                            <label class="form-label">Search here</label>
+                            <input type="text" class="form-control">
+                        </div> *@
+                    </div>
+                    <ul class="navbar-nav  justify-content-end">
+                        <li class="nav-item">
+                            <a asp-controller="Account" asp-action="Logout" class="nav-link text-body font-weight-bold px-0">
+                                <i class="fa fa-user me-sm-1"></i>
+                                <span class="d-sm-inline d-none">Sign Out</span>
+                            </a>
+                        </li>
+                        <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
+                            <a href="javascript:;" class="nav-link text-body p-0" id="iconNavbarSidenav">
+                                <div class="sidenav-toggler-inner">
+                                    <i class="sidenav-toggler-line"></i>
+                                    <i class="sidenav-toggler-line"></i>
+                                    <i class="sidenav-toggler-line"></i>
+                                </div>
+                            </a>
+                        </li>
+                        <li class="nav-item px-3">
+                           @*  <a href="javascript:;" class="nav-link text-body p-0">
+                                <i class="material-icons fixed-plugin-button-nav cursor-pointer">
+                                    settings
+                                </i>
+                            </a> *@
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <!-- End Navbar -->
+        <div class="container-fluid">
+            <div class="page-title-box" style="padding-bottom: 0px;">
+                <div class="d-flex Brudcrum align-items-start">
+                    <div class="page-title-box flex-grow-1">
+                       @*  <ol class="breadcrumb m-0">
+                            @RenderSection("Breadcrump", false)
+                        </ol> *@
+                        @* <h3>@ViewData["Title"]</h3> *@
+                    </div>
+                </div>
+            </div>
+            @RenderBody()
+
+        </div>
+        @await Component.InvokeAsync("Footer")
+    </main>
+    <script src="~/assets/js/jquery.min.js"></script>
+    
+    <!--   Core JS Files   -->
+    <script src="~/creativeassets/js/core/popper.min.js"></script>
+    <script src="~/creativeassets/js/core/bootstrap.min.js"></script>
+    <script src="~/imageViewBox/jquery.viewbox.min.js"></script>
+    <script src="~/creativeassets/js/plugins/perfect-scrollbar.min.js"></script>
+    <script src="~/creativeassets/js/plugins/smooth-scrollbar.min.js"></script>
+    <script src="~/creativeassets/js/plugins/datatables.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/metismenu"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplebar/5.3.6/simplebar.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    @* <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script> *@
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/cdn_local/fullcalendar@6.1.15/index.global.min.js"></script>
+
+    <script src="~/cdn_local/fullcalendar@6.1.15/moment.min.js"></script>
+    <script src="~/cdn_local/fullcalendar@6.1.15/daterangepicker.min.js"></script>
+
+    <script src="~/js/jquery.serializejson.min.js"></script>
+   @*  <script src="~/creativeassets/js/material-kit-pro.min.js"></script> *@
+    <!-- Custom scripts for all pages -->
+
+   @*  <script src="~/assets/js/app.js" asp-append-version="true"></script> *@
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        var win = navigator.platform.indexOf('Win') > -1;
+        if (win && document.querySelector('#sidenav-scrollbar')) {
+            var options = {
+                damping: '0.5'
+            }
+            Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
+        }
+        // if (document.getElementById('dt')) {
+        //     const dataTableSearch = new simpleDatatables.DataTable("#dt", {fixedHeight: false,});
+        // };
+        if (document.getElementById('datatable-search')) {
+            const dataTableSearch = new simpleDatatables.DataTable("#datatable-search", {
+                searchable: true,
+                fixedHeight: false,
+                perPage: 20
+            });
+
+            // document.querySelectorAll(".export").forEach(function (el) {
+            //     el.addEventListener("click", function (e) {
+            //         var type = el.dataset.type;
+            //         var data = {
+            //             type: type,
+            //             filename: "List-" + type,
+            //         };
+
+            //         if (type === "csv") {
+            //             data.columnDelimiter = "|";
+            //         }
+                   
+
+            //         dataTableSearch.export(data);
+            //     });
+            // });
+
+        };
+        if (document.getElementById('report')) {
+            const dataTableSearch = new simpleDatatables.DataTable("#report", {
+                searchable: false,
+                fixedHeight: false,
+                perPage: 20
+            });
+
+            // document.querySelectorAll(".export").forEach(function (el) {
+            //     el.addEventListener("click", function (e) {
+            //         var type = el.dataset.type;
+            //         var data = {
+            //             type: type,
+            //             filename: "List-" + type,
+            //         };
+
+            //         if (type === "csv") {
+            //             data.columnDelimiter = "|";
+            //         }
+
+
+            //         dataTableSearch.export(data);
+            //     });
+            // });
+
+        };
+    </script>
+    <script src="~/creativeassets/js/material-dashboard.min.js?v=3.1.0"></script>
+    @* <script src="~/creativeassets/js/material-kit-pro.min.js"></script> *@
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

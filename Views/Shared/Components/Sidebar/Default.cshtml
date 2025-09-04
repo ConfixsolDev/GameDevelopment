@@ -1,0 +1,39 @@
+﻿<div class="vertical-menu">
+    <div data-simplebar class="h-100">
+        <div id="sidebar-menu">
+            <cache expires-after="@TimeSpan.FromMinutes(10)" vary-by-user="true">
+            </cache>
+
+            <ul class="metismenu list-unstyled" id="side-menu">
+                <li>
+                    <a asp-area="Mail" asp-controller="Mails" asp-action="Index">
+                        <i class="fas fa-download"></i> <span>Mail</span>
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="" asp-controller="Home" asp-action="Index">
+                        <i class="fas fa-download"></i> <span>Home</span>
+                    </a>
+                </li>
+
+                <secure-content asp-area="" asp-controller="Home" asp-action="AdminDashboard">
+                    <li>
+                        <a href="UrlDefaultAdmin">
+                            <i class="fas fa-home"></i>
+                            <span>Dashboard </span>
+                        </a>
+                    </li>
+                </secure-content>
+
+                <secure-content asp-area="Identity" asp-controller="Role" asp-action="Index">
+                    <li>
+                        <a href="/Identity/Role/Index">
+                            <i class="fas fa-home"></i>
+                            <span>Role Managment </span>
+                        </a>
+                    </li>
+                </secure-content>
+            </ul>
+        </div>
+    </div>
+</div>

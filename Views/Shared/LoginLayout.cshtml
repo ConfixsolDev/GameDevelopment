@@ -1,0 +1,55 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Human resource management system</title>
+    <link rel="shortcut icon" href="~/assets/images/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400&display=swap" rel="stylesheet">
+
+    <link href="~/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+
+
+    <link href="~/assets/css/icons.min.css" rel="stylesheet">
+    <link href="~/assets/css/app.min.css" id="app-style" rel="stylesheet">
+    <link href="~/assets/css/custom.css" rel="stylesheet" asp-append-version="true">
+
+    <!--<link rel="stylesheet" href="~/Moore.Web.styles.css" asp-append-version="true" />-->
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <!-- start .login-sec -->
+    <div class="login-sec container-fluid">
+        <div class="row">
+            <div class="col-lg-6 order-lg-2">
+                <div class="login-form-sec">
+                    <div class="text-center">
+                    </div>
+                    @RenderBody()
+                </div>
+                <footer class="footer">
+                    <p class="copyrights">Copyright <script>document.write(new Date().getFullYear())</script> I2MS Confidential. All rights reserved.</p>
+                </footer>
+            </div>
+            <div class="col-lg-6 order-lg-1">
+                <div class="text-center">
+                    <div class="px-2 py-4"><img width="500px" height="600px" src="~/assets/images/logo-lg.png" alt=""></div>
+                    <h1 class="mt-4">@ViewData["Title"]</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- end .login-sec -->
+    <!-- Scripts for all pages -->
+    <script src="~/assets/js/jquery.min.js"></script>
+    <script src="~/assets/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
