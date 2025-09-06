@@ -189,7 +189,7 @@ namespace TechWebSol.Areas.Identity.Controllers
                 DeleteUser.IsActive = false;
                 await _context.SaveChangesAsync();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
             return RedirectToAction("Index");
