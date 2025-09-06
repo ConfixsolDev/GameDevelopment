@@ -131,7 +131,7 @@
     </div>
 </div>
 
-<!-- Manual Token Creation Modal -->
+<!-- Token Creation Modal -->
 <div class="modal fade" id="createManualTokenModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -257,7 +257,7 @@
                         select.append(`<option value="${group.id}">${group.name} (${group.groupCode})</option>`);
                     });
 
-                    // Also populate manual token group dropdown
+                    // Also populate token group dropdown
                     const tokenGroupSelect = $('#tokenGroupSelect');
                     tokenGroupSelect.empty().append('<option value="">-- Select Group (Optional) --</option>');
                     
