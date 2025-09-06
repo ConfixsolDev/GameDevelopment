@@ -41,6 +41,22 @@ namespace TechWebSol.Models
 
         [MaxLength(1000)]
         public string? Notes { get; set; }
+
+        // Team isolation - tokens are team-specific
+        [Required]
+        [MaxLength(50)]
+        public string TeamId { get; set; } = string.Empty; // TeamCode + SubTeamCode
+
+        [Required]
+        [MaxLength(50)]
+        public string CreatedByUserId { get; set; } = string.Empty;
+
+        // Token group assignment - tokens belong to administrator-managed groups
+        public int? TokenGroupId { get; set; }
+
+        // Navigation property
+        public virtual TokenGroup? TokenGroup { get; set; }
+
         public virtual ICollection<MapMarker> MapMarkers { get; set; } = new List<MapMarker>();
     }
 

@@ -10,6 +10,7 @@ namespace TechWebSol.Data
     /// Unified Data Access Layer for Token Identification
     /// Provides a single, consistent API for token identification across all systems
     /// Works with both complex and simplified token systems
+    /// Team-based isolation ensures tokens are only accessible within the same team
     /// </summary>
     public class TokenIdentificationDAL
     {
@@ -17,6 +18,7 @@ namespace TechWebSol.Data
         private readonly SimplifiedApplicationDbContext _simplifiedContext;
         private readonly IPatternMatchingService _complexPatternService;
         private readonly ISimplifiedPatternMatchingService _simplifiedPatternService;
+        private readonly IUserSessionService _userSessionService;
         private readonly ILogger<TokenIdentificationDAL> _logger;
 
         public TokenIdentificationDAL(
@@ -24,18 +26,56 @@ namespace TechWebSol.Data
             SimplifiedApplicationDbContext simplifiedContext,
             IPatternMatchingService complexPatternService,
             ISimplifiedPatternMatchingService simplifiedPatternService,
+            IUserSessionService userSessionService,
             ILogger<TokenIdentificationDAL> logger)
         {
             _complexContext = complexContext;
             _simplifiedContext = simplifiedContext;
             _complexPatternService = complexPatternService;
             _simplifiedPatternService = simplifiedPatternService;
+            _userSessionService = userSessionService;
             _logger = logger;
+        }
+
+        /// <summary>
+        /// Get current user's team ID (TeamCode + SubTeamCode)
+        /// </summary>
+        private string GetCurrentTeamId()
+        {
+            var currentUser = _userSessionService.GetCurrentUser();
+            if (currentUser == null)
+            {
+                throw new UnauthorizedAccessException("User not authenticated");
+            }
+
+            // Get user details from database to get TeamCode and SubTeamCode
+            var user = _complexContext.Users.FirstOrDefault(u => u.Id == currentUser.ApplicationUserId);
+            if (user == null)
+            {
+                throw new UnauthorizedAccessException("User not found");
+            }
+
+            return $"{user.TeamCode}_{user.SubTeamCode}";
+        }
+
+        /// <summary>
+        /// Get current user ID
+        /// </summary>
+        private string GetCurrentUserId()
+        {
+            var currentUser = _userSessionService.GetCurrentUser();
+            if (currentUser == null)
+            {
+                throw new UnauthorizedAccessException("User not authenticated");
+            }
+
+            return currentUser.ApplicationUserId;
         }
 
         /// <summary>
         /// Unified token identification method
         /// Automatically detects the best matching system and returns consistent results
+        /// Only searches within the current user's team
         /// </summary>
         public async Task<UnifiedTokenIdentificationResult> IdentifyTokenAsync(
             double[][] touchPoints, 
@@ -44,8 +84,9 @@ namespace TechWebSol.Data
         {
             try
             {
-                _logger.LogInformation("Starting unified token identification with {PointCount} touch points", 
-                    touchPoints.Length);
+                var teamId = GetCurrentTeamId();
+                _logger.LogInformation("Starting unified token identification with {PointCount} touch points for team {TeamId}", 
+                    touchPoints.Length, teamId);
 
                 if (touchPoints.Length < 2)
                 {
@@ -60,7 +101,7 @@ namespace TechWebSol.Data
                 // Try simplified system first (faster and more reliable for basic patterns)
                 if (preferSimplified)
                 {
-                    var simplifiedResult = await TrySimplifiedIdentification(touchPoints, confidenceThreshold);
+                    var simplifiedResult = await TrySimplifiedIdentification(touchPoints, confidenceThreshold, teamId);
                     if (simplifiedResult.Success)
                     {
                         return simplifiedResult;
@@ -68,14 +109,14 @@ namespace TechWebSol.Data
                 }
 
                 // Fallback to complex system
-                var complexResult = await TryComplexIdentification(touchPoints, confidenceThreshold);
+                var complexResult = await TryComplexIdentification(touchPoints, confidenceThreshold, teamId);
                 if (complexResult.Success)
                 {
                     return complexResult;
                 }
 
                 // If both systems fail, return the best result
-                var simplifiedFallback = await TrySimplifiedIdentification(touchPoints, confidenceThreshold);
+                var simplifiedFallback = await TrySimplifiedIdentification(touchPoints, confidenceThreshold, teamId);
                 return simplifiedFallback;
             }
             catch (Exception ex)
@@ -95,15 +136,32 @@ namespace TechWebSol.Data
         /// </summary>
         private async Task<UnifiedTokenIdentificationResult> TrySimplifiedIdentification(
             double[][] touchPoints, 
-            double confidenceThreshold)
+            double confidenceThreshold,
+            string teamId)
         {
             try
             {
                 // Calculate geometric data
                 var geometricData = await _simplifiedPatternService.CalculateGeometricDataAsync(touchPoints);
                 
-                // Identify token
-                var result = await _simplifiedPatternService.IdentifyTokenAsync(geometricData, confidenceThreshold);
+                // Get team-specific tokens for identification
+                var teamTokens = await _simplifiedContext.Tokens
+                    .Include(t => t.Signature)
+                    .Where(t => t.TeamId == teamId && t.IsActive)
+                    .ToListAsync();
+
+                if (!teamTokens.Any())
+                {
+                    return new UnifiedTokenIdentificationResult
+                    {
+                        Success = false,
+                        Message = "No tokens found for your team",
+                        SystemUsed = "simplified"
+                    };
+                }
+
+                // Identify token using team-specific tokens
+                var result = await _simplifiedPatternService.IdentifyTokenAsync(geometricData, confidenceThreshold, teamTokens);
                 
                 return new UnifiedTokenIdentificationResult
                 {
@@ -303,133 +361,21 @@ namespace TechWebSol.Data
             return squaredDiffs.Average();
         }
 
-        /// <summary>
-        /// Get token by ID from either system
-        /// </summary>
-        public async Task<UnifiedTokenInfo?> GetTokenByIdAsync(long tokenId)
-        {
-            try
-            {
-                // Try simplified system first
-                var simplifiedToken = await _simplifiedContext.Tokens
-                    .Include(t => t.Signature)
-                    .FirstOrDefaultAsync(t => t.Id == tokenId);
-
-                if (simplifiedToken != null)
-                {
-                    return new UnifiedTokenInfo
-                    {
-                        Id = simplifiedToken.Id,
-                        Name = simplifiedToken.Name,
-                        Description = simplifiedToken.Description,
-                        Category = simplifiedToken.Category,
-                        IsActive = simplifiedToken.IsActive,
-                        CreatedAt = simplifiedToken.CreatedAt,
-                        LastUsed = simplifiedToken.LastUsed,
-                        UsageCount = simplifiedToken.UsageCount,
-                        System = "simplified",
-                        TouchCount = simplifiedToken.Signature?.TouchCount ?? 0
-                    };
-                }
-
-                // Try complex system
-                var complexToken = await _complexContext.Tokens
-                    .Include(t => t.Signature)
-                    .FirstOrDefaultAsync(t => t.Id == tokenId);
-
-                if (complexToken != null)
-                {
-                    return new UnifiedTokenInfo
-                    {
-                        Id = complexToken.Id,
-                        Name = complexToken.Name,
-                        Description = complexToken.Description,
-                        Category = complexToken.Category,
-                        IsActive = complexToken.IsActive,
-                        CreatedAt = complexToken.CreatedAt,
-                        LastUsed = complexToken.LastUsed,
-                        UsageCount = complexToken.UsageCount,
-                        System = "complex",
-                        TouchCount = complexToken.Signature?.TouchCount ?? 0
-                    };
-                }
-
-                return null;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting token by ID {TokenId}", tokenId);
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Get all active tokens from both systems
-        /// </summary>
-        public async Task<List<UnifiedTokenInfo>> GetAllActiveTokensAsync()
-        {
-            var tokens = new List<UnifiedTokenInfo>();
-
-            try
-            {
-                // Get simplified tokens
-                var simplifiedTokens = await _simplifiedContext.Tokens
-                    .Include(t => t.Signature)
-                    .Where(t => t.IsActive)
-                    .ToListAsync();
-
-                tokens.AddRange(simplifiedTokens.Select(t => new UnifiedTokenInfo
-                {
-                    Id = t.Id,
-                    Name = t.Name,
-                    Description = t.Description,
-                    Category = t.Category,
-                    IsActive = t.IsActive,
-                    CreatedAt = t.CreatedAt,
-                    LastUsed = t.LastUsed,
-                    UsageCount = t.UsageCount,
-                    System = "simplified",
-                    TouchCount = t.Signature?.TouchCount ?? 0
-                }));
-
-                // Get complex tokens
-                var complexTokens = await _complexContext.Tokens
-                    .Include(t => t.Signature)
-                    .Where(t => t.IsActive)
-                    .ToListAsync();
-
-                tokens.AddRange(complexTokens.Select(t => new UnifiedTokenInfo
-                {
-                    Id = t.Id,
-                    Name = t.Name,
-                    Description = t.Description,
-                    Category = t.Category,
-                    IsActive = t.IsActive,
-                    CreatedAt = t.CreatedAt,
-                    LastUsed = t.LastUsed,
-                    UsageCount = t.UsageCount,
-                    System = "complex",
-                    TouchCount = t.Signature?.TouchCount ?? 0
-                }));
-
-                return tokens.OrderBy(t => t.Name).ToList();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting all active tokens");
-                return tokens;
-            }
-        }
 
         /// <summary>
         /// UNIFIED SAVE FUNCTION - The single point for all token saving operations
         /// Handles both creation and updates across both systems
+        /// Automatically associates tokens with the current user's team
         /// </summary>
         public async Task<UnifiedSaveResult> SaveTokenAsync(UnifiedTokenSaveRequest request)
         {
             try
             {
-                _logger.LogInformation("Starting unified token save operation for token: {TokenName}", request.Name);
+                var teamId = GetCurrentTeamId();
+                var userId = GetCurrentUserId();
+                
+                _logger.LogInformation("Starting unified token save operation for token: {TokenName} in team: {TeamId}", 
+                    request.Name, teamId);
 
                 // Validate request
                 var validationResult = ValidateSaveRequest(request);
@@ -442,6 +388,10 @@ namespace TechWebSol.Data
                         TokenId = null
                     };
                 }
+
+                // Add team context to request
+                request.TeamId = teamId;
+                request.CreatedByUserId = userId;
 
                 // Determine which system to use based on request or auto-detect
                 var systemToUse = DetermineSystemToUse(request);
@@ -532,7 +482,10 @@ namespace TechWebSol.Data
                             Category = request.Category,
                             IsActive = request.IsActive,
                             CreatedAt = DateTime.UtcNow,
-                            UsageCount = 0
+                            UsageCount = 0,
+                            TeamId = request.TeamId,
+                            CreatedByUserId = request.CreatedByUserId,
+                            TokenGroupId = request.TokenGroupId
                         };
 
                         signature = new SimplifiedTokenSignature
@@ -658,7 +611,10 @@ namespace TechWebSol.Data
                             IsActive = request.IsActive,
                             CreatedAt = DateTime.UtcNow,
                             UsageCount = 0,
-                            TrainingConsistency = 0
+                            TrainingConsistency = 0,
+                            TeamId = request.TeamId,
+                            CreatedByUserId = request.CreatedByUserId,
+                            TokenGroupId = request.TokenGroupId
                         };
 
                         signature = new TokenSignature
@@ -735,6 +691,12 @@ namespace TechWebSol.Data
                 return (false, "Maximum 5 touch points allowed");
             }
 
+            // For new tokens, TokenGroupId is required
+            if (!request.TokenId.HasValue && !request.TokenGroupId.HasValue)
+            {
+                return (false, "Token group must be specified for new tokens");
+            }
+
             return (true, string.Empty);
         }
 
@@ -772,73 +734,111 @@ namespace TechWebSol.Data
         }
 
         /// <summary>
-        /// Delete token from both systems
+        /// Get team's token list for dropdowns
+        /// Returns tokens from groups bound to the current user's team in active game sessions
         /// </summary>
-        public async Task<UnifiedSaveResult> DeleteTokenAsync(long tokenId)
+        public async Task<List<GroupedTeamTokenInfo>> GetTeamTokensAsync()
         {
             try
             {
-                var results = new List<UnifiedSaveResult>();
+                var teamId = GetCurrentTeamId();
+                var groupedTokens = new List<GroupedTeamTokenInfo>();
 
-                // Try to delete from simplified system
-                var simplifiedToken = await _simplifiedContext.Tokens.FindAsync(tokenId);
-                if (simplifiedToken != null)
+                // Get active game sessions
+                var activeSessions = await _complexContext.GameSessions
+                    .Where(s => s.Status == "Active")
+                    .ToListAsync();
+
+                if (!activeSessions.Any())
                 {
-                    _simplifiedContext.Tokens.Remove(simplifiedToken);
-                    await _simplifiedContext.SaveChangesAsync();
-                    results.Add(new UnifiedSaveResult
-                    {
-                        Success = true,
-                        Message = "Token deleted from simplified system",
-                        TokenId = tokenId,
-                        SystemUsed = "simplified"
-                    });
+                    return groupedTokens; // No active game sessions
                 }
 
-                // Try to delete from complex system
-                var complexToken = await _complexContext.Tokens.FindAsync(tokenId);
-                if (complexToken != null)
+                // Get token bindings for this team in active sessions
+                var activeSessionIds = activeSessions.Select(s => s.Id).ToList();
+                var teamBindings = await _complexContext.TokenBindings
+                    .Where(b => b.TeamId == teamId && activeSessionIds.Contains(b.GameSessionId) && b.IsActive)
+                    .ToListAsync();
+
+                if (!teamBindings.Any())
                 {
-                    _complexContext.Tokens.Remove(complexToken);
-                    await _complexContext.SaveChangesAsync();
-                    results.Add(new UnifiedSaveResult
-                    {
-                        Success = true,
-                        Message = "Token deleted from complex system",
-                        TokenId = tokenId,
-                        SystemUsed = "complex"
-                    });
+                    return groupedTokens; // No bindings for this team
                 }
 
-                if (results.Any())
+                // Get token groups for the bindings
+                var boundGroupIds = teamBindings.Select(b => b.TokenGroupId).ToList();
+                var tokenGroups = await _complexContext.TokenGroups
+                    .Where(g => boundGroupIds.Contains(g.Id) && g.IsActive)
+                    .OrderBy(g => g.Name)
+                    .ToListAsync();
+
+                foreach (var group in tokenGroups)
                 {
-                    return new UnifiedSaveResult
+                    var binding = teamBindings.First(b => b.TokenGroupId == group.Id);
+                    var groupTokens = new List<TeamTokenInfo>();
+
+                    // Get simplified tokens for this group
+                    var simplifiedTokens = await _simplifiedContext.Tokens
+                        .Include(t => t.Signature)
+                        .Where(t => t.TokenGroupId == group.Id && t.IsActive)
+                        .OrderBy(t => t.Name)
+                        .ToListAsync();
+
+                    groupTokens.AddRange(simplifiedTokens.Select(t => new TeamTokenInfo
                     {
-                        Success = true,
-                        Message = $"Token deleted from {results.Count} system(s)",
-                        TokenId = tokenId,
-                        SystemUsed = string.Join(",", results.Select(r => r.SystemUsed))
-                    };
+                        Id = t.Id,
+                        Name = t.Name,
+                        Description = t.Description,
+                        Category = t.Category,
+                        TouchCount = t.Signature?.TouchCount ?? 0,
+                        System = "simplified",
+                        CreatedAt = t.CreatedAt,
+                        UsageCount = t.UsageCount
+                    }));
+
+                    // Get complex tokens for this group
+                    var complexTokens = await _complexContext.Tokens
+                        .Include(t => t.Signature)
+                        .Where(t => t.TokenGroupId == group.Id && t.IsActive)
+                        .OrderBy(t => t.Name)
+                        .ToListAsync();
+
+                    groupTokens.AddRange(complexTokens.Select(t => new TeamTokenInfo
+                    {
+                        Id = t.Id,
+                        Name = t.Name,
+                        Description = t.Description,
+                        Category = t.Category,
+                        TouchCount = t.Signature?.TouchCount ?? 0,
+                        System = "complex",
+                        CreatedAt = t.CreatedAt,
+                        UsageCount = t.UsageCount
+                    }));
+
+                    if (groupTokens.Any())
+                    {
+                        groupedTokens.Add(new GroupedTeamTokenInfo
+                        {
+                            GroupId = group.Id,
+                            GroupName = group.Name,
+                            GroupCode = group.GroupCode,
+                            GroupCategory = group.Category,
+                            EntityName = binding.EntityName,
+                            EntityCode = binding.EntityCode,
+                            Tokens = groupTokens.OrderBy(t => t.Name).ToList()
+                        });
+                    }
                 }
 
-                return new UnifiedSaveResult
-                {
-                    Success = false,
-                    Message = "Token not found in any system",
-                    TokenId = tokenId
-                };
+                return groupedTokens;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting token {TokenId}", tokenId);
-                return new UnifiedSaveResult
-                {
-                    Success = false,
-                    Message = "Error deleting token",
-                    TokenId = tokenId
-                };
+                _logger.LogError(ex, "Error getting team tokens");
+                return new List<GroupedTeamTokenInfo>();
             }
         }
+
     }
 
     /// <summary>
@@ -871,25 +871,10 @@ namespace TechWebSol.Data
         public List<string> MatchFactors { get; set; } = new();
     }
 
-    /// <summary>
-    /// Unified token information
-    /// </summary>
-    public class UnifiedTokenInfo
-    {
-        public long Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string? Description { get; set; }
-        public string? Category { get; set; }
-        public bool IsActive { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime? LastUsed { get; set; }
-        public int UsageCount { get; set; }
-        public string System { get; set; } = string.Empty;
-        public int TouchCount { get; set; }
-    }
 
     /// <summary>
     /// Unified token save request - Single request format for all save operations
+    /// Team context is automatically added by the DAL
     /// </summary>
     public class UnifiedTokenSaveRequest
     {
@@ -933,6 +918,15 @@ namespace TechWebSol.Data
         /// Additional metadata
         /// </summary>
         public Dictionary<string, object>? Metadata { get; set; }
+
+        // Team context - automatically set by DAL
+        internal string TeamId { get; set; } = string.Empty;
+        internal string CreatedByUserId { get; set; } = string.Empty;
+        
+        /// <summary>
+        /// Token group ID - must be provided for new tokens
+        /// </summary>
+        public int? TokenGroupId { get; set; }
     }
 
     /// <summary>

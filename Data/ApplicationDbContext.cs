@@ -265,6 +265,11 @@ namespace TechWebSol.Data
         public DbSet<TouchPattern> TouchPatterns { get; set; }
         public DbSet<MultiTouchGeometry> MultiTouchGeometry { get; set; }
         public DbSet<MapMarker> MapMarkers { get; set; }
+        public DbSet<TokenGroup> TokenGroups { get; set; }
+        public DbSet<TeamTokenGroupAssignment> TeamTokenGroupAssignments { get; set; }
+        public DbSet<GameSession> GameSessions { get; set; }
+        public DbSet<TokenBinding> TokenBindings { get; set; }
+        public DbSet<FreeToken> FreeTokens { get; set; }
 
         private T GenerateOriginalEntity<T>(PropertyValues values) where T : new()
         {

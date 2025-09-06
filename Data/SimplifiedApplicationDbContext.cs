@@ -194,6 +194,11 @@ namespace TechWebSol.Data
         public DbSet<AppRoles> AppRoles { get; set; }
         public DbSet<SimplifiedToken> Tokens { get; set; }
         public DbSet<SimplifiedTokenSignature> TokenSignatures { get; set; }
+        public DbSet<TokenGroup> TokenGroups { get; set; }
+        public DbSet<TeamTokenGroupAssignment> TeamTokenGroupAssignments { get; set; }
+        public DbSet<GameSession> GameSessions { get; set; }
+        public DbSet<TokenBinding> TokenBindings { get; set; }
+        public DbSet<FreeToken> FreeTokens { get; set; }
         public DbSet<MapMarker> MapMarkers { get; set; }
     }
 }

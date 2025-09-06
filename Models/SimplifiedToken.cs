@@ -7,6 +7,7 @@ namespace TechWebSol.Models
     /// <summary>
     /// Simplified Token model - only essential properties for geometric pattern matching
     /// Supports 2-5 touch points with distance and angle calculations
+    /// Team-based isolation using SectionCode + SubSectionCode
     /// </summary>
     public class SimplifiedToken
     {
@@ -25,6 +26,21 @@ namespace TechWebSol.Models
         public DateTime? LastUsed { get; set; }
 
         public int UsageCount { get; set; } = 0;
+
+        // Team isolation - tokens are team-specific
+        [Required]
+        [MaxLength(50)]
+        public string TeamId { get; set; } = string.Empty; // TeamCode + SubTeamCode
+
+        [Required]
+        [MaxLength(50)]
+        public string CreatedByUserId { get; set; } = string.Empty;
+
+        // Token group assignment - tokens belong to administrator-managed groups
+        public int? TokenGroupId { get; set; }
+
+        // Navigation property
+        public virtual TokenGroup? TokenGroup { get; set; }
 
         // Navigation property
         public virtual SimplifiedTokenSignature? Signature { get; set; }

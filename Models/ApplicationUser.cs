@@ -51,12 +51,12 @@ namespace TechWebSol.Models
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         [ScaffoldColumn(false)]
-        [DisplayName("Section")]
-        public string SectionCode { get; set; } = string.Empty;
+        [DisplayName("Team")]
+        public string TeamCode { get; set; } = string.Empty;
 
         [ScaffoldColumn(false)]
-        [DisplayName("Sub-Section")]
-        public string SubSectionCode { get; set; } = string.Empty;
+        [DisplayName("Sub-Team")]
+        public string SubTeamCode { get; set; } = string.Empty;
 
         [MaxLength(250)]
         public string HomeUrl { get; set; } = string.Empty;
