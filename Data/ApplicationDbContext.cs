@@ -191,6 +191,29 @@ namespace TechWebSol.Data
                 entity.HasIndex(e => e.IsActive);
             });
 
+
+            // Configure MapMarker entity (keep for map functionality)
+            modelBuilder.Entity<MapMarker>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.TokenName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Location).IsRequired().HasColumnType("nvarchar(max)");
+                entity.Property(e => e.Description).HasMaxLength(500);
+                entity.Property(e => e.Category).HasMaxLength(50);
+                entity.Property(e => e.CreatedBy).HasMaxLength(100);
+                entity.Property(e => e.Notes).HasMaxLength(1000);
+
+                entity.HasOne(e => e.Token)
+                    .WithMany(e => e.MapMarkers)
+                    .HasForeignKey(e => e.TokenId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.TokenId);
+                entity.HasIndex(e => e.CreatedAt);
+                entity.HasIndex(e => e.IsActive);
+            });
+
         }
         
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

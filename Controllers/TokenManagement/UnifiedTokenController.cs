@@ -107,33 +107,5 @@ namespace TechWebSol.Controllers.TokenManagement
         public bool? PreferSimplified { get; set; }
     }
 
-    /// <summary>
-    /// Team token information for dropdowns
-    /// </summary>
-    public class TeamTokenInfo
-    {
-        public long Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string? Description { get; set; }
-        public string? Category { get; set; }
-        public int TouchCount { get; set; }
-        public string System { get; set; } = string.Empty; // "simplified" or "complex"
-        public DateTime CreatedAt { get; set; }
-        public int UsageCount { get; set; }
-    }
-
-    /// <summary>
-    /// Grouped team token information for organized dropdowns
-    /// </summary>
-    public class GroupedTeamTokenInfo
-    {
-        public int GroupId { get; set; }
-        public string GroupName { get; set; } = string.Empty;
-        public string GroupCode { get; set; } = string.Empty;
-        public string? GroupCategory { get; set; }
-        public string? EntityName { get; set; } // e.g., "Company A", "Brigade 1"
-        public string? EntityCode { get; set; } // e.g., "COMP_A", "BRIG_1"
-        public List<TeamTokenInfo> Tokens { get; set; } = new();
-    }
 
 }

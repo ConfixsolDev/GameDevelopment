@@ -11,10 +11,10 @@ namespace TechWebSol.Services.TokenManagement
     /// </summary>
     public class SimplifiedPatternMatchingService : ISimplifiedPatternMatchingService
     {
-        private readonly SimplifiedApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
         private readonly ILogger<SimplifiedPatternMatchingService> _logger;
 
-        public SimplifiedPatternMatchingService(SimplifiedApplicationDbContext context, ILogger<SimplifiedPatternMatchingService> logger)
+        public SimplifiedPatternMatchingService(ApplicationDbContext context, ILogger<SimplifiedPatternMatchingService> logger)
         {
             _context = context;
             _logger = logger;
@@ -266,11 +266,11 @@ namespace TechWebSol.Services.TokenManagement
                 // Check if touch counts match
                 if (data1.Distances.Length != data2.Distances.Length)
                 {
-                    return new PatternSimilarityResult
-                    {
-                        OverallSimilarity = 0,
-                        MatchFactors = new List<string> { "Touch count mismatch" }
-                    };
+                return new PatternSimilarityResult
+                {
+                    OverallSimilarity = 0,
+                    MatchFactors = new Dictionary<string, double> { { "Touch count mismatch", 0 } }
+                };
                 }
 
                 // Calculate distance similarity (60% weight)
@@ -291,10 +291,10 @@ namespace TechWebSol.Services.TokenManagement
                                       (angleSimilarity * 0.3) + 
                                       (centerSimilarity * 0.1);
 
-                var matchFactors = new List<string>();
-                if (distanceSimilarity > 90) matchFactors.Add("Excellent distance match");
-                if (angleSimilarity > 90) matchFactors.Add("Excellent angle match");
-                if (centerSimilarity > 90) matchFactors.Add("Excellent center match");
+                var matchFactors = new Dictionary<string, double>();
+                if (distanceSimilarity > 90) matchFactors.Add("Excellent distance match", distanceSimilarity);
+                if (angleSimilarity > 90) matchFactors.Add("Excellent angle match", angleSimilarity);
+                if (centerSimilarity > 90) matchFactors.Add("Excellent center match", centerSimilarity);
 
                 return new PatternSimilarityResult
                 {
@@ -423,7 +423,7 @@ namespace TechWebSol.Services.TokenManagement
         /// <summary>
         /// Parse geometric data from token signature
         /// </summary>
-        private GeometricData ParseGeometricData(SimplifiedTokenSignature signature)
+        private GeometricData ParseGeometricData(TokenSignature signature)
         {
             var data = new GeometricData();
             
@@ -455,7 +455,7 @@ namespace TechWebSol.Services.TokenManagement
         private class TokenMatch
         {
             public double Confidence { get; set; }
-            public SimplifiedToken? Token { get; set; }
+            public Token? Token { get; set; }
             public TokenMatchDetail? MatchDetails { get; set; }
         }
     }

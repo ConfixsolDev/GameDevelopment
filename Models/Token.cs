@@ -51,6 +51,9 @@ namespace TechWebSol.Models
         [MaxLength(50)]
         public string CreatedByUserId { get; set; } = string.Empty;
 
+        [MaxLength(50)]
+        public string? CreatedByUserName { get; set; }
+
         // Token group assignment - tokens belong to administrator-managed groups
         public int? TokenGroupId { get; set; }
 
@@ -58,6 +61,137 @@ namespace TechWebSol.Models
         public virtual TokenGroup? TokenGroup { get; set; }
 
         public virtual ICollection<MapMarker> MapMarkers { get; set; } = new List<MapMarker>();
+    }
+
+    // DTOs for pattern matching
+    public class GeometricData
+    {
+        public double[] Distances { get; set; } = Array.Empty<double>();
+        public double[] Angles { get; set; } = Array.Empty<double>();
+        public CenterPoint Center { get; set; } = new CenterPoint();
+        public int TouchCount { get; set; }
+    }
+
+    public class CenterPoint
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+    }
+
+    public class PatternAnalysisResult
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public double Confidence { get; set; }
+        public List<PatternMetric> Metrics { get; set; } = new();
+        public string Characteristics { get; set; } = string.Empty;
+        public string Complexity { get; set; } = string.Empty;
+        public string PatternType { get; set; } = string.Empty;
+    }
+
+    public class PatternMetric
+    {
+        public string Name { get; set; } = string.Empty;
+        public double Value { get; set; }
+        public double Weight { get; set; }
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        public string Unit { get; set; } = string.Empty;
+    }
+
+    public class PatternSimilarityResult
+    {
+        public double DistanceSimilarity { get; set; }
+        public double AngleSimilarity { get; set; }
+        public double CenterSimilarity { get; set; }
+        public double ShapeSimilarity { get; set; }
+        public double TimingSimilarity { get; set; }
+        public double GeometricSimilarity { get; set; }
+        public double OverallSimilarity { get; set; }
+        public Dictionary<string, double> MatchFactors { get; set; } = new();
+    }
+
+    public class PatternStatistics
+    {
+        public int TotalPatterns { get; set; }
+        public double AverageConfidence { get; set; }
+        public double SuccessRate { get; set; }
+        public long TokenId { get; set; }
+        public string TokenName { get; set; } = string.Empty;
+        public int TotalIdentifications { get; set; }
+        public int SuccessfulIdentifications { get; set; }
+        public DateTime LastIdentified { get; set; }
+        public List<PatternMetric> Metrics { get; set; } = new();
+    }
+
+    public class TokenIdentificationResult
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public double Confidence { get; set; }
+        public Token? MatchedToken { get; set; }
+        public List<TokenMatchDetail> AllMatches { get; set; } = new();
+    }
+
+    public class TokenMatchDetail
+    {
+        public long TokenId { get; set; }
+        public string TokenName { get; set; } = string.Empty;
+        public double Confidence { get; set; }
+        public double DistanceSimilarity { get; set; }
+        public double AngleSimilarity { get; set; }
+        public double CenterSimilarity { get; set; }
+        public double ShapeSimilarity { get; set; }
+        public double TimingSimilarity { get; set; }
+        public double GeometricSimilarity { get; set; }
+        public double OverallSimilarity { get; set; }
+        public Dictionary<string, double> MatchFactors { get; set; } = new();
+    }
+
+    public class TokenStatistics
+    {
+        public int TotalTokens { get; set; }
+        public int ActiveTokens { get; set; }
+        public int InactiveTokens { get; set; }
+        public double AverageUsage { get; set; }
+        public double AverageConfidence { get; set; }
+        public DateTime? LastTokenCreated { get; set; }
+        public DateTime? LastTokenUsed { get; set; }
+        public int TotalIdentifications { get; set; }
+        public int SuccessfulIdentifications { get; set; }
+        public double SuccessRate { get; set; }
+    }
+
+    public class ComplexTokenIdentificationResult
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public double Confidence { get; set; }
+        public Token? MatchedToken { get; set; }
+        public List<TokenMatch> AllMatches { get; set; } = new();
+    }
+
+    public class TokenMatch
+    {
+        public long TokenId { get; set; }
+        public string TokenName { get; set; } = string.Empty;
+        public double Confidence { get; set; }
+        public double DistanceSimilarity { get; set; }
+        public double ShapeSimilarity { get; set; }
+        public double TimingSimilarity { get; set; }
+        public double GeometricSimilarity { get; set; }
+        public Dictionary<string, double> MatchFactors { get; set; } = new();
+    }
+
+    public class ComplexTokenMatchDetail
+    {
+        public long TokenId { get; set; }
+        public string TokenName { get; set; } = string.Empty;
+        public double Confidence { get; set; }
+        public double DistanceSimilarity { get; set; }
+        public double ShapeSimilarity { get; set; }
+        public double TimingSimilarity { get; set; }
+        public double GeometricSimilarity { get; set; }
+        public Dictionary<string, double> MatchFactors { get; set; } = new();
     }
 
     [Table("TokenSignatures")]
@@ -85,6 +219,16 @@ namespace TechWebSol.Models
 
         [Column(TypeName = "nvarchar(max)")]
         public string? OriginalTouches { get; set; }
+
+        // Simplified properties for basic pattern matching
+        [Column(TypeName = "nvarchar(max)")]
+        public string? Distances { get; set; }
+
+        [Column(TypeName = "nvarchar(max)")]
+        public string? Angles { get; set; }
+
+        [Column(TypeName = "nvarchar(max)")]
+        public string? Center { get; set; }
     }
 
     [Table("StabilityInfo")]
@@ -212,31 +356,5 @@ namespace TechWebSol.Models
         public virtual TokenSignature TokenSignature { get; set; } = null!;
     }
 
-    /// <summary>
-    /// Result of token identification for complex system
-    /// </summary>
-    public class ComplexTokenIdentificationResult
-    {
-        public bool Success { get; set; }
-        public string Message { get; set; } = string.Empty;
-        public Token? MatchedToken { get; set; }
-        public double Confidence { get; set; }
-        public List<ComplexTokenMatchDetail> AllMatches { get; set; } = new();
-    }
-
-    /// <summary>
-    /// Details of a token match for complex system
-    /// </summary>
-    public class ComplexTokenMatchDetail
-    {
-        public long TokenId { get; set; }
-        public string TokenName { get; set; } = string.Empty;
-        public double Confidence { get; set; }
-        public double DistanceSimilarity { get; set; }
-        public double ShapeSimilarity { get; set; }
-        public double TimingSimilarity { get; set; }
-        public double GeometricSimilarity { get; set; }
-        public List<string> MatchFactors { get; set; } = new();
-    }
 
 }

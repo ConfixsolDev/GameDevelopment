@@ -23,7 +23,7 @@ namespace TechWebSol.Services.TokenManagement
                     return new PatternSimilarityResult
                     {
                         OverallSimilarity = 0,
-                        MatchFactors = new List<string> { "Touch count mismatch" }
+                        MatchFactors = new Dictionary<string, double> { { "Touch count mismatch", 0 } }
                     };
                 }
 
@@ -45,11 +45,11 @@ namespace TechWebSol.Services.TokenManagement
                                       (timingSimilarity * 0.2) + 
                                       (geometricSimilarity * 0.1);
 
-                var matchFactors = new List<string>();
-                if (distanceSimilarity > 90) matchFactors.Add("Excellent distance match");
-                if (shapeSimilarity > 90) matchFactors.Add("Excellent shape match");
-                if (timingSimilarity > 90) matchFactors.Add("Excellent timing match");
-                if (geometricSimilarity > 90) matchFactors.Add("Excellent geometric match");
+                var matchFactors = new Dictionary<string, double>();
+                if (distanceSimilarity > 90) matchFactors.Add("Excellent distance match", distanceSimilarity);
+                if (shapeSimilarity > 90) matchFactors.Add("Excellent shape match", shapeSimilarity);
+                if (timingSimilarity > 90) matchFactors.Add("Excellent timing match", timingSimilarity);
+                if (geometricSimilarity > 90) matchFactors.Add("Excellent geometric match", geometricSimilarity);
 
                 return new PatternSimilarityResult
                 {
@@ -241,28 +241,30 @@ namespace TechWebSol.Services.TokenManagement
                 var result = new PatternAnalysisResult
                 {
                     PatternType = signature.TouchCount == 1 ? "single" : "multi",
-                    Complexity = signature.TouchCount,
+                    Complexity = signature.TouchCount.ToString(),
                     Confidence = 0,
-                    Characteristics = new List<string>(),
-                    Metrics = new Dictionary<string, object>()
+                    Characteristics = string.Empty,
+                    Metrics = new List<PatternMetric>()
                 };
+
+                var characteristics = new List<string>();
 
                 // Analyze touch pattern
                 if (signature.TouchPattern != null)
                 {
-                    result.Characteristics.Add($"Touch count: {signature.TouchCount}");
-                    result.Characteristics.Add($"Pattern type: {signature.TouchPattern.Type}");
-                    result.Characteristics.Add($"Complexity: {signature.TouchPattern.Complexity}");
+                    characteristics.Add($"Touch count: {signature.TouchCount}");
+                    characteristics.Add($"Pattern type: {signature.TouchPattern.Type}");
+                    characteristics.Add($"Complexity: {signature.TouchPattern.Complexity}");
 
                     if (signature.TouchPattern.Distances != null)
                     {
                         var distances = JsonSerializer.Deserialize<double[]>(signature.TouchPattern.Distances) ?? new double[0];
                         if (distances.Length > 0)
                         {
-                            result.Metrics["AverageDistance"] = distances.Average();
-                            result.Metrics["MinDistance"] = distances.Min();
-                            result.Metrics["MaxDistance"] = distances.Max();
-                            result.Metrics["DistanceVariance"] = CalculateVariance(distances);
+                            result.Metrics.Add(new PatternMetric { Name = "AverageDistance", Value = distances.Average() });
+                            result.Metrics.Add(new PatternMetric { Name = "MinDistance", Value = distances.Min() });
+                            result.Metrics.Add(new PatternMetric { Name = "MaxDistance", Value = distances.Max() });
+                            result.Metrics.Add(new PatternMetric { Name = "DistanceVariance", Value = CalculateVariance(distances) });
                         }
                     }
                 }
@@ -271,16 +273,16 @@ namespace TechWebSol.Services.TokenManagement
                 if (signature.MultiTouchGeometry != null)
                 {
                     var geometry = signature.MultiTouchGeometry;
-                    result.Characteristics.Add($"Aspect ratio: {(double)geometry.AspectRatio:F2}");
-                    result.Characteristics.Add($"Bounding box: {(double)geometry.BoundingBoxWidth:F1}x{(double)geometry.BoundingBoxHeight:F1}");
-                    result.Characteristics.Add($"Area: {(double)geometry.BoundingBoxArea:F1}");
-                    result.Characteristics.Add($"Spread: {(double)geometry.Spread:F1}");
-                    result.Characteristics.Add($"Density: {(double)geometry.Density:F2}");
+                    characteristics.Add($"Aspect ratio: {(double)geometry.AspectRatio:F2}");
+                    characteristics.Add($"Bounding box: {(double)geometry.BoundingBoxWidth:F1}x{(double)geometry.BoundingBoxHeight:F1}");
+                    characteristics.Add($"Area: {(double)geometry.BoundingBoxArea:F1}");
+                    characteristics.Add($"Spread: {(double)geometry.Spread:F1}");
+                    characteristics.Add($"Density: {(double)geometry.Density:F2}");
 
-                    result.Metrics["AspectRatio"] = (double)geometry.AspectRatio;
-                    result.Metrics["BoundingBoxArea"] = (double)geometry.BoundingBoxArea;
-                    result.Metrics["Spread"] = (double)geometry.Spread;
-                    result.Metrics["Density"] = (double)geometry.Density;
+                    result.Metrics.Add(new PatternMetric { Name = "AspectRatio", Value = (double)geometry.AspectRatio });
+                    result.Metrics.Add(new PatternMetric { Name = "BoundingBoxArea", Value = (double)geometry.BoundingBoxArea });
+                    result.Metrics.Add(new PatternMetric { Name = "Spread", Value = (double)geometry.Spread });
+                    result.Metrics.Add(new PatternMetric { Name = "Density", Value = (double)geometry.Density });
                 }
 
                 // Analyze touch properties
@@ -289,20 +291,23 @@ namespace TechWebSol.Services.TokenManagement
                     var properties = signature.TouchProperties;
                     if (properties.HasRadius)
                     {
-                        result.Characteristics.Add($"Average radius: {(double)properties.AvgRadius:F2}");
-                        result.Metrics["AvgRadius"] = (double)properties.AvgRadius;
-                        result.Metrics["RadiusVariance"] = (double)properties.RadiusVariance;
+                        characteristics.Add($"Average radius: {(double)properties.AvgRadius:F2}");
+                        result.Metrics.Add(new PatternMetric { Name = "AvgRadius", Value = (double)properties.AvgRadius });
+                        result.Metrics.Add(new PatternMetric { Name = "RadiusVariance", Value = (double)properties.RadiusVariance });
                     }
 
                     if (properties.HasRotation)
                     {
-                        result.Characteristics.Add($"Average rotation: {(double)properties.AvgRotation:F1}°");
-                        result.Metrics["AvgRotation"] = (double)properties.AvgRotation;
+                        characteristics.Add($"Average rotation: {(double)properties.AvgRotation:F1}°");
+                        result.Metrics.Add(new PatternMetric { Name = "AvgRotation", Value = (double)properties.AvgRotation });
                     }
                 }
 
                 // Calculate overall confidence
                 result.Confidence = CalculatePatternConfidence(signature);
+                
+                // Set characteristics as joined string
+                result.Characteristics = string.Join("; ", characteristics);
 
                 return result;
             }
@@ -312,10 +317,10 @@ namespace TechWebSol.Services.TokenManagement
                 return new PatternAnalysisResult
                 {
                     PatternType = "unknown",
-                    Complexity = 0,
+                    Complexity = "0",
                     Confidence = 0,
-                    Characteristics = new List<string> { "Error analyzing pattern" },
-                    Metrics = new Dictionary<string, object>()
+                    Characteristics = "Error analyzing pattern",
+                    Metrics = new List<PatternMetric>()
                 };
             }
         }

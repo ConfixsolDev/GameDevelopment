@@ -40,7 +40,6 @@ namespace TechWebSol.Models
 
         // Navigation properties
         public virtual ICollection<Token> Tokens { get; set; } = new List<Token>();
-        public virtual ICollection<SimplifiedToken> SimplifiedTokens { get; set; } = new List<SimplifiedToken>();
         public virtual ICollection<TeamTokenGroupAssignment> TeamAssignments { get; set; } = new List<TeamTokenGroupAssignment>();
     }
 

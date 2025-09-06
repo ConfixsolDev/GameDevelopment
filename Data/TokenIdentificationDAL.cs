@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TechWebSol.Data;
 using TechWebSol.Models;
+using TechWebSol.Services;
 using TechWebSol.Services.TokenManagement;
 using System.Text.Json;
 
@@ -9,30 +10,24 @@ namespace TechWebSol.Data
     /// <summary>
     /// Unified Data Access Layer for Token Identification
     /// Provides a single, consistent API for token identification across all systems
-    /// Works with both complex and simplified token systems
+    /// Works with both complex and simplified token systems using single database context
     /// Team-based isolation ensures tokens are only accessible within the same team
     /// </summary>
     public class TokenIdentificationDAL
     {
-        private readonly ApplicationDbContext _complexContext;
-        private readonly SimplifiedApplicationDbContext _simplifiedContext;
-        private readonly IPatternMatchingService _complexPatternService;
-        private readonly ISimplifiedPatternMatchingService _simplifiedPatternService;
+        private readonly ApplicationDbContext _context;
+        private readonly IPatternMatchingService _patternService;
         private readonly IUserSessionService _userSessionService;
         private readonly ILogger<TokenIdentificationDAL> _logger;
 
         public TokenIdentificationDAL(
-            ApplicationDbContext complexContext,
-            SimplifiedApplicationDbContext simplifiedContext,
-            IPatternMatchingService complexPatternService,
-            ISimplifiedPatternMatchingService simplifiedPatternService,
+            ApplicationDbContext context,
+            IPatternMatchingService patternService,
             IUserSessionService userSessionService,
             ILogger<TokenIdentificationDAL> logger)
         {
-            _complexContext = complexContext;
-            _simplifiedContext = simplifiedContext;
-            _complexPatternService = complexPatternService;
-            _simplifiedPatternService = simplifiedPatternService;
+            _context = context;
+            _patternService = patternService;
             _userSessionService = userSessionService;
             _logger = logger;
         }
@@ -49,7 +44,7 @@ namespace TechWebSol.Data
             }
 
             // Get user details from database to get TeamCode and SubTeamCode
-            var user = _complexContext.Users.FirstOrDefault(u => u.Id == currentUser.ApplicationUserId);
+            var user = _context.Users.FirstOrDefault(u => u.Id == currentUser.ApplicationUserId);
             if (user == null)
             {
                 throw new UnauthorizedAccessException("User not found");
@@ -70,6 +65,20 @@ namespace TechWebSol.Data
             }
 
             return currentUser.ApplicationUserId;
+        }
+
+        /// <summary>
+        /// Get current user name
+        /// </summary>
+        private string GetCurrentUserName()
+        {
+            var currentUser = _userSessionService.GetCurrentUser();
+            if (currentUser == null)
+            {
+                return "Unknown User";
+            }
+
+            return currentUser.FullName;
         }
 
         /// <summary>
@@ -98,26 +107,74 @@ namespace TechWebSol.Data
                     };
                 }
 
-                // Try simplified system first (faster and more reliable for basic patterns)
-                if (preferSimplified)
+                // Get active game sessions and bindings for this team
+                var activeSessionIds = await _context.GameSessions.Where(s => s.Status == "Active").Select(s => s.Id).ToListAsync();
+                var boundGroupIds = await _context.TokenBindings
+                    .Where(b => b.TeamId == teamId && activeSessionIds.Contains(b.GameSessionId) && b.IsActive)
+                    .Select(b => b.TokenGroupId)
+                    .ToListAsync();
+
+                var teamTokens = await _context.Tokens
+                    .Include(t => t.Signature)
+                    .Where(t => boundGroupIds.Contains(t.TokenGroupId.Value) && t.IsActive)
+                    .ToListAsync();
+
+                if (!teamTokens.Any())
                 {
-                    var simplifiedResult = await TrySimplifiedIdentification(touchPoints, confidenceThreshold, teamId);
-                    if (simplifiedResult.Success)
+                    return new UnifiedTokenIdentificationResult
                     {
-                        return simplifiedResult;
+                        Success = false,
+                        Message = "No tokens found for this team in active game sessions",
+                        Confidence = 0,
+                        TokenId = null,
+                        TokenName = null,
+                        SystemUsed = "unified"
+                    };
+                }
+
+                // Calculate geometric data for pattern matching
+                var geometricData = await CalculateGeometricDataAsync(touchPoints);
+                var signature = ConvertToTokenSignature(geometricData);
+
+                // Use pattern matching service
+                var result = await _patternService.IdentifyTokenAsync(signature, confidenceThreshold);
+                
+                if (result.Success)
+                {
+                    var matchedToken = teamTokens.FirstOrDefault(t => t.Id == result.MatchedToken?.Id);
+                    if (matchedToken != null)
+                    {
+                        return new UnifiedTokenIdentificationResult
+                        {
+                            Success = true,
+                            Message = "Token identified successfully",
+                            Confidence = result.Confidence,
+                            TokenId = matchedToken.Id,
+                            TokenName = matchedToken.Name,
+                            SystemUsed = "unified",
+                            MatchDetails = result.AllMatches?.Select(m => new UnifiedTokenMatchDetail
+                            {
+                                TokenId = m.TokenId,
+                                TokenName = m.TokenName,
+                                Confidence = m.Confidence,
+                                DistanceSimilarity = m.DistanceSimilarity,
+                                AngleSimilarity = m.ShapeSimilarity, // Map ShapeSimilarity to AngleSimilarity
+                                CenterSimilarity = m.GeometricSimilarity, // Map GeometricSimilarity to CenterSimilarity
+                                OverallSimilarity = m.Confidence
+                            }).ToList()
+                        };
                     }
                 }
 
-                // Fallback to complex system
-                var complexResult = await TryComplexIdentification(touchPoints, confidenceThreshold, teamId);
-                if (complexResult.Success)
+                return new UnifiedTokenIdentificationResult
                 {
-                    return complexResult;
-                }
-
-                // If both systems fail, return the best result
-                var simplifiedFallback = await TrySimplifiedIdentification(touchPoints, confidenceThreshold, teamId);
-                return simplifiedFallback;
+                    Success = false,
+                    Message = "No matching token found",
+                    Confidence = result.Confidence,
+                    TokenId = null,
+                    TokenName = null,
+                    SystemUsed = "unified"
+                };
             }
             catch (Exception ex)
             {
@@ -132,118 +189,82 @@ namespace TechWebSol.Data
         }
 
         /// <summary>
-        /// Try identification using simplified system
+        /// Calculate geometric data from touch points
         /// </summary>
-        private async Task<UnifiedTokenIdentificationResult> TrySimplifiedIdentification(
-            double[][] touchPoints, 
-            double confidenceThreshold,
-            string teamId)
+        private async Task<GeometricData> CalculateGeometricDataAsync(double[][] touchPoints)
         {
-            try
+            // This is a simplified calculation - you can enhance this based on your needs
+            var distances = new List<double>();
+            var angles = new List<double>();
+            
+            // Calculate distances between consecutive points
+            for (int i = 0; i < touchPoints.Length - 1; i++)
             {
-                // Calculate geometric data
-                var geometricData = await _simplifiedPatternService.CalculateGeometricDataAsync(touchPoints);
-                
-                // Get team-specific tokens for identification
-                var teamTokens = await _simplifiedContext.Tokens
-                    .Include(t => t.Signature)
-                    .Where(t => t.TeamId == teamId && t.IsActive)
-                    .ToListAsync();
-
-                if (!teamTokens.Any())
-                {
-                    return new UnifiedTokenIdentificationResult
-                    {
-                        Success = false,
-                        Message = "No tokens found for your team",
-                        SystemUsed = "simplified"
-                    };
-                }
-
-                // Identify token using team-specific tokens
-                var result = await _simplifiedPatternService.IdentifyTokenAsync(geometricData, confidenceThreshold, teamTokens);
-                
-                return new UnifiedTokenIdentificationResult
-                {
-                    Success = result.Success,
-                    Message = result.Message,
-                    Confidence = result.Confidence,
-                    SystemUsed = "simplified",
-                    MatchedTokenId = result.MatchedToken?.Id,
-                    MatchedTokenName = result.MatchedToken?.Name,
-                    AllMatches = result.AllMatches.Select(m => new UnifiedTokenMatch
-                    {
-                        TokenId = m.TokenId,
-                        TokenName = m.TokenName,
-                        Confidence = m.Confidence,
-                        DistanceSimilarity = m.DistanceSimilarity,
-                        ShapeSimilarity = m.ShapeSimilarity,
-                        TimingSimilarity = m.TimingSimilarity,
-                        GeometricSimilarity = m.GeometricSimilarity,
-                        MatchFactors = m.MatchFactors
-                    }).ToList(),
-                    GeometricData = geometricData
-                };
+                var distance = Math.Sqrt(
+                    Math.Pow(touchPoints[i + 1][0] - touchPoints[i][0], 2) +
+                    Math.Pow(touchPoints[i + 1][1] - touchPoints[i][1], 2)
+                );
+                distances.Add(distance);
             }
-            catch (Exception ex)
+            
+            // Calculate angles between consecutive line segments
+            for (int i = 0; i < touchPoints.Length - 2; i++)
             {
-                _logger.LogWarning(ex, "Simplified identification failed, trying complex system");
-                return new UnifiedTokenIdentificationResult
-                {
-                    Success = false,
-                    Message = "Simplified identification failed",
-                    SystemUsed = "simplified_failed"
-                };
+                var angle = CalculateAngle(
+                    touchPoints[i], touchPoints[i + 1], touchPoints[i + 2]
+                );
+                angles.Add(angle);
             }
+            
+            // Calculate center point
+            var centerX = touchPoints.Average(p => p[0]);
+            var centerY = touchPoints.Average(p => p[1]);
+            var center = new CenterPoint { X = centerX, Y = centerY };
+            
+            return new GeometricData
+            {
+                Distances = distances.ToArray(),
+                Angles = angles.ToArray(),
+                Center = center,
+                TouchCount = touchPoints.Length
+            };
         }
 
         /// <summary>
-        /// Try identification using complex system
+        /// Calculate angle between three points
         /// </summary>
-        private async Task<UnifiedTokenIdentificationResult> TryComplexIdentification(
-            double[][] touchPoints, 
-            double confidenceThreshold)
+        private double CalculateAngle(double[] p1, double[] p2, double[] p3)
         {
-            try
-            {
-                // Convert touch points to complex signature format
-                var signature = await ConvertToComplexSignature(touchPoints);
-                
-                // Identify token
-                var result = await _complexPatternService.IdentifyTokenAsync(signature, confidenceThreshold);
-                
-                return new UnifiedTokenIdentificationResult
-                {
-                    Success = result.Success,
-                    Message = result.Message,
-                    Confidence = result.Confidence,
-                    SystemUsed = "complex",
-                    MatchedTokenId = result.MatchedToken?.Id,
-                    MatchedTokenName = result.MatchedToken?.Name,
-                    AllMatches = result.AllMatches.Select(m => new UnifiedTokenMatch
-                    {
-                        TokenId = m.TokenId,
-                        TokenName = m.TokenName,
-                        Confidence = m.Confidence,
-                        DistanceSimilarity = m.DistanceSimilarity,
-                        ShapeSimilarity = m.ShapeSimilarity,
-                        TimingSimilarity = m.TimingSimilarity,
-                        GeometricSimilarity = m.GeometricSimilarity,
-                        MatchFactors = m.MatchFactors
-                    }).ToList()
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Complex identification failed");
-                return new UnifiedTokenIdentificationResult
-                {
-                    Success = false,
-                    Message = "Complex identification failed",
-                    SystemUsed = "complex_failed"
-                };
-            }
+            var v1 = new double[] { p2[0] - p1[0], p2[1] - p1[1] };
+            var v2 = new double[] { p3[0] - p2[0], p3[1] - p2[1] };
+            
+            var dot = v1[0] * v2[0] + v1[1] * v2[1];
+            var mag1 = Math.Sqrt(v1[0] * v1[0] + v1[1] * v1[1]);
+            var mag2 = Math.Sqrt(v2[0] * v2[0] + v2[1] * v2[1]);
+            
+            if (mag1 == 0 || mag2 == 0) return 0;
+            
+            var cosAngle = dot / (mag1 * mag2);
+            cosAngle = Math.Max(-1, Math.Min(1, cosAngle)); // Clamp to valid range
+            
+            return Math.Acos(cosAngle) * 180 / Math.PI; // Convert to degrees
         }
+
+        /// <summary>
+        /// Convert geometric data to TokenSignature
+        /// </summary>
+        private TokenSignature ConvertToTokenSignature(GeometricData geometricData)
+        {
+            return new TokenSignature
+            {
+                TouchCount = geometricData.TouchCount,
+                Distances = System.Text.Json.JsonSerializer.Serialize(geometricData.Distances),
+                Angles = System.Text.Json.JsonSerializer.Serialize(geometricData.Angles),
+                Center = System.Text.Json.JsonSerializer.Serialize(new double[] { geometricData.Center.X, geometricData.Center.Y }),
+                Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+            };
+        }
+
 
         /// <summary>
         /// Convert touch points to complex signature format
@@ -393,17 +414,8 @@ namespace TechWebSol.Data
                 request.TeamId = teamId;
                 request.CreatedByUserId = userId;
 
-                // Determine which system to use based on request or auto-detect
-                var systemToUse = DetermineSystemToUse(request);
-                
-                if (systemToUse == "simplified")
-                {
-                    return await SaveToSimplifiedSystem(request);
-                }
-                else
-                {
-                    return await SaveToComplexSystem(request);
-                }
+                // Use unified system for all tokens
+                return await SaveToUnifiedSystem(request);
             }
             catch (Exception ex)
             {
@@ -418,141 +430,13 @@ namespace TechWebSol.Data
         }
 
         /// <summary>
-        /// Save token to simplified system
+        /// Save token to unified system
         /// </summary>
-        private async Task<UnifiedSaveResult> SaveToSimplifiedSystem(UnifiedTokenSaveRequest request)
+        private async Task<UnifiedSaveResult> SaveToUnifiedSystem(UnifiedTokenSaveRequest request)
         {
             try
             {
-                using var transaction = await _simplifiedContext.Database.BeginTransactionAsync();
-                
-                try
-                {
-                    SimplifiedToken token;
-                    SimplifiedTokenSignature signature;
-
-                    if (request.TokenId.HasValue)
-                    {
-                        // Update existing token
-                        token = await _simplifiedContext.Tokens
-                            .Include(t => t.Signature)
-                            .FirstOrDefaultAsync(t => t.Id == request.TokenId.Value);
-
-                        if (token == null)
-                        {
-                            return new UnifiedSaveResult
-                            {
-                                Success = false,
-                                Message = "Token not found for update",
-                                TokenId = null
-                            };
-                        }
-
-                        // Update token properties
-                        token.Name = request.Name;
-                        token.Description = request.Description;
-                        token.Category = request.Category;
-                        token.IsActive = request.IsActive;
-
-                        // Update or create signature
-                        if (token.Signature != null)
-                        {
-                            signature = token.Signature;
-                        }
-                        else
-                        {
-                            signature = new SimplifiedTokenSignature
-                            {
-                                TokenId = token.Id,
-                                Token = token
-                            };
-                            token.Signature = signature;
-                        }
-                    }
-                    else
-                    {
-                        // Create new token
-                        var tokenId = request.TokenId ?? GenerateTokenId();
-                        
-                        token = new SimplifiedToken
-                        {
-                            Id = tokenId,
-                            Name = request.Name,
-                            Description = request.Description,
-                            Category = request.Category,
-                            IsActive = request.IsActive,
-                            CreatedAt = DateTime.UtcNow,
-                            UsageCount = 0,
-                            TeamId = request.TeamId,
-                            CreatedByUserId = request.CreatedByUserId,
-                            TokenGroupId = request.TokenGroupId
-                        };
-
-                        signature = new SimplifiedTokenSignature
-                        {
-                            TokenId = tokenId,
-                            Token = token
-                        };
-
-                        token.Signature = signature;
-                        _simplifiedContext.Tokens.Add(token);
-                    }
-
-                    // Update signature with geometric data
-                    if (request.TouchPoints != null && request.TouchPoints.Length >= 2)
-                    {
-                        var geometricData = await _simplifiedPatternService.CalculateGeometricDataAsync(request.TouchPoints);
-                        
-                        signature.TouchCount = request.TouchPoints.Length;
-                        signature.Distances = JsonSerializer.Serialize(geometricData.Distances);
-                        signature.Angles = JsonSerializer.Serialize(geometricData.Angles);
-                        signature.Center = JsonSerializer.Serialize(geometricData.Center);
-
-                        if (token.Signature == null)
-                        {
-                            _simplifiedContext.TokenSignatures.Add(signature);
-                        }
-                    }
-
-                    await _simplifiedContext.SaveChangesAsync();
-                    await transaction.CommitAsync();
-
-                    _logger.LogInformation("Successfully saved token to simplified system: {TokenId}", token.Id);
-
-                    return new UnifiedSaveResult
-                    {
-                        Success = true,
-                        Message = "Token saved successfully to simplified system",
-                        TokenId = token.Id,
-                        SystemUsed = "simplified"
-                    };
-                }
-                catch
-                {
-                    await transaction.RollbackAsync();
-                    throw;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error saving token to simplified system");
-                return new UnifiedSaveResult
-                {
-                    Success = false,
-                    Message = "Error saving token to simplified system",
-                    TokenId = null
-                };
-            }
-        }
-
-        /// <summary>
-        /// Save token to complex system
-        /// </summary>
-        private async Task<UnifiedSaveResult> SaveToComplexSystem(UnifiedTokenSaveRequest request)
-        {
-            try
-            {
-                using var transaction = await _complexContext.Database.BeginTransactionAsync();
+                using var transaction = await _context.Database.BeginTransactionAsync();
                 
                 try
                 {
@@ -562,7 +446,7 @@ namespace TechWebSol.Data
                     if (request.TokenId.HasValue)
                     {
                         // Update existing token
-                        token = await _complexContext.Tokens
+                        token = await _context.Tokens
                             .Include(t => t.Signature)
                             .FirstOrDefaultAsync(t => t.Id == request.TokenId.Value);
 
@@ -614,6 +498,7 @@ namespace TechWebSol.Data
                             TrainingConsistency = 0,
                             TeamId = request.TeamId,
                             CreatedByUserId = request.CreatedByUserId,
+                            CreatedByUserName = GetCurrentUserName(),
                             TokenGroupId = request.TokenGroupId
                         };
 
@@ -624,33 +509,36 @@ namespace TechWebSol.Data
                         };
 
                         token.Signature = signature;
-                        _complexContext.Tokens.Add(token);
+                        _context.Tokens.Add(token);
                     }
 
-                    // Update signature with complex data
+                    // Update signature with geometric data
                     if (request.TouchPoints != null && request.TouchPoints.Length >= 2)
                     {
-                        signature = await ConvertToComplexSignature(request.TouchPoints);
-                        signature.TokenId = token.Id;
-                        signature.Token = token;
+                        var geometricData = await CalculateGeometricDataAsync(request.TouchPoints);
+                        
+                        signature.TouchCount = request.TouchPoints.Length;
+                        signature.Distances = JsonSerializer.Serialize(geometricData.Distances);
+                        signature.Angles = JsonSerializer.Serialize(geometricData.Angles);
+                        signature.Center = JsonSerializer.Serialize(new double[] { geometricData.Center.X, geometricData.Center.Y });
 
                         if (token.Signature == null)
                         {
-                            _complexContext.TokenSignatures.Add(signature);
+                            _context.TokenSignatures.Add(signature);
                         }
                     }
 
-                    await _complexContext.SaveChangesAsync();
+                    await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
 
-                    _logger.LogInformation("Successfully saved token to complex system: {TokenId}", token.Id);
+                    _logger.LogInformation("Successfully saved token to simplified system: {TokenId}", token.Id);
 
                     return new UnifiedSaveResult
                     {
                         Success = true,
-                        Message = "Token saved successfully to complex system",
+                        Message = "Token saved successfully to simplified system",
                         TokenId = token.Id,
-                        SystemUsed = "complex"
+                        SystemUsed = "simplified"
                     };
                 }
                 catch
@@ -661,15 +549,16 @@ namespace TechWebSol.Data
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error saving token to complex system");
+                _logger.LogError(ex, "Error saving token to simplified system");
                 return new UnifiedSaveResult
                 {
                     Success = false,
-                    Message = "Error saving token to complex system",
+                    Message = "Error saving token to simplified system",
                     TokenId = null
                 };
             }
         }
+
 
         /// <summary>
         /// Validate save request
@@ -703,26 +592,10 @@ namespace TechWebSol.Data
         /// <summary>
         /// Determine which system to use for saving
         /// </summary>
-        private string DetermineSystemToUse(UnifiedTokenSaveRequest request)
+        private async Task<string> DetermineSystemToUse(UnifiedTokenSaveRequest request)
         {
-            // If explicitly specified, use that
-            if (!string.IsNullOrEmpty(request.PreferredSystem))
-            {
-                return request.PreferredSystem;
-            }
-
-            // If updating existing token, use the same system
-            if (request.TokenId.HasValue)
-            {
-                var existingToken = GetTokenByIdAsync(request.TokenId.Value).Result;
-                if (existingToken != null)
-                {
-                    return existingToken.System;
-                }
-            }
-
-            // Default to simplified system for new tokens (faster and more reliable)
-            return "simplified";
+            // Always use unified system
+            return "unified";
         }
 
         /// <summary>
@@ -745,7 +618,7 @@ namespace TechWebSol.Data
                 var groupedTokens = new List<GroupedTeamTokenInfo>();
 
                 // Get active game sessions
-                var activeSessions = await _complexContext.GameSessions
+                var activeSessions = await _context.GameSessions
                     .Where(s => s.Status == "Active")
                     .ToListAsync();
 
@@ -756,7 +629,7 @@ namespace TechWebSol.Data
 
                 // Get token bindings for this team in active sessions
                 var activeSessionIds = activeSessions.Select(s => s.Id).ToList();
-                var teamBindings = await _complexContext.TokenBindings
+                var teamBindings = await _context.TokenBindings
                     .Where(b => b.TeamId == teamId && activeSessionIds.Contains(b.GameSessionId) && b.IsActive)
                     .ToListAsync();
 
@@ -767,7 +640,7 @@ namespace TechWebSol.Data
 
                 // Get token groups for the bindings
                 var boundGroupIds = teamBindings.Select(b => b.TokenGroupId).ToList();
-                var tokenGroups = await _complexContext.TokenGroups
+                var tokenGroups = await _context.TokenGroups
                     .Where(g => boundGroupIds.Contains(g.Id) && g.IsActive)
                     .OrderBy(g => g.Name)
                     .ToListAsync();
@@ -777,40 +650,21 @@ namespace TechWebSol.Data
                     var binding = teamBindings.First(b => b.TokenGroupId == group.Id);
                     var groupTokens = new List<TeamTokenInfo>();
 
-                    // Get simplified tokens for this group
-                    var simplifiedTokens = await _simplifiedContext.Tokens
+                    // Get all tokens for this group (both simplified and complex are now in same table)
+                    var allTokens = await _context.Tokens
                         .Include(t => t.Signature)
                         .Where(t => t.TokenGroupId == group.Id && t.IsActive)
                         .OrderBy(t => t.Name)
                         .ToListAsync();
 
-                    groupTokens.AddRange(simplifiedTokens.Select(t => new TeamTokenInfo
+                    groupTokens.AddRange(allTokens.Select(t => new TeamTokenInfo
                     {
                         Id = t.Id,
                         Name = t.Name,
                         Description = t.Description,
                         Category = t.Category,
                         TouchCount = t.Signature?.TouchCount ?? 0,
-                        System = "simplified",
-                        CreatedAt = t.CreatedAt,
-                        UsageCount = t.UsageCount
-                    }));
-
-                    // Get complex tokens for this group
-                    var complexTokens = await _complexContext.Tokens
-                        .Include(t => t.Signature)
-                        .Where(t => t.TokenGroupId == group.Id && t.IsActive)
-                        .OrderBy(t => t.Name)
-                        .ToListAsync();
-
-                    groupTokens.AddRange(complexTokens.Select(t => new TeamTokenInfo
-                    {
-                        Id = t.Id,
-                        Name = t.Name,
-                        Description = t.Description,
-                        Category = t.Category,
-                        TouchCount = t.Signature?.TouchCount ?? 0,
-                        System = "complex",
+                        System = "unified", // Now using unified system
                         CreatedAt = t.CreatedAt,
                         UsageCount = t.UsageCount
                     }));
@@ -839,6 +693,105 @@ namespace TechWebSol.Data
             }
         }
 
+        /// <summary>
+        /// UNIFIED DELETE FUNCTION - The single point for all token deletion operations
+        /// Handles token deletion and cleanup across both systems
+        /// Automatically handles team context and related data cleanup
+        /// </summary>
+        public async Task<UnifiedDeleteResult> DeleteTokenAsync(long tokenId)
+        {
+            try
+            {
+                var teamId = GetCurrentTeamId();
+                var userId = GetCurrentUserId();
+                
+                _logger.LogInformation("Starting unified token delete operation for token: {TokenId} in team: {TeamId}", 
+                    tokenId, teamId);
+
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                
+                try
+                {
+                    // Find the token and verify it belongs to the current team
+                    var token = await _context.Tokens
+                        .Include(t => t.Signature)
+                        .FirstOrDefaultAsync(t => t.Id == tokenId && t.TeamId == teamId);
+
+                    if (token == null)
+                    {
+                        return new UnifiedDeleteResult
+                        {
+                            Success = false,
+                            Message = "Token not found or access denied",
+                            TokenId = tokenId
+                        };
+                    }
+
+                    // Delete associated map markers first
+                    var markers = await _context.MapMarkers
+                        .Where(m => m.TokenId == tokenId)
+                        .ToListAsync();
+                    
+                    if (markers.Any())
+                    {
+                        _context.MapMarkers.RemoveRange(markers);
+                        _logger.LogInformation("Deleted {Count} map markers for token {TokenId}", markers.Count, tokenId);
+                    }
+
+                    // Delete token signature and related data
+                    if (token.Signature != null)
+                    {
+                        // Delete related signature data
+                        if (token.Signature.Stability != null)
+                            _context.StabilityInfo.Remove(token.Signature.Stability);
+                        
+                        if (token.Signature.TouchProperties != null)
+                            _context.TouchGeometry.Remove(token.Signature.TouchProperties);
+                        
+                        if (token.Signature.TouchPattern != null)
+                            _context.TouchPatterns.Remove(token.Signature.TouchPattern);
+                        
+                        if (token.Signature.MultiTouchGeometry != null)
+                            _context.MultiTouchGeometry.Remove(token.Signature.MultiTouchGeometry);
+
+                        // Delete the signature itself
+                        _context.TokenSignatures.Remove(token.Signature);
+                    }
+
+                    // Delete the token
+                    _context.Tokens.Remove(token);
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    _logger.LogInformation("Successfully deleted token {TokenId} and all related data", tokenId);
+
+                    return new UnifiedDeleteResult
+                    {
+                        Success = true,
+                        Message = $"Token '{token.Name}' deleted successfully",
+                        TokenId = tokenId,
+                        DeletedMarkersCount = markers.Count
+                    };
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during unified token delete operation for token {TokenId}", tokenId);
+                return new UnifiedDeleteResult
+                {
+                    Success = false,
+                    Message = "Error deleting token",
+                    TokenId = tokenId
+                };
+            }
+        }
+
     }
 
     /// <summary>
@@ -854,6 +807,11 @@ namespace TechWebSol.Data
         public string? MatchedTokenName { get; set; }
         public List<UnifiedTokenMatch> AllMatches { get; set; } = new();
         public GeometricData? GeometricData { get; set; }
+        
+        // Additional properties for compatibility
+        public long? TokenId { get; set; }
+        public string? TokenName { get; set; }
+        public List<UnifiedTokenMatchDetail>? MatchDetails { get; set; }
     }
 
     /// <summary>
@@ -939,5 +897,57 @@ namespace TechWebSol.Data
         public long? TokenId { get; set; }
         public string? SystemUsed { get; set; }
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Unified delete result
+    /// </summary>
+    public class UnifiedDeleteResult
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public long TokenId { get; set; }
+        public int DeletedMarkersCount { get; set; }
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Team token information for dropdowns
+    /// </summary>
+    public class TeamTokenInfo
+    {
+        public long Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string? Category { get; set; }
+        public int TouchCount { get; set; }
+        public string System { get; set; } = string.Empty; // "simplified" or "complex"
+        public DateTime CreatedAt { get; set; }
+        public int UsageCount { get; set; }
+    }
+
+    /// <summary>
+    /// Grouped team token information for organized dropdowns
+    /// </summary>
+    public class GroupedTeamTokenInfo
+    {
+        public int GroupId { get; set; }
+        public string GroupName { get; set; } = string.Empty;
+        public string GroupCode { get; set; } = string.Empty;
+        public string? GroupCategory { get; set; }
+        public string? EntityName { get; set; } // e.g., "Company A", "Brigade 1"
+        public string? EntityCode { get; set; } // e.g., "COMP_A", "BRIG_1"
+        public List<TeamTokenInfo> Tokens { get; set; } = new();
+    }
+
+    public class UnifiedTokenMatchDetail
+    {
+        public long TokenId { get; set; }
+        public string TokenName { get; set; } = string.Empty;
+        public double Confidence { get; set; }
+        public double DistanceSimilarity { get; set; }
+        public double AngleSimilarity { get; set; }
+        public double CenterSimilarity { get; set; }
+        public double OverallSimilarity { get; set; }
     }
 }

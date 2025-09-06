@@ -301,17 +301,13 @@ namespace TechWebSol.Controllers.TokenManagement
         /// </summary>
         private async Task MoveTokensToFreeTokens(TokenBinding binding)
         {
-            // Get tokens from the bound group
-            var simplifiedTokens = await _context.Tokens
+            // Get all tokens from the bound group
+            var allTokens = await _context.Tokens
                 .Where(t => t.TokenGroupId == binding.TokenGroupId && t.IsActive)
                 .ToListAsync();
 
-            var complexTokens = await _context.Tokens
-                .Where(t => t.TokenGroupId == binding.TokenGroupId && t.IsActive)
-                .ToListAsync();
-
-            // Move simplified tokens to free tokens
-            foreach (var token in simplifiedTokens)
+            // Move all tokens to free tokens
+            foreach (var token in allTokens)
             {
                 var freeToken = new FreeToken
                 {
@@ -320,28 +316,7 @@ namespace TechWebSol.Controllers.TokenManagement
                     Description = token.Description,
                     Category = token.Category,
                     TouchCount = token.Signature?.TouchCount ?? 0,
-                    System = "simplified",
-                    CreatedAt = token.CreatedAt,
-                    LastUsed = token.LastUsed,
-                    UsageCount = token.UsageCount,
-                    CreatedByUserId = token.CreatedByUserId,
-                    CreatedByUserName = token.CreatedByUserName
-                };
-
-                _context.FreeTokens.Add(freeToken);
-            }
-
-            // Move complex tokens to free tokens
-            foreach (var token in complexTokens)
-            {
-                var freeToken = new FreeToken
-                {
-                    Id = token.Id,
-                    Name = token.Name,
-                    Description = token.Description,
-                    Category = token.Category,
-                    TouchCount = token.Signature?.TouchCount ?? 0,
-                    System = "complex",
+                    System = "unified", // Now using unified system
                     CreatedAt = token.CreatedAt,
                     LastUsed = token.LastUsed,
                     UsageCount = token.UsageCount,

@@ -37,18 +37,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 errorNumbersToAdd: null);
         }));
 
-// Add simplified database context
-builder.Services.AddDbContext<SimplifiedApplicationDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("ApplicationDbContext")
-        ?? throw new InvalidOperationException("Connection string 'ApplicationDbContext' not found."),
-        sqlServerOptionsAction: sqlOptions =>
-        {
-            sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 5,
-                maxRetryDelay: TimeSpan.FromSeconds(30),
-                errorNumbersToAdd: null);
-        }));
 
 // Configure Identity
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
@@ -69,12 +57,6 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";
     options.ExpireTimeSpan = TimeSpan.FromMinutes(300);
-});
-
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-.AddCookie(options =>
-{
-    options.LoginPath = "/Account/Login";
 });
 
 // MVC, JSON, and Custom Configurations
@@ -133,7 +115,6 @@ builder.Services.AddScoped<IPatternMatchingService, PatternMatchingService>();
 builder.Services.AddScoped<PatternAnalysisEngine>();
 
 // Simplified Pattern Matching Services
-builder.Services.AddScoped<ISimplifiedPatternMatchingService, SimplifiedPatternMatchingService>();
 
 // Unified Token Identification DAL
 builder.Services.AddScoped<TokenIdentificationDAL>();

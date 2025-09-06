@@ -48,7 +48,14 @@ namespace TechWebSol.Services.TokenManagement
 
                 var bestMatch = new TokenMatch
                 {
+                    TokenId = 0,
+                    TokenName = string.Empty,
                     Confidence = 0,
+                    DistanceSimilarity = 0,
+                    ShapeSimilarity = 0,
+                    TimingSimilarity = 0,
+                    GeometricSimilarity = 0,
+                    MatchFactors = new Dictionary<string, double>(),
                     Token = null
                 };
 
@@ -78,7 +85,14 @@ namespace TechWebSol.Services.TokenManagement
                     {
                         bestMatch = new TokenMatch
                         {
+                            TokenId = token.Id,
+                            TokenName = token.Name,
                             Confidence = similarityResult.OverallSimilarity,
+                            DistanceSimilarity = similarityResult.DistanceSimilarity,
+                            ShapeSimilarity = similarityResult.ShapeSimilarity,
+                            TimingSimilarity = similarityResult.TimingSimilarity,
+                            GeometricSimilarity = similarityResult.GeometricSimilarity,
+                            MatchFactors = similarityResult.MatchFactors,
                             Token = token,
                             MatchDetails = matchDetail
                         };
@@ -98,7 +112,18 @@ namespace TechWebSol.Services.TokenManagement
                     Success = bestMatch.Token != null,
                     MatchedToken = bestMatch.Token,
                     Confidence = bestMatch.Confidence,
-                    AllMatches = matchDetails.OrderByDescending(m => m.Confidence).ToList(),
+                    AllMatches = matchDetails.OrderByDescending(m => m.Confidence)
+                        .Select(m => new Models.TokenMatch
+                        {
+                            TokenId = m.TokenId,
+                            TokenName = m.TokenName,
+                            Confidence = m.Confidence,
+                            DistanceSimilarity = m.DistanceSimilarity,
+                            ShapeSimilarity = m.ShapeSimilarity,
+                            TimingSimilarity = m.TimingSimilarity,
+                            GeometricSimilarity = m.GeometricSimilarity,
+                            MatchFactors = m.MatchFactors
+                        }).ToList(),
                     Message = bestMatch.Token != null 
                         ? $"Token '{bestMatch.Token.Name}' identified with {bestMatch.Confidence:F1}% confidence"
                         : $"No token found above {confidenceThreshold}% confidence threshold"
@@ -140,10 +165,10 @@ namespace TechWebSol.Services.TokenManagement
                 return new PatternAnalysisResult
                 {
                     PatternType = "unknown",
-                    Complexity = 0,
+                    Complexity = "0",
                     Confidence = 0,
-                    Characteristics = new List<string> { "Error analyzing pattern" },
-                    Metrics = new Dictionary<string, object>()
+                    Characteristics = "Error analyzing pattern",
+                    Metrics = new List<PatternMetric>()
                 };
             }
         }
@@ -260,7 +285,14 @@ namespace TechWebSol.Services.TokenManagement
 
         private class TokenMatch
         {
+            public long TokenId { get; set; }
+            public string TokenName { get; set; } = string.Empty;
             public double Confidence { get; set; }
+            public double DistanceSimilarity { get; set; }
+            public double ShapeSimilarity { get; set; }
+            public double TimingSimilarity { get; set; }
+            public double GeometricSimilarity { get; set; }
+            public Dictionary<string, double> MatchFactors { get; set; } = new();
             public Token? Token { get; set; }
             public ComplexTokenMatchDetail? MatchDetails { get; set; }
         }

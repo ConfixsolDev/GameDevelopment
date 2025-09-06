@@ -8,10 +8,12 @@ namespace TechWebSol.Services.TokenManagement
     public class TokenRepository: ITokenRepository
     {
         private readonly ApplicationDbContext _context;
+        private readonly TokenIdentificationDAL _tokenDAL;
 
-        public TokenRepository(ApplicationDbContext context)
+        public TokenRepository(ApplicationDbContext context, TokenIdentificationDAL tokenDAL)
         {
             _context = context;
+            _tokenDAL = tokenDAL;
         }
 
         public async Task<IEnumerable<Token>> GetAllTokensAsync()
@@ -59,26 +61,62 @@ namespace TechWebSol.Services.TokenManagement
 
         public async Task<Token> CreateTokenAsync(Token token)
         {
-            _context.Tokens.Add(token);
-            await _context.SaveChangesAsync();
-            return token;
+            // Convert Token to UnifiedTokenSaveRequest and use unified DAL
+            var request = new UnifiedTokenSaveRequest
+            {
+                Name = token.Name,
+                Description = token.Description,
+                Category = token.Category,
+                IsActive = token.IsActive,
+                TokenGroupId = token.TokenGroupId,
+                // Note: TouchPoints would need to be provided separately for pattern creation
+                // This method assumes the token is already created with signature
+            };
+
+            var result = await _tokenDAL.SaveTokenAsync(request);
+            
+            if (!result.Success)
+            {
+                throw new InvalidOperationException($"Failed to create token: {result.Message}");
+            }
+
+            // Return the created token
+            return await GetTokenByIdAsync(result.TokenId!.Value) 
+                ?? throw new InvalidOperationException("Token was created but could not be retrieved");
         }
 
         public async Task<Token> UpdateTokenAsync(Token token)
         {
-            _context.Tokens.Update(token);
-            await _context.SaveChangesAsync();
-            return token;
+            // Convert Token to UnifiedTokenSaveRequest and use unified DAL
+            var request = new UnifiedTokenSaveRequest
+            {
+                TokenId = token.Id,
+                Name = token.Name,
+                Description = token.Description,
+                Category = token.Category,
+                IsActive = token.IsActive,
+                TokenGroupId = token.TokenGroupId,
+                // Note: TouchPoints would need to be provided separately for pattern updates
+                // This method assumes the token signature is already updated
+            };
+
+            var result = await _tokenDAL.SaveTokenAsync(request);
+            
+            if (!result.Success)
+            {
+                throw new InvalidOperationException($"Failed to update token: {result.Message}");
+            }
+
+            // Return the updated token
+            return await GetTokenByIdAsync(result.TokenId!.Value) 
+                ?? throw new InvalidOperationException("Token was updated but could not be retrieved");
         }
 
         public async Task<bool> DeleteTokenAsync(long id)
         {
-            var token = await _context.Tokens.FindAsync(id);
-            if (token == null) return false;
-
-            _context.Tokens.Remove(token);
-            await _context.SaveChangesAsync();
-            return true;
+            // Use unified DAL for token deletion
+            var result = await _tokenDAL.DeleteTokenAsync(id);
+            return result.Success;
         }
 
         public async Task<bool> TokenExistsAsync(long id)

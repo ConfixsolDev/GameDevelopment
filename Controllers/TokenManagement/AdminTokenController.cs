@@ -115,7 +115,7 @@ namespace TechWebSol.Controllers.TokenManagement
                         IsActive = g.IsActive,
                         CreatedAt = g.CreatedAt,
                         CreatedByUserName = g.CreatedByUserName,
-                        TokenCount = g.Tokens.Count + g.SimplifiedTokens.Count
+                        TokenCount = g.Tokens.Count
                     })
                     .ToListAsync();
 
