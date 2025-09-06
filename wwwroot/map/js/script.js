@@ -111,28 +111,51 @@ class TokenSystem {
     }
 
     setupEventListeners() {
-        // Button event listeners
-        document.getElementById('addTokenBtn').addEventListener('click', () => {
-            console.log('Add Token button clicked');
-            this.startTrainingMode();
-        });
-        document.getElementById('testTokenBtn').addEventListener('click', () => {
-            console.log('Test Token button clicked');
-            this.startTestMode();
-        });
-        document.getElementById('identifyBtn').addEventListener('click', () => {
-            console.log('Identify button clicked');
-            this.startIdentificationMode();
-        });
-        document.getElementById('manageTokensBtn').addEventListener('click', () => {
-            console.log('Manage Tokens button clicked');
-            this.showTokenManagement();
-        });
-        document.getElementById('clearScreenBtn').addEventListener('click', () => {
-            console.log('Clear Screen button clicked');
-            this.clearAllPermanentLabels();
-        });
-        document.getElementById('cancelTrainingBtn').addEventListener('click', () => this.cancelTraining());
+        // Button event listeners - with null checks
+        const addTokenBtn = document.getElementById('addTokenBtn');
+        if (addTokenBtn) {
+            addTokenBtn.addEventListener('click', () => {
+                console.log('Add Token button clicked');
+                this.startTrainingMode();
+            });
+        }
+
+        const testTokenBtn = document.getElementById('testTokenBtn');
+        if (testTokenBtn) {
+            testTokenBtn.addEventListener('click', () => {
+                console.log('Test Token button clicked');
+                this.startTestMode();
+            });
+        }
+
+        const identifyBtn = document.getElementById('identifyBtn');
+        if (identifyBtn) {
+            identifyBtn.addEventListener('click', () => {
+                console.log('Identify button clicked');
+                this.startIdentificationMode();
+            });
+        }
+
+        const manageTokensBtn = document.getElementById('manageTokensBtn');
+        if (manageTokensBtn) {
+            manageTokensBtn.addEventListener('click', () => {
+                console.log('Manage Tokens button clicked');
+                this.showTokenManagement();
+            });
+        }
+
+        const clearScreenBtn = document.getElementById('clearScreenBtn');
+        if (clearScreenBtn) {
+            clearScreenBtn.addEventListener('click', () => {
+                console.log('Clear Screen button clicked');
+                this.clearAllPermanentLabels();
+            });
+        }
+
+        const cancelTrainingBtn = document.getElementById('cancelTrainingBtn');
+        if (cancelTrainingBtn) {
+            cancelTrainingBtn.addEventListener('click', () => this.cancelTraining());
+        }
 
         // Add reset training button functionality if it exists
         const resetBtn = document.getElementById('resetTrainingBtn');
@@ -183,19 +206,69 @@ class TokenSystem {
 
 
 
-        // Modal event listeners
-        document.getElementById('closeTokenModal').addEventListener('click', () => this.hideTokenNameModal());
-        document.getElementById('confirmSave').addEventListener('click', () => this.saveToken());
-        document.getElementById('cancelSave').addEventListener('click', () => this.hideTokenNameModal());
-        document.getElementById('closeManagementModal').addEventListener('click', () => this.hideTokenManagement());
-        document.getElementById('closeTokenManagement').addEventListener('click', () => this.hideTokenManagement());
-        document.getElementById('deleteAllTokens').addEventListener('click', () => this.deleteAllTokens());
-        document.getElementById('exportTokens').addEventListener('click', () => this.exportTokens());
-        document.getElementById('importTokens').addEventListener('click', () => document.getElementById('importFile').click());
-        document.getElementById('importFile').addEventListener('change', (e) => this.importTokens(e));
-        document.getElementById('closeDeleteModal').addEventListener('click', () => this.hideDeleteConfirmModal());
-        document.getElementById('cancelDelete').addEventListener('click', () => this.hideDeleteConfirmModal());
-        document.getElementById('confirmDelete').addEventListener('click', () => this.confirmDeleteToken());
+        // Modal event listeners - with null checks
+        const closeTokenModal = document.getElementById('closeTokenModal');
+        if (closeTokenModal) {
+            closeTokenModal.addEventListener('click', () => this.hideTokenNameModal());
+        }
+
+        const confirmSave = document.getElementById('confirmSave');
+        if (confirmSave) {
+            confirmSave.addEventListener('click', () => this.saveToken());
+        }
+
+        const cancelSave = document.getElementById('cancelSave');
+        if (cancelSave) {
+            cancelSave.addEventListener('click', () => this.hideTokenNameModal());
+        }
+
+        const closeManagementModal = document.getElementById('closeManagementModal');
+        if (closeManagementModal) {
+            closeManagementModal.addEventListener('click', () => this.hideTokenManagement());
+        }
+
+        const closeTokenManagement = document.getElementById('closeTokenManagement');
+        if (closeTokenManagement) {
+            closeTokenManagement.addEventListener('click', () => this.hideTokenManagement());
+        }
+
+        const deleteAllTokens = document.getElementById('deleteAllTokens');
+        if (deleteAllTokens) {
+            deleteAllTokens.addEventListener('click', () => this.deleteAllTokens());
+        }
+
+        const exportTokens = document.getElementById('exportTokens');
+        if (exportTokens) {
+            exportTokens.addEventListener('click', () => this.exportTokens());
+        }
+
+        const importTokens = document.getElementById('importTokens');
+        if (importTokens) {
+            importTokens.addEventListener('click', () => {
+                const importFile = document.getElementById('importFile');
+                if (importFile) importFile.click();
+            });
+        }
+
+        const importFile = document.getElementById('importFile');
+        if (importFile) {
+            importFile.addEventListener('change', (e) => this.importTokens(e));
+        }
+
+        const closeDeleteModal = document.getElementById('closeDeleteModal');
+        if (closeDeleteModal) {
+            closeDeleteModal.addEventListener('click', () => this.hideDeleteConfirmModal());
+        }
+
+        const cancelDelete = document.getElementById('cancelDelete');
+        if (cancelDelete) {
+            cancelDelete.addEventListener('click', () => this.hideDeleteConfirmModal());
+        }
+
+        const confirmDelete = document.getElementById('confirmDelete');
+        if (confirmDelete) {
+            confirmDelete.addEventListener('click', () => this.confirmDeleteToken());
+        }
 
         // Canvas event listeners
         this.canvas.addEventListener('touchstart', (e) => this.handleTouchStart(e));
@@ -253,7 +326,10 @@ class TokenSystem {
             this.showTrainingStatus();
 
             // 🎯 NEW: Ensure touch pattern section is visible and ready
-            document.getElementById('touchPatternSection').style.display = 'block';
+            const touchPatternSection = document.getElementById('touchPatternSection');
+            if (touchPatternSection) {
+                touchPatternSection.style.display = 'block';
+            }
 
             // 🚨 DEBUG: Log training session creation
             console.log(`🎯 Training session created:`, {
@@ -277,7 +353,10 @@ class TokenSystem {
         this.showTestResult();
 
         // 🎯 NEW: Ensure touch pattern section is visible and ready
-        document.getElementById('touchPatternSection').style.display = 'block';
+        const touchPatternSection = document.getElementById('touchPatternSection');
+        if (touchPatternSection) {
+            touchPatternSection.style.display = 'block';
+        }
 
         this.showToast('Test mode started. Touch to test token recognition.', 'info');
     }
@@ -289,7 +368,10 @@ class TokenSystem {
         this.showIdentificationResult();
 
         // 🎯 NEW: Ensure touch pattern section is visible and ready
-        document.getElementById('touchPatternSection').style.display = 'block';
+        const touchPatternSection = document.getElementById('touchPatternSection');
+        if (touchPatternSection) {
+            touchPatternSection.style.display = 'block';
+        }
 
         this.showToast('Identification mode started. Touch to identify tokens.', 'info');
     }
@@ -309,14 +391,24 @@ class TokenSystem {
         this.showSystemStatus();
 
         // 🎯 NEW: Ensure touch pattern section is visible and ready
-        document.getElementById('touchPatternSection').style.display = 'block';
+        const touchPatternSection = document.getElementById('touchPatternSection');
+        if (touchPatternSection) {
+            touchPatternSection.style.display = 'block';
+        }
 
         this.showToast('Returned to main menu', 'info');
     }
 
     updateModeDisplay() {
-        document.getElementById('currentMode').textContent = this.mode.toUpperCase();
-        document.getElementById('panelTitle').textContent = this.getPanelTitle();
+        const currentMode = document.getElementById('currentMode');
+        if (currentMode) {
+            currentMode.textContent = this.mode.toUpperCase();
+        }
+        
+        const panelTitle = document.getElementById('panelTitle');
+        if (panelTitle) {
+            panelTitle.textContent = this.getPanelTitle();
+        }
 
         // 🎯 NEW: Refresh touch pattern display when mode changes
         this.refreshTouchPatternDisplay();
@@ -351,22 +443,42 @@ class TokenSystem {
 
     showTrainingStatus() {
         this.hideAllPanels();
-        document.getElementById('trainingStatus').style.display = 'block';
+        const trainingStatus = document.getElementById('trainingStatus');
+        if (trainingStatus) {
+            trainingStatus.style.display = 'block';
+        }
 
         // 🎯 NEW: Ensure touch pattern section is always visible
-        document.getElementById('touchPatternSection').style.display = 'block';
-        document.getElementById('systemStatus').style.display = 'block';
+        const touchPatternSection = document.getElementById('touchPatternSection');
+        if (touchPatternSection) {
+            touchPatternSection.style.display = 'block';
+        }
+        
+        const systemStatus = document.getElementById('systemStatus');
+        if (systemStatus) {
+            systemStatus.style.display = 'block';
+        }
 
         this.updateTrainingProgress();
     }
 
     showSystemStatus() {
         this.hideAllPanels();
-        document.getElementById('systemStatus').style.display = 'block';
-        document.getElementById('touchData').style.display = 'block';
+        const systemStatus = document.getElementById('systemStatus');
+        if (systemStatus) {
+            systemStatus.style.display = 'block';
+        }
+        
+        const touchData = document.getElementById('touchData');
+        if (touchData) {
+            touchData.style.display = 'block';
+        }
 
         // 🎯 NEW: Ensure touch pattern section is always visible
-        document.getElementById('touchPatternSection').style.display = 'block';
+        const touchPatternSection = document.getElementById('touchPatternSection');
+        if (touchPatternSection) {
+            touchPatternSection.style.display = 'block';
+        }
     }
 
     showTestResult() {
@@ -6095,7 +6207,13 @@ class TokenSystem {
 // Initialize the system
 let tokenSystem;
 document.addEventListener('DOMContentLoaded', () => {
-    tokenSystem = new TokenSystem();
-    window.currentTokenSystem = tokenSystem; // Make it globally accessible
+    try {
+        tokenSystem = new TokenSystem();
+        window.tokenSystem = tokenSystem; // Make it globally accessible
+        window.currentTokenSystem = tokenSystem; // Keep backward compatibility
+        console.log('TokenSystem initialized successfully');
+    } catch (error) {
+        console.error('Error initializing TokenSystem:', error);
+    }
 });
 

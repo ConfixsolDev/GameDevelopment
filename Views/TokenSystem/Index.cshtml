@@ -1,26 +1,29 @@
 ﻿
+@{
+    Layout = "_TokenManagementLayout";
+}
+
 <link href="~/map/css/styles.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
  
 
-    .token-controls {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-    }
 
 
     .main-container {
         display: flex;
         height: calc(100vh - 80px);
+        width: 100%;
+        margin: 0;
+        padding: 0;
     }
 
     .canvas-container {
         flex: 1;
         position: relative;
-        border-right: 2px solid rgba(255, 255, 255, 0.2);
+        height: 100%;
+        min-width: 0; /* Allow flex item to shrink below content size */
     }
 
     #touchCanvas {
@@ -29,27 +32,34 @@
         background: rgba(0, 0, 0, 0.2);
         cursor: crosshair;
         touch-action: none;
+        display: block;
     }
 
     .data-panel {
         width: 400px;
-        background: rgba(0, 0, 0, 0.4);
+        background: linear-gradient(135deg, #00ff88, #00cc6a);
         display: flex;
         flex-direction: column;
+        flex-shrink: 0; /* Prevent sidebar from shrinking */
+        box-shadow: -2px 0 10px rgba(0, 255, 136, 0.3);
     }
 
     .panel-header {
         padding: 15px;
-        background: rgba(0, 0, 0, 0.3);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(0, 0, 0, 0.2);
+        border-bottom: 2px solid rgba(255, 255, 255, 0.3);
         font-weight: bold;
         font-size: 16px;
+        color: white;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     }
 
     .panel-content {
         flex: 1;
         padding: 15px;
         overflow-y: auto;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
     }
 
     .data-section {
@@ -307,26 +317,6 @@
             border-left-color: #2196F3;
         }
 
-    .touch-feedback {
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        background: rgba(0, 0, 0, 0.7);
-        color: white;
-        padding: 10px;
-        border-radius: 6px;
-        font-family: monospace;
-        font-size: 12px;
-    }
-
-    .touch-count {
-        margin-bottom: 5px;
-    }
-
-    .detection-area {
-        font-size: 10px;
-        color: #4CAF50;
-    }
 
     /* 🗺️ Enhanced Map Styles */
     .map-tile-layer {
@@ -767,19 +757,6 @@
     }
 </style>
 
-<div class="header">
-    <div class="title">🎯 Token Training & Identification System</div>
-    <div class="token-controls">
-        <button id="addTokenBtn" class="btn btn-primary">➕ Add Token</button>
-        <button id="testTokenBtn" class="btn btn-info">🧪 Test Token</button>
-        <button id="identifyBtn" class="btn btn-success">🔍 Identify</button>
-        <button id="manageTokensBtn" class="btn btn-warning">📋 Manage</button>
-        <button id="clearScreenBtn" class="btn btn-danger">🗑️ Clear</button>
-
-        <button id="toggleMapViewBtn" class="btn" style="background: linear-gradient(135deg, #4CAF50, #45a049);">🗺️ Map View</button>
-
-    </div>
-</div>
 
 <div class="main-container">
     <div class="canvas-container">
@@ -803,11 +780,6 @@
             <div id="map" style="width: 100%; height: 100%;"></div>
         </div>
 
-        <!-- Touch Feedback -->
-        <div class="touch-feedback">
-            <div class="touch-count">Touches: 0</div>
-            <div class="detection-area">Area: 0×0px</div>
-        </div>
 
         <!-- Training Position Indicators -->
         <div id="trainingPositions" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
@@ -1000,3 +972,35 @@
 <script src="~/map/js/api-service.js"></script>
 <script src="~/map/js/database-operations.js"></script>
 <script src="~/map/js/script.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Mobile menu toggle
+        $('#mobileMenuBtn').click(function() {
+            $('#navMenu').toggleClass('show');
+        });
+        
+        // Close mobile menu when clicking outside
+        $(document).click(function(e) {
+            if (!$(e.target).closest('.top-navigation').length) {
+                $('#navMenu').removeClass('show');
+            }
+        });
+        
+        // Set active navigation item based on current page
+        var currentPath = window.location.pathname;
+        $('.nav-link').each(function() {
+            var linkPath = $(this).attr('href');
+            if (currentPath === linkPath || (linkPath !== '/' && currentPath.startsWith(linkPath))) {
+                $(this).addClass('active');
+            } else {
+                $(this).removeClass('active');
+            }
+        });
+        
+        // Initialize token system after layout is ready
+        if (typeof TokenSystem !== 'undefined') {
+            window.tokenSystem = new TokenSystem();
+        }
+    });
+</script>

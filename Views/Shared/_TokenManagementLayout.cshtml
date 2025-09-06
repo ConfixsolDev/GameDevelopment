@@ -1,0 +1,243 @@
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> _userManager
+@{
+    var ShortName = "";
+    var DisplayName = "";
+    var user = await _userManager.GetUserAsync(User);
+    if (user != null)
+    {
+        DisplayName = user.FullName;
+        string[] nameParts = user.FullName.Split(' ');
+        ShortName = nameParts[0].Substring(0, 1) + nameParts[1].Substring(0, 1);
+    }
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Token Management System</title>
+    <link rel="shortcut icon" href="~/assets/images/favicon.ico">
+    
+    <!-- Core CSS -->
+    <link href="~/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="~/assets/css/icons.min.css" rel="stylesheet">
+    <link href="~/assets/css/app.min.css" rel="stylesheet">
+    <link href="~/assets/css/custom.css" rel="stylesheet" asp-append-version="true">
+    <link href="~/assets/css/WarGameStyle.css" rel="stylesheet" asp-append-version="true">
+    
+    <!-- External Libraries -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Token Management Specific Styles -->
+    <link href="~/map/css/styles.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="token-management-layout">
+    <!-- Top Navigation -->
+    <nav class="top-navigation">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center py-3">
+                <!-- Brand and Mobile Menu -->
+                <div class="d-flex align-items-center">
+                    <a href="/Home/Index" class="nav-brand">
+                        <i class="fas fa-fingerprint"></i>
+                        <span>Token Management</span>
+                    </a>
+                    <button class="mobile-menu-btn ms-3" id="mobileMenuBtn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+                
+                <!-- Navigation Menu -->
+                <ul class="nav-menu" id="navMenu">
+                    <li class="nav-item">
+                        <a href="/Home/Index" class="nav-link">
+                            <i class="fas fa-home"></i>
+                            <span>Home</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" onclick="addToken()">
+                            <i class="fas fa-plus"></i>
+                            <span>Add Token</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="testToken()">
+                            <i class="fas fa-vial"></i>
+                            <span>Test Token</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="identifyToken()">
+                            <i class="fas fa-search"></i>
+                            <span>Identify</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="manageTokens()">
+                            <i class="fas fa-cogs"></i>
+                            <span>Manage</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="clearScreen()">
+                            <i class="fas fa-trash"></i>
+                            <span>Clear</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="toggleMapView()">
+                            <i class="fas fa-map"></i>
+                            <span>Map View</span>
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- User Menu -->
+                <div class="user-menu">
+                    <div class="dropdown">
+                        <button class="btn btn-link text-decoration-none" type="button" id="userDropdown" 
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="user-avatar">
+                                @ShortName
+                            </div>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-user"></i>
+                                    <span>@DisplayName</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/Identity/AccountAdmin/SetUserUrl">
+                                    <i class="fas fa-cog"></i>
+                                    <span>Settings</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/Identity/AccountAdmin/PasswordReset">
+                                    <i class="fas fa-key"></i>
+                                    <span>Change Password</span>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="/Account/Logout">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Logout</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page Content -->
+        <div class="container-fluid token-management-content">
+            @RenderBody()
+        </div>
+    </main>
+    
+    <!-- Scripts -->
+    <script src="~/assets/js/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="~/assets/js/app.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Mobile menu toggle
+            $('#mobileMenuBtn').click(function() {
+                $('#navMenu').toggleClass('show');
+            });
+            
+            // Close mobile menu when clicking outside
+            $(document).click(function(e) {
+                if (!$(e.target).closest('.top-navigation').length) {
+                    $('#navMenu').removeClass('show');
+                }
+            });
+            
+            // Set active navigation item based on current page
+            var currentPath = window.location.pathname;
+            $('.nav-link').each(function() {
+                var linkPath = $(this).attr('href');
+                if (currentPath === linkPath || (linkPath !== '/' && currentPath.startsWith(linkPath))) {
+                    $(this).addClass('active');
+                } else {
+                    $(this).removeClass('active');
+                }
+            });
+        });
+        
+        // Token Management Functions
+        function addToken() {
+            // Trigger the add token functionality
+            if (window.tokenSystem && typeof window.tokenSystem.startTrainingMode === 'function') {
+                window.tokenSystem.startTrainingMode();
+            } else {
+                console.log('TokenSystem not available, adding new token...');
+            }
+        }
+        
+        function testToken() {
+            // Trigger the test token functionality
+            if (window.tokenSystem && typeof window.tokenSystem.startTestMode === 'function') {
+                window.tokenSystem.startTestMode();
+            } else {
+                console.log('TokenSystem not available, testing token...');
+            }
+        }
+        
+        function identifyToken() {
+            // Trigger the identify functionality
+            if (window.tokenSystem && typeof window.tokenSystem.startIdentificationMode === 'function') {
+                window.tokenSystem.startIdentificationMode();
+            } else {
+                console.log('TokenSystem not available, identifying token...');
+            }
+        }
+        
+        function manageTokens() {
+            // Trigger the manage tokens functionality
+            if (window.tokenSystem && typeof window.tokenSystem.showTokenManagement === 'function') {
+                window.tokenSystem.showTokenManagement();
+            } else {
+                console.log('TokenSystem not available, managing tokens...');
+            }
+        }
+        
+        function clearScreen() {
+            // Trigger the clear screen functionality
+            if (window.tokenSystem && typeof window.tokenSystem.clearAllPermanentLabels === 'function') {
+                window.tokenSystem.clearAllPermanentLabels();
+            } else {
+                console.log('TokenSystem not available, clearing screen...');
+            }
+        }
+        
+        function toggleMapView() {
+            // Trigger the map view toggle functionality
+            if (window.tokenSystem && typeof window.tokenSystem.toggleMapView === 'function') {
+                window.tokenSystem.toggleMapView();
+            } else {
+                console.log('TokenSystem not available, toggling map view...');
+            }
+        }
+    </script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
