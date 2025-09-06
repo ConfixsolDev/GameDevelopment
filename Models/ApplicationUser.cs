@@ -58,6 +58,12 @@ namespace TechWebSol.Models
         [DisplayName("Sub-Team")]
         public string SubTeamCode { get; set; } = string.Empty;
 
+        // Foreign key to Team
+        public Guid? TeamId { get; set; }
+
+        // Navigation property
+        public virtual Team? Team { get; set; }
+
         [MaxLength(250)]
         public string HomeUrl { get; set; } = string.Empty;
 

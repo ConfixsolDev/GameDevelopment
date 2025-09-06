@@ -34,6 +34,11 @@ namespace TechWebSol.Data
             {
                 entity.ToTable("AspNetUsers");
                 entity.Property(e => e.isSuperAdmin).HasDefaultValue(false);
+                
+                entity.HasOne(e => e.Team)
+                    .WithMany(e => e.Users)
+                    .HasForeignKey(e => e.TeamId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<ApplicationRole>(entity =>
@@ -79,9 +84,20 @@ namespace TechWebSol.Data
                 entity.Property(e => e.Notes).HasMaxLength(1000);
                 entity.Property(e => e.TrainingConsistency).HasColumnType("decimal(5,2)");
 
+                entity.HasOne(e => e.Team)
+                    .WithMany(e => e.Tokens)
+                    .HasForeignKey(e => e.TeamId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.TokenGroup)
+                    .WithMany(e => e.Tokens)
+                    .HasForeignKey(e => e.TokenGroupId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
                 entity.HasIndex(e => e.Name).IsUnique();
                 entity.HasIndex(e => e.CreatedAt);
                 entity.HasIndex(e => e.IsActive);
+                entity.HasIndex(e => e.TeamId);
                 entity.Property(e=>e.Id).ValueGeneratedNever();
 
             });
@@ -192,6 +208,125 @@ namespace TechWebSol.Data
             });
 
 
+            // Configure Team entity
+            modelBuilder.Entity<Team>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.TeamCode).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.SubTeamCode).HasMaxLength(50);
+                entity.Property(e => e.Description).HasMaxLength(500);
+                entity.Property(e => e.Category).HasMaxLength(50);
+                entity.Property(e => e.CreatedByUserId).HasMaxLength(50);
+                entity.Property(e => e.CreatedByUserName).HasMaxLength(50);
+
+                entity.HasIndex(e => e.TeamCode);
+                entity.HasIndex(e => e.IsActive);
+            });
+
+            // Configure TokenGroup entity
+            modelBuilder.Entity<TokenGroup>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Description).HasMaxLength(500);
+                entity.Property(e => e.GroupCode).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Category).HasMaxLength(50);
+                entity.Property(e => e.CreatedByUserId).HasMaxLength(50);
+                entity.Property(e => e.CreatedByUserName).HasMaxLength(50);
+
+                entity.HasIndex(e => e.GroupCode);
+                entity.HasIndex(e => e.IsActive);
+            });
+
+            // Configure TeamTokenGroupAssignment entity
+            modelBuilder.Entity<TeamTokenGroupAssignment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.AssignedByUserId).HasMaxLength(50);
+                entity.Property(e => e.AssignedByUserName).HasMaxLength(50);
+
+                entity.HasOne(e => e.Team)
+                    .WithMany(e => e.TokenGroupAssignments)
+                    .HasForeignKey(e => e.TeamId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.TokenGroup)
+                    .WithMany(e => e.TeamAssignments)
+                    .HasForeignKey(e => e.TokenGroupId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.TeamId);
+                entity.HasIndex(e => e.TokenGroupId);
+                entity.HasIndex(e => e.IsActive);
+            });
+
+            // Configure GameSession entity
+            modelBuilder.Entity<GameSession>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Description).HasMaxLength(500);
+                entity.Property(e => e.SessionCode).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.CreatedByUserId).HasMaxLength(50);
+                entity.Property(e => e.CreatedByUserName).HasMaxLength(50);
+
+                entity.HasIndex(e => e.SessionCode);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.StartTime);
+            });
+
+            // Configure TokenBinding entity
+            modelBuilder.Entity<TokenBinding>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.EntityName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.EntityCode).HasMaxLength(50);
+                entity.Property(e => e.EntityDescription).HasMaxLength(500);
+                entity.Property(e => e.BoundByUserId).HasMaxLength(50);
+                entity.Property(e => e.BoundByUserName).HasMaxLength(50);
+
+                entity.HasOne(e => e.GameSession)
+                    .WithMany(e => e.TokenBindings)
+                    .HasForeignKey(e => e.GameSessionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.TokenGroup)
+                    .WithMany()
+                    .HasForeignKey(e => e.TokenGroupId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Team)
+                    .WithMany()
+                    .HasForeignKey(e => e.TeamId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.GameSessionId);
+                entity.HasIndex(e => e.TokenGroupId);
+                entity.HasIndex(e => e.TeamId);
+                entity.HasIndex(e => e.IsActive);
+            });
+
+            // Configure FreeToken entity
+            modelBuilder.Entity<FreeToken>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Description).HasMaxLength(500);
+                entity.Property(e => e.Category).HasMaxLength(50);
+                entity.Property(e => e.System).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.CreatedByUserId).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.CreatedByUserName).HasMaxLength(50);
+                entity.Property(e => e.Distances).HasMaxLength(1000);
+                entity.Property(e => e.Angles).HasMaxLength(1000);
+                entity.Property(e => e.Center).HasMaxLength(100);
+                entity.Property(e => e.ComplexSignature).HasMaxLength(2000);
+
+                entity.HasIndex(e => e.CreatedAt);
+                entity.HasIndex(e => e.System);
+            });
+
             // Configure MapMarker entity (keep for map functionality)
             modelBuilder.Entity<MapMarker>(entity =>
             {
@@ -250,6 +385,7 @@ namespace TechWebSol.Data
                                 baseEntity.Id = Guid.NewGuid();
                                 baseEntity.CreatedBy = userDetails?.UserCode ?? "System";
                                 baseEntity.CreatedDate = now;
+                                baseEntity.CreatedAt = now;
                                 baseEntity.UpdatedBy = userDetails?.UserCode ?? "System";
                                 baseEntity.UpdatedDate = now;
                             }
@@ -289,6 +425,7 @@ namespace TechWebSol.Data
         public DbSet<MultiTouchGeometry> MultiTouchGeometry { get; set; }
         public DbSet<MapMarker> MapMarkers { get; set; }
         public DbSet<TokenGroup> TokenGroups { get; set; }
+        public DbSet<Team> Teams { get; set; }
         public DbSet<TeamTokenGroupAssignment> TeamTokenGroupAssignments { get; set; }
         public DbSet<GameSession> GameSessions { get; set; }
         public DbSet<TokenBinding> TokenBindings { get; set; }

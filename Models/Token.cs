@@ -44,8 +44,7 @@ namespace TechWebSol.Models
 
         // Team isolation - tokens are team-specific
         [Required]
-        [MaxLength(50)]
-        public string TeamId { get; set; } = string.Empty; // TeamCode + SubTeamCode
+        public Guid TeamId { get; set; } // Foreign key to Team.Id
 
         [Required]
         [MaxLength(50)]
@@ -55,11 +54,11 @@ namespace TechWebSol.Models
         public string? CreatedByUserName { get; set; }
 
         // Token group assignment - tokens belong to administrator-managed groups
-        public int? TokenGroupId { get; set; }
+        public Guid? TokenGroupId { get; set; }
 
-        // Navigation property
+        // Navigation properties
+        public virtual Team Team { get; set; } = null!;
         public virtual TokenGroup? TokenGroup { get; set; }
-
         public virtual ICollection<MapMarker> MapMarkers { get; set; } = new List<MapMarker>();
     }
 

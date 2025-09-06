@@ -8,11 +8,8 @@ namespace TechWebSol.Models
     /// Tokens are bound to entities during active games, freed when games end
     /// </summary>
     [Table("GameSessions")]
-    public class GameSession
+    public class GameSession : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
-
         [Required]
         [MaxLength(100)]
         public string Name { get; set; } = string.Empty; // e.g., "War Game 2024", "Training Exercise Alpha"
@@ -31,14 +28,12 @@ namespace TechWebSol.Models
         [MaxLength(20)]
         public string Status { get; set; } = "Active"; // "Active", "Completed", "Cancelled"
 
-        [Required]
+        // Additional game session-specific fields
         [MaxLength(50)]
-        public string CreatedByUserId { get; set; } = string.Empty;
+        public string? CreatedByUserId { get; set; }
 
         [MaxLength(50)]
         public string? CreatedByUserName { get; set; }
-
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation properties
         public virtual ICollection<TokenBinding> TokenBindings { get; set; } = new List<TokenBinding>();
@@ -49,20 +44,16 @@ namespace TechWebSol.Models
     /// When game ends, bindings are cleared but tokens remain for reuse
     /// </summary>
     [Table("TokenBindings")]
-    public class TokenBinding
+    public class TokenBinding : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
+        [Required]
+        public Guid GameSessionId { get; set; }
 
         [Required]
-        public int GameSessionId { get; set; }
+        public Guid TokenGroupId { get; set; }
 
         [Required]
-        public int TokenGroupId { get; set; }
-
-        [Required]
-        [MaxLength(50)]
-        public string TeamId { get; set; } = string.Empty; // TeamCode + SubTeamCode
+        public Guid TeamId { get; set; } // Foreign key to Team.Id
 
         [Required]
         [MaxLength(100)]
@@ -80,9 +71,9 @@ namespace TechWebSol.Models
 
         public DateTime? UnboundAt { get; set; }
 
-        [Required]
+        // Additional binding-specific fields
         [MaxLength(50)]
-        public string BoundByUserId { get; set; } = string.Empty;
+        public string? BoundByUserId { get; set; }
 
         [MaxLength(50)]
         public string? BoundByUserName { get; set; }
@@ -90,6 +81,7 @@ namespace TechWebSol.Models
         // Navigation properties
         public virtual GameSession GameSession { get; set; } = null!;
         public virtual TokenGroup TokenGroup { get; set; } = null!;
+        public virtual Team Team { get; set; } = null!;
     }
 
     /// <summary>

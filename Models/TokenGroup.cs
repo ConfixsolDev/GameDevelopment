@@ -8,11 +8,8 @@ namespace TechWebSol.Models
     /// Examples: "Company A", "Brigade 1", "Department Alpha", etc.
     /// </summary>
     [Table("TokenGroups")]
-    public class TokenGroup
+    public class TokenGroup : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
-
         [Required]
         [MaxLength(100)]
         public string Name { get; set; } = string.Empty; // e.g., "Company A", "Brigade 1"
@@ -29,11 +26,9 @@ namespace TechWebSol.Models
 
         public bool IsActive { get; set; } = true;
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        [Required]
+        // Additional token group-specific fields
         [MaxLength(50)]
-        public string CreatedByUserId { get; set; } = string.Empty;
+        public string? CreatedByUserId { get; set; }
 
         [MaxLength(50)]
         public string? CreatedByUserName { get; set; }
@@ -48,30 +43,27 @@ namespace TechWebSol.Models
     /// Allows administrators to assign specific token groups to specific teams
     /// </summary>
     [Table("TeamTokenGroupAssignments")]
-    public class TeamTokenGroupAssignment
+    public class TeamTokenGroupAssignment : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
+        [Required]
+        public Guid TeamId { get; set; } // Foreign key to Team.Id
 
         [Required]
-        [MaxLength(50)]
-        public string TeamId { get; set; } = string.Empty; // TeamCode + SubTeamCode
-
-        [Required]
-        public int TokenGroupId { get; set; }
+        public Guid TokenGroupId { get; set; } // Foreign key to TokenGroup.Id
 
         public bool IsActive { get; set; } = true;
 
         public DateTime AssignedAt { get; set; } = DateTime.UtcNow;
 
-        [Required]
+        // Additional assignment-specific fields
         [MaxLength(50)]
-        public string AssignedByUserId { get; set; } = string.Empty;
+        public string? AssignedByUserId { get; set; }
 
         [MaxLength(50)]
         public string? AssignedByUserName { get; set; }
 
         // Navigation properties
+        public virtual Team Team { get; set; } = null!;
         public virtual TokenGroup TokenGroup { get; set; } = null!;
     }
 }

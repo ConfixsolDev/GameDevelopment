@@ -33,9 +33,9 @@ namespace TechWebSol.Data
         }
 
         /// <summary>
-        /// Get current user's team ID (TeamCode + SubTeamCode)
+        /// Get current user's team ID
         /// </summary>
-        private string GetCurrentTeamId()
+        private Guid GetCurrentTeamId()
         {
             var currentUser = _userSessionService.GetCurrentUser();
             if (currentUser == null)
@@ -43,14 +43,21 @@ namespace TechWebSol.Data
                 throw new UnauthorizedAccessException("User not authenticated");
             }
 
-            // Get user details from database to get TeamCode and SubTeamCode
+            // Get user details from database to get TeamId
             var user = _context.Users.FirstOrDefault(u => u.Id == currentUser.ApplicationUserId);
             if (user == null)
             {
                 throw new UnauthorizedAccessException("User not found");
             }
 
-            return $"{user.TeamCode}_{user.SubTeamCode}";
+            // Find the team by TeamCode and SubTeamCode
+            var team = _context.Teams.FirstOrDefault(t => t.TeamCode == user.TeamCode && t.SubTeamCode == user.SubTeamCode);
+            if (team == null)
+            {
+                throw new UnauthorizedAccessException("Team not found");
+            }
+
+            return team.Id;
         }
 
         /// <summary>
@@ -878,13 +885,13 @@ namespace TechWebSol.Data
         public Dictionary<string, object>? Metadata { get; set; }
 
         // Team context - automatically set by DAL
-        internal string TeamId { get; set; } = string.Empty;
+        internal Guid TeamId { get; set; }
         internal string CreatedByUserId { get; set; } = string.Empty;
         
         /// <summary>
         /// Token group ID - must be provided for new tokens
         /// </summary>
-        public int? TokenGroupId { get; set; }
+        public Guid? TokenGroupId { get; set; }
     }
 
     /// <summary>
@@ -931,7 +938,7 @@ namespace TechWebSol.Data
     /// </summary>
     public class GroupedTeamTokenInfo
     {
-        public int GroupId { get; set; }
+        public Guid GroupId { get; set; }
         public string GroupName { get; set; } = string.Empty;
         public string GroupCode { get; set; } = string.Empty;
         public string? GroupCategory { get; set; }

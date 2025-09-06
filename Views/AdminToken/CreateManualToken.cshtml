@@ -1,0 +1,225 @@
+@{
+    ViewData["Title"] = "Create Manual Token";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-plus-circle"></i> Create Manual Token
+                    </h3>
+                    <div class="card-tools">
+                        <a href="/api/admin/AdminToken/manage" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Group Management
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <form id="createManualTokenForm">
+                                <div class="mb-3">
+                                    <label for="tokenName" class="form-label">Token Name *</label>
+                                    <input type="text" class="form-control" id="tokenName" required>
+                                    <div class="form-text">Enter a descriptive name for the token</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="tokenDescription" class="form-label">Description</label>
+                                    <textarea class="form-control" id="tokenDescription" rows="3"></textarea>
+                                    <div class="form-text">Optional description of the token's purpose</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="tokenCategory" class="form-label">Category</label>
+                                    <input type="text" class="form-control" id="tokenCategory" placeholder="e.g., Vehicle, Equipment, Personnel">
+                                    <div class="form-text">Optional category to help organize tokens</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="tokenGroupSelect" class="form-label">Token Group</label>
+                                    <select class="form-control" id="tokenGroupSelect">
+                                        <option value="">-- Select Group (Optional) --</option>
+                                    </select>
+                                    <div class="form-text">Assign this token to a specific group for better organization</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <button type="button" class="btn btn-primary" id="saveManualTokenBtn">
+                                        <i class="fas fa-save"></i> Create Manual Token
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" id="resetFormBtn">
+                                        <i class="fas fa-undo"></i> Reset Form
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">
+                                        <i class="fas fa-info-circle"></i> Manual Token Info
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>What is a Manual Token?</strong></p>
+                                    <p>A manual token is a token that exists in the system but doesn't have physical touch characteristics yet. It can be:</p>
+                                    <ul>
+                                        <li>Created by administrators</li>
+                                        <li>Assigned to token groups</li>
+                                        <li>Converted to physical tokens later by adding touch data</li>
+                                        <li>Used for planning and organization</li>
+                                    </ul>
+                                    
+                                    <hr>
+                                    
+                                    <p><strong>Token Groups:</strong></p>
+                                    <p>Token groups help organize tokens by:</p>
+                                    <ul>
+                                        <li>Company (e.g., "Company A")</li>
+                                        <li>Brigade (e.g., "Brigade 1")</li>
+                                        <li>Department (e.g., "Department Alpha")</li>
+                                        <li>Unit (e.g., "Unit Bravo")</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Manual Tokens -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-list"></i> Recent Manual Tokens
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="recentTokensTable" class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Category</th>
+                                    <th>Group</th>
+                                    <th>Created By</th>
+                                    <th>Created At</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be loaded via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            loadGroupsForDropdown();
+            loadRecentTokens();
+
+            $('#saveManualTokenBtn').click(function() {
+                createManualToken();
+            });
+
+            $('#resetFormBtn').click(function() {
+                $('#createManualTokenForm')[0].reset();
+            });
+        });
+
+        function loadGroupsForDropdown() {
+            $.get('/api/admin/AdminToken/groups')
+                .done(function(groups) {
+                    const select = $('#tokenGroupSelect');
+                    select.empty().append('<option value="">-- Select Group (Optional) --</option>');
+                    
+                    groups.forEach(function(group) {
+                        select.append(`<option value="${group.id}">${group.name} (${group.groupCode})</option>`);
+                    });
+                })
+                .fail(function() {
+                    showAlert('Error loading token groups', 'danger');
+                });
+        }
+
+        function loadRecentTokens() {
+            // This would need to be implemented in the controller
+            // For now, we'll show a placeholder
+            const tbody = $('#recentTokensTable tbody');
+            tbody.html('<tr><td colspan="7" class="text-center text-muted">No recent tokens found. Create your first manual token above!</td></tr>');
+        }
+
+        function createManualToken() {
+            const name = $('#tokenName').val().trim();
+            const description = $('#tokenDescription').val().trim();
+            const category = $('#tokenCategory').val().trim();
+            const tokenGroupId = $('#tokenGroupSelect').val();
+
+            if (!name) {
+                showAlert('Token name is required', 'warning');
+                $('#tokenName').focus();
+                return;
+            }
+
+            const data = {
+                name: name,
+                description: description || null,
+                category: category || null,
+                tokenGroupId: tokenGroupId ? parseInt(tokenGroupId) : null
+            };
+
+            // Show loading state
+            $('#saveManualTokenBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Creating...');
+
+            $.post('/api/admin/AdminToken/create-manual-token', data)
+                .done(function(response) {
+                    if (response.success) {
+                        showAlert('Manual token created successfully!', 'success');
+                        $('#createManualTokenForm')[0].reset();
+                        loadRecentTokens();
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                })
+                .fail(function(xhr) {
+                    const message = xhr.responseJSON?.message || 'Error creating manual token';
+                    showAlert(message, 'danger');
+                })
+                .always(function() {
+                    // Reset button state
+                    $('#saveManualTokenBtn').prop('disabled', false).html('<i class="fas fa-save"></i> Create Manual Token');
+                });
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            $('.container-fluid').prepend(alertDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(function() {
+                $('.alert').fadeOut();
+            }, 5000);
+        }
+    </script>
+}

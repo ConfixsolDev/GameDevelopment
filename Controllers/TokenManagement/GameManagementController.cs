@@ -97,7 +97,7 @@ namespace TechWebSol.Controllers.TokenManagement
         /// End a game session and free all bound tokens
         /// </summary>
         [HttpPost("end-session/{sessionId}")]
-        public async Task<ActionResult<GameSessionResult>> EndGameSession(int sessionId)
+        public async Task<ActionResult<GameSessionResult>> EndGameSession(Guid sessionId)
         {
             try
             {
@@ -353,8 +353,8 @@ namespace TechWebSol.Controllers.TokenManagement
     /// </summary>
     public class EntityBinding
     {
-        public int TokenGroupId { get; set; }
-        public string TeamId { get; set; } = string.Empty;
+        public Guid TokenGroupId { get; set; }
+        public Guid TeamId { get; set; }
         public string EntityName { get; set; } = string.Empty;
         public string? EntityCode { get; set; }
         public string? EntityDescription { get; set; }
@@ -384,7 +384,7 @@ namespace TechWebSol.Controllers.TokenManagement
     /// </summary>
     public class GameSessionInfo
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public string SessionCode { get; set; } = string.Empty;

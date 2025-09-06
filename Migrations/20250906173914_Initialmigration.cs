@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace TechWebSol.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class Initialmigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -41,67 +41,103 @@ namespace TechWebSol.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AspNetUsers",
+                name: "FreeTokens",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    FirstName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    LastName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    Designation = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    Department = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    IsOnline = table.Column<bool>(type: "bit", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    LastLoginDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LoginCount = table.Column<int>(type: "int", nullable: false),
-                    UserCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    ModifiedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    SectionCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SubSectionCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    HomeUrl = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: true),
-                    isSuperAdmin = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
-                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    AccessFailedCount = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Category = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    TouchCount = table.Column<int>(type: "int", nullable: false),
+                    System = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    LastUsed = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UsageCount = table.Column<int>(type: "int", nullable: false),
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    CreatedByUserName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Distances = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    Angles = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    Center = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    ComplexSignature = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                    table.PrimaryKey("PK_FreeTokens", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Tokens",
+                name: "GameSessions",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    TrainingConsistency = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    Category = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    LastUsed = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UsageCount = table.Column<int>(type: "int", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    Notes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true)
+                    SessionCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    StartTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    CreatedByUserName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Tokens", x => x.Id);
+                    table.PrimaryKey("PK_GameSessions", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Teams",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    TeamCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    SubTeamCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Category = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    CreatedByUserName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Teams", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TokenGroups",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    GroupCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Category = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    CreatedByUserName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TokenGroups", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -123,6 +159,174 @@ namespace TechWebSol.Migrations
                         principalTable: "AspNetRoles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AspNetUsers",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    LastName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    Designation = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    Department = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    IsOnline = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    LastLoginDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LoginCount = table.Column<int>(type: "int", nullable: false),
+                    UserCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    ModifiedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    TeamCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SubTeamCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    HomeUrl = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: true),
+                    isSuperAdmin = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    AccessFailedCount = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AspNetUsers_Teams_TeamId",
+                        column: x => x.TeamId,
+                        principalTable: "Teams",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TeamTokenGroupAssignments",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TokenGroupId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    AssignedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    AssignedByUserId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    AssignedByUserName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TeamTokenGroupAssignments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TeamTokenGroupAssignments_Teams_TeamId",
+                        column: x => x.TeamId,
+                        principalTable: "Teams",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_TeamTokenGroupAssignments_TokenGroups_TokenGroupId",
+                        column: x => x.TokenGroupId,
+                        principalTable: "TokenGroups",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TokenBindings",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    GameSessionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TokenGroupId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    EntityName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    EntityCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    EntityDescription = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    BoundAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UnboundAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    BoundByUserId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    BoundByUserName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TokenBindings", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TokenBindings_GameSessions_GameSessionId",
+                        column: x => x.GameSessionId,
+                        principalTable: "GameSessions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_TokenBindings_Teams_TeamId",
+                        column: x => x.TeamId,
+                        principalTable: "Teams",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_TokenBindings_TokenGroups_TokenGroupId",
+                        column: x => x.TokenGroupId,
+                        principalTable: "TokenGroups",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Tokens",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    TrainingConsistency = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Category = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    LastUsed = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UsageCount = table.Column<int>(type: "int", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Notes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    CreatedByUserName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    TokenGroupId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tokens", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Tokens_Teams_TeamId",
+                        column: x => x.TeamId,
+                        principalTable: "Teams",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Tokens_TokenGroups_TokenGroupId",
+                        column: x => x.TokenGroupId,
+                        principalTable: "TokenGroups",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -247,7 +451,10 @@ namespace TechWebSol.Migrations
                     TouchCount = table.Column<int>(type: "int", nullable: false),
                     Timestamp = table.Column<long>(type: "bigint", nullable: false),
                     TokenHash = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    OriginalTouches = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    OriginalTouches = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Distances = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Angles = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Center = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -391,11 +598,41 @@ namespace TechWebSol.Migrations
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_TeamId",
+                table: "AspNetUsers",
+                column: "TeamId");
+
+            migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FreeTokens_CreatedAt",
+                table: "FreeTokens",
+                column: "CreatedAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FreeTokens_System",
+                table: "FreeTokens",
+                column: "System");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GameSessions_SessionCode",
+                table: "GameSessions",
+                column: "SessionCode");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GameSessions_StartTime",
+                table: "GameSessions",
+                column: "StartTime");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GameSessions_Status",
+                table: "GameSessions",
+                column: "Status");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MapMarkers_CreatedAt",
@@ -413,6 +650,61 @@ namespace TechWebSol.Migrations
                 column: "TokenId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Teams_IsActive",
+                table: "Teams",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Teams_TeamCode",
+                table: "Teams",
+                column: "TeamCode");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TeamTokenGroupAssignments_IsActive",
+                table: "TeamTokenGroupAssignments",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TeamTokenGroupAssignments_TeamId",
+                table: "TeamTokenGroupAssignments",
+                column: "TeamId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TeamTokenGroupAssignments_TokenGroupId",
+                table: "TeamTokenGroupAssignments",
+                column: "TokenGroupId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TokenBindings_GameSessionId",
+                table: "TokenBindings",
+                column: "GameSessionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TokenBindings_IsActive",
+                table: "TokenBindings",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TokenBindings_TeamId",
+                table: "TokenBindings",
+                column: "TeamId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TokenBindings_TokenGroupId",
+                table: "TokenBindings",
+                column: "TokenGroupId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TokenGroups_GroupCode",
+                table: "TokenGroups",
+                column: "GroupCode");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TokenGroups_IsActive",
+                table: "TokenGroups",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Tokens_CreatedAt",
                 table: "Tokens",
                 column: "CreatedAt");
@@ -427,6 +719,16 @@ namespace TechWebSol.Migrations
                 table: "Tokens",
                 column: "Name",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tokens_TeamId",
+                table: "Tokens",
+                column: "TeamId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tokens_TokenGroupId",
+                table: "Tokens",
+                column: "TokenGroupId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TokenSignatures_Timestamp",
@@ -462,6 +764,9 @@ namespace TechWebSol.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "FreeTokens");
+
+            migrationBuilder.DropTable(
                 name: "MapMarkers");
 
             migrationBuilder.DropTable(
@@ -469,6 +774,12 @@ namespace TechWebSol.Migrations
 
             migrationBuilder.DropTable(
                 name: "StabilityInfo");
+
+            migrationBuilder.DropTable(
+                name: "TeamTokenGroupAssignments");
+
+            migrationBuilder.DropTable(
+                name: "TokenBindings");
 
             migrationBuilder.DropTable(
                 name: "TouchGeometry");
@@ -483,10 +794,19 @@ namespace TechWebSol.Migrations
                 name: "AspNetUsers");
 
             migrationBuilder.DropTable(
+                name: "GameSessions");
+
+            migrationBuilder.DropTable(
                 name: "TokenSignatures");
 
             migrationBuilder.DropTable(
                 name: "Tokens");
+
+            migrationBuilder.DropTable(
+                name: "Teams");
+
+            migrationBuilder.DropTable(
+                name: "TokenGroups");
         }
     }
 }

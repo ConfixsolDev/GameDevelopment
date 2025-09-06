@@ -184,7 +184,7 @@ namespace TechWebSol.Controllers.TokenManagement
         /// Get team assignments for a token group
         /// </summary>
         [HttpGet("group-assignments/{groupId}")]
-        public async Task<ActionResult<List<TeamAssignmentInfo>>> GetGroupAssignments(int groupId)
+        public async Task<ActionResult<List<TeamAssignmentInfo>>> GetGroupAssignments(Guid groupId)
         {
             try
             {
@@ -212,7 +212,7 @@ namespace TechWebSol.Controllers.TokenManagement
         /// Remove token group assignment from team
         /// </summary>
         [HttpDelete("remove-assignment/{assignmentId}")]
-        public async Task<ActionResult<AdminAssignmentResult>> RemoveAssignment(int assignmentId)
+        public async Task<ActionResult<AdminAssignmentResult>> RemoveAssignment(Guid assignmentId)
         {
             try
             {
@@ -241,6 +241,119 @@ namespace TechWebSol.Controllers.TokenManagement
                 return StatusCode(500, "Internal server error");
             }
         }
+
+
+        /// <summary>
+        /// Create a manual token (without physical characteristics)
+        /// </summary>
+        [HttpPost("create-manual-token")]
+        public async Task<ActionResult<ManualTokenResult>> CreateManualToken([FromBody] CreateManualTokenRequest request)
+        {
+            try
+            {
+                var currentUser = _userSessionService.GetCurrentUser();
+                if (currentUser == null)
+                {
+                    return Unauthorized("User not authenticated");
+                }
+
+                // Get user details to determine team
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == currentUser.ApplicationUserId);
+                if (user == null)
+                {
+                    return Unauthorized("User not found");
+                }
+
+                // Find the team by TeamCode and SubTeamCode
+                var team = await _context.Teams.FirstOrDefaultAsync(t => t.TeamCode == user.TeamCode && t.SubTeamCode == user.SubTeamCode);
+                if (team == null)
+                {
+                    return Unauthorized("Team not found");
+                }
+
+                var teamId = team.Id;
+
+                // Generate unique token ID
+                var tokenId = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+                var token = new Token
+                {
+                    Id = tokenId,
+                    Name = request.Name,
+                    Description = request.Description,
+                    Category = request.Category,
+                    TeamId = teamId,
+                    CreatedByUserId = currentUser.ApplicationUserId,
+                    CreatedByUserName = currentUser.FullName,
+                    TokenGroupId = request.TokenGroupId,
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true,
+                    TrainingConsistency = 0 // Manual tokens have no training consistency
+                    // Note: No TokenSignature - this makes it a "manual" token
+                };
+
+                _context.Tokens.Add(token);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Created manual token: {TokenName} by user {UserId}", 
+                    request.Name, currentUser.ApplicationUserId);
+
+                return Ok(new ManualTokenResult
+                {
+                    Success = true,
+                    Message = "Manual token created successfully",
+                    Token = new ManualTokenInfo
+                    {
+                        Name = token.Name,
+                        Description = token.Description,
+                        Category = token.Category,
+                        TokenGroupId = token.TokenGroupId,
+                        CreatedAt = token.CreatedAt,
+                        CreatedByUserName = token.CreatedByUserName
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating manual token");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        /// <summary>
+        /// Get all teams for assignment dropdown
+        /// </summary>
+        [HttpGet("teams")]
+        public async Task<ActionResult<List<TeamInfo>>> GetTeams()
+        {
+            try
+            {
+                var teams = await _context.Teams
+                    .Where(t => t.IsActive)
+                    .Select(t => new TeamInfo
+                    {
+                        Id = t.Id,
+                        Name = t.Name,
+                        TeamCode = t.TeamCode,
+                        SubTeamCode = t.SubTeamCode,
+                        Description = t.Description,
+                        Category = t.Category,
+                        IsActive = t.IsActive,
+                        CreatedAt = t.CreatedAt,
+                        CreatedByUserName = t.CreatedByUserName,
+                        MemberCount = t.Users.Count
+                    })
+                    .OrderBy(t => t.Name)
+                    .ToListAsync();
+
+                return Ok(teams);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting teams");
+                return StatusCode(500, "Internal server error");
+            }
+        }
     }
 
     /// <summary>
@@ -259,8 +372,8 @@ namespace TechWebSol.Controllers.TokenManagement
     /// </summary>
     public class AssignGroupToTeamRequest
     {
-        public string TeamId { get; set; } = string.Empty;
-        public int TokenGroupId { get; set; }
+        public Guid TeamId { get; set; }
+        public Guid TokenGroupId { get; set; }
     }
 
     /// <summary>
@@ -287,7 +400,7 @@ namespace TechWebSol.Controllers.TokenManagement
     /// </summary>
     public class TokenGroupInfo
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public string GroupCode { get; set; } = string.Empty;
@@ -303,9 +416,61 @@ namespace TechWebSol.Controllers.TokenManagement
     /// </summary>
     public class TeamAssignmentInfo
     {
-        public int Id { get; set; }
-        public string TeamId { get; set; } = string.Empty;
+        public Guid Id { get; set; }
+        public Guid TeamId { get; set; }
         public DateTime AssignedAt { get; set; }
         public string? AssignedByUserName { get; set; }
+    }
+
+    /// <summary>
+    /// Request to create a manual token
+    /// </summary>
+    public class CreateManualTokenRequest
+    {
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string? Category { get; set; }
+        public Guid? TokenGroupId { get; set; }
+    }
+
+    /// <summary>
+    /// Result of manual token creation
+    /// </summary>
+    public class ManualTokenResult
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public ManualTokenInfo? Token { get; set; }
+    }
+
+    /// <summary>
+    /// Manual token information
+    /// </summary>
+    public class ManualTokenInfo : BaseEntity
+    {
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string? Category { get; set; }
+        public Guid? TokenGroupId { get; set; }
+        public string? CreatedByUserName { get; set; }
+    }
+
+    /// <summary>
+    /// Team information for dropdowns
+    /// </summary>
+
+    /// <summary>
+    /// Team information
+    /// </summary>
+    public class TeamInfo:BaseEntity
+    {
+        public string Name { get; set; } = string.Empty;
+        public string TeamCode { get; set; } = string.Empty;
+        public string? SubTeamCode { get; set; }
+        public string? Description { get; set; }
+        public string? Category { get; set; }
+        public bool IsActive { get; set; }
+        public string? CreatedByUserName { get; set; }
+        public int MemberCount { get; set; }
     }
 }

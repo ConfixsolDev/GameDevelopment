@@ -276,6 +276,9 @@ namespace TechWebSol.Migrations
                     b.Property<string>("TeamCode")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 
@@ -303,6 +306,8 @@ namespace TechWebSol.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.HasIndex("TeamId");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -360,6 +365,7 @@ namespace TechWebSol.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("System")
+                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
@@ -371,22 +377,27 @@ namespace TechWebSol.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("System");
+
                     b.ToTable("FreeTokens");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.GameSession", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<string>("CreatedByUserId")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
@@ -394,12 +405,18 @@ namespace TechWebSol.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<DateTime?>("EndTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -419,7 +436,20 @@ namespace TechWebSol.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("SessionCode");
+
+                    b.HasIndex("StartTime");
+
+                    b.HasIndex("Status");
 
                     b.ToTable("GameSessions");
                 });
@@ -531,19 +561,84 @@ namespace TechWebSol.Migrations
                     b.ToTable("StabilityInfo");
                 });
 
+            modelBuilder.Entity("TechWebSol.Models.Team", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Category")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("CreatedByUserName")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("SubTeamCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TeamCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("TeamCode");
+
+                    b.ToTable("Teams");
+                });
+
             modelBuilder.Entity("TechWebSol.Models.TeamTokenGroupAssignment", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("AssignedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("AssignedByUserId")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
@@ -551,18 +646,40 @@ namespace TechWebSol.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<string>("TeamId")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
-                    b.Property<int>("TokenGroupId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TokenGroupId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("TeamId");
 
                     b.HasIndex("TokenGroupId");
 
@@ -613,13 +730,11 @@ namespace TechWebSol.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<string>("TeamId")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<Guid>("TeamId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("TokenGroupId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("TokenGroupId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("TrainingConsistency")
                         .HasColumnType("decimal(5,2)");
@@ -636,6 +751,8 @@ namespace TechWebSol.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
+                    b.HasIndex("TeamId");
+
                     b.HasIndex("TokenGroupId");
 
                     b.ToTable("Tokens");
@@ -643,23 +760,30 @@ namespace TechWebSol.Migrations
 
             modelBuilder.Entity("TechWebSol.Models.TokenBinding", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("BoundAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("BoundByUserId")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("BoundByUserName")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("EntityCode")
                         .HasMaxLength(50)
@@ -674,26 +798,38 @@ namespace TechWebSol.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("GameSessionId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("GameSessionId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<string>("TeamId")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
-                    b.Property<int>("TokenGroupId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TokenGroupId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("UnboundAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
                     b.HasIndex("GameSessionId");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("TeamId");
 
                     b.HasIndex("TokenGroupId");
 
@@ -702,11 +838,9 @@ namespace TechWebSol.Migrations
 
             modelBuilder.Entity("TechWebSol.Models.TokenGroup", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Category")
                         .HasMaxLength(50)
@@ -715,14 +849,20 @@ namespace TechWebSol.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<string>("CreatedByUserId")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("CreatedByUserName")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
@@ -736,12 +876,26 @@ namespace TechWebSol.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("GroupCode");
+
+                    b.HasIndex("IsActive");
 
                     b.ToTable("TokenGroups");
                 });
@@ -920,6 +1074,16 @@ namespace TechWebSol.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("TechWebSol.Models.ApplicationUser", b =>
+                {
+                    b.HasOne("TechWebSol.Models.Team", "Team")
+                        .WithMany("Users")
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Team");
+                });
+
             modelBuilder.Entity("TechWebSol.Models.MapMarker", b =>
                 {
                     b.HasOne("TechWebSol.Models.Token", "Token")
@@ -955,20 +1119,37 @@ namespace TechWebSol.Migrations
 
             modelBuilder.Entity("TechWebSol.Models.TeamTokenGroupAssignment", b =>
                 {
+                    b.HasOne("TechWebSol.Models.Team", "Team")
+                        .WithMany("TokenGroupAssignments")
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("TechWebSol.Models.TokenGroup", "TokenGroup")
                         .WithMany("TeamAssignments")
                         .HasForeignKey("TokenGroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Team");
+
                     b.Navigation("TokenGroup");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.Token", b =>
                 {
+                    b.HasOne("TechWebSol.Models.Team", "Team")
+                        .WithMany("Tokens")
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("TechWebSol.Models.TokenGroup", "TokenGroup")
                         .WithMany("Tokens")
-                        .HasForeignKey("TokenGroupId");
+                        .HasForeignKey("TokenGroupId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Team");
 
                     b.Navigation("TokenGroup");
                 });
@@ -981,6 +1162,12 @@ namespace TechWebSol.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("TechWebSol.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("TechWebSol.Models.TokenGroup", "TokenGroup")
                         .WithMany()
                         .HasForeignKey("TokenGroupId")
@@ -988,6 +1175,8 @@ namespace TechWebSol.Migrations
                         .IsRequired();
 
                     b.Navigation("GameSession");
+
+                    b.Navigation("Team");
 
                     b.Navigation("TokenGroup");
                 });
@@ -1028,6 +1217,15 @@ namespace TechWebSol.Migrations
             modelBuilder.Entity("TechWebSol.Models.GameSession", b =>
                 {
                     b.Navigation("TokenBindings");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.Team", b =>
+                {
+                    b.Navigation("TokenGroupAssignments");
+
+                    b.Navigation("Tokens");
+
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.Token", b =>

@@ -15,18 +15,50 @@
                 <secure-content asp-area="" asp-controller="TokenSystem" asp-action="Index">
                     <li>
                         <a asp-area="" asp-controller="TokenSystem" asp-action="Index">
-                            <i class="fas fa-home"></i>
-                            <span>Token Managment </span>
+                            <i class="fas fa-fingerprint"></i>
+                            <span>Token System </span>
                         </a>
                     </li>
                 </secure-content>
 
+                <!-- Token Management Section -->
+                <li class="menu-title">Token Management</li>
+                
+                <secure-content asp-area="" asp-controller="AdminToken" asp-action="ManageTokenGroups">
+                    <li>
+                        <a asp-area="" asp-controller="AdminToken" asp-action="ManageTokenGroups">
+                            <i class="fas fa-layer-group"></i>
+                            <span>Token Groups </span>
+                        </a>
+                    </li>
+                </secure-content>
+
+                <secure-content asp-area="" asp-controller="AdminToken" asp-action="CreateManualToken">
+                    <li>
+                        <a asp-area="" asp-controller="AdminToken" asp-action="CreateManualToken">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Create Manual Token </span>
+                        </a>
+                    </li>
+                </secure-content>
+
+                <secure-content asp-area="" asp-controller="GameManagement" asp-action="Index">
+                    <li>
+                        <a asp-area="" asp-controller="GameManagement" asp-action="Index">
+                            <i class="fas fa-gamepad"></i>
+                            <span>Game Sessions </span>
+                        </a>
+                    </li>
+                </secure-content>
+
+                <!-- System Management Section -->
+                <li class="menu-title">System Management</li>
              
                 <secure-content asp-area="Identity" asp-controller="Role" asp-action="Index">
                     <li>
                         <a href="/Identity/Role/Index">
-                            <i class="fas fa-home"></i>
-                            <span>Role Managment </span>
+                            <i class="fas fa-users-cog"></i>
+                            <span>Role Management </span>
                         </a>
                     </li>
                 </secure-content>

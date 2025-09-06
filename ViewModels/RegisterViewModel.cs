@@ -65,5 +65,11 @@ namespace TechWebSol.ViewModels
         public string UserEmail { get; set; } = string.Empty;
 
         public IEnumerable<SelectListItem> RoleList { get; set; } = new List<SelectListItem>();
+
+        // Team assignment fields
+        [DisplayName("Team")]
+        public int? TeamId { get; set; }
+
+        public IEnumerable<SelectListItem> TeamList { get; set; } = new List<SelectListItem>();
     }
 }
