@@ -340,7 +340,6 @@ namespace TechWebSol.Controllers.TokenManagement
                         Category = t.Category,
                         IsActive = t.IsActive,
                         CreatedAt = t.CreatedAt,
-                        CreatedByUserName = t.CreatedByUserName,
                         MemberCount = t.Users.Count
                     })
                     .OrderBy(t => t.Name)
@@ -351,6 +350,160 @@ namespace TechWebSol.Controllers.TokenManagement
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting teams");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        /// <summary>
+        /// Update token group information
+        /// </summary>
+        [HttpPut("update-group/{groupId}")]
+        public async Task<ActionResult<AdminTokenGroupResult>> UpdateTokenGroup(Guid groupId, [FromBody] UpdateTokenGroupRequest request)
+        {
+            try
+            {
+                var currentUser = _userSessionService.GetCurrentUser();
+                if (currentUser == null)
+                {
+                    return Unauthorized("User not authenticated");
+                }
+
+                var group = await _context.TokenGroups.FirstOrDefaultAsync(g => g.Id == groupId);
+                if (group == null)
+                {
+                    return NotFound("Token group not found");
+                }
+
+                // Check if group code already exists (excluding current group)
+                var existingGroup = await _context.TokenGroups
+                    .FirstOrDefaultAsync(g => g.GroupCode == request.GroupCode && g.Id != groupId);
+
+                if (existingGroup != null)
+                {
+                    return BadRequest($"Token group with code '{request.GroupCode}' already exists");
+                }
+
+                // Update group properties
+                group.Name = request.Name;
+                group.Description = request.Description;
+                group.GroupCode = request.GroupCode;
+                group.Category = request.Category;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Updated token group: {GroupName} ({GroupCode}) by user {UserId}", 
+                    request.Name, request.GroupCode, currentUser.ApplicationUserId);
+
+                return Ok(new AdminTokenGroupResult
+                {
+                    Success = true,
+                    Message = "Token group updated successfully",
+                    TokenGroup = new TokenGroupInfo
+                    {
+                        Id = group.Id,
+                        Name = group.Name,
+                        Description = group.Description,
+                        GroupCode = group.GroupCode,
+                        Category = group.Category,
+                        IsActive = group.IsActive,
+                        TokenCount = group.Tokens.Count
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating token group");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        /// <summary>
+        /// Delete token group
+        /// </summary>
+        [HttpDelete("delete-group/{groupId}")]
+        public async Task<ActionResult<AdminTokenGroupResult>> DeleteTokenGroup(Guid groupId)
+        {
+            try
+            {
+                var currentUser = _userSessionService.GetCurrentUser();
+                if (currentUser == null)
+                {
+                    return Unauthorized("User not authenticated");
+                }
+
+                var group = await _context.TokenGroups
+                    .Include(g => g.Tokens)
+                    .FirstOrDefaultAsync(g => g.Id == groupId);
+
+                if (group == null)
+                {
+                    return NotFound("Token group not found");
+                }
+
+                // Check if group has active tokens
+                var activeTokens = group.Tokens.Count(t => t.IsActive);
+                if (activeTokens > 0)
+                {
+                    return BadRequest($"Cannot delete token group with {activeTokens} active tokens. Please remove or reassign tokens first.");
+                }
+
+                // Check if group has active team assignments
+                var activeAssignments = await _context.TeamTokenGroupAssignments
+                    .CountAsync(a => a.TokenGroupId == groupId && a.IsActive);
+
+                if (activeAssignments > 0)
+                {
+                    return BadRequest($"Cannot delete token group with {activeAssignments} active team assignments. Please remove assignments first.");
+                }
+
+                // Soft delete the group
+                group.IsActive = false;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Deleted token group: {GroupName} ({GroupCode}) by user {UserId}", 
+                    group.Name, group.GroupCode, currentUser.ApplicationUserId);
+
+                return Ok(new AdminTokenGroupResult
+                {
+                    Success = true,
+                    Message = "Token group deleted successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting token group");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        /// <summary>
+        /// Get all team assignments for a specific team
+        /// </summary>
+        [HttpGet("team-assignments/{teamId}")]
+        public async Task<ActionResult<List<TokenGroupAssignmentInfo>>> GetTeamAssignments(Guid teamId)
+        {
+            try
+            {
+                var assignments = await _context.TeamTokenGroupAssignments
+                    .Where(a => a.TeamId == teamId && a.IsActive)
+                    .Include(a => a.TokenGroup)
+                    .Select(a => new TokenGroupAssignmentInfo
+                    {
+                        Id = a.Id,
+                        TokenGroupId = a.TokenGroupId,
+                        TokenGroupName = a.TokenGroup.Name,
+                        TokenGroupCode = a.TokenGroup.GroupCode,
+                        AssignedAt = a.AssignedAt,
+                        AssignedByUserName = a.AssignedByUserName
+                    })
+                    .ToListAsync();
+
+                return Ok(assignments);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting team assignments");
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -460,17 +613,41 @@ namespace TechWebSol.Controllers.TokenManagement
     /// </summary>
 
     /// <summary>
+    /// Request to update a token group
+    /// </summary>
+    public class UpdateTokenGroupRequest
+    {
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string GroupCode { get; set; } = string.Empty;
+        public string? Category { get; set; }
+    }
+
+    /// <summary>
+    /// Token group assignment information
+    /// </summary>
+    public class TokenGroupAssignmentInfo
+    {
+        public Guid Id { get; set; }
+        public Guid TokenGroupId { get; set; }
+        public string TokenGroupName { get; set; } = string.Empty;
+        public string TokenGroupCode { get; set; } = string.Empty;
+        public DateTime AssignedAt { get; set; }
+        public string? AssignedByUserName { get; set; }
+    }
+
+    /// <summary>
     /// Team information
     /// </summary>
     public class TeamInfo:BaseEntity
     {
+        public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string TeamCode { get; set; } = string.Empty;
         public string? SubTeamCode { get; set; }
         public string? Description { get; set; }
         public string? Category { get; set; }
         public bool IsActive { get; set; }
-        public string? CreatedByUserName { get; set; }
         public int MemberCount { get; set; }
     }
 }

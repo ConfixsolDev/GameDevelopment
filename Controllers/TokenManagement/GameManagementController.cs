@@ -297,6 +297,206 @@ namespace TechWebSol.Controllers.TokenManagement
         }
 
         /// <summary>
+        /// Bind a specific token to a game session
+        /// </summary>
+        [HttpPost("bind-token")]
+        public async Task<ActionResult<BindingResult>> BindTokenToSession([FromBody] BindTokenRequest request)
+        {
+            try
+            {
+                var currentUser = _userSessionService.GetCurrentUser();
+                if (currentUser == null)
+                {
+                    return Unauthorized("User not authenticated");
+                }
+
+                var gameSession = await _context.GameSessions
+                    .FirstOrDefaultAsync(s => s.Id == request.SessionId);
+
+                if (gameSession == null)
+                {
+                    return NotFound("Game session not found");
+                }
+
+                if (gameSession.Status != "Active")
+                {
+                    return BadRequest("Game session is not active");
+                }
+
+                var token = await _context.Tokens
+                    .FirstOrDefaultAsync(t => t.Id == request.TokenId);
+
+                if (token == null)
+                {
+                    return NotFound("Token not found");
+                }
+
+                // Check if token is already bound to an active session
+                var existingBinding = await _context.TokenBindings
+                    .FirstOrDefaultAsync(b => b.TokenId == request.TokenId && b.IsActive);
+
+                if (existingBinding != null)
+                {
+                    return BadRequest("Token is already bound to another active session");
+                }
+
+                var binding = new TokenBinding
+                {
+                    GameSessionId = request.SessionId,
+                    TokenId = request.TokenId,
+                    BindingType = request.BindingType,
+                    Priority = request.Priority,
+                    Notes = request.Notes,
+                    BoundAt = DateTime.UtcNow,
+                    BoundByUserId = currentUser.ApplicationUserId,
+                    BoundByUserName = currentUser.FullName,
+                    IsActive = true
+                };
+
+                _context.TokenBindings.Add(binding);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Bound token {TokenId} to session {SessionId} by user {UserId}", 
+                    request.TokenId, request.SessionId, currentUser.ApplicationUserId);
+
+                return Ok(new BindingResult
+                {
+                    Success = true,
+                    Message = "Token bound to session successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error binding token to session");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        /// <summary>
+        /// Unbind a token from a game session
+        /// </summary>
+        [HttpDelete("unbind-token/{bindingId}")]
+        public async Task<ActionResult<BindingResult>> UnbindTokenFromSession(Guid bindingId)
+        {
+            try
+            {
+                var currentUser = _userSessionService.GetCurrentUser();
+                if (currentUser == null)
+                {
+                    return Unauthorized("User not authenticated");
+                }
+
+                var binding = await _context.TokenBindings
+                    .FirstOrDefaultAsync(b => b.Id == bindingId);
+
+                if (binding == null)
+                {
+                    return NotFound("Token binding not found");
+                }
+
+                if (!binding.IsActive)
+                {
+                    return BadRequest("Token binding is already inactive");
+                }
+
+                // Mark binding as inactive
+                binding.IsActive = false;
+                binding.UnboundAt = DateTime.UtcNow;
+                binding.UnboundByUserId = currentUser.ApplicationUserId;
+                binding.UnboundByUserName = currentUser.FullName;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Unbound token {TokenId} from session {SessionId} by user {UserId}", 
+                    binding.TokenId, binding.GameSessionId, currentUser.ApplicationUserId);
+
+                return Ok(new BindingResult
+                {
+                    Success = true,
+                    Message = "Token unbound from session successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error unbinding token from session");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        /// <summary>
+        /// Get token bindings for a specific session
+        /// </summary>
+        [HttpGet("token-bindings")]
+        public async Task<ActionResult<List<TokenBindingInfo>>> GetTokenBindings()
+        {
+            try
+            {
+                var bindings = await _context.TokenBindings
+                    .Include(b => b.GameSession)
+                    .Include(b => b.Token)
+                    .Where(b => b.IsActive)
+                    .OrderBy(b => b.BoundAt)
+                    .Select(b => new TokenBindingInfo
+                    {
+                        Id = b.Id,
+                        SessionId = b.GameSessionId,
+                        SessionName = b.GameSession.Name,
+                        TokenId = b.TokenId,
+                        TokenName = b.Token.Name,
+                        BindingType = b.BindingType,
+                        Priority = b.Priority,
+                        BoundAt = b.BoundAt,
+                        IsActive = b.IsActive,
+                        Notes = b.Notes
+                    })
+                    .ToListAsync();
+
+                return Ok(bindings);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting token bindings");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        /// <summary>
+        /// Get session details by ID
+        /// </summary>
+        [HttpGet("session/{sessionId}")]
+        public async Task<ActionResult<GameSessionInfo>> GetSessionById(Guid sessionId)
+        {
+            try
+            {
+                var session = await _context.GameSessions
+                    .FirstOrDefaultAsync(s => s.Id == sessionId);
+
+                if (session == null)
+                {
+                    return NotFound("Game session not found");
+                }
+
+                return Ok(new GameSessionInfo
+                {
+                    Id = session.Id,
+                    Name = session.Name,
+                    Description = session.Description,
+                    SessionCode = session.SessionCode,
+                    StartTime = session.StartTime,
+                    EndTime = session.EndTime,
+                    Status = session.Status,
+                    CreatedByUserName = session.CreatedByUserName,
+                    TokenBindingCount = session.TokenBindings.Count(b => b.IsActive),
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting session by ID");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        /// <summary>
         /// Move tokens from bound state to free tokens table
         /// </summary>
         private async Task MoveTokensToFreeTokens(TokenBinding binding)
@@ -393,6 +593,37 @@ namespace TechWebSol.Controllers.TokenManagement
         public string Status { get; set; } = string.Empty;
         public string? CreatedByUserName { get; set; }
         public int TokenBindingCount { get; set; }
+        public string? TeamName { get; set; }
+    }
+
+    /// <summary>
+    /// Request to bind a token to a session
+    /// </summary>
+    public class BindTokenRequest
+    {
+        public Guid SessionId { get; set; }
+        public long TokenId { get; set; }
+        public string BindingType { get; set; } = "manual";
+        public int Priority { get; set; } = 2;
+        public string? Notes { get; set; }
+        public List<List<double>>? TouchPoints { get; set; }
+    }
+
+    /// <summary>
+    /// Token binding information
+    /// </summary>
+    public class TokenBindingInfo
+    {
+        public Guid Id { get; set; }
+        public Guid SessionId { get; set; }
+        public string SessionName { get; set; } = string.Empty;
+        public long TokenId { get; set; }
+        public string TokenName { get; set; } = string.Empty;
+        public string BindingType { get; set; } = string.Empty;
+        public int Priority { get; set; }
+        public DateTime BoundAt { get; set; }
+        public bool IsActive { get; set; }
+        public string? Notes { get; set; }
     }
 
     /// <summary>

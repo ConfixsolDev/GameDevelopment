@@ -86,7 +86,6 @@ namespace TechWebSol.Controllers.TokenManagement
                         Category = team.Category,
                         IsActive = team.IsActive,
                         CreatedAt = team.CreatedAt,
-                        CreatedByUserName = team.CreatedByUserName,
                         MemberCount = 0
                     }
                 });
@@ -118,7 +117,6 @@ namespace TechWebSol.Controllers.TokenManagement
                         Category = t.Category,
                         IsActive = t.IsActive,
                         CreatedAt = t.CreatedAt,
-                        CreatedByUserName = t.CreatedByUserName,
                         MemberCount = t.Users.Count(u => u.IsActive && !u.IsDeleted)
                     })
                     .ToListAsync();
@@ -301,6 +299,210 @@ namespace TechWebSol.Controllers.TokenManagement
                 return StatusCode(500, "Internal server error");
             }
         }
+
+        /// <summary>
+        /// Update team information
+        /// </summary>
+        [HttpPut("update-team/{teamId}")]
+        public async Task<ActionResult<TeamResult>> UpdateTeam(Guid teamId, [FromBody] UpdateTeamRequest request)
+        {
+            try
+            {
+                var currentUser = _userSessionService.GetCurrentUser();
+                if (currentUser == null)
+                {
+                    return Unauthorized("User not authenticated");
+                }
+
+                var team = await _context.Teams.FirstOrDefaultAsync(t => t.Id == teamId);
+                if (team == null)
+                {
+                    return NotFound("Team not found");
+                }
+
+                // Check if team code already exists (excluding current team)
+                var existingTeam = await _context.Teams
+                    .FirstOrDefaultAsync(t => t.TeamCode == request.TeamCode && t.Id != teamId);
+
+                if (existingTeam != null)
+                {
+                    return BadRequest($"Team with code '{request.TeamCode}' already exists");
+                }
+
+                // Update team properties
+                team.Name = request.Name;
+                team.TeamCode = request.TeamCode;
+                team.SubTeamCode = request.SubTeamCode;
+                team.Description = request.Description;
+                team.Category = request.Category;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Updated team: {TeamName} ({TeamCode}) by user {UserId}", 
+                    request.Name, request.TeamCode, currentUser.ApplicationUserId);
+
+                return Ok(new TeamResult
+                {
+                    Success = true,
+                    Message = "Team updated successfully",
+                    Team = new TeamInfo
+                    {
+                        Id = team.Id,
+                        Name = team.Name,
+                        TeamCode = team.TeamCode,
+                        SubTeamCode = team.SubTeamCode,
+                        Description = team.Description,
+                        Category = team.Category,
+                        IsActive = team.IsActive,
+                        MemberCount = team.Users.Count(u => u.IsActive && !u.IsDeleted)
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating team");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        /// <summary>
+        /// Delete team
+        /// </summary>
+        [HttpDelete("delete-team/{teamId}")]
+        public async Task<ActionResult<TeamResult>> DeleteTeam(Guid teamId)
+        {
+            try
+            {
+                var currentUser = _userSessionService.GetCurrentUser();
+                if (currentUser == null)
+                {
+                    return Unauthorized("User not authenticated");
+                }
+
+                var team = await _context.Teams
+                    .Include(t => t.Users)
+                    .FirstOrDefaultAsync(t => t.Id == teamId);
+
+                if (team == null)
+                {
+                    return NotFound("Team not found");
+                }
+
+                // Check if team has active users
+                var activeUsers = team.Users.Count(u => u.IsActive && !u.IsDeleted);
+                if (activeUsers > 0)
+                {
+                    return BadRequest($"Cannot delete team with {activeUsers} active members. Please reassign or remove members first.");
+                }
+
+                // Soft delete the team
+                team.IsActive = false;
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Deleted team: {TeamName} ({TeamCode}) by user {UserId}", 
+                    team.Name, team.TeamCode, currentUser.ApplicationUserId);
+
+                return Ok(new TeamResult
+                {
+                    Success = true,
+                    Message = "Team deleted successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting team");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        /// <summary>
+        /// Remove user from team by user ID
+        /// </summary>
+        [HttpDelete("remove-user-from-team/{userId}")]
+        public async Task<ActionResult<AssignmentResult>> RemoveUserFromTeamById(string userId)
+        {
+            try
+            {
+                var currentUser = _userSessionService.GetCurrentUser();
+                if (currentUser == null)
+                {
+                    return Unauthorized("User not authenticated");
+                }
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user == null)
+                {
+                    return NotFound("User not found");
+                }
+
+                // Remove user from team
+                user.TeamId = null;
+                user.TeamCode = string.Empty;
+                user.SubTeamCode = string.Empty;
+                user.ModifiedBy = currentUser.FullName;
+                user.UpdatedDate = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Removed user {UserId} from team by user {CurrentUserId}", 
+                    userId, currentUser.ApplicationUserId);
+
+                return Ok(new AssignmentResult
+                {
+                    Success = true,
+                    Message = "User removed from team successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error removing user from team");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        /// <summary>
+        /// Update user role in team
+        /// </summary>
+        [HttpPut("update-user-role")]
+        public async Task<ActionResult<AssignmentResult>> UpdateUserRole([FromBody] UpdateUserRoleRequest request)
+        {
+            try
+            {
+                var currentUser = _userSessionService.GetCurrentUser();
+                if (currentUser == null)
+                {
+                    return Unauthorized("User not authenticated");
+                }
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId);
+                if (user == null)
+                {
+                    return NotFound("User not found");
+                }
+
+                // Update user role (you might need to add a Role field to ApplicationUser)
+                // For now, we'll update the Designation field
+                user.Designation = request.Role;
+                user.ModifiedBy = currentUser.FullName;
+                user.UpdatedDate = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Updated user {UserId} role to {Role} by user {CurrentUserId}", 
+                    request.UserId, request.Role, currentUser.ApplicationUserId);
+
+                return Ok(new AssignmentResult
+                {
+                    Success = true,
+                    Message = "User role updated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating user role");
+                return StatusCode(500, "Internal server error");
+            }
+        }
     }
 
     /// <summary>
@@ -352,6 +554,28 @@ namespace TechWebSol.Controllers.TokenManagement
     }
 
     /// <summary>
+    /// Request to update a team
+    /// </summary>
+    public class UpdateTeamRequest
+    {
+        public string Name { get; set; } = string.Empty;
+        public string TeamCode { get; set; } = string.Empty;
+        public string? SubTeamCode { get; set; }
+        public string? Description { get; set; }
+        public string? Category { get; set; }
+    }
+
+    /// <summary>
+    /// Request to update user role
+    /// </summary>
+    public class UpdateUserRoleRequest
+    {
+        public string UserId { get; set; } = string.Empty;
+        public Guid TeamId { get; set; }
+        public string Role { get; set; } = string.Empty;
+    }
+
+    /// <summary>
     /// User information
     /// </summary>
     public class UserInfo
@@ -369,5 +593,7 @@ namespace TechWebSol.Controllers.TokenManagement
         public Guid? TeamId { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedDate { get; set; }
+        public string? Role { get; set; }
+        public DateTime? AssignedDate { get; set; }
     }
 }

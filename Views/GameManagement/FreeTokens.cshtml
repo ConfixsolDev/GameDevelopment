@@ -1,0 +1,413 @@
+@{
+    ViewData["Title"] = "Free Tokens Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-unlock"></i> Free Tokens Management
+                    </h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-primary" onclick="refreshFreeTokens()">
+                            <i class="fas fa-sync"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchTokens" placeholder="Search tokens...">
+                                <button class="btn btn-outline-secondary" type="button" onclick="searchTokens()">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-control" id="filterCategory">
+                                <option value="">All Categories</option>
+                                <option value="Company">Company</option>
+                                <option value="Brigade">Brigade</option>
+                                <option value="Department">Department</option>
+                                <option value="Unit">Unit</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-control" id="filterSystem">
+                                <option value="">All Systems</option>
+                                <option value="unified">Unified</option>
+                                <option value="simplified">Simplified</option>
+                                <option value="complex">Complex</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="freeTokensTable" class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Token Name</th>
+                                    <th>Description</th>
+                                    <th>Category</th>
+                                    <th>Touch Count</th>
+                                    <th>System</th>
+                                    <th>Created At</th>
+                                    <th>Last Used</th>
+                                    <th>Usage Count</th>
+                                    <th>Created By</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be loaded via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Token Details Modal -->
+<div class="modal fade" id="tokenDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Token Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="tokenDetailsContent">
+                    <!-- Content will be loaded via JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="assignTokenBtn">Assign to Game</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Token Modal -->
+<div class="modal fade" id="assignTokenModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Assign Token to Game</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="assignTokenForm">
+                    <input type="hidden" id="tokenIdToAssign">
+                    <div class="mb-3">
+                        <label for="gameSessionSelect" class="form-label">Select Game Session *</label>
+                        <select id="gameSessionSelect" class="form-control" required>
+                            <option value="">-- Select Game Session --</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="entityName" class="form-label">Entity Name *</label>
+                        <input type="text" class="form-control" id="entityName" required>
+                        <div class="form-text">Name of the entity this token represents</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="entityCode" class="form-label">Entity Code</label>
+                        <input type="text" class="form-control" id="entityCode">
+                        <div class="form-text">Optional code for the entity</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="entityDescription" class="form-label">Entity Description</label>
+                        <textarea class="form-control" id="entityDescription" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmAssignBtn">Assign Token</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentTokenId = null;
+
+        $(document).ready(function() {
+            loadFreeTokens();
+            loadGameSessions();
+
+            $('#searchTokens').on('keyup', function() {
+                if ($(this).val().length >= 3) {
+                    searchTokens();
+                } else if ($(this).val().length === 0) {
+                    loadFreeTokens();
+                }
+            });
+
+            $('#filterCategory, #filterSystem').change(function() {
+                loadFreeTokens();
+            });
+
+            $('#confirmAssignBtn').click(function() {
+                assignTokenToGame();
+            });
+
+            $('#assignTokenBtn').click(function() {
+                if (currentTokenId) {
+                    $('#tokenIdToAssign').val(currentTokenId);
+                    $('#assignTokenModal').modal('show');
+                }
+            });
+        });
+
+        function loadFreeTokens() {
+            const category = $('#filterCategory').val();
+            const system = $('#filterSystem').val();
+            
+            let url = '/api/game/GameManagement/free-tokens';
+            const params = [];
+            if (category) params.push(`category=${category}`);
+            if (system) params.push(`system=${system}`);
+            if (params.length > 0) url += '?' + params.join('&');
+
+            $.get(url)
+                .done(function(tokens) {
+                    const tbody = $('#freeTokensTable tbody');
+                    tbody.empty();
+                    
+                    tokens.forEach(function(token) {
+                        const row = `
+                            <tr>
+                                <td>${token.name}</td>
+                                <td>${token.description || 'N/A'}</td>
+                                <td>${token.category || 'N/A'}</td>
+                                <td><span class="badge bg-info">${token.touchCount}</span></td>
+                                <td><span class="badge bg-secondary">${token.system}</span></td>
+                                <td>${new Date(token.createdAt).toLocaleDateString()}</td>
+                                <td>${token.lastUsed ? new Date(token.lastUsed).toLocaleDateString() : 'Never'}</td>
+                                <td><span class="badge bg-success">${token.usageCount}</span></td>
+                                <td>${token.createdByUserName || 'N/A'}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" onclick="viewTokenDetails('${token.id}')">
+                                        <i class="fas fa-eye"></i> Details
+                                    </button>
+                                    <button class="btn btn-sm btn-primary" onclick="assignToken('${token.id}')">
+                                        <i class="fas fa-link"></i> Assign
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteToken('${token.id}')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.append(row);
+                    });
+                })
+                .fail(function() {
+                    showAlert('Error loading free tokens', 'danger');
+                });
+        }
+
+        function searchTokens() {
+            const searchTerm = $('#searchTokens').val();
+            if (searchTerm.length < 3) return;
+
+            $.get(`/api/game/GameManagement/search-free-tokens?q=${encodeURIComponent(searchTerm)}`)
+                .done(function(tokens) {
+                    const tbody = $('#freeTokensTable tbody');
+                    tbody.empty();
+                    
+                    tokens.forEach(function(token) {
+                        const row = `
+                            <tr>
+                                <td>${token.name}</td>
+                                <td>${token.description || 'N/A'}</td>
+                                <td>${token.category || 'N/A'}</td>
+                                <td><span class="badge bg-info">${token.touchCount}</span></td>
+                                <td><span class="badge bg-secondary">${token.system}</span></td>
+                                <td>${new Date(token.createdAt).toLocaleDateString()}</td>
+                                <td>${token.lastUsed ? new Date(token.lastUsed).toLocaleDateString() : 'Never'}</td>
+                                <td><span class="badge bg-success">${token.usageCount}</span></td>
+                                <td>${token.createdByUserName || 'N/A'}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" onclick="viewTokenDetails('${token.id}')">
+                                        <i class="fas fa-eye"></i> Details
+                                    </button>
+                                    <button class="btn btn-sm btn-primary" onclick="assignToken('${token.id}')">
+                                        <i class="fas fa-link"></i> Assign
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteToken('${token.id}')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.append(row);
+                    });
+                })
+                .fail(function() {
+                    showAlert('Error searching tokens', 'danger');
+                });
+        }
+
+        function loadGameSessions() {
+            $.get('/api/game/GameManagement/active-sessions')
+                .done(function(sessions) {
+                    const select = $('#gameSessionSelect');
+                    select.empty().append('<option value="">-- Select Game Session --</option>');
+                    
+                    sessions.forEach(function(session) {
+                        select.append(`<option value="${session.id}">${session.name} (${session.sessionCode})</option>`);
+                    });
+                })
+                .fail(function() {
+                    showAlert('Error loading game sessions', 'danger');
+                });
+        }
+
+        function viewTokenDetails(tokenId) {
+            currentTokenId = tokenId;
+            $.get(`/api/game/GameManagement/token-details/${tokenId}`)
+                .done(function(token) {
+                    const content = `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Token Information</h6>
+                                <table class="table table-sm">
+                                    <tr><td><strong>Name:</strong></td><td>${token.name}</td></tr>
+                                    <tr><td><strong>Description:</strong></td><td>${token.description || 'N/A'}</td></tr>
+                                    <tr><td><strong>Category:</strong></td><td>${token.category || 'N/A'}</td></tr>
+                                    <tr><td><strong>System:</strong></td><td><span class="badge bg-secondary">${token.system}</span></td></tr>
+                                    <tr><td><strong>Touch Count:</strong></td><td><span class="badge bg-info">${token.touchCount}</span></td></tr>
+                                    <tr><td><strong>Usage Count:</strong></td><td><span class="badge bg-success">${token.usageCount}</span></td></tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Timeline</h6>
+                                <table class="table table-sm">
+                                    <tr><td><strong>Created:</strong></td><td>${new Date(token.createdAt).toLocaleString()}</td></tr>
+                                    <tr><td><strong>Created By:</strong></td><td>${token.createdByUserName || 'N/A'}</td></tr>
+                                    <tr><td><strong>Last Used:</strong></td><td>${token.lastUsed ? new Date(token.lastUsed).toLocaleString() : 'Never'}</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <h6>Token Signature Data</h6>
+                                <div class="card">
+                                    <div class="card-body">
+                                        <pre id="signatureData">Loading...</pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    $('#tokenDetailsContent').html(content);
+                    loadTokenSignatureData(tokenId);
+                    $('#tokenDetailsModal').modal('show');
+                })
+                .fail(function() {
+                    showAlert('Error loading token details', 'danger');
+                });
+        }
+
+        function loadTokenSignatureData(tokenId) {
+            $.get(`/api/game/GameManagement/token-signature/${tokenId}`)
+                .done(function(signature) {
+                    const signatureData = JSON.stringify(signature, null, 2);
+                    $('#signatureData').text(signatureData);
+                })
+                .fail(function() {
+                    $('#signatureData').text('Error loading signature data');
+                });
+        }
+
+        function assignToken(tokenId) {
+            currentTokenId = tokenId;
+            $('#tokenIdToAssign').val(tokenId);
+            $('#assignTokenModal').modal('show');
+        }
+
+        function assignTokenToGame() {
+            const tokenId = $('#tokenIdToAssign').val();
+            const sessionId = $('#gameSessionSelect').val();
+            const entityName = $('#entityName').val();
+            const entityCode = $('#entityCode').val();
+            const entityDescription = $('#entityDescription').val();
+
+            if (!sessionId || !entityName) {
+                showAlert('Please select a game session and provide an entity name', 'warning');
+                return;
+            }
+
+            const data = {
+                tokenId: tokenId,
+                sessionId: sessionId,
+                entityName: entityName,
+                entityCode: entityCode,
+                entityDescription: entityDescription
+            };
+
+            $.post('/api/game/GameManagement/assign-token', data)
+                .done(function(response) {
+                    if (response.success) {
+                        showAlert('Token assigned to game successfully', 'success');
+                        $('#assignTokenModal').modal('hide');
+                        $('#assignTokenForm')[0].reset();
+                        loadFreeTokens();
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                })
+                .fail(function(xhr) {
+                    const message = xhr.responseJSON?.message || 'Error assigning token';
+                    showAlert(message, 'danger');
+                });
+        }
+
+        function deleteToken(tokenId) {
+            if (confirm('Are you sure you want to delete this token? This action cannot be undone.')) {
+                $.ajax({
+                    url: `/api/game/GameManagement/delete-free-token/${tokenId}`,
+                    type: 'DELETE'
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        showAlert('Token deleted successfully', 'success');
+                        loadFreeTokens();
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('Error deleting token', 'danger');
+                });
+            }
+        }
+
+        function refreshFreeTokens() {
+            loadFreeTokens();
+            showAlert('Free tokens refreshed', 'info');
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            $('.container-fluid').prepend(alertDiv);
+            
+            setTimeout(function() {
+                $('.alert').fadeOut();
+            }, 5000);
+        }
+    </script>
+}

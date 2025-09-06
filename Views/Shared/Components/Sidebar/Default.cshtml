@@ -51,6 +51,45 @@
                     </li>
                 </secure-content>
 
+                <secure-content asp-area="" asp-controller="GameManagement" asp-action="ActiveSessions">
+                    <li>
+                        <a asp-area="" asp-controller="GameManagement" asp-action="ActiveSessions">
+                            <i class="fas fa-play-circle"></i>
+                            <span>Active Sessions </span>
+                        </a>
+                    </li>
+                </secure-content>
+
+                <secure-content asp-area="" asp-controller="GameManagement" asp-action="FreeTokens">
+                    <li>
+                        <a asp-area="" asp-controller="GameManagement" asp-action="FreeTokens">
+                            <i class="fas fa-unlock"></i>
+                            <span>Free Tokens </span>
+                        </a>
+                    </li>
+                </secure-content>
+
+                <!-- Team Management Section -->
+                <li class="menu-title">Team Management</li>
+                
+                <secure-content asp-area="" asp-controller="TeamManagement" asp-action="Index">
+                    <li>
+                        <a asp-area="" asp-controller="TeamManagement" asp-action="Index">
+                            <i class="fas fa-users"></i>
+                            <span>Teams </span>
+                        </a>
+                    </li>
+                </secure-content>
+
+                <secure-content asp-area="" asp-controller="TeamManagement" asp-action="Create">
+                    <li>
+                        <a asp-area="" asp-controller="TeamManagement" asp-action="Create">
+                            <i class="fas fa-plus"></i>
+                            <span>Create Team </span>
+                        </a>
+                    </li>
+                </secure-content>
+
                 <!-- System Management Section -->
                 <li class="menu-title">System Management</li>
              

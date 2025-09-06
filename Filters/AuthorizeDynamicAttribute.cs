@@ -54,12 +54,6 @@ namespace TechWebSol.Filters
                 return true;
             }
 
-            // Allow access to Home controller for basic navigation
-            if (string.Equals(controllerName, "Home", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-
             // Allow access to Error pages
             if (string.Equals(controllerName, "Error", StringComparison.OrdinalIgnoreCase))
             {

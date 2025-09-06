@@ -50,20 +50,28 @@ namespace TechWebSol.Models
         public Guid GameSessionId { get; set; }
 
         [Required]
-        public Guid TokenGroupId { get; set; }
+        public long TokenId { get; set; } // Direct reference to Token.Id
 
-        [Required]
-        public Guid TeamId { get; set; } // Foreign key to Team.Id
+        public Guid? TokenGroupId { get; set; } // Optional group reference
 
-        [Required]
+        public Guid? TeamId { get; set; } // Optional team reference
+
         [MaxLength(100)]
-        public string EntityName { get; set; } = string.Empty; // e.g., "Company A", "Brigade 1"
+        public string? EntityName { get; set; } // e.g., "Company A", "Brigade 1"
 
         [MaxLength(50)]
         public string? EntityCode { get; set; } // e.g., "COMP_A", "BRIG_1"
 
         [MaxLength(500)]
         public string? EntityDescription { get; set; }
+
+        [MaxLength(20)]
+        public string BindingType { get; set; } = "manual"; // "automatic" or "manual"
+
+        public int Priority { get; set; } = 2; // 1=High, 2=Medium, 3=Low
+
+        [MaxLength(1000)]
+        public string? Notes { get; set; }
 
         public bool IsActive { get; set; } = true;
 
@@ -78,10 +86,17 @@ namespace TechWebSol.Models
         [MaxLength(50)]
         public string? BoundByUserName { get; set; }
 
+        [MaxLength(50)]
+        public string? UnboundByUserId { get; set; }
+
+        [MaxLength(50)]
+        public string? UnboundByUserName { get; set; }
+
         // Navigation properties
         public virtual GameSession GameSession { get; set; } = null!;
-        public virtual TokenGroup TokenGroup { get; set; } = null!;
-        public virtual Team Team { get; set; } = null!;
+        public virtual Token Token { get; set; } = null!;
+        public virtual TokenGroup? TokenGroup { get; set; }
+        public virtual Team? Team { get; set; }
     }
 
     /// <summary>
@@ -121,6 +136,12 @@ namespace TechWebSol.Models
 
         [MaxLength(50)]
         public string? CreatedByUserName { get; set; }
+
+        [MaxLength(50)]
+        public string? UnboundByUserId { get; set; }
+
+        [MaxLength(50)]
+        public string? UnboundByUserName { get; set; }
 
         // Token signature data (simplified)
         [MaxLength(1000)]

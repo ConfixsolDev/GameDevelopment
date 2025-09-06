@@ -1,0 +1,133 @@
+@{
+    ViewData["Title"] = "Create Team";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-plus"></i> Create New Team
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form id="createTeamForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="teamName" class="form-label">Team Name *</label>
+                                    <input type="text" class="form-control" id="teamName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="teamCode" class="form-label">Team Code *</label>
+                                    <input type="text" class="form-control" id="teamCode" required>
+                                    <div class="form-text">Unique identifier (e.g., TEAM_A, BRIG_1)</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="subTeamCode" class="form-label">Sub Team Code</label>
+                                    <input type="text" class="form-control" id="subTeamCode">
+                                    <div class="form-text">Optional sub-team identifier</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="teamCategory" class="form-label">Category</label>
+                                    <select class="form-control" id="teamCategory">
+                                        <option value="">-- Select Category --</option>
+                                        <option value="Company">Company</option>
+                                        <option value="Brigade">Brigade</option>
+                                        <option value="Department">Department</option>
+                                        <option value="Unit">Unit</option>
+                                        <option value="Squad">Squad</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="teamDescription" class="form-label">Description</label>
+                                    <textarea class="form-control" id="teamDescription" rows="4"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Create Team
+                                </button>
+                                <a href="@Url.Action("Index", "TeamManagement")" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Back to Teams
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#createTeamForm').submit(function(e) {
+                e.preventDefault();
+                createTeam();
+            });
+        });
+
+        function createTeam() {
+            const data = {
+                name: $('#teamName').val(),
+                teamCode: $('#teamCode').val(),
+                subTeamCode: $('#subTeamCode').val(),
+                category: $('#teamCategory').val(),
+                description: $('#teamDescription').val()
+            };
+
+            if (!data.name || !data.teamCode) {
+                showAlert('Team name and code are required', 'warning');
+                return;
+            }
+
+            $.post('/api/admin/TeamManagementApi/create-team', data)
+                .done(function(response) {
+                    if (response.success) {
+                        showAlert('Team created successfully', 'success');
+                        setTimeout(function() {
+                            window.location.href = '@Url.Action("Index", "TeamManagement")';
+                        }, 1500);
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                })
+                .fail(function(xhr) {
+                    const message = xhr.responseJSON?.message || 'Error creating team';
+                    showAlert(message, 'danger');
+                });
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            $('.container-fluid').prepend(alertDiv);
+            
+            setTimeout(function() {
+                $('.alert').fadeOut();
+            }, 5000);
+        }
+    </script>
+}
