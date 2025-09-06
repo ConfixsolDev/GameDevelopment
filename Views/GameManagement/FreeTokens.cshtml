@@ -354,7 +354,7 @@
                 entityDescription: entityDescription
             };
 
-            $.post('/api/game/GameManagement/assign-token', data)
+            postJson(getApiUrl('GameManagement', 'assignToken'), data)
                 .done(function(response) {
                     if (response.success) {
                         showAlert('Token assigned to game successfully', 'success');
@@ -374,7 +374,7 @@
         function deleteToken(tokenId) {
             if (confirm('Are you sure you want to delete this token? This action cannot be undone.')) {
                 $.ajax({
-                    url: `/api/game/GameManagement/delete-free-token/${tokenId}`,
+                    url: getApiUrlWithParams('GameManagement', 'deleteFreeToken', { tokenId: tokenId }),
                     type: 'DELETE'
                 })
                 .done(function(response) {

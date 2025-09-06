@@ -24,6 +24,15 @@
                 <!-- Token Management Section -->
                 <li class="menu-title">Token Management</li>
                 
+                <secure-content asp-area="" asp-controller="AdminToken" asp-action="Index">
+                    <li>
+                        <a asp-area="" asp-controller="AdminToken" asp-action="Index">
+                            <i class="fas fa-cogs"></i>
+                            <span>Admin Dashboard </span>
+                        </a>
+                    </li>
+                </secure-content>
+                
                 <secure-content asp-area="" asp-controller="AdminToken" asp-action="ManageTokenGroups">
                     <li>
                         <a asp-area="" asp-controller="AdminToken" asp-action="ManageTokenGroups">
@@ -33,9 +42,9 @@
                     </li>
                 </secure-content>
 
-                <secure-content asp-area="" asp-controller="AdminToken" asp-action="CreateManualToken">
+                <secure-content asp-area="" asp-controller="AdminToken" asp-action="Create">
                     <li>
-                        <a asp-area="" asp-controller="AdminToken" asp-action="CreateManualToken">
+                        <a asp-area="" asp-controller="AdminToken" asp-action="Create">
                             <i class="fas fa-plus-circle"></i>
                             <span>Create Token </span>
                         </a>

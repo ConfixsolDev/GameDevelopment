@@ -321,13 +321,6 @@ class TokenSystem {
             });
         }
 
-        const clearScreenBtn = document.getElementById('clearScreenBtn');
-        if (clearScreenBtn) {
-            clearScreenBtn.addEventListener('click', () => {
-                console.log('Clear Screen button clicked');
-                this.clearAllPermanentLabels();
-            });
-        }
 
         const cancelTrainingBtn = document.getElementById('cancelTrainingBtn');
         if (cancelTrainingBtn) {
@@ -344,10 +337,6 @@ class TokenSystem {
 
 
         // Add map view toggle button functionality
-        const toggleMapViewBtn = document.getElementById('toggleMapViewBtn');
-        if (toggleMapViewBtn) {
-            toggleMapViewBtn.addEventListener('click', () => this.toggleMapView());
-        }
 
         // Add map location control functionality
         const goToLocationBtn = document.getElementById('goToLocationBtn');
@@ -409,10 +398,6 @@ class TokenSystem {
             closeTokenManagement.addEventListener('click', () => this.hideTokenManagement());
         }
 
-        const deleteAllTokens = document.getElementById('deleteAllTokens');
-        if (deleteAllTokens) {
-            deleteAllTokens.addEventListener('click', () => this.deleteAllTokens());
-        }
 
         const exportTokens = document.getElementById('exportTokens');
         if (exportTokens) {
@@ -3216,28 +3201,6 @@ class TokenSystem {
         this.hideDeleteConfirmModal();
     }
 
-    async deleteAllTokens() {
-        if (confirm('Are you sure you want to delete ALL tokens? This cannot be undone.')) {
-            try {
-                // Delete all tokens from database
-                await window.apiService.deleteAllTokens();
-                
-                // Clear local array
-                this.learnedTokens = [];
-                
-                // Clear map markers
-                this.mapTokenMarkers.clear();
-                
-                console.log('📡 All tokens deleted from database');
-                this.updateTokenCount();
-                this.updateManagementTokenList();
-                this.showToast('All tokens deleted', 'warning');
-            } catch (error) {
-                console.error('Error deleting all tokens from database:', error);
-                this.showToast('Failed to delete all tokens from database', 'error');
-            }
-        }
-    }
 
     exportTokens() {
         const dataStr = JSON.stringify(this.learnedTokens, null, 2);
@@ -4172,6 +4135,25 @@ class TokenSystem {
         if (this.map) return; // Already initialized
 
         try {
+            console.log('🗺️ Initializing map view...');
+            
+            // Check if Leaflet is available
+            if (typeof L === 'undefined') {
+                console.error('❌ Leaflet library not loaded!');
+                this.showToast('Map library not loaded. Please refresh the page.', 'error');
+                return;
+            }
+
+            // Check if map container exists
+            const mapElement = document.getElementById('map');
+            if (!mapElement) {
+                console.error('❌ Map container not found!');
+                this.showToast('Map container not found.', 'error');
+                return;
+            }
+
+            console.log('🗺️ Creating Leaflet map...');
+            
             // Initialize Leaflet map with better default view
             this.map = L.map('map', {
                 zoomControl: false, // We'll add custom zoom control
@@ -4230,6 +4212,14 @@ class TokenSystem {
             setTimeout(() => this.tryRestoreMapMarkers(), 500);
 
             console.log('🗺️ Enhanced map view initialized successfully');
+            
+            // Trigger map resize to ensure proper display
+            setTimeout(() => {
+                if (this.map) {
+                    this.map.invalidateSize();
+                    console.log('🗺️ Map size invalidated');
+                }
+            }, 200);
         } catch (error) {
             console.error('❌ Error initializing map view:', error);
             this.showToast('Failed to initialize map view', 'error');
@@ -5307,14 +5297,15 @@ class TokenSystem {
     toggleMapView() {
         const canvas = document.getElementById('touchCanvas');
         const mapContainer = document.getElementById('mapContainer');
-        const toggleBtn = document.getElementById('toggleMapViewBtn');
+        const toggleBtn = document.querySelector('a[onclick="toggleMapView()"]');
 
         if (this.mapViewActive) {
             // Switch back to canvas view
             canvas.style.display = 'block';
             mapContainer.style.display = 'none';
-            toggleBtn.textContent = '🗺️ Map View';
-            toggleBtn.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
+            if (toggleBtn) {
+                toggleBtn.innerHTML = '<i class="fas fa-map"></i><span>Map View</span>';
+            }
             this.mapViewActive = false;
 
             // Clear map touch markers
@@ -5325,13 +5316,17 @@ class TokenSystem {
             // Switch to map view
             canvas.style.display = 'none';
             mapContainer.style.display = 'block';
-            toggleBtn.textContent = '🎨 Canvas View';
-            toggleBtn.style.background = 'linear-gradient(135deg, #2196F3, #1976D2)';
+            if (toggleBtn) {
+                toggleBtn.innerHTML = '<i class="fas fa-paint-brush"></i><span>Canvas View</span>';
+            }
             this.mapViewActive = true;
 
             // Initialize map if not already done
             if (!this.map) {
-                this.initMapView();
+                // Add a small delay to ensure the container is visible
+                setTimeout(() => {
+                    this.initMapView();
+                }, 100);
             }
 
             console.log('🗺️ Switched to map view');

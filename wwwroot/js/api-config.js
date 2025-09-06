@@ -5,7 +5,7 @@
 window.API_CONFIG = {
     // Admin Token Management APIs
     AdminToken: {
-        baseUrl: '/api/admin/AdminTokenApi',
+        baseUrl: '/AdminToken',
         endpoints: {
             groups: '/groups',
             createGroup: '/create-group',
@@ -22,7 +22,7 @@ window.API_CONFIG = {
     
     // Team Management APIs
     TeamManagement: {
-        baseUrl: '/api/admin/TeamManagementApi',
+        baseUrl: '/TeamManagement',
         endpoints: {
             teams: '/teams',
             createTeam: '/create-team',
@@ -38,7 +38,7 @@ window.API_CONFIG = {
     
     // Game Management APIs
     GameManagement: {
-        baseUrl: '/api/game/GameManagement',
+        baseUrl: '/GameManagement',
         endpoints: {
             startSession: '/start-session',
             endSession: '/end-session',
@@ -77,6 +77,29 @@ window.API_CONFIG = {
             train: '/train',
             identify: '/identify',
             validate: '/validate'
+        }
+    },
+    
+    // Unified Token APIs
+    UnifiedToken: {
+        baseUrl: '/api/UnifiedToken',
+        endpoints: {
+            identify: '/identify',
+            save: '/save',
+            teamTokens: '/team-tokens'
+        }
+    },
+    
+    // Map Marker APIs
+    MapMarker: {
+        baseUrl: '/api/MapMarker',
+        endpoints: {
+            byToken: '/by-token',
+            get: '/',
+            update: '/',
+            delete: '/',
+            deleteByToken: '/by-token',
+            bulk: '/bulk'
         }
     }
 };
@@ -201,9 +224,66 @@ window.showAlert = function(message, type, duration) {
     window.AlertSystem.show(message, type, duration);
 };
 
+// Helper function for JSON POST requests
+window.postJson = function(url, data) {
+    return $.ajax({
+        url: url,
+        type: 'POST',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        dataType: 'json'
+    });
+};
+
 // Debug function to test API URL generation
 window.debugApiUrl = function(controller, endpoint) {
     const url = getApiUrl(controller, endpoint);
     console.log(`API URL for ${controller}.${endpoint}:`, url);
     return url;
 };
+
+// Session Management - Clear session when browser closes
+window.addEventListener('beforeunload', function(event) {
+    // Clear session data when browser is closing
+    if (window.API_CONFIG && window.API_CONFIG.baseUrl) {
+        // Make a synchronous request to clear session
+        try {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/Account/ClearSession', false); // Synchronous request
+            xhr.send();
+        } catch (e) {
+            // Ignore errors during browser close
+        }
+    }
+});
+
+// Also clear session on page unload (for cases where beforeunload doesn't fire)
+window.addEventListener('unload', function(event) {
+    try {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/Account/ClearSession', false);
+        xhr.send();
+    } catch (e) {
+        // Ignore errors
+    }
+});
+
+// Session timeout handler - redirect to login after 30 minutes of inactivity
+let sessionTimeout;
+const SESSION_TIMEOUT_MINUTES = 30;
+
+function resetSessionTimeout() {
+    clearTimeout(sessionTimeout);
+    sessionTimeout = setTimeout(function() {
+        // Session expired, redirect to login
+        window.location.href = '/Account/Login';
+    }, SESSION_TIMEOUT_MINUTES * 60 * 1000);
+}
+
+// Reset timeout on user activity
+['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(function(event) {
+    document.addEventListener(event, resetSessionTimeout, true);
+});
+
+// Initialize session timeout
+resetSessionTimeout();

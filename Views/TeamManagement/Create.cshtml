@@ -99,7 +99,7 @@
                 return;
             }
 
-            $.post('/api/admin/TeamManagementApi/create-team', data)
+            postJson(getApiUrl('TeamManagement', 'createTeam'), data)
                 .done(function(response) {
                     if (response.success) {
                         showAlert('Team created successfully', 'success');

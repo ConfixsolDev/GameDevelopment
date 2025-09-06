@@ -69,6 +69,25 @@ namespace TechWebSol.Controllers
             }
         }
 
+        [HttpPost]
+        public IActionResult ClearSession()
+        {
+            try
+            {
+                // Clear session data
+                HttpContext.Session.Clear();
+                _userSessionService.ClearCurrentUser();
+                
+                // Return success response
+                return Json(new { success = true, message = "Session cleared" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error clearing session");
+                return Json(new { success = false, message = "Error clearing session" });
+            }
+        }
+
         public IActionResult AccessDenied()
         {
             return View();

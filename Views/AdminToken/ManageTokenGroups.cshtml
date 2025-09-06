@@ -136,7 +136,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Create Manual Token</h5>
+                <h5 class="modal-title">Create Token</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -186,12 +186,12 @@
                 assignGroupToTeam();
             });
 
-            // Create Manual Token functionality
+            // Create Token functionality
             $('#saveManualTokenBtn').click(function() {
                 createManualToken();
             });
 
-            // Show manual token creation modal
+            // Show token creation modal
             $(document).on('click', '.create-manual-token', function() {
                 $('#createManualTokenModal').modal('show');
             });
@@ -278,7 +278,7 @@
                 description: $('#groupDescription').val()
             };
 
-            $.post(getApiUrl('AdminToken', 'createGroup'), data)
+            postJson(getApiUrl('AdminToken', 'createGroup'), data)
                 .done(function(response) {
                     if (response.success) {
                         showAlert('Token group created successfully', 'success');
@@ -310,7 +310,7 @@
                 teamId: teamId
             };
 
-            $.post(getApiUrl('AdminToken', 'assignGroupToTeam'), data)
+            postJson(getApiUrl('AdminToken', 'assignGroupToTeam'), data)
                 .done(function(response) {
                     if (response.success) {
                         showAlert('Group assigned to team successfully', 'success');
@@ -335,10 +335,10 @@
                 tokenGroupId: $('#tokenGroupSelect').val() ? parseInt($('#tokenGroupSelect').val()) : null
             };
 
-            $.post(getApiUrl('AdminToken', 'create'), data)
+            postJson(getApiUrl('AdminToken', 'create'), data)
                 .done(function(response) {
                     if (response.success) {
-                        showAlert('Manual token created successfully', 'success');
+                        showAlert('Token created successfully', 'success');
                         $('#createManualTokenModal').modal('hide');
                         $('#createManualTokenForm')[0].reset();
                         loadTokenGroups();
@@ -347,7 +347,7 @@
                     }
                 })
                 .fail(function(xhr) {
-                    const message = xhr.responseJSON?.message || 'Error creating manual token';
+                    const message = xhr.responseJSON?.message || 'Error creating token';
                     showAlert(message, 'danger');
                 });
         }

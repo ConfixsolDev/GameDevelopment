@@ -757,7 +757,7 @@
         <canvas id="touchCanvas" width="800" height="600"></canvas>
 
         <!-- Map container for OSM view -->
-        <div id="mapContainer" style="display: none; width: 100%; height: 100%; margin: 0; border: none; border-radius: 0; overflow: hidden; position: absolute; top: 0; left: 0; z-index: 10;">
+        <div id="mapContainer" style="display: none; width: 100%; height: 100%; margin: 0; border: none; border-radius: 0; overflow: hidden; position: absolute; top: 0; left: 0; z-index: 10; min-height: 500px;">
             <!-- Map location controls -->
 
 
@@ -922,7 +922,6 @@
                     <span id="totalTokens">0 tokens learned</span>
                 </div>
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <button id="deleteAllTokens" class="btn btn-danger">🗑️ Clear All</button>
                     <button id="exportTokens" class="btn btn-info">📤 Export</button>
                     <button id="importTokens" class="btn btn-info">📥 Import</button>
                     <input type="file" id="importFile" accept=".json" style="display: none;">

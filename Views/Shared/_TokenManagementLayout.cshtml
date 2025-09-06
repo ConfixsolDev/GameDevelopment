@@ -84,10 +84,6 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link" onclick="clearScreen()">
-                            <i class="fas fa-trash"></i>
-                            <span>Clear</span>
-                        </a>
                     </li>
                     <li class="nav-item">
                         <a href="#" class="nav-link" onclick="toggleMapView()">
@@ -217,14 +213,6 @@
             }
         }
         
-        function clearScreen() {
-            // Trigger the clear screen functionality
-            if (window.tokenSystem && typeof window.tokenSystem.clearAllPermanentLabels === 'function') {
-                window.tokenSystem.clearAllPermanentLabels();
-            } else {
-                console.log('TokenSystem not available, clearing screen...');
-            }
-        }
         
         function toggleMapView() {
             // Trigger the map view toggle functionality

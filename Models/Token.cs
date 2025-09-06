@@ -31,6 +31,7 @@ namespace TechWebSol.Models
         public string? Category { get; set; }
 
         public bool IsActive { get; set; } = true;
+        public bool IsManualToken { get; set; } = false;
 
         public DateTime? LastUsed { get; set; }
 

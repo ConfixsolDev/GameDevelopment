@@ -269,8 +269,6 @@ namespace TechWebSol.Data
                 entity.Property(e => e.Description).HasMaxLength(500);
                 entity.Property(e => e.SessionCode).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
-                entity.Property(e => e.CreatedByUserId).HasMaxLength(50);
-                entity.Property(e => e.CreatedByUserName).HasMaxLength(50);
 
                 entity.HasIndex(e => e.SessionCode);
                 entity.HasIndex(e => e.Status);

@@ -56,7 +56,12 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.Name = "techwebsolCookie";
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";
-    options.ExpireTimeSpan = TimeSpan.FromMinutes(300);
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(30); // Reduced from 300 minutes
+    options.SlidingExpiration = true; // Reset expiration on activity
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    // Authentication cookie expires when browser closes (non-persistent)
+    options.Cookie.Expiration = null; // This makes it a session cookie
 });
 
 // MVC, JSON, and Custom Configurations
@@ -79,6 +84,8 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
     options.Cookie.Name = "TechWebSolSession";
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 builder.Services.Configure<CookiePolicyOptions>(options =>

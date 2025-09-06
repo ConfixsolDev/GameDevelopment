@@ -170,7 +170,7 @@
                 role: role
             };
 
-            $.post('/api/admin/TeamManagementApi/assign-user-to-team', data)
+            postJson(getApiUrl('TeamManagement', 'assignUserToTeam'), data)
                 .done(function(response) {
                     if (response.success) {
                         showAlert('User assigned to team successfully', 'success');
@@ -197,7 +197,7 @@
                 };
 
                 $.ajax({
-                    url: '/api/admin/TeamManagementApi/update-user-role',
+                    url: getApiUrl('TeamManagement', 'updateUserRole'),
                     type: 'PUT',
                     data: JSON.stringify(data),
                     contentType: 'application/json'
@@ -220,7 +220,7 @@
         function removeUserFromTeam(userId) {
             if (confirm('Are you sure you want to remove this user from the team?')) {
                 $.ajax({
-                    url: `/api/admin/TeamManagementApi/remove-user-from-team/${userId}`,
+                    url: getApiUrlWithParams('TeamManagement', 'removeUserFromTeam', { userId: userId }),
                     type: 'DELETE'
                 })
                 .done(function(response) {

@@ -28,6 +28,12 @@ namespace TechWebSol.Controllers
 
         public IActionResult Index()
         {
+            // Double-check that user session is valid
+            if (applicatonUser == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+            
             return View();
         }
 

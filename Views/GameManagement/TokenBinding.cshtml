@@ -303,7 +303,7 @@
                 preferSimplified: true
             };
 
-            $.post('/api/UnifiedToken/identify', data)
+            postJson(getApiUrl('UnifiedToken', 'identify'), data)
                 .done(function(response) {
                     displayPatternResult(response);
                 })
@@ -483,7 +483,7 @@
                 touchPoints: bindingType === 'automatic' ? touchPoints : null
             };
 
-            $.post('/api/admin/GameManagement/bind-token', data)
+            postJson(getApiUrl('AdminGameManagement', 'bindToken'), data)
                 .done(function(response) {
                     if (response.success) {
                         showAlert('Token binding created successfully', 'success');

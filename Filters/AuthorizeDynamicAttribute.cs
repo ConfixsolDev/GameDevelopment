@@ -33,16 +33,25 @@ namespace TechWebSol.Filters
                 return;
             }
 
+            // Check if user is authenticated via ASP.NET Core Identity
+            if (!context.HttpContext.User.Identity.IsAuthenticated)
+            {
+                context.Result = new RedirectToActionResult("Login", "Account", null);
+                return;
+            }
+
+            // Check if user session is valid
             var user = _userSessionService.GetCurrentUser();
             if (user == null)
             {
-                // Redirect to the correct login page in the Identity area
+                // Clear any invalid session data
+                context.HttpContext.Session.Clear();
                 context.Result = new RedirectToActionResult("Login", "Account", null);
                 return;
             }
 
             // Basic authorization - you can enhance this with role-based checks
-            // For now, just ensure user is authenticated
+            // For now, just ensure user is authenticated and has valid session
         }
 
         private bool IsAuthenticationAction(string controllerName, string actionName, string areaName)

@@ -24,16 +24,10 @@ namespace TechWebSol.Models
         public DateTime StartTime { get; set; }
         public DateTime? EndTime { get; set; }
 
+        
         [Required]
         [MaxLength(20)]
         public string Status { get; set; } = "Active"; // "Active", "Completed", "Cancelled"
-
-        // Additional game session-specific fields
-        [MaxLength(50)]
-        public string? CreatedByUserId { get; set; }
-
-        [MaxLength(50)]
-        public string? CreatedByUserName { get; set; }
 
         // Navigation properties
         public virtual ICollection<TokenBinding> TokenBindings { get; set; } = new List<TokenBinding>();

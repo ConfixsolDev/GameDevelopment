@@ -208,7 +208,7 @@
                 return;
             }
 
-            $.post('/api/game/GameManagement/start-session', data)
+            postJson(getApiUrl('GameManagement', 'startSession'), data)
                 .done(function(response) {
                     if (response.success) {
                         showAlert('Game session started successfully', 'success');
@@ -405,7 +405,7 @@
                 entities: bindings
             };
 
-            $.post('/api/game/GameManagement/bind-tokens', data)
+            postJson(getApiUrl('GameManagement', 'bindTokens'), data)
                 .done(function(response) {
                     if (response.success) {
                         showAlert('Token bindings saved successfully', 'success');
@@ -423,7 +423,7 @@
 
         function endSession(sessionId) {
             if (confirm('Are you sure you want to end this game session? All bound tokens will be freed.')) {
-                $.post(`/api/game/GameManagement/end-session/${sessionId}`)
+                postJson(getApiUrlWithParams('GameManagement', 'endSession', { sessionId: sessionId }), {})
                     .done(function(response) {
                         if (response.success) {
                             showAlert('Game session ended successfully', 'success');
@@ -448,7 +448,7 @@
         function removeBinding(bindingId) {
             if (confirm('Are you sure you want to remove this binding?')) {
                 $.ajax({
-                    url: `/api/game/GameManagement/remove-binding/${bindingId}`,
+                    url: getApiUrlWithParams('GameManagement', 'unbindToken', { bindingId: bindingId }),
                     type: 'DELETE'
                 })
                 .done(function(response) {

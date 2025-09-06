@@ -159,7 +159,7 @@ TokenBindings
 | POST | `/create-group` | Create token group | `CreateTokenGroupRequest` | `AdminTokenGroupResult` |
 | GET | `/groups` | Get all token groups | None | `List<TokenGroupInfo>` |
 | POST | `/assign-group-to-team` | Assign group to team | `AssignGroupToTeamRequest` | `AdminAssignmentResult` |
-| POST | `/create` | Create manual token | `CreateManualTokenRequest` | `ManualTokenResult` |
+| POST | `/create` | Create token | `CreateTokenRequest` | `TokenResult` |
 | GET | `/teams` | Get all teams | None | `List<TeamInfo>` |
 
 ### Team Management API (`/api/admin/TeamManagementApi`)
@@ -270,7 +270,7 @@ public class Team
 
 ### Razor Pages
 - **`/AdminToken/ManageTokenGroups`**: Token group management
-- **`/AdminToken/CreateManualToken`**: Manual token creation
+- **`/AdminToken/Create`**: Token creation
 - **`/GameManagement/Index`**: Game session management
 - **`/TeamManagement/Index`**: Team management
 
