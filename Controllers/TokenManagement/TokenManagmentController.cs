@@ -5,7 +5,7 @@ using TechWebSol.Filters;
 namespace TechWebSol.Controllers.TokenManagement
 {
     [AuthorizeDynamic]
-    public class StrategyMapController : Controller
+    public class TokenManagmentController : Controller
     {
         public IActionResult Index()
         {
