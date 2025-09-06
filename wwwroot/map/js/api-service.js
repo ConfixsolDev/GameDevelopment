@@ -176,7 +176,6 @@ class ApiService {
      */
     async loadMapMarkers() {
         try {
-            debugger
             const markers = await this.apiCall(this.mapMarkersUrl);
             console.log(`📡 Loaded ${markers.length} map markers from database`);
             return markers;
@@ -357,7 +356,6 @@ class ApiService {
      */
     convertSignatureToDbFormat(jsSignature, tokenId) {
 
-        debugger
         let originalTouches = this.ensureJSONString(jsSignature.originalTouches)
 
 
@@ -475,7 +473,6 @@ class ApiService {
 
     convertSignatureFromDbFormat(dbSignature) {
 
-        debugger
         let originalTouches = this.toJSONObject(dbSignature.originalTouches); 
 
         return {

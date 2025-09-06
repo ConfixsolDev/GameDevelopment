@@ -287,7 +287,6 @@ $(document).on("submit", ".frmSubmitupload", function (e) {
 });
 $(document).on("submit", ".fileFrmSubmitupload", function (e) {
     e.preventDefault();
-    debugger;
     var formData = new FormData(this);
     var $form = $(this);
     var strSuccess = $form.attr("data-success");
@@ -596,7 +595,6 @@ $(document).on("click", ".action_link", function (e) {
         });
 
     }).fail(function (jqXHR, textStatus, errorThrown) {
-        debugger;
         ShowMessageError(jqXHR.responseText);
         console.log(`Error loading content: ${textStatus}, ${errorThrown}`);
         $modelContentDiv.html('<div>Error loading the information. Please try again later.</div>');

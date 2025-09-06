@@ -52,7 +52,7 @@ if (typeof TouchTokenApp !== 'undefined') {
             const results = await window.apiService.bulkImportTokens(dbTokens);
             
             // Check for any failures
-            const failures = results.filter(result => !result.success);
+            const failures = results.filter(result => !result.Success);
             if (failures.length > 0) {
                 console.warn('Some tokens failed to save:', failures);
                 this.showToast(`${failures.length} tokens failed to save`, 'warning');
@@ -224,7 +224,6 @@ if (typeof TouchTokenApp !== 'undefined') {
     TouchTokenApp.prototype.saveMapMarkersToStorage = async function() {
         try {
             console.log('📡 Saving map markers to database...');
-            debugger
             const markersData = Array.from(this.mapTokenMarkers.entries()).map(([id, data]) => ({
                 id: id,
                 tokenId: data.tokenId,

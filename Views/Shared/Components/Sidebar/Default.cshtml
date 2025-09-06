@@ -5,11 +5,7 @@
             </cache>
 
             <ul class="metismenu list-unstyled" id="side-menu">
-                <li>
-                    <a asp-area="Mail" asp-controller="Mails" asp-action="Index">
-                        <i class="fas fa-download"></i> <span>Mail</span>
-                    </a>
-                </li>
+              
                 <li>
                     <a asp-area="" asp-controller="Home" asp-action="Index">
                         <i class="fas fa-download"></i> <span>Home</span>
@@ -24,7 +20,12 @@
                         </a>
                     </li>
                 </secure-content>
-
+                <li>
+                    <a href="/StrategyMap/Index">
+                        <i class="fas fa-map"></i>
+                        <span>Strategy Map</span>
+                    </a>
+                </li>
                 <secure-content asp-area="Identity" asp-controller="Role" asp-action="Index">
                     <li>
                         <a href="/Identity/Role/Index">

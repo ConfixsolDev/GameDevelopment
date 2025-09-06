@@ -3087,7 +3087,7 @@ class TokenSystem {
             const results = await window.apiService.bulkImportTokens(dbTokens);
             
             // Check for any failures
-            const failures = results.filter(result => !result.success);
+            const failures = results.filter(result => !result.Success);
             if (failures.length > 0) {
                 console.warn('Some tokens failed to save:', failures);
                 this.showToast(`${failures.length} tokens failed to save`, 'warning');
@@ -5963,7 +5963,6 @@ class TokenSystem {
 
     // NEW: Show detailed token information
     showDetailedTokenInfo(tokenId) {
-        debugger
         const token = this.learnedTokens.find(t => t.id == tokenId);
         if (!token) {
             this.showToast('Token not found', 'error');

@@ -11,37 +11,6 @@
         align-items: center;
     }
 
-    .btn {
-        padding: 8px 16px;
-        border: none;
-        border-radius: 6px;
-        background: linear-gradient(135deg, #4CAF50, #45a049);
-        color: white;
-        cursor: pointer;
-        font-weight: bold;
-        transition: all 0.3s ease;
-    }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .btn.danger {
-            background: linear-gradient(135deg, #f44336, #da190b);
-        }
-
-        .btn.info {
-            background: linear-gradient(135deg, #2196F3, #1976D2);
-        }
-
-        .btn.warning {
-            background: linear-gradient(135deg, #ff9800, #f57c00);
-        }
-
-        .btn.success {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-        }
 
     .main-container {
         display: flex;
@@ -234,7 +203,7 @@
         border: 2px solid rgba(255, 255, 255, 0.2);
         border-radius: 12px;
         width: 90%;
-        max-width: 500px;
+        max-width: 600px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
 
@@ -801,11 +770,11 @@
 <div class="header">
     <div class="title">🎯 Token Training & Identification System</div>
     <div class="token-controls">
-        <button id="addTokenBtn" class="btn">➕ Add Token</button>
-        <button id="testTokenBtn" class="btn info">🧪 Test Token</button>
-        <button id="identifyBtn" class="btn success">🔍 Identify</button>
-        <button id="manageTokensBtn" class="btn warning">📋 Manage</button>
-        <button id="clearScreenBtn" class="btn danger">🗑️ Clear</button>
+        <button id="addTokenBtn" class="btn btn-primary">➕ Add Token</button>
+        <button id="testTokenBtn" class="btn btn-info">🧪 Test Token</button>
+        <button id="identifyBtn" class="btn btn-success">🔍 Identify</button>
+        <button id="manageTokensBtn" class="btn btn-warning">📋 Manage</button>
+        <button id="clearScreenBtn" class="btn btn-danger">🗑️ Clear</button>
 
         <button id="toggleMapViewBtn" class="btn" style="background: linear-gradient(135deg, #4CAF50, #45a049);">🗺️ Map View</button>
 
@@ -820,14 +789,16 @@
         <!-- Map container for OSM view -->
         <div id="mapContainer" style="display: none; width: 100%; height: 100%; margin: 0; border: none; border-radius: 0; overflow: hidden; position: absolute; top: 0; left: 0; z-index: 10;">
             <!-- Map location controls -->
+
+
             <div id="mapControls" style="background: rgba(255,255,255,0.95); padding: 15px; border-bottom: 1px solid #ddd; display: flex; gap: 15px; align-items: center; justify-content: center; position: absolute; top: 0; left: 0; right: 0; z-index: 1000;">
                 <input type="text" id="mapLatInput" placeholder="Latitude" style="width: 150px; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px;">
                 <input type="text" id="mapLngInput" placeholder="Longitude" style="width: 150px; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px;">
-                <button id="goToLocationBtn" class="btn" style="padding: 8px 15px; font-size: 14px;">📍 Go</button>
-                <button id="useCurrentLocationBtn" class="btn" style="padding: 8px 15px; font-size: 14px; background: #4CAF50;">📍 Current</button>
-                <button id="fullscreenMapBtn" class="btn" style="padding: 8px 15px; font-size: 14px; background: linear-gradient(135deg, #9c27b0, #7b1fa2);">⛶ Fullscreen</button>
-                <button id="placeTokenMarkerBtn" class="btn" style="padding: 8px 15px; font-size: 14px; background: linear-gradient(135deg, #4CAF50, #45a049);">🎯 Place Token</button>
-                <button id="mapControlsBtn" class="btn" style="padding: 8px 15px; font-size: 14px; background: linear-gradient(135deg, #ff9800, #f57c00);">🎮 Controls</button>
+                <button id="goToLocationBtn" class="btn btn-info" style="padding: 8px 15px; font-size: 14px;">📍 Go</button>
+                <button id="useCurrentLocationBtn" class="btn" style="padding: 8px 15px; font-size: 14px; background: #4CAF50; color:white">📍 Current</button>
+                <button id="fullscreenMapBtn" class="btn" style="padding: 8px 15px; font-size: 14px; background: linear-gradient(135deg, #9c27b0, #7b1fa2); color:white">⛶ Fullscreen</button>
+                <button id="placeTokenMarkerBtn" class="btn" style="padding: 8px 15px; font-size: 14px; background: linear-gradient(135deg, #4CAF50, #45a049); color:white">🎯 Place Token</button>
+                <button id="mapControlsBtn" class="btn" style="padding: 8px 15px; font-size: 14px; background: linear-gradient(135deg, #ff9800, #f57c00);color:white">🎮 Controls</button>
             </div>
             <div id="map" style="width: 100%; height: 100%;"></div>
         </div>
@@ -869,8 +840,8 @@
                 <div style="text-align: center; margin-bottom: 15px;">
                     <span id="trainingPosition">Position: 1/5</span>
                 </div>
-                <button id="cancelTrainingBtn" class="btn danger">❌ Cancel Training</button>
-                <button id="saveTokenBtn" class="btn success" style="display: none;">💾 Save Token</button>
+                <button id="cancelTrainingBtn" class="btn btn-danger">❌ Cancel Training</button>
+                <button id="saveTokenBtn" class="btn btn-success" style="display: none;">💾 Save Token</button>
             </div>
 
             <!-- Test Result -->
@@ -967,8 +938,8 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn" id="cancelSave">Cancel</button>
-            <button class="btn success" id="confirmSave">Save Token</button>
+            <button class="btn btn-primary" id="cancelSave">Cancel</button>
+            <button class="btn btn-success" id="confirmSave">Save Token</button>
         </div>
     </div>
 </div>
@@ -986,9 +957,9 @@
                     <span id="totalTokens">0 tokens learned</span>
                 </div>
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <button id="deleteAllTokens" class="btn danger">🗑️ Clear All</button>
-                    <button id="exportTokens" class="btn info">📤 Export</button>
-                    <button id="importTokens" class="btn info">📥 Import</button>
+                    <button id="deleteAllTokens" class="btn btn-danger">🗑️ Clear All</button>
+                    <button id="exportTokens" class="btn btn-info">📤 Export</button>
+                    <button id="importTokens" class="btn btn-info">📥 Import</button>
                     <input type="file" id="importFile" accept=".json" style="display: none;">
                 </div>
             </div>
@@ -999,7 +970,7 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn" id="closeTokenManagement">Done</button>
+            <button class="btn btn-primary" id="closeTokenManagement">Done</button>
         </div>
     </div>
 </div>
@@ -1016,8 +987,8 @@
             <div class="token-preview" id="deleteTokenPreview"></div>
         </div>
         <div class="modal-footer">
-            <button class="btn" id="cancelDelete">Cancel</button>
-            <button class="btn danger" id="confirmDelete">Delete Token</button>
+            <button class="btn btn-primary" id="cancelDelete">Cancel</button>
+            <button class="btn btn-danger" id="confirmDelete">Delete Token</button>
         </div>
     </div>
 </div>

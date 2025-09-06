@@ -226,7 +226,7 @@ namespace TechWebSol.Controllers.TokenManagement
                 .Where(t => t.IsActive)
                     .OrderByDescending(t => t.CreatedAt)
                     .ToListAsync();
-              
+
 
                 return Ok(tokens);
             }
@@ -245,59 +245,63 @@ namespace TechWebSol.Controllers.TokenManagement
         {
             try
             {
-                using var transaction = await _context.Database.BeginTransactionAsync();
+                var strategy = _context.Database.CreateExecutionStrategy();
 
-                try
+                // Execute everything in a retryable unit of work
+                return await strategy.ExecuteAsync(async () =>
                 {
-                    var token = await _context.Tokens
-                        .Include(t => t.Signature)
-                        .FirstOrDefaultAsync(t => t.Id == id);
-
-                    if (token == null)
-                        return NotFound();
-
-                    // Delete related data
-                    if (token.Signature != null)
+                    await using var transaction = await _context.Database.BeginTransactionAsync();
+                    try
                     {
-                        // Delete related entities
-                        await _context.StabilityInfo
-                            .Where(s => s.TokenSignatureId == token.Signature.Id)
+                        var token = await _context.Tokens
+                            .Include(t => t.Signature)
+                            .FirstOrDefaultAsync(t => t.Id == id);
+
+                        if (token == null)
+                        {
+                            return (IActionResult)NotFound();
+                        }
+
+                        // Delete related signature and dependent data
+                        if (token.Signature != null)
+                        {
+                            await _context.StabilityInfo
+                                .Where(s => s.TokenSignatureId == token.Signature.Id)
+                                .ExecuteDeleteAsync();
+
+                            await _context.TouchGeometry
+                                .Where(tg => tg.TokenSignatureId == token.Signature.Id)
+                                .ExecuteDeleteAsync();
+
+                            await _context.TouchPatterns
+                                .Where(tp => tp.TokenSignatureId == token.Signature.Id)
+                                .ExecuteDeleteAsync();
+
+                            await _context.MultiTouchGeometry
+                                .Where(mtg => mtg.TokenSignatureId == token.Signature.Id)
+                                .ExecuteDeleteAsync();
+
+                            _context.TokenSignatures.Remove(token.Signature);
+                        }
+
+                        // Delete map markers and the token itself
+                        await _context.MapMarkers
+                            .Where(m => m.TokenId == id)
                             .ExecuteDeleteAsync();
 
-                        await _context.TouchGeometry
-                            .Where(tg => tg.TokenSignatureId == token.Signature.Id)
-                            .ExecuteDeleteAsync();
+                        _context.Tokens.Remove(token);
+                        await _context.SaveChangesAsync();
 
-                        await _context.TouchPatterns
-                            .Where(tp => tp.TokenSignatureId == token.Signature.Id)
-                            .ExecuteDeleteAsync();
-
-                        await _context.MultiTouchGeometry
-                            .Where(mtg => mtg.TokenSignatureId == token.Signature.Id)
-                            .ExecuteDeleteAsync();
-
-                        // Delete signature
-                        _context.TokenSignatures.Remove(token.Signature);
+                        // Commit the transaction
+                        await transaction.CommitAsync();
+                        return (IActionResult)NoContent();
                     }
-
-                    // Delete map markers
-                    await _context.MapMarkers
-                        .Where(m => m.TokenId == id)
-                        .ExecuteDeleteAsync();
-
-                    // Delete token
-                    _context.Tokens.Remove(token);
-
-                    await _context.SaveChangesAsync();
-                    await transaction.CommitAsync();
-
-                    return NoContent();
-                }
-                catch
-                {
-                    await transaction.RollbackAsync();
-                    throw;
-                }
+                    catch
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
+                });
             }
             catch (Exception ex)
             {
@@ -305,26 +309,27 @@ namespace TechWebSol.Controllers.TokenManagement
                 return StatusCode(500, "Internal server error");
             }
         }
-    }
 
-    // Request/Response DTOs
-    public class CompleteTokenRequest
-    {
-        public Token Token { get; set; } = null!;
-        public TokenSignature? Signature { get; set; }
-        public StabilityInfo? Stability { get; set; }
-        public TouchGeometry? TouchGeometry { get; set; }
-        public TouchPattern? TouchPattern { get; set; }
-        public MultiTouchGeometry? MultiTouchGeometry { get; set; }
-    }
 
-    public class CompleteTokenResponse
-    {
-        public Token Token { get; set; } = null!;
-        public TokenSignature? Signature { get; set; }
-        public StabilityInfo? Stability { get; set; }
-        public TouchGeometry? TouchGeometry { get; set; }
-        public TouchPattern? TouchPattern { get; set; }
-        public MultiTouchGeometry? MultiTouchGeometry { get; set; }
+        // Request/Response DTOs
+        public class CompleteTokenRequest
+        {
+            public Token Token { get; set; } = null!;
+            public TokenSignature? Signature { get; set; }
+            public StabilityInfo? Stability { get; set; }
+            public TouchGeometry? TouchGeometry { get; set; }
+            public TouchPattern? TouchPattern { get; set; }
+            public MultiTouchGeometry? MultiTouchGeometry { get; set; }
+        }
+
+        public class CompleteTokenResponse
+        {
+            public Token Token { get; set; } = null!;
+            public TokenSignature? Signature { get; set; }
+            public StabilityInfo? Stability { get; set; }
+            public TouchGeometry? TouchGeometry { get; set; }
+            public TouchPattern? TouchPattern { get; set; }
+            public MultiTouchGeometry? MultiTouchGeometry { get; set; }
+        }
     }
 }
