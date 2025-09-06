@@ -1,0 +1,1024 @@
+/* ========================================
+   GAME PLAY SYSTEM STYLES
+   ======================================== */
+
+:root {
+    /* Game Play Color Palette */
+    --gameplay-primary: #00ff88;
+    --gameplay-secondary: #0088ff;
+    --gameplay-accent: #ff4444;
+    --gameplay-warning: #ffaa00;
+    --gameplay-dark: #0a0a0a;
+    --gameplay-darker: #050505;
+    --gameplay-light: #1a1a1a;
+    --gameplay-lighter: #2a2a2a;
+    --gameplay-text: #ffffff;
+    --gameplay-text-dim: #cccccc;
+    --gameplay-border: rgba(0, 255, 136, 0.3);
+    --gameplay-glow: 0 0 20px rgba(0, 255, 136, 0.5);
+    --gameplay-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+    
+    /* Team Colors */
+    --fox-land-color: #ff4444;
+    --fox-land-bg: rgba(255, 68, 68, 0.1);
+    --fox-land-border: rgba(255, 68, 68, 0.3);
+    --fox-land-glow: 0 0 20px rgba(255, 68, 68, 0.5);
+    
+    --blue-land-color: #0088ff;
+    --blue-land-bg: rgba(0, 136, 255, 0.1);
+    --blue-land-border: rgba(0, 136, 255, 0.3);
+    --blue-land-glow: 0 0 20px rgba(0, 136, 255, 0.5);
+    
+    --spectator-color: #ffaa00;
+    --spectator-bg: rgba(255, 170, 0, 0.1);
+    --spectator-border: rgba(255, 170, 0, 0.3);
+    --spectator-glow: 0 0 20px rgba(255, 170, 0, 0.5);
+}
+
+/* ========================================
+   BASE STYLES
+   ======================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: 'Orbitron', 'Roboto', sans-serif;
+    background: var(--gameplay-dark);
+    color: var(--gameplay-text);
+}
+
+/* ========================================
+   MAIN CONTAINER
+   ======================================== */
+
+.gameplay-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    background: 
+        radial-gradient(circle at 20% 20%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(0, 136, 255, 0.1) 0%, transparent 50%),
+        linear-gradient(135deg, var(--gameplay-darker) 0%, var(--gameplay-dark) 100%);
+    position: relative;
+}
+
+.gameplay-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 255, 136, 0.03) 2px,
+            rgba(0, 255, 136, 0.03) 4px
+        );
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ========================================
+   SUPER ADMIN BUTTON
+   ======================================== */
+
+.super-admin-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    border: 2px solid #ff6b35;
+    border-radius: 25px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    user-select: none;
+}
+
+.super-admin-button:hover {
+    background: linear-gradient(135deg, #ff7b45, #ffa31e);
+    border-color: #ff7b45;
+    transform: translateY(-2px);
+    box-shadow: 0 0 30px rgba(255, 107, 53, 0.7);
+}
+
+.super-admin-button.active {
+    background: linear-gradient(135deg, #00ff88, #00cc6a);
+    border-color: #00ff88;
+    box-shadow: 0 0 30px rgba(0, 255, 136, 0.7);
+}
+
+.super-admin-button i {
+    font-size: 16px;
+    color: #ffffff;
+}
+
+.super-admin-button span {
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* ========================================
+   MAIN GAME AREA
+   ======================================== */
+
+.game-main-area {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+    height: 100%;
+    width: 100%;
+}
+
+/* ========================================
+   MAP CONTAINER
+   ======================================== */
+
+.game-map-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+    overflow: hidden;
+    z-index: 1;
+}
+
+#gameMap {
+    width: 100%;
+    height: 100%;
+    background: var(--gameplay-dark);
+    position: relative;
+    min-height: 100vh;
+}
+
+/* Ensure Leaflet map tiles display properly */
+#gameMap .leaflet-container {
+    width: 100% !important;
+    height: 100% !important;
+    background: var(--gameplay-dark);
+}
+
+#gameMap .leaflet-tile-pane {
+    opacity: 0.9;
+}
+
+#gameMap .leaflet-control-container {
+    z-index: 1000;
+}
+
+/* ========================================
+   MAP OVERLAY CONTROLS
+   ======================================== */
+
+.map-overlay-controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.overlay-control-group {
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--gameplay-border);
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: var(--gameplay-shadow);
+}
+
+.overlay-control-group h6 {
+    color: var(--gameplay-primary);
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.control-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.control-row:last-child {
+    margin-bottom: 0;
+}
+
+.overlay-btn {
+    padding: 6px 12px;
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid var(--gameplay-border);
+    border-radius: 6px;
+    color: var(--gameplay-text);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.overlay-btn:hover {
+    background: rgba(0, 255, 136, 0.2);
+    border-color: var(--gameplay-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+.overlay-btn.active {
+    background: rgba(0, 255, 136, 0.3);
+    border-color: var(--gameplay-primary);
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+.overlay-btn i {
+    font-size: 12px;
+}
+
+/* ========================================
+   COORDINATES DISPLAY
+   ======================================== */
+
+.coordinates-display {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--gameplay-border);
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: var(--gameplay-primary);
+    box-shadow: var(--gameplay-shadow);
+}
+
+.coord-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 4px;
+}
+
+.coord-item:last-child {
+    margin-bottom: 0;
+}
+
+.coord-label {
+    color: var(--gameplay-text-dim);
+    font-weight: 500;
+}
+
+.coord-value {
+    color: var(--gameplay-primary);
+    font-weight: 600;
+}
+
+/* ========================================
+   TEAM STATUS PANEL
+   ======================================== */
+
+.team-status-panel {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--gameplay-border);
+    border-radius: 8px;
+    padding: 15px;
+    min-width: 250px;
+    box-shadow: var(--gameplay-shadow);
+}
+
+.team-status-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--gameplay-border);
+}
+
+.team-status-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gameplay-primary), var(--gameplay-secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--gameplay-dark);
+}
+
+.team-status-info h5 {
+    color: var(--gameplay-primary);
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.team-status-info p {
+    color: var(--gameplay-text-dim);
+    font-size: 12px;
+    margin: 0;
+}
+
+.status-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.metric-item {
+    text-align: center;
+    padding: 8px;
+    background: rgba(0, 255, 136, 0.05);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    border-radius: 6px;
+}
+
+.metric-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gameplay-primary);
+    display: block;
+}
+
+.metric-label {
+    font-size: 10px;
+    color: var(--gameplay-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ========================================
+   TOKEN MARKERS
+   ======================================== */
+
+.token-marker {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 500;
+}
+
+.token-marker:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.6);
+}
+
+.token-marker.fox-land {
+    border-color: var(--fox-land-color);
+    color: var(--fox-land-color);
+}
+
+.token-marker.blue-land {
+    border-color: var(--blue-land-color);
+    color: var(--blue-land-color);
+}
+
+.token-marker.neutral {
+    border-color: var(--spectator-color);
+    color: var(--spectator-color);
+}
+
+/* ========================================
+   BOTTOM CONTROL PANEL
+   ======================================== */
+
+.gameplay-control-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(15px);
+    border-top: 2px solid var(--gameplay-border);
+    padding: 15px 20px;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.8);
+    transform: translateY(0);
+    transition: transform 0.3s ease;
+}
+
+.gameplay-control-panel.hidden {
+    transform: translateY(100%);
+}
+
+.control-panel-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.team-logo-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.team-logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: transparent;
+    border: 3px solid var(--gameplay-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--gameplay-primary);
+    text-shadow: 0 0 10px var(--gameplay-primary);
+    box-shadow: var(--gameplay-glow);
+    position: relative;
+    overflow: hidden;
+}
+
+.team-logo::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: conic-gradient(var(--gameplay-primary), var(--gameplay-secondary), var(--gameplay-accent), var(--gameplay-primary));
+    border-radius: 50%;
+    z-index: -1;
+    animation: rotate 3s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.team-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.team-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gameplay-primary);
+    text-shadow: 0 0 8px var(--gameplay-primary);
+}
+
+.team-status {
+    font-size: 12px;
+    color: var(--gameplay-text-dim);
+    margin-top: 2px;
+}
+
+.control-menu {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.control-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 12px 16px;
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid var(--gameplay-border);
+    border-radius: 12px;
+    color: var(--gameplay-text);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    min-width: 80px;
+    position: relative;
+    overflow: hidden;
+}
+
+.control-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.control-btn:hover::before {
+    left: 100%;
+}
+
+.control-btn:hover {
+    background: rgba(0, 255, 136, 0.2);
+    border-color: var(--gameplay-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--gameplay-glow);
+}
+
+.control-btn.active {
+    background: rgba(0, 255, 136, 0.3);
+    border-color: var(--gameplay-primary);
+    box-shadow: var(--gameplay-glow);
+}
+
+.control-btn i {
+    font-size: 20px;
+    color: var(--gameplay-primary);
+}
+
+.control-btn span {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Team-specific button styles */
+.control-btn.fox-land {
+    background: var(--fox-land-bg);
+    border-color: var(--fox-land-border);
+}
+
+.control-btn.fox-land:hover {
+    background: rgba(255, 68, 68, 0.2);
+    border-color: var(--fox-land-color);
+}
+
+.control-btn.fox-land i {
+    color: var(--fox-land-color);
+}
+
+.control-btn.blue-land {
+    background: var(--blue-land-bg);
+    border-color: var(--blue-land-border);
+}
+
+.control-btn.blue-land:hover {
+    background: rgba(0, 136, 255, 0.2);
+    border-color: var(--blue-land-color);
+}
+
+.control-btn.blue-land i {
+    color: var(--blue-land-color);
+}
+
+.control-btn.spectator {
+    background: var(--spectator-bg);
+    border-color: var(--spectator-border);
+}
+
+.control-btn.spectator:hover {
+    background: rgba(255, 170, 0, 0.2);
+    border-color: var(--spectator-color);
+}
+
+.control-btn.spectator i {
+    color: var(--spectator-color);
+}
+
+/* ========================================
+   MODAL SYSTEM
+   ======================================== */
+
+.gameplay-modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(5px);
+}
+
+.gameplay-modal-content {
+    background: linear-gradient(135deg, var(--gameplay-dark) 0%, var(--gameplay-lighter) 100%);
+    margin: 5% auto;
+    padding: 0;
+    border: 2px solid var(--gameplay-border);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 800px;
+    box-shadow: var(--gameplay-shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.gameplay-modal-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--gameplay-primary), var(--gameplay-secondary), var(--gameplay-accent));
+}
+
+.gameplay-modal-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--gameplay-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.gameplay-modal-header h3 {
+    color: var(--gameplay-primary);
+    margin: 0;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.gameplay-modal-close {
+    background: none;
+    border: none;
+    color: var(--gameplay-text);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 5px;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.gameplay-modal-close:hover {
+    background: rgba(255, 68, 68, 0.2);
+    color: var(--gameplay-accent);
+}
+
+.gameplay-modal-body {
+    padding: 20px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.gameplay-modal-footer {
+    padding: 20px;
+    border-top: 1px solid var(--gameplay-border);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.gameplay-btn {
+    padding: 10px 20px;
+    border: 1px solid var(--gameplay-border);
+    border-radius: 6px;
+    background: rgba(0, 255, 136, 0.1);
+    color: var(--gameplay-text);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gameplay-btn:hover {
+    background: rgba(0, 255, 136, 0.2);
+    border-color: var(--gameplay-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+.gameplay-btn.primary {
+    background: rgba(0, 255, 136, 0.3);
+    border-color: var(--gameplay-primary);
+}
+
+.gameplay-btn.danger {
+    background: rgba(255, 68, 68, 0.1);
+    border-color: var(--gameplay-accent);
+}
+
+.gameplay-btn.danger:hover {
+    background: rgba(255, 68, 68, 0.2);
+    border-color: var(--gameplay-accent);
+}
+
+/* ========================================
+   LOADING ANIMATION
+   ======================================== */
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--gameplay-dark);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 3px solid rgba(0, 255, 136, 0.3);
+    border-top: 3px solid var(--gameplay-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    color: var(--gameplay-primary);
+    text-shadow: 0 0 10px var(--gameplay-primary);
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 768px) {
+    .super-admin-button {
+        bottom: 10px;
+        right: 10px;
+        padding: 10px 16px;
+        font-size: 11px;
+    }
+
+    .super-admin-button i {
+        font-size: 14px;
+    }
+
+    .super-admin-button span {
+        font-size: 10px;
+    }
+
+    .control-panel-content {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .control-menu {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .control-btn {
+        min-width: 70px;
+        padding: 10px 12px;
+    }
+
+    .control-btn i {
+        font-size: 16px;
+    }
+
+    .control-btn span {
+        font-size: 10px;
+    }
+
+    .map-overlay-controls {
+        top: 10px;
+        right: 10px;
+    }
+
+    .team-status-panel {
+        top: 10px;
+        left: 10px;
+        min-width: 200px;
+    }
+
+    .coordinates-display {
+        bottom: 10px;
+        left: 10px;
+    }
+
+    .overlay-control-group {
+        padding: 8px;
+    }
+
+    .control-row {
+        flex-wrap: wrap;
+    }
+
+    .overlay-btn {
+        padding: 4px 8px;
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .super-admin-button {
+        bottom: 8px;
+        right: 8px;
+        padding: 8px 12px;
+        font-size: 10px;
+    }
+
+    .super-admin-button i {
+        font-size: 12px;
+    }
+
+    .super-admin-button span {
+        font-size: 9px;
+    }
+
+    .team-logo {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+
+    .team-name {
+        font-size: 16px;
+    }
+
+    .control-btn {
+        min-width: 60px;
+        padding: 8px 10px;
+    }
+
+    .control-btn i {
+        font-size: 14px;
+    }
+
+    .control-btn span {
+        font-size: 9px;
+    }
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.d-none { display: none; }
+.d-block { display: block; }
+.d-flex { display: flex; }
+.d-grid { display: grid; }
+
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.justify-end { justify-content: flex-end; }
+
+.align-center { align-items: center; }
+.align-start { align-items: flex-start; }
+.align-end { align-items: flex-end; }
+
+.gap-5 { gap: 5px; }
+.gap-10 { gap: 10px; }
+.gap-15 { gap: 15px; }
+.gap-20 { gap: 20px; }
+
+.mb-5 { margin-bottom: 5px; }
+.mb-10 { margin-bottom: 10px; }
+.mb-15 { margin-bottom: 15px; }
+.mb-20 { margin-bottom: 20px; }
+
+.mt-5 { margin-top: 5px; }
+.mt-10 { margin-top: 10px; }
+.mt-15 { margin-top: 15px; }
+.mt-20 { margin-top: 20px; }
+
+.p-5 { padding: 5px; }
+.p-10 { padding: 10px; }
+.p-15 { padding: 15px; }
+.p-20 { padding: 20px; }
+
+/* ========================================
+   ANIMATION CLASSES
+   ======================================== */
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { 
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.scale-in {
+    animation: scaleIn 0.3s ease-out;
+}
+
+@keyframes scaleIn {
+    from { 
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to { 
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ========================================
+   THEME VARIATIONS
+   ======================================== */
+
+/* Fox Land Theme */
+.fox-land-theme {
+    --gameplay-primary: var(--fox-land-color);
+    --gameplay-border: var(--fox-land-border);
+    --gameplay-glow: var(--fox-land-glow);
+}
+
+/* Blue Land Theme */
+.blue-land-theme {
+    --gameplay-primary: var(--blue-land-color);
+    --gameplay-border: var(--blue-land-border);
+    --gameplay-glow: var(--blue-land-glow);
+}
+
+/* Spectator Theme */
+.spectator-theme {
+    --gameplay-primary: var(--spectator-color);
+    --gameplay-border: var(--spectator-border);
+    --gameplay-glow: var(--spectator-glow);
+}

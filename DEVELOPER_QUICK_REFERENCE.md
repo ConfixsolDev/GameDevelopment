@@ -35,7 +35,9 @@ TechWebSol/
 │   │   └── TeamManagementApiController.cs
 │   ├── AdminTokenController.cs   # MVC Controller
 │   ├── GameManagementController.cs
-│   └── TeamManagementController.cs
+│   ├── TeamManagementController.cs
+│   ├── GamePlayController.cs     # Game Play Controller
+│   └── GamePlayDataAPIController.cs # Game Play API Controller
 ├── Models/
 │   ├── Token.cs                  # Main token model
 │   ├── Team.cs                   # Team model
@@ -50,7 +52,12 @@ TechWebSol/
 ├── Views/
 │   ├── AdminToken/               # Admin UI pages
 │   ├── GameManagement/           # Game UI pages
-│   └── TeamManagement/           # Team UI pages
+│   ├── TeamManagement/           # Team UI pages
+│   ├── GamePlay/                 # Game Play UI pages
+│   └── Shared/
+│       ├── _Layout.cshtml        # Main layout
+│       ├── _TokenManagementLayout.cshtml # Token management layout
+│       └── _GamePlayLayout.cshtml # Game play layout
 └── wwwroot/
     └── map/js/                   # Frontend JavaScript
 ```
@@ -349,6 +356,48 @@ dotnet run --verbosity detailed
 - `POST /api/game/GameManagement/start-session` - Start game session
 - `POST /api/game/GameManagement/end-session/{id}` - End game session
 - `GET /api/game/GameManagement/active-sessions` - Get active sessions
+
+#### Game Play Operations
+- `GET /api/GamePlayDataAPI/game-state` - Get current game state
+- `POST /api/GamePlayDataAPI/update-position` - Update player position
+- `POST /api/GamePlayDataAPI/place-token` - Place token on map
+- `GET /api/GamePlayDataAPI/team-data/{teamId}` - Get team data
+
+### 🎮 Game Play System
+
+#### Overview
+The Game Play system provides a full-screen tactical interface for strategic gameplay with three main modes:
+- **Fox Land**: Attacking team with red-themed UI
+- **Blue Land**: Defending team with blue-themed UI  
+- **Spectator**: Observing mode with yellow-themed UI
+
+#### Key Features
+- **Full-screen map interface** with Leaflet integration
+- **Real-time token placement** and management
+- **Team-based data isolation** and display
+- **Technical/cyberpunk design** with animated elements
+- **Responsive bottom control panel** with team logo
+- **Modal-based data entry** and management interfaces
+
+#### Controllers
+- `GamePlayController`: Main MVC controller for the gameplay interface
+- `GamePlayDataAPIController`: API controller for real-time data operations
+
+#### Views
+- `Views/GamePlay/Index.cshtml`: Main gameplay interface with full-screen map
+- `Views/Shared/_GamePlayLayout.cshtml`: Specialized layout for gameplay
+
+#### Usage
+```csharp
+// Navigate to gameplay
+return RedirectToAction("Index", "GamePlay");
+
+// API calls for real-time updates
+$.get('/api/GamePlayDataAPI/game-state')
+    .done(function(data) {
+        // Update game state
+    });
+```
 
 ### 🎯 Best Practices
 
