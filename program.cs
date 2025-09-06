@@ -8,7 +8,6 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using System.Globalization;
 using TechWebSol.Data;
-using TechWebSol.Filters;
 using TechWebSol.Models;
 using TechWebSol.Services;
 using TechWebSol.Services.TokenManagement;
@@ -27,6 +26,19 @@ builder.Services.AddHttpContextAccessor();
 
 // Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("ApplicationDbContext")
+        ?? throw new InvalidOperationException("Connection string 'ApplicationDbContext' not found."),
+        sqlServerOptionsAction: sqlOptions =>
+        {
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(30),
+                errorNumbersToAdd: null);
+        }));
+
+// Add simplified database context
+builder.Services.AddDbContext<SimplifiedApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("ApplicationDbContext")
         ?? throw new InvalidOperationException("Connection string 'ApplicationDbContext' not found."),
@@ -115,6 +127,16 @@ builder.Services.AddSingleton<IMvcControllerDiscovery, MvcControllerDiscovery>()
 builder.Services.AddScoped<IUserSessionService, UserSessionService>();
 builder.Services.AddScoped<DbInitializer>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
+
+// Pattern Matching Services
+builder.Services.AddScoped<IPatternMatchingService, PatternMatchingService>();
+builder.Services.AddScoped<PatternAnalysisEngine>();
+
+// Simplified Pattern Matching Services
+builder.Services.AddScoped<ISimplifiedPatternMatchingService, SimplifiedPatternMatchingService>();
+
+// Unified Token Identification DAL
+builder.Services.AddScoped<TokenIdentificationDAL>();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();

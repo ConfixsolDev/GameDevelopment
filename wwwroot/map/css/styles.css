@@ -2193,10 +2193,31 @@ body {
     text-decoration: none;
     padding: 8px 12px;
     border-radius: 6px;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     gap: 6px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Sliding background effect for navigation container */
+.header-nav, .navbar-nav, .nav-item {
+    position: relative;
+}
+
+.header-nav::before, .navbar-nav::before, .nav-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.1));
+    border-radius: 6px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+    pointer-events: none;
 }
 
 /* Active Navigation State - Only One Can Be Active */
@@ -2210,6 +2231,30 @@ body {
     position: relative;
     z-index: 10;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Sliding indicator for active navigation */
+.nav-active::before, .active-nav::before, .current-page::before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #22C55E, #16A34A);
+    border-radius: 2px;
+    transform: translateX(-50%);
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes slideIn {
+    from {
+        width: 0;
+    }
+    to {
+        width: 80%;
+    }
 }
 
 /* Ensure only one active state at a time - Reset all others */

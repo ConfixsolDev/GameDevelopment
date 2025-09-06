@@ -140,26 +140,85 @@ class TokenSystem {
             // Get ALL navigation items
             const navItems = document.querySelectorAll('.header-nav a, .navbar-nav a, .nav-item a, .nav-btn, .menu-btn, .header-btn');
             
+            // Add transition effect to all items
+            navItems.forEach(item => {
+                item.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            });
+            
             // Remove active class from ALL navigation items first
             navItems.forEach(item => {
                 item.classList.remove('nav-active', 'active-nav', 'current-page');
             });
             
-            // Add active class ONLY to the clicked element
-            activeElement.classList.add('nav-active');
+            // Animate sliding background effect
+            this.animateSlidingBackground(activeElement);
             
-            console.log('✅ Active navigation updated:', activeElement.textContent.trim());
-            console.log('📊 Total navigation items:', navItems.length);
-            
-            // Verify only one item is active
-            const activeItems = document.querySelectorAll('.nav-active, .active-nav, .current-page');
-            console.log('🎯 Currently active items:', activeItems.length);
-            
-            // Optional: Update page content based on active navigation
-            this.updatePageContent(activeElement);
+            // Add a small delay for smooth transition
+            setTimeout(() => {
+                // Add active class ONLY to the clicked element
+                activeElement.classList.add('nav-active');
+                
+                // Add a subtle bounce effect
+                activeElement.style.transform = 'translateY(-1px) scale(1.02)';
+                setTimeout(() => {
+                    activeElement.style.transform = 'translateY(-1px) scale(1)';
+                }, 150);
+                
+                console.log('✅ Active navigation updated:', activeElement.textContent.trim());
+                console.log('📊 Total navigation items:', navItems.length);
+                
+                // Verify only one item is active
+                const activeItems = document.querySelectorAll('.nav-active, .active-nav, .current-page');
+                console.log('🎯 Currently active items:', activeItems.length);
+                
+                // Optional: Update page content based on active navigation
+                this.updatePageContent(activeElement);
+            }, 50);
             
         } catch (error) {
             console.error('Error setting active navigation:', error);
+        }
+    }
+    
+    animateSlidingBackground(activeElement) {
+        try {
+            // Find the navigation container
+            const navContainer = activeElement.closest('.header-nav, .navbar-nav, .nav-item');
+            if (!navContainer) return;
+            
+            // Get the position and dimensions of the active element
+            const activeRect = activeElement.getBoundingClientRect();
+            const containerRect = navContainer.getBoundingClientRect();
+            
+            // Calculate relative position
+            const relativeLeft = activeRect.left - containerRect.left;
+            const relativeWidth = activeRect.width;
+            
+            // Create or update sliding background
+            let slidingBg = navContainer.querySelector('.sliding-bg');
+            if (!slidingBg) {
+                slidingBg = document.createElement('div');
+                slidingBg.className = 'sliding-bg';
+                slidingBg.style.cssText = `
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    height: 100%;
+                    background: linear-gradient(90deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.1));
+                    border-radius: 6px;
+                    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                    z-index: 1;
+                    pointer-events: none;
+                `;
+                navContainer.appendChild(slidingBg);
+            }
+            
+            // Animate to new position
+            slidingBg.style.left = relativeLeft + 'px';
+            slidingBg.style.width = relativeWidth + 'px';
+            
+        } catch (error) {
+            console.error('Error animating sliding background:', error);
         }
     }
     
@@ -1694,20 +1753,24 @@ class TokenSystem {
         // Debug: Log raw touch data to console
         this.debugRawTouchData(touches, 'TEST');
 
-        const result = this.identifyToken(touches);
-        if (result) {
-            document.getElementById('testTokenName').textContent = result.name;
-            document.getElementById('testConfidence').textContent = result.confidence + '%';
-            document.getElementById('testTouchCount').textContent = touches.length;
-            document.getElementById('testArea').textContent = `${touches.length} touch${touches.length > 1 ? 'es' : ''}`;
-            this.showTestResult();
-            this.showToast(`Token identified: ${result.name} (${result.confidence}%)`, 'success');
+        this.identifyToken(touches).then(result => {
+            if (result) {
+                document.getElementById('testTokenName').textContent = result.name;
+                document.getElementById('testConfidence').textContent = result.confidence + '%';
+                document.getElementById('testTouchCount').textContent = touches.length;
+                document.getElementById('testArea').textContent = `${touches.length} touch${touches.length > 1 ? 'es' : ''}`;
+                this.showTestResult();
+                this.showToast(`Token identified: ${result.name} (${result.confidence}%)`, 'success');
 
-            // 🎯 NEW: Show detailed token information for test results
-            this.showTestTokenDetails(result.token, result.confidence);
-        } else {
-            this.showToast('No matching token found', 'warning');
-        }
+                // 🎯 NEW: Show detailed token information for test results
+                this.showTestTokenDetails(result.token, result.confidence);
+            } else {
+                this.showToast('No matching token found', 'warning');
+            }
+        }).catch(error => {
+            console.error('Error in test mode identification:', error);
+            this.showToast('Error identifying token', 'error');
+        });
     }
 
     // NEW: Show detailed token information for test results
@@ -1814,17 +1877,23 @@ class TokenSystem {
             return;
         }
 
-        const result = this.identifyToken(touches);
-        if (result) {
-            document.getElementById('identifiedTokenName').textContent = result.name;
-            document.getElementById('identificationConfidence').textContent = result.confidence + '%';
-            document.getElementById('lastDetectionTime').textContent = new Date().toLocaleTimeString();
-            this.showIdentificationResult();
-            this.showToast(`Token identified: ${result.name}`, 'success');
+        this.identifyToken(touches).then(result => {
+            if (result) {
+                document.getElementById('identifiedTokenName').textContent = result.name;
+                document.getElementById('identificationConfidence').textContent = result.confidence + '%';
+                document.getElementById('lastDetectionTime').textContent = new Date().toLocaleTimeString();
+                this.showIdentificationResult();
+                this.showToast(`Token identified: ${result.name}`, 'success');
 
-            // 🎯 NEW: Show detailed token information for identification results
-            this.showIdentificationTokenDetails(result.token, result.confidence);
-        }
+                // 🎯 NEW: Show detailed token information for identification results
+                this.showIdentificationTokenDetails(result.token, result.confidence);
+            } else {
+                this.showToast('No matching token found', 'warning');
+            }
+        }).catch(error => {
+            console.error('Error in identification mode:', error);
+            this.showToast('Error identifying token', 'error');
+        });
     }
 
     // NEW: Show detailed token information for identification results
@@ -3790,9 +3859,41 @@ class TokenSystem {
 
 
 
-    // NEW: Main token identification function that compares distances between all touch points
-    identifyToken(touches) {
-        console.log(`🔍 IDENTIFY TOKEN: Processing ${touches.length} touches`);
+    // NEW: Main token identification function using simplified backend pattern matching
+    async identifyToken(touches) {
+        console.log(`🔍 SIMPLIFIED BACKEND IDENTIFY TOKEN: Processing ${touches.length} touches`);
+
+        try {
+            // Use simplified backend pattern matching service
+            const result = await window.simplifiedPatternMatcher.identifyToken(touches);
+            
+            if (result.success) {
+                console.log(`✅ Simplified backend identification successful: ${result.matchedToken.name} (${result.confidence}% confidence)`);
+                
+                // Convert backend result to frontend format
+                return {
+                    name: result.matchedToken.name,
+                    confidence: result.confidence,
+                    token: result.matchedToken,
+                    matchDetails: result.allMatches,
+                    backendResult: result
+                };
+            } else {
+                console.log(`❌ Simplified backend identification failed: ${result.message}`);
+                return null;
+            }
+        } catch (error) {
+            console.error(`❌ Error in simplified backend identification:`, error);
+            
+            // Fallback to frontend identification if backend fails
+            console.log(`🔄 Falling back to frontend identification...`);
+            return this.identifyTokenFrontend(touches);
+        }
+    }
+
+    // Fallback frontend identification method
+    identifyTokenFrontend(touches) {
+        console.log(`🔍 FRONTEND IDENTIFY TOKEN: Processing ${touches.length} touches`);
 
         if (this.learnedTokens.length === 0) {
             console.log(`❌ No learned tokens available for identification`);
@@ -5472,8 +5573,8 @@ class TokenSystem {
 
             // First try to identify token using the touch pattern
             console.log('🗺️ Calling identifyToken with valid touches:', validTouches);
-            const result = this.identifyToken(validTouches);
-            console.log('🗺️ Token identification result:', result);
+            this.identifyToken(validTouches).then(result => {
+                console.log('🗺️ Token identification result:', result);
 
             // 🎯 DEBUG: Log the structure of the result
             if (result) {
@@ -5552,11 +5653,18 @@ class TokenSystem {
                 }
             }
 
-            // Process the touch pattern for any additional logic
-            this.processMapTokenIdentification(canvasTouches);
+                // Process the touch pattern for any additional logic
+                this.processMapTokenIdentification(canvasTouches);
 
-            // Clear the stored touch data after processing
-            this.currentMapTouchData = null;
+                // Clear the stored touch data after processing
+                this.currentMapTouchData = null;
+            }).catch(error => {
+                console.error('Error in map token identification:', error);
+                this.showToast('Error identifying token on map', 'error');
+                
+                // Clear the stored touch data after error
+                this.currentMapTouchData = null;
+            });
         } else {
             console.log('🗺️ Insufficient touch data for token identification:', this.currentMapTouchData);
         }

@@ -196,45 +196,31 @@ namespace TechWebSol.Models
         public virtual TokenSignature TokenSignature { get; set; } = null!;
     }
 
-    public class DistancePair
+    /// <summary>
+    /// Result of token identification for complex system
+    /// </summary>
+    public class ComplexTokenIdentificationResult
     {
-        public int From { get; set; }
-        public int To { get; set; }
-        public double Distance { get; set; }
-        public double Angle { get; set; }
-    }
-
-    public class GeometricCenter
-    {
-        public double X { get; set; }
-        public double Y { get; set; }
-    }
-
-    public class OriginalTouch
-    {
-        public double ClientX { get; set; }
-        public double ClientY { get; set; }
-        public int Identifier { get; set; }
-    }
-
-    public class TouchIdentificationResult
-    {
-        public string Name { get; set; } = string.Empty;
-        public double Confidence { get; set; }
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
         public Token? MatchedToken { get; set; }
-        public DateTime DetectedAt { get; set; }
+        public double Confidence { get; set; }
+        public List<ComplexTokenMatchDetail> AllMatches { get; set; } = new();
     }
 
-    public class TokenStatistics
+    /// <summary>
+    /// Details of a token match for complex system
+    /// </summary>
+    public class ComplexTokenMatchDetail
     {
-        public int TotalTokens { get; set; }
-        public int ActiveTokens { get; set; }
-        public int InactiveTokens { get; set; }
-        public DateTime? LastTokenCreated { get; set; }
-        public DateTime? LastTokenUsed { get; set; }
-        public double AverageConfidence { get; set; }
-        public int TotalIdentifications { get; set; }
-        public int SuccessfulIdentifications { get; set; }
-        public double SuccessRate { get; set; }
+        public long TokenId { get; set; }
+        public string TokenName { get; set; } = string.Empty;
+        public double Confidence { get; set; }
+        public double DistanceSimilarity { get; set; }
+        public double ShapeSimilarity { get; set; }
+        public double TimingSimilarity { get; set; }
+        public double GeometricSimilarity { get; set; }
+        public List<string> MatchFactors { get; set; } = new();
     }
+
 }
