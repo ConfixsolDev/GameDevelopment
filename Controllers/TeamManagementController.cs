@@ -70,7 +70,8 @@ namespace TechWebSol.Controllers
         /// Create a new team
         /// </summary>
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateTeamRequest request)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(CreateTeamRequest request)
         {
             try
             {

@@ -14,17 +14,18 @@
                 </div>
                 <div class="card-body">
                     <form id="createTeamForm">
+                        @Html.AntiForgeryToken()
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="teamName" class="form-label">Team Name *</label>
-                                    <input type="text" class="form-control" id="teamName" required>
+                                    <input type="text" class="form-control" id="teamName" name="Name" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="teamCode" class="form-label">Team Code *</label>
-                                    <input type="text" class="form-control" id="teamCode" required>
+                                    <input type="text" class="form-control" id="teamCode" name="TeamCode" required>
                                     <div class="form-text">Unique identifier (e.g., TEAM_A, BRIG_1)</div>
                                 </div>
                             </div>
@@ -33,7 +34,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="subTeamCode" class="form-label">Sub Team Code</label>
-                                    <input type="text" class="form-control" id="subTeamCode">
+                                    <input type="text" class="form-control" id="subTeamCode" name="SubTeamCode">
                                     <div class="form-text">Optional sub-team identifier</div>
                                 </div>
                             </div>
@@ -55,7 +56,7 @@
                             <div class="col-12">
                                 <div class="mb-3">
                                     <label for="teamDescription" class="form-label">Description</label>
-                                    <textarea class="form-control" id="teamDescription" rows="4"></textarea>
+                                    <textarea class="form-control" id="teamDescription" name="Description" rows="4"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -76,46 +77,84 @@
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        $(document).ready(function() {
-            $('#createTeamForm').submit(function(e) {
-                e.preventDefault();
-                createTeam();
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('createTeamForm');
+    
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Get form data
+        const formData = new FormData(form);
+        const teamData = {
+            Name: formData.get('Name'),
+            TeamCode: formData.get('TeamCode'),
+            SubTeamCode: formData.get('SubTeamCode') || '',
+            Description: formData.get('Description') || ''
+        };
+        
+        // Show loading state
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+        submitBtn.disabled = true;
+        
+        try {
+            const response = await fetch('@Url.Action("Create", "TeamManagement")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: JSON.stringify(teamData)
             });
-        });
-
-        function createTeam() {
-            const data = {
-                name: $('#teamName').val(),
-                teamCode: $('#teamCode').val(),
-                subTeamCode: $('#subTeamCode').val(),
-                category: $('#teamCategory').val(),
-                description: $('#teamDescription').val()
-            };
-
-            if (!data.name || !data.teamCode) {
-                showAlert('Team name and code are required', 'warning');
-                return;
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // Show success message
+                showAlert('success', result.message);
+                
+                // Reset form
+                form.reset();
+                
+                // Optionally redirect to teams list
+                setTimeout(() => {
+                    window.location.href = '@Url.Action("Index", "TeamManagement")';
+                }, 1500);
+            } else {
+                showAlert('error', result.message);
             }
-
-            postJson(getApiUrl('TeamManagement', 'createTeam'), data)
-                .done(function(response) {
-                    if (response.success) {
-                        showAlert('Team created successfully', 'success');
-                        setTimeout(function() {
-                            window.location.href = '@Url.Action("Index", "TeamManagement")';
-                        }, 1500);
-                    } else {
-                        showAlert(response.message, 'danger');
-                    }
-                })
-                .fail(function(xhr) {
-                    const message = xhr.responseJSON?.message || 'Error creating team';
-                    showAlert(message, 'danger');
-                });
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('error', 'An error occurred while creating the team. Please try again.');
+        } finally {
+            // Reset button state
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
         }
+    });
+    
+    function showAlert(type, message) {
+        // Create alert element
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insert at the top of the card body
+        const cardBody = document.querySelector('.card-body');
+        cardBody.insertBefore(alertDiv, cardBody.firstChild);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+});
+</script>
 
-        // showAlert function is now provided by the centralized AlertSystem
-    </script>
-}

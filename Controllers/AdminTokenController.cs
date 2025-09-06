@@ -4,13 +4,10 @@ using TechWebSol.Data;
 using TechWebSol.Filters;
 using TechWebSol.Models;
 using TechWebSol.Services;
+using TechWebSol.ViewModels;
 
 namespace TechWebSol.Controllers
 {
-    /// <summary>
-    /// Admin Token Management MVC Controller
-    /// Handles UI pages for token group management and token creation
-    /// </summary>
     [AuthorizeDynamic]
     public class AdminTokenController : Controller
     {
@@ -41,18 +38,306 @@ namespace TechWebSol.Controllers
         /// Display token group management page
         /// </summary>
         [HttpGet]
-        public IActionResult ManageTokenGroups()
+        public async Task<IActionResult> ManageTokenGroups(string searchTerm, string categoryFilter, bool? statusFilter)
         {
-            return View();
+            var query = _context.TokenGroups.AsQueryable();
+
+            // Apply filters
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                query = query.Where(g => g.Name.Contains(searchTerm) || 
+                                       g.GroupCode.Contains(searchTerm) || 
+                                       (g.Description != null && g.Description.Contains(searchTerm)));
+            }
+
+            if (!string.IsNullOrEmpty(categoryFilter))
+            {
+                query = query.Where(g => g.Category == categoryFilter);
+            }
+
+            if (statusFilter.HasValue)
+            {
+                query = query.Where(g => g.IsActive == statusFilter.Value);
+            }
+
+            var tokenGroups = await query
+                .OrderBy(g => g.Name)
+                .Select(g => new TokenGroupViewModel
+                {
+                    Id = g.Id,
+                    Name = g.Name,
+                    GroupCode = g.GroupCode,
+                    Category = g.Category,
+                    Description = g.Description,
+                    IsActive = g.IsActive,
+                    CreatedByUserName = g.CreatedByUserName,
+                    CreatedAt = g.CreatedAt,
+                    TokenCount = g.Tokens.Count(t => t.IsActive),
+                    TeamAssignmentCount = g.TeamAssignments.Count(a => a.IsActive)
+                })
+                .ToListAsync();
+
+            var availableCategories = await _context.TokenGroups
+                .Where(g => !string.IsNullOrEmpty(g.Category))
+                .Select(g => g.Category!)
+                .Distinct()
+                .OrderBy(c => c)
+                .ToListAsync();
+
+            var viewModel = new TokenGroupIndexViewModel
+            {
+                TokenGroups = tokenGroups,
+                SearchTerm = searchTerm,
+                CategoryFilter = categoryFilter,
+                StatusFilter = statusFilter,
+                AvailableCategories = availableCategories
+            };
+
+            return View(viewModel);
         }
 
         /// <summary>
         /// Display token creation page
         /// </summary>
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            return View();
+            var viewModel = new CreateTokenViewModel
+            {
+                AvailableTokenGroups = await _context.TokenGroups
+                    .Where(g => g.IsActive)
+                    .OrderBy(g => g.Name)
+                    .ToListAsync()
+            };
+            
+            return View(viewModel);
+        }
+
+        // ===== TOKEN GROUP CRUD METHODS =====
+
+        /// <summary>
+        /// Display token group creation page
+        /// </summary>
+        [HttpGet]
+        public IActionResult CreateTokenGroup()
+        {
+            return View(new CreateTokenGroupViewModel());
+        }
+
+        /// <summary>
+        /// Create a new token group
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateTokenGroup(CreateTokenGroupViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            try
+            {
+                var currentUser = _userSessionService.GetCurrentUser();
+                if (currentUser == null)
+                {
+                    ModelState.AddModelError("", "User not authenticated");
+                    return View(model);
+                }
+
+                // Check if group code already exists
+                var existingGroup = await _context.TokenGroups
+                    .FirstOrDefaultAsync(g => g.GroupCode == model.GroupCode);
+
+                if (existingGroup != null)
+                {
+                    ModelState.AddModelError(nameof(model.GroupCode), "A token group with this code already exists");
+                    return View(model);
+                }
+
+                var tokenGroup = new TokenGroup
+                {
+                    Name = model.Name,
+                    GroupCode = model.GroupCode,
+                    Category = model.Category,
+                    Description = model.Description,
+                    IsActive = model.IsActive,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedByUserId = currentUser.ApplicationUserId,
+                    CreatedByUserName = currentUser.FullName
+                };
+
+                _context.TokenGroups.Add(tokenGroup);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Created token group: {GroupName} ({GroupCode}) by user {UserId}", 
+                    model.Name, model.GroupCode, currentUser.ApplicationUserId);
+
+                TempData["SuccessMessage"] = "Token group created successfully!";
+                return RedirectToAction("ManageTokenGroups");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating token group");
+                ModelState.AddModelError("", "An error occurred while creating the token group. Please try again.");
+                return View(model);
+            }
+        }
+
+        /// <summary>
+        /// Display token group details
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> TokenGroupDetails(Guid id)
+        {
+            var tokenGroup = await _context.TokenGroups
+                .Include(g => g.Tokens.Where(t => t.IsActive))
+                .Include(g => g.TeamAssignments.Where(a => a.IsActive))
+                    .ThenInclude(a => a.Team)
+                .FirstOrDefaultAsync(g => g.Id == id);
+
+            if (tokenGroup == null)
+            {
+                return NotFound();
+            }
+
+            var viewModel = new TokenGroupDetailsViewModel
+            {
+                Id = tokenGroup.Id,
+                Name = tokenGroup.Name,
+                GroupCode = tokenGroup.GroupCode,
+                Category = tokenGroup.Category,
+                Description = tokenGroup.Description,
+                IsActive = tokenGroup.IsActive,
+                CreatedByUserName = tokenGroup.CreatedByUserName,
+                CreatedAt = tokenGroup.CreatedAt,
+                TokenCount = tokenGroup.Tokens.Count,
+                TeamAssignmentCount = tokenGroup.TeamAssignments.Count,
+                Tokens = tokenGroup.Tokens.ToList(),
+                TeamAssignments = tokenGroup.TeamAssignments.ToList()
+            };
+
+            return View(viewModel);
+        }
+
+        /// <summary>
+        /// Display token group edit page
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> EditTokenGroup(Guid id)
+        {
+            var tokenGroup = await _context.TokenGroups.FindAsync(id);
+            if (tokenGroup == null)
+            {
+                return NotFound();
+            }
+
+            var viewModel = new EditTokenGroupViewModel
+            {
+                Id = tokenGroup.Id,
+                Name = tokenGroup.Name,
+                GroupCode = tokenGroup.GroupCode,
+                Category = tokenGroup.Category,
+                Description = tokenGroup.Description,
+                IsActive = tokenGroup.IsActive
+            };
+
+            return View(viewModel);
+        }
+
+        /// <summary>
+        /// Update an existing token group
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditTokenGroup(EditTokenGroupViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            try
+            {
+                var tokenGroup = await _context.TokenGroups.FindAsync(model.Id);
+                if (tokenGroup == null)
+                {
+                    return NotFound();
+                }
+
+                // Check if group code already exists (excluding current group)
+                var existingGroup = await _context.TokenGroups
+                    .FirstOrDefaultAsync(g => g.GroupCode == model.GroupCode && g.Id != model.Id);
+
+                if (existingGroup != null)
+                {
+                    ModelState.AddModelError(nameof(model.GroupCode), "A token group with this code already exists");
+                    return View(model);
+                }
+
+                tokenGroup.Name = model.Name;
+                tokenGroup.GroupCode = model.GroupCode;
+                tokenGroup.Category = model.Category;
+                tokenGroup.Description = model.Description;
+                tokenGroup.IsActive = model.IsActive;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Updated token group: {GroupName} ({GroupCode})", 
+                    model.Name, model.GroupCode);
+
+                TempData["SuccessMessage"] = "Token group updated successfully!";
+                return RedirectToAction("ManageTokenGroups");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating token group");
+                ModelState.AddModelError("", "An error occurred while updating the token group. Please try again.");
+                return View(model);
+            }
+        }
+
+        /// <summary>
+        /// Delete a token group
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteTokenGroup(Guid id)
+        {
+            try
+            {
+                var tokenGroup = await _context.TokenGroups.FindAsync(id);
+                if (tokenGroup == null)
+                {
+                    return NotFound();
+                }
+
+                // Check if group has active tokens
+                var hasActiveTokens = await _context.Tokens
+                    .AnyAsync(t => t.TokenGroupId == id && t.IsActive);
+
+                if (hasActiveTokens)
+                {
+                    TempData["ErrorMessage"] = "Cannot delete token group with active tokens. Please reassign or deactivate tokens first.";
+                    return RedirectToAction("ManageTokenGroups");
+                }
+
+                // Soft delete by setting IsActive to false
+                tokenGroup.IsActive = false;
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Deleted token group: {GroupName} ({GroupCode})", 
+                    tokenGroup.Name, tokenGroup.GroupCode);
+
+                TempData["SuccessMessage"] = "Token group deleted successfully!";
+                return RedirectToAction("ManageTokenGroups");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting token group");
+                TempData["ErrorMessage"] = "An error occurred while deleting the token group. Please try again.";
+                return RedirectToAction("ManageTokenGroups");
+            }
         }
 
         // ===== API ENDPOINTS FOR AJAX CALLS =====
@@ -158,38 +443,57 @@ namespace TechWebSol.Controllers
         /// <summary>
         /// Create a token (without physical characteristics)
         /// </summary>
-        [HttpPost("create")]
-        public async Task<IActionResult> CreateToken([FromBody] CreateTokenRequest request)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(CreateTokenViewModel model)
         {
+            // Reload token groups for the view in case of validation errors
+            model.AvailableTokenGroups = await _context.TokenGroups
+                .Where(g => g.IsActive)
+                .OrderBy(g => g.Name)
+                .ToListAsync();
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
             try
             {
                 var currentUser = _userSessionService.GetCurrentUser();
                 if (currentUser == null)
                 {
-                    return Json(new { success = false, message = "User not authenticated" });
+                    ModelState.AddModelError("", "User not authenticated");
+                    return View(model);
                 }
 
                 // Get user details to determine team
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == currentUser.ApplicationUserId);
                 if (user == null)
                 {
-                    return Json(new { success = false, message = "User not found" });
+                    ModelState.AddModelError("", "User not found");
+                    return View(model);
                 }
 
                 // Find the team by TeamCode and SubTeamCode
                 var team = await _context.Teams.FirstOrDefaultAsync(t => t.TeamCode == user.TeamCode && t.SubTeamCode == user.SubTeamCode);
                 if (team == null)
                 {
-                    return Json(new { success = false, message = "User team not found" });
+                    ModelState.AddModelError("", "User team not found");
+                    return View(model);
                 }
+
+                // Generate a unique token ID
+                var tokenId = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
                 // Create the token
                 var token = new Token
                 {
-                    Name = request.Name,
-                    Description = request.Description,
-                    Category = request.Category,
-                    TokenGroupId = request.TokenGroupId,
+                    Id = tokenId,
+                    Name = model.Name,
+                    Description = model.Description,
+                    Category = model.Category,
+                    TokenGroupId = model.TokenGroupId,
                     TeamId = team.Id,
                     IsManualToken = true,
                     IsActive = true,
@@ -202,31 +506,16 @@ namespace TechWebSol.Controllers
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Created token: {TokenName} by user {UserId}", 
-                    request.Name, currentUser.ApplicationUserId);
+                    model.Name, currentUser.ApplicationUserId);
 
-                return Json(new
-                {
-                    success = true,
-                    message = "Token created successfully",
-                    token = new
-                    {
-                        id = token.Id,
-                        name = token.Name,
-                        description = token.Description,
-                        category = token.Category,
-                        tokenGroupId = token.TokenGroupId,
-                        teamId = token.TeamId,
-                        isManualToken = token.IsManualToken,
-                        isActive = token.IsActive,
-                        createdAt = token.CreatedAt,
-                        createdByUserName = token.CreatedByUserName
-                    }
-                });
+                TempData["SuccessMessage"] = "Token created successfully!";
+                return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating token");
-                return Json(new { success = false, message = "Internal server error" });
+                ModelState.AddModelError("", "An error occurred while creating the token. Please try again.");
+                return View(model);
             }
         }
 
