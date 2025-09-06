@@ -87,7 +87,7 @@
         });
 
         function loadGameSessions() {
-            $.get('/api/game/GameManagement/active-sessions')
+            $.get(getApiUrl('GameManagement', 'activeSessions'))
                 .done(function(sessions) {
                     const tbody = $('#gameSessionsTable tbody');
                     tbody.empty();
@@ -127,7 +127,7 @@
                 description: $('#sessionDescription').val()
             };
 
-            $.post('/api/game/GameManagement/start-session', data)
+            $.post(getApiUrl('GameManagement', 'startSession'), data)
                 .done(function(response) {
                     if (response.success) {
                         showAlert('Game session started successfully', 'success');
@@ -146,7 +146,7 @@
 
         function endSession(sessionId) {
             if (confirm('Are you sure you want to end this game session? All bound tokens will be freed.')) {
-                $.post(`/api/game/GameManagement/end-session/${sessionId}`)
+                $.post(getApiUrlWithParams('GameManagement', 'endSession', { id: sessionId }))
                     .done(function(response) {
                         if (response.success) {
                             showAlert('Game session ended successfully', 'success');
@@ -161,18 +161,6 @@
             }
         }
 
-        function showAlert(message, type) {
-            const alertDiv = `
-                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-            $('.container-fluid').prepend(alertDiv);
-            
-            setTimeout(function() {
-                $('.alert').fadeOut();
-            }, 5000);
-        }
+        // showAlert function is now provided by the centralized AlertSystem
     </script>
 }

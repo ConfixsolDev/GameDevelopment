@@ -211,7 +211,7 @@
         });
 
         function loadTeams() {
-            $.get('/api/admin/TeamManagementApi/teams')
+            $.get(getApiUrl('TeamManagement', 'teams'))
                 .done(function(teams) {
                     const tbody = $('#teamsTable tbody');
                     tbody.empty();
@@ -278,7 +278,7 @@
                 return;
             }
 
-            $.post('/api/admin/TeamManagementApi/create-team', data)
+            $.post(getApiUrl('TeamManagement', 'createTeam'), data)
                 .done(function(response) {
                     if (response.success) {
                         showAlert('Team created successfully', 'success');
@@ -455,18 +455,6 @@
             }
         }
 
-        function showAlert(message, type) {
-            const alertDiv = `
-                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-            $('.container-fluid').prepend(alertDiv);
-            
-            setTimeout(function() {
-                $('.alert').fadeOut();
-            }, 5000);
-        }
+        // showAlert function is now provided by the centralized AlertSystem
     </script>
 }

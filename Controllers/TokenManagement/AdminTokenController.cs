@@ -14,16 +14,16 @@ namespace TechWebSol.Controllers.TokenManagement
     [AuthorizeDynamic]
     [ApiController]
     [Route("api/admin/[controller]")]
-    public class AdminTokenController : ControllerBase
+    public class AdminTokenApiController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
         private readonly IUserSessionService _userSessionService;
-        private readonly ILogger<AdminTokenController> _logger;
+        private readonly ILogger<AdminTokenApiController> _logger;
 
-        public AdminTokenController(
+        public AdminTokenApiController(
             ApplicationDbContext context,
             IUserSessionService userSessionService,
-            ILogger<AdminTokenController> logger)
+            ILogger<AdminTokenApiController> logger)
         {
             _context = context;
             _userSessionService = userSessionService;
@@ -246,7 +246,7 @@ namespace TechWebSol.Controllers.TokenManagement
         /// <summary>
         /// Create a manual token (without physical characteristics)
         /// </summary>
-        [HttpPost("create-manual-token")]
+        [HttpPost("create")]
         public async Task<ActionResult<ManualTokenResult>> CreateManualToken([FromBody] CreateManualTokenRequest request)
         {
             try

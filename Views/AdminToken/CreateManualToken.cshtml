@@ -12,7 +12,7 @@
                         <i class="fas fa-plus-circle"></i> Create Manual Token
                     </h3>
                     <div class="card-tools">
-                        <a href="/api/admin/AdminToken/manage" class="btn btn-secondary">
+                        <a href="/AdminToken/manage" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Back to Group Management
                         </a>
                     </div>
@@ -144,7 +144,7 @@
         });
 
         function loadGroupsForDropdown() {
-            $.get('/api/admin/AdminToken/groups')
+            $.get(getApiUrl('AdminToken', 'groups'))
                 .done(function(groups) {
                     const select = $('#tokenGroupSelect');
                     select.empty().append('<option value="">-- Select Group (Optional) --</option>');
@@ -187,7 +187,7 @@
             // Show loading state
             $('#saveManualTokenBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Creating...');
 
-            $.post('/api/admin/AdminToken/create-manual-token', data)
+            $.post(getApiUrl('AdminToken', 'create'), data)
                 .done(function(response) {
                     if (response.success) {
                         showAlert('Manual token created successfully!', 'success');
@@ -207,19 +207,6 @@
                 });
         }
 
-        function showAlert(message, type) {
-            const alertDiv = `
-                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-            $('.container-fluid').prepend(alertDiv);
-            
-            // Auto-remove after 5 seconds
-            setTimeout(function() {
-                $('.alert').fadeOut();
-            }, 5000);
-        }
+        // showAlert function is now provided by the centralized AlertSystem
     </script>
 }

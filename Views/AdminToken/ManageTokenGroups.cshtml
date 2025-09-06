@@ -198,7 +198,7 @@
         });
 
         function loadTokenGroups() {
-            $.get('/api/admin/AdminToken/groups')
+            $.get(getApiUrl('AdminToken', 'groups'))
                 .done(function(groups) {
                     const tbody = $('#tokenGroupsTable tbody');
                     tbody.empty();
@@ -233,7 +233,7 @@
         }
 
         function loadTeams() {
-            $.get('/api/admin/AdminToken/teams')
+            $.get(getApiUrl('AdminToken', 'teams'))
                 .done(function(teams) {
                     const select = $('#teamSelect');
                     select.empty().append('<option value="">-- Select Team --</option>');
@@ -248,7 +248,7 @@
         }
 
         function loadGroupsForDropdown() {
-            $.get('/api/admin/AdminToken/groups')
+            $.get(getApiUrl('AdminToken', 'groups'))
                 .done(function(groups) {
                     const select = $('#groupSelect');
                     select.empty().append('<option value="">-- Select Group --</option>');
@@ -278,7 +278,7 @@
                 description: $('#groupDescription').val()
             };
 
-            $.post('/api/admin/AdminToken/create-group', data)
+            $.post(getApiUrl('AdminToken', 'createGroup'), data)
                 .done(function(response) {
                     if (response.success) {
                         showAlert('Token group created successfully', 'success');
@@ -310,7 +310,7 @@
                 teamId: teamId
             };
 
-            $.post('/api/admin/AdminToken/assign-group-to-team', data)
+            $.post(getApiUrl('AdminToken', 'assignGroupToTeam'), data)
                 .done(function(response) {
                     if (response.success) {
                         showAlert('Group assigned to team successfully', 'success');
@@ -335,7 +335,7 @@
                 tokenGroupId: $('#tokenGroupSelect').val() ? parseInt($('#tokenGroupSelect').val()) : null
             };
 
-            $.post('/api/admin/AdminToken/create-manual-token', data)
+            $.post(getApiUrl('AdminToken', 'create'), data)
                 .done(function(response) {
                     if (response.success) {
                         showAlert('Manual token created successfully', 'success');
@@ -353,7 +353,7 @@
         }
 
         function viewAssignments(groupId) {
-            $.get(`/api/admin/AdminToken/group-assignments/${groupId}`)
+            $.get(getApiUrlWithParams('AdminToken', 'groupAssignments', { id: groupId }))
                 .done(function(assignments) {
                     const container = $('#assignmentsList');
                     container.empty();
@@ -394,7 +394,7 @@
         function removeAssignment(assignmentId) {
             if (confirm('Are you sure you want to remove this assignment?')) {
                 $.ajax({
-                    url: `/api/admin/AdminToken/remove-assignment/${assignmentId}`,
+                    url: getApiUrlWithParams('AdminToken', 'removeAssignment', { id: assignmentId }),
                     type: 'DELETE'
                 })
                 .done(function(response) {
@@ -414,19 +414,6 @@
             }
         }
 
-        function showAlert(message, type) {
-            const alertDiv = `
-                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-            $('.container-fluid').prepend(alertDiv);
-            
-            // Auto-remove after 5 seconds
-            setTimeout(function() {
-                $('.alert').fadeOut();
-            }, 5000);
-        }
+        // showAlert function is now provided by the centralized AlertSystem
     </script>
 }
