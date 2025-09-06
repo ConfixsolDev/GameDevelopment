@@ -90,7 +90,7 @@ namespace TechWebSol.Services.TokenManagement
 
                 // Calculate adaptive tolerance based on pattern complexity
                 var baseTolerance = 4.0; // Base 4px tolerance
-                var complexityFactor = Math.Min(signature1.TouchCount, 5);
+                var complexityFactor = Math.Min(signature1.TouchCount, 5.0);
                 var adaptiveTolerance = baseTolerance + (complexityFactor - 2) * 0.5;
 
                 double totalSimilarity = 0;
@@ -105,13 +105,13 @@ namespace TechWebSol.Services.TokenManagement
                         if (pixelDifference <= adaptiveTolerance)
                         {
                             // Within tolerance - high similarity
-                            var similarity = Math.Max(0, 100 - (pixelDifference / adaptiveTolerance * 15));
+                            var similarity = Math.Max(0.0, 100 - (pixelDifference / adaptiveTolerance * 15));
                             totalSimilarity += similarity;
                         }
                         else
                         {
                             // Outside tolerance - lower similarity but not zero
-                            var similarity = Math.Max(0, 100 - (pixelDifference * 1.5));
+                            var similarity = Math.Max(0.0, 100 - (pixelDifference * 1.5));
                             totalSimilarity += similarity;
                         }
                         
@@ -136,7 +136,7 @@ namespace TechWebSol.Services.TokenManagement
                 var geometry2 = signature2.MultiTouchGeometry;
 
                 if (geometry1 == null || geometry2 == null)
-                    return 50; // Neutral score if no geometry data
+                    return 50.0; // Neutral score if no geometry data
 
                 var similarities = new List<double>();
 
@@ -144,7 +144,7 @@ namespace TechWebSol.Services.TokenManagement
                 if (geometry1.AspectRatio > 0 && geometry2.AspectRatio > 0)
                 {
                     var aspectRatioDiff = Math.Abs((double)geometry1.AspectRatio - (double)geometry2.AspectRatio);
-                    var aspectRatioSim = Math.Max(0, 100 - (aspectRatioDiff * 50));
+                    var aspectRatioSim = Math.Max(0.0, 100 - (aspectRatioDiff * 50));
                     similarities.Add(aspectRatioSim);
                 }
 
@@ -153,14 +153,14 @@ namespace TechWebSol.Services.TokenManagement
                 {
                     var areaDiff = Math.Abs((double)geometry1.BoundingBoxArea - (double)geometry2.BoundingBoxArea);
                     var maxArea = Math.Max((double)geometry1.BoundingBoxArea, (double)geometry2.BoundingBoxArea);
-                    var areaSim = Math.Max(0, 100 - (areaDiff / maxArea * 100));
+                    var areaSim = Math.Max(0.0, 100 - (areaDiff / maxArea * 100));
                     similarities.Add(areaSim);
                 }
 
                 // Center position similarity (relative)
                 var centerXDiff = Math.Abs((double)geometry1.CenterX - (double)geometry2.CenterX);
                 var centerYDiff = Math.Abs((double)geometry1.CenterY - (double)geometry2.CenterY);
-                var centerSim = Math.Max(0, 100 - Math.Sqrt(centerXDiff * centerXDiff + centerYDiff * centerYDiff));
+                var centerSim = Math.Max(0.0, 100 - Math.Sqrt(centerXDiff * centerXDiff + centerYDiff * centerYDiff));
                 similarities.Add(centerSim);
 
                 // Spread similarity
@@ -168,11 +168,11 @@ namespace TechWebSol.Services.TokenManagement
                 {
                     var spreadDiff = Math.Abs((double)geometry1.Spread - (double)geometry2.Spread);
                     var maxSpread = Math.Max((double)geometry1.Spread, (double)geometry2.Spread);
-                    var spreadSim = Math.Max(0, 100 - (spreadDiff / maxSpread * 100));
+                    var spreadSim = Math.Max(0.0, 100 - (spreadDiff / maxSpread * 100));
                     similarities.Add(spreadSim);
                 }
 
-                return similarities.Any() ? similarities.Average() : 50;
+                return similarities.Any() ? similarities.Average() : 50.0;
             }
             catch (Exception ex)
             {
@@ -187,7 +187,7 @@ namespace TechWebSol.Services.TokenManagement
             {
                 // For now, return neutral score as timing data is not fully implemented
                 // This can be enhanced when timing patterns are added to the signature
-                return 50;
+                return 50.0;
             }
             catch (Exception ex)
             {
@@ -204,7 +204,7 @@ namespace TechWebSol.Services.TokenManagement
                 var geometry2 = signature2.TouchProperties;
 
                 if (geometry1 == null || geometry2 == null)
-                    return 50;
+                    return 50.0;
 
                 var similarities = new List<double>();
 
@@ -225,7 +225,7 @@ namespace TechWebSol.Services.TokenManagement
                     similarities.Add(rotationSim);
                 }
 
-                return similarities.Any() ? similarities.Average() : 50;
+                return similarities.Any() ? similarities.Average() : 50.0;
             }
             catch (Exception ex)
             {

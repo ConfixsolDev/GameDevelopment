@@ -554,7 +554,6 @@ namespace TechWebSol.Data
                         signature.Distances = JsonSerializer.Serialize(geometricData.Distances);
                         signature.Angles = JsonSerializer.Serialize(geometricData.Angles);
                         signature.Center = JsonSerializer.Serialize(geometricData.Center);
-                        signature.CreatedAt = DateTime.UtcNow;
 
                         if (token.Signature == null)
                         {
