@@ -1,0 +1,242 @@
+@{
+    ViewData["Title"] = "Team Members";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-users"></i> Team Members - <span id="teamNameDisplay"></span>
+                    </h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#assignUserModal">
+                            <i class="fas fa-plus"></i> Assign User
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="teamMembersTable" class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>User Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Assigned Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be loaded via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assign User Modal -->
+<div class="modal fade" id="assignUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Assign User to Team</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="assignUserForm">
+                    <div class="mb-3">
+                        <label for="userSelect" class="form-label">Select User *</label>
+                        <select id="userSelect" class="form-control" required>
+                            <option value="">-- Select User --</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="userRole" class="form-label">Role</label>
+                        <select id="userRole" class="form-control">
+                            <option value="Member">Member</option>
+                            <option value="Leader">Leader</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="assignUserBtn">Assign User</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentTeamId = '@ViewBag.TeamId';
+
+        $(document).ready(function() {
+            if (!currentTeamId) {
+                showAlert('Team ID not provided', 'danger');
+                return;
+            }
+
+            loadTeamData();
+            loadTeamMembers();
+            loadUsers();
+
+            $('#assignUserBtn').click(function() {
+                assignUserToTeam();
+            });
+        });
+
+        function loadTeamData() {
+            $.get('/api/admin/TeamManagementApi/teams')
+                .done(function(teams) {
+                    const team = teams.find(t => t.id === currentTeamId);
+                    if (team) {
+                        $('#teamNameDisplay').text(team.name);
+                        document.title = `Team Members - ${team.name}`;
+                    }
+                })
+                .fail(function() {
+                    showAlert('Error loading team data', 'danger');
+                });
+        }
+
+        function loadTeamMembers() {
+            $.get(`/api/admin/TeamManagementApi/team-members/${currentTeamId}`)
+                .done(function(members) {
+                    const tbody = $('#teamMembersTable tbody');
+                    tbody.empty();
+                    
+                    members.forEach(function(member) {
+                        const row = `
+                            <tr>
+                                <td>${member.firstName} ${member.lastName}</td>
+                                <td>${member.email}</td>
+                                <td><span class="badge bg-info">${member.role || 'Member'}</span></td>
+                                <td>${new Date(member.assignedDate).toLocaleDateString()}</td>
+                                <td>${member.isActive ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Inactive</span>'}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning" onclick="editUserRole('${member.id}', '${member.role || 'Member'}')">
+                                        <i class="fas fa-edit"></i> Edit Role
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="removeUserFromTeam('${member.id}')">
+                                        <i class="fas fa-trash"></i> Remove
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.append(row);
+                    });
+                })
+                .fail(function() {
+                    showAlert('Error loading team members', 'danger');
+                });
+        }
+
+        function loadUsers() {
+            $.get('/api/admin/TeamManagementApi/users')
+                .done(function(users) {
+                    const select = $('#userSelect');
+                    select.empty().append('<option value="">-- Select User --</option>');
+                    
+                    users.forEach(function(user) {
+                        select.append(`<option value="${user.id}">${user.firstName} ${user.lastName} (${user.email})</option>`);
+                    });
+                })
+                .fail(function() {
+                    showAlert('Error loading users', 'danger');
+                });
+        }
+
+        function assignUserToTeam() {
+            const userId = $('#userSelect').val();
+            const role = $('#userRole').val();
+
+            if (!userId) {
+                showAlert('Please select a user', 'warning');
+                return;
+            }
+
+            const data = {
+                userId: userId,
+                teamId: currentTeamId,
+                role: role
+            };
+
+            postJson(getApiUrl('TeamManagement', 'assignUserToTeam'), data)
+                .done(function(response) {
+                    if (response.success) {
+                        showAlert('User assigned to team successfully', 'success');
+                        $('#assignUserModal').modal('hide');
+                        $('#assignUserForm')[0].reset();
+                        loadTeamMembers();
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                })
+                .fail(function(xhr) {
+                    const message = xhr.responseJSON?.message || 'Error assigning user to team';
+                    showAlert(message, 'danger');
+                });
+        }
+
+        function editUserRole(userId, currentRole) {
+            const newRole = prompt('Enter new role:', currentRole);
+            if (newRole && newRole !== currentRole) {
+                const data = {
+                    userId: userId,
+                    teamId: currentTeamId,
+                    role: newRole
+                };
+
+                $.ajax({
+                    url: getApiUrl('TeamManagement', 'updateUserRole'),
+                    type: 'PUT',
+                    data: JSON.stringify(data),
+                    contentType: 'application/json'
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        showAlert('User role updated successfully', 'success');
+                        loadTeamMembers();
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                })
+                .fail(function(xhr) {
+                    const message = xhr.responseJSON?.message || 'Error updating user role';
+                    showAlert(message, 'danger');
+                });
+            }
+        }
+
+        function removeUserFromTeam(userId) {
+            if (confirm('Are you sure you want to remove this user from the team?')) {
+                $.ajax({
+                    url: getApiUrlWithParams('TeamManagement', 'removeUserFromTeam', { userId: userId }),
+                    type: 'DELETE'
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        showAlert('User removed from team successfully', 'success');
+                        loadTeamMembers();
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('Error removing user from team', 'danger');
+                });
+            }
+        }
+
+        // showAlert function is now provided by the centralized AlertSystem
+    </script>
+}

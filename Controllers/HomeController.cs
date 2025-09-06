@@ -9,7 +9,7 @@ using System.ComponentModel;
 
 namespace TechWebSol.Controllers
 {
-    [AuthorizeDynamic]
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -26,9 +26,14 @@ namespace TechWebSol.Controllers
             applicatonUser = IUserSessionService.GetCurrentUser();
         }
 
-        [Authorize]
         public IActionResult Index()
         {
+            // Double-check that user session is valid
+            if (applicatonUser == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+            
             return View();
         }
 

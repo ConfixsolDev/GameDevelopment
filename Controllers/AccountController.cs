@@ -69,6 +69,25 @@ namespace TechWebSol.Controllers
             }
         }
 
+        [HttpPost]
+        public IActionResult ClearSession()
+        {
+            try
+            {
+                // Clear session data
+                HttpContext.Session.Clear();
+                _userSessionService.ClearCurrentUser();
+                
+                // Return success response
+                return Json(new { success = true, message = "Session cleared" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error clearing session");
+                return Json(new { success = false, message = "Error clearing session" });
+            }
+        }
+
         public IActionResult AccessDenied()
         {
             return View();
@@ -112,10 +131,6 @@ namespace TechWebSol.Controllers
                                 select role
                             ).AsNoTracking().FirstOrDefault();
 
-                            if (roles == null)
-                            {
-                                roles = _Appcontext.Roles.FirstOrDefault(x => x.ApplicationId == AppConstants.Id && x.Id == "e7fd028f-98d4-4901-8f2d-89c9cf5c8722");
-                            }
 
                             ApplicationUserVM applicaitonUserVM = new ApplicationUserVM
                             {

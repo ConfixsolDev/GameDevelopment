@@ -1,0 +1,402 @@
+@{
+    Layout = "_GamePlayLayout";
+}
+
+@section Styles {
+    <!-- Additional Game Play specific styles can be added here -->
+}
+
+<div class="game-map-container">
+    <!-- Main Game Map -->
+    <div id="gameMap"></div>
+
+    <!-- Map Overlay Controls -->
+    <div class="map-overlay-controls">
+        <div class="overlay-control-group">
+            <h6>Map Controls</h6>
+            <div class="control-row">
+                <button class="overlay-btn" onclick="toggleMapLayers()">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Layers</span>
+                </button>
+                <button class="overlay-btn" onclick="toggleFullscreen()">
+                    <i class="fas fa-expand"></i>
+                    <span>Fullscreen</span>
+                </button>
+            </div>
+            <div class="control-row">
+                <button class="overlay-btn" onclick="resetMapView()">
+                    <i class="fas fa-home"></i>
+                    <span>Reset</span>
+                </button>
+                <button class="overlay-btn" onclick="toggleCoordinates()">
+                    <i class="fas fa-crosshairs"></i>
+                    <span>Coords</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="overlay-control-group">
+            <h6>Game Tools</h6>
+            <div class="control-row">
+                <button class="overlay-btn" onclick="placeToken()">
+                    <i class="fas fa-plus"></i>
+                    <span>Place Token</span>
+                </button>
+                <button class="overlay-btn" onclick="selectToken()">
+                    <i class="fas fa-mouse-pointer"></i>
+                    <span>Select</span>
+                </button>
+            </div>
+            <div class="control-row">
+                <button class="overlay-btn" onclick="measureDistance()">
+                    <i class="fas fa-ruler"></i>
+                    <span>Measure</span>
+                </button>
+                <button class="overlay-btn" onclick="drawArea()">
+                    <i class="fas fa-draw-polygon"></i>
+                    <span>Draw Area</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Status Panel -->
+    <div class="team-status-panel">
+        <div class="team-status-header">
+            <div class="team-status-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="team-status-info">
+                <h5 id="currentTeamName">Alpha Team</h5>
+                <p id="currentTeamStatus">Ready for Battle</p>
+            </div>
+        </div>
+        <div class="status-metrics">
+            <div class="metric-item">
+                <span class="metric-value" id="tokenCount">0</span>
+                <span class="metric-label">Tokens</span>
+            </div>
+            <div class="metric-item">
+                <span class="metric-value" id="areaCovered">0%</span>
+                <span class="metric-label">Area</span>
+            </div>
+            <div class="metric-item">
+                <span class="metric-value" id="score">0</span>
+                <span class="metric-label">Score</span>
+            </div>
+            <div class="metric-item">
+                <span class="metric-value" id="timeRemaining">∞</span>
+                <span class="metric-label">Time</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coordinates Display -->
+    <div class="coordinates-display" id="coordinatesDisplay">
+        <div class="coord-item">
+            <span class="coord-label">Lat:</span>
+            <span class="coord-value" id="currentLat">0.000000</span>
+        </div>
+        <div class="coord-item">
+            <span class="coord-label">Lng:</span>
+            <span class="coord-value" id="currentLng">0.000000</span>
+        </div>
+        <div class="coord-item">
+            <span class="coord-label">Zoom:</span>
+            <span class="coord-value" id="currentZoom">10</span>
+        </div>
+    </div>
+</div>
+
+<!-- Data Entry Modal -->
+<div id="dataEntryModal" class="gameplay-modal">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-database"></i> Data Entry</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('dataEntryModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <p>Data entry functionality will be implemented here.</p>
+            <!-- TODO: Add data entry form -->
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('dataEntryModal')">Cancel</button>
+            <button class="gameplay-btn primary" onclick="saveData()">Save Data</button>
+        </div>
+    </div>
+</div>
+
+<!-- Token Management Modal -->
+<div id="tokenManagementModal" class="gameplay-modal">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-crosshairs"></i> Token Management</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('tokenManagementModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <p>Token management functionality will be implemented here.</p>
+            <!-- TODO: Add token management interface -->
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('tokenManagementModal')">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settingsModal" class="gameplay-modal">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-cog"></i> Game Settings</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('settingsModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <p>Game settings will be implemented here.</p>
+            <!-- TODO: Add settings interface -->
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('settingsModal')">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let gameMap;
+    let currentMode = 'fox-land';
+    let tokens = [];
+    let isFullscreen = false;
+
+    // Wait for jQuery to be available
+    function waitForJQuery() {
+        if (typeof jQuery !== 'undefined') {
+            $(document).ready(function() {
+                initializeGameMap();
+                setupEventListeners();
+                
+                // Handle window resize
+                $(window).resize(function() {
+                    if (gameMap) {
+                        setTimeout(function() {
+                            gameMap.invalidateSize();
+                        }, 100);
+                    }
+                });
+            });
+        } else {
+            console.log('Waiting for jQuery...');
+            setTimeout(waitForJQuery, 100);
+        }
+    }
+    
+    // Start waiting for jQuery
+    waitForJQuery();
+
+    function initializeGameMap() {
+        try {
+            // Check if Leaflet is loaded
+            if (typeof L === 'undefined') {
+                console.error('Leaflet library not loaded');
+                $('#gameMap').html('<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--gameplay-primary); font-family: Orbitron, sans-serif; font-size: 18px;">Loading Map Library...</div>');
+                return;
+            }
+
+            // Initialize Leaflet map
+            gameMap = L.map('gameMap', {
+                zoomControl: true,
+                attributionControl: true
+            }).setView([51.505, -0.09], 13);
+
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19,
+                minZoom: 1
+            }).addTo(gameMap);
+
+            // Add map event listeners
+            gameMap.on('moveend', updateCoordinates);
+            gameMap.on('zoomend', updateCoordinates);
+            gameMap.on('click', onMapClick);
+
+            // Initial coordinate update
+            updateCoordinates();
+            
+            // Force map to resize after initialization
+            setTimeout(function() {
+                if (gameMap) {
+                    gameMap.invalidateSize();
+                }
+            }, 100);
+
+            console.log('Map initialized successfully');
+        } catch (error) {
+            console.error('Error initializing map:', error);
+            $('#gameMap').html('<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--gameplay-accent); font-family: Orbitron, sans-serif; font-size: 18px;">Map Initialization Error</div>');
+        }
+    }
+
+    function setupEventListeners() {
+        // Map control buttons
+        $('#dataEntryBtn').click(function() {
+            openModal('dataEntryModal');
+        });
+
+        $('#tokensBtn').click(function() {
+            openModal('tokenManagementModal');
+        });
+
+        $('#settingsBtn').click(function() {
+            openModal('settingsModal');
+        });
+    }
+
+    function updateCoordinates() {
+        const center = gameMap.getCenter();
+        const zoom = gameMap.getZoom();
+        
+        $('#currentLat').text(center.lat.toFixed(6));
+        $('#currentLng').text(center.lng.toFixed(6));
+        $('#currentZoom').text(zoom);
+    }
+
+    function onMapClick(e) {
+        console.log('Map clicked at:', e.latlng);
+        
+        if (currentMode === 'fox-land' || currentMode === 'blue-land') {
+            placeTokenAtLocation(e.latlng);
+        }
+    }
+
+    function placeTokenAtLocation(latlng) {
+        const tokenId = 'token_' + Date.now();
+        const tokenType = currentMode;
+        
+        // Create token marker
+        const marker = L.marker(latlng, {
+            icon: L.divIcon({
+                className: 'token-marker ' + tokenType,
+                html: '<i class="fas fa-crosshairs"></i>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            })
+        }).addTo(gameMap);
+
+        // Store token data
+        const tokenData = {
+            id: tokenId,
+            type: tokenType,
+            position: latlng,
+            marker: marker,
+            timestamp: new Date()
+        };
+        
+        tokens.push(tokenData);
+        updateTokenCount();
+        
+        console.log('Token placed:', tokenData);
+    }
+
+    function updateTokenCount() {
+        const count = tokens.filter(t => t.type === currentMode).length;
+        $('#tokenCount').text(count);
+    }
+
+    function updateTeamDisplay(teamName, status) {
+        $('#currentTeamName').text(teamName);
+        $('#currentTeamStatus').text(status);
+    }
+
+    // Map Control Functions
+    function toggleMapLayers() {
+        console.log('Toggling map layers...');
+        // TODO: Implement layer toggle
+    }
+
+    function toggleFullscreen() {
+        if (!isFullscreen) {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+        isFullscreen = !isFullscreen;
+    }
+
+    function resetMapView() {
+        gameMap.setView([51.505, -0.09], 13);
+    }
+
+    function toggleCoordinates() {
+        $('#coordinatesDisplay').toggle();
+    }
+
+    function placeToken() {
+        console.log('Place token mode activated');
+        // TODO: Implement token placement mode
+    }
+
+    function selectToken() {
+        console.log('Select token mode activated');
+        // TODO: Implement token selection mode
+    }
+
+    function measureDistance() {
+        console.log('Measure distance mode activated');
+        // TODO: Implement distance measurement
+    }
+
+    function drawArea() {
+        console.log('Draw area mode activated');
+        // TODO: Implement area drawing
+    }
+
+    // Modal Functions
+    function openModal(modalId) {
+        $('#' + modalId).show();
+    }
+
+    function closeModal(modalId) {
+        $('#' + modalId).hide();
+    }
+
+    function saveData() {
+        console.log('Saving data...');
+        // TODO: Implement data saving
+        closeModal('dataEntryModal');
+    }
+
+    // Team switching functions (called from layout)
+    window.switchToFoxLand = function() {
+        currentMode = 'fox-land';
+        updateTeamDisplay('Fox Land', 'Attacking');
+        updateTokenCount();
+    };
+
+    window.switchToBlueLand = function() {
+        currentMode = 'blue-land';
+        updateTeamDisplay('Blue Land', 'Defending');
+        updateTokenCount();
+    };
+
+    window.switchToSpectator = function() {
+        currentMode = 'spectator';
+        updateTeamDisplay('Spectator', 'Observing');
+        updateTokenCount();
+    };
+
+    window.openDataEntry = function() {
+        openModal('dataEntryModal');
+    };
+
+    window.manageTokens = function() {
+        openModal('tokenManagementModal');
+    };
+
+    window.openSettings = function() {
+        openModal('settingsModal');
+    };
+</script>

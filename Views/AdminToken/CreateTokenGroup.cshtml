@@ -1,0 +1,124 @@
+@model TechWebSol.ViewModels.CreateTokenGroupViewModel
+@{
+    ViewData["Title"] = "Create Token Group";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-plus-circle"></i> Create Token Group
+                    </h3>
+                    <div class="card-tools">
+                        <a href="@Url.Action("CreateTokenGroup", "AdminToken")" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Groups
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CreateTokenGroup" asp-controller="AdminToken" method="post">
+                        @Html.AntiForgeryToken()
+                        
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Name" class="form-label"></label>
+                                    <input asp-for="Name" class="form-control" placeholder="Enter group name (e.g., Company A)" />
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                    <div class="form-text">Enter a descriptive name for the token group</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="GroupCode" class="form-label"></label>
+                                    <input asp-for="GroupCode" class="form-control" placeholder="Enter group code (e.g., COMP_A)" />
+                                    <span asp-validation-for="GroupCode" class="text-danger"></span>
+                                    <div class="form-text">Unique identifier for the group (e.g., COMP_A, BRIG_1)</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Category" class="form-label"></label>
+                                    <select asp-for="Category" class="form-control">
+                                        <option value="">-- Select Category --</option>
+                                        <option value="Company">Company</option>
+                                        <option value="Brigade">Brigade</option>
+                                        <option value="Department">Department</option>
+                                        <option value="Unit">Unit</option>
+                                        <option value="Squad">Squad</option>
+                                    </select>
+                                    <span asp-validation-for="Category" class="text-danger"></span>
+                                    <div class="form-text">Optional category to help organize groups</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="IsActive" class="form-label"></label>
+                                    <div class="form-check form-switch">
+                                        <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                        <label asp-for="IsActive" class="form-check-label">
+                                            Active (group will be available for use)
+                                        </label>
+                                    </div>
+                                    <span asp-validation-for="IsActive" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label asp-for="Description" class="form-label"></label>
+                                    <textarea asp-for="Description" class="form-control" rows="4" 
+                                              placeholder="Optional description of the group's purpose"></textarea>
+                                    <span asp-validation-for="Description" class="text-danger"></span>
+                                    <div class="form-text">Optional description of the group's purpose and usage</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Create Token Group
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="resetFormBtn">
+                                    <i class="fas fa-undo"></i> Reset Form
+                                </button>
+                                <a href="@Url.Action("ManageTokenGroups", "AdminToken")" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Reset form functionality
+            const resetBtn = document.getElementById('resetFormBtn');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function() {
+                    if (confirm('Are you sure you want to reset the form? All entered data will be lost.')) {
+                        document.querySelector('form').reset();
+                    }
+                });
+            }
+        });
+    </script>
+}

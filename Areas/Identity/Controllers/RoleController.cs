@@ -221,24 +221,85 @@ namespace TechWebSol.Areas.Identity.Controllers
         [DisplayName("Role Management: Edit Role Permissions")]
         public async Task<ActionResult> Edit(string id)
         {
-            ViewData["Controllers"] = GetControllers(AppConstants.Id);
-
-            var role = await _roleManager.FindByIdAsync(id);
-            if (role == null)
-                return NotFound();
-            var viewModel = new RoleViewModel
+            try
             {
-                Name = role.Name
-            };
-            if (role.Access != null)
-            {
-                var MvcControllerInfoArea = JsonConvert.DeserializeObject<List<MvcControllerInfoArea>>(role.Access);
-                viewModel.MvcControllerInfoCont = MvcControllerInfoArea.SelectMany(x => x.Controller).ToList();
+                ViewData["Controllers"] = GetControllers(AppConstants.Id);
 
+                var role = await _roleManager.FindByIdAsync(id);
+                if (role == null)
+                    return NotFound();
+                var viewModel = new RoleViewModel
+                {
+                    Name = role.Name
+                };
+                if (role.Access != null)
+                {
+                    var MvcControllerInfoArea = JsonConvert.DeserializeObject<List<MvcControllerInfoArea>>(role.Access);
+                    viewModel.MvcControllerInfoCont = MvcControllerInfoArea.SelectMany(x => x.Controller).ToList();
+
+                    return View(viewModel);
+                }
                 return View(viewModel);
             }
-            return View(viewModel);
+            catch (Exception)
+            {
+
+                throw;
+            }
         }
+        //[DisplayName("Role Management: Edit Role Permissions")]
+        //public async Task<ActionResult> Edit(string id)
+        //{
+        //    ViewData["Controllers"] = GetControllers(AppConstants.Id);
+
+        //    var role = await _roleManager.FindByIdAsync(id);
+        //    if (role == null)
+        //        return NotFound();
+
+        //    var viewModel = new RoleViewModel
+        //    {
+        //        Name = role.Name,
+        //        MvcControllerInfoCont = new List<MvcControllerInfoCont>()
+        //    };
+
+        //    if (string.IsNullOrWhiteSpace(role.Access))
+        //        return View(viewModel);
+
+        //    var controllers = JsonConvert.DeserializeObject<List<MvcControllerInfo>>(role.Access)
+        //                      ?? new List<MvcControllerInfo>();
+
+        //    var areas = new List<MvcControllerInfoArea>();
+
+        //    foreach (var c in controllers)
+        //    {
+        //        var areaName = string.IsNullOrWhiteSpace(c.AreaName) ? "Default" : c.AreaName;
+
+        //        var area = areas.FirstOrDefault(a => a.AreaName == areaName);
+        //        if (area == null)
+        //        {
+        //            area = new MvcControllerInfoArea
+        //            {
+        //                AreaName = areaName,
+        //                Controller = new List<MvcControllerInfoCont>()
+        //            };
+        //            areas.Add(area);
+        //        }
+
+        //        var cont = new MvcControllerInfoCont
+        //        {
+        //            Id = c.Id,
+        //            Actions = (c.Actions ?? Enumerable.Empty<MvcActionInfo>()).ToList()
+        //        };
+
+        //        area.Controller.Add(cont);
+        //    }
+
+        //    viewModel.MvcControllerInfoCont = areas.SelectMany(x => x.Controller).ToList();
+
+        //    return View(viewModel);
+        //}
+
+
 
         // POST: Role/Edit/5
         [HttpPost]

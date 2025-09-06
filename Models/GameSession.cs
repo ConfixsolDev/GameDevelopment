@@ -1,0 +1,154 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace TechWebSol.Models
+{
+    /// <summary>
+    /// Game Session - Tracks active and completed games
+    /// Tokens are bound to entities during active games, freed when games end
+    /// </summary>
+    [Table("GameSessions")]
+    public class GameSession : BaseEntity
+    {
+        [Required]
+        [MaxLength(100)]
+        public string Name { get; set; } = string.Empty; // e.g., "War Game 2024", "Training Exercise Alpha"
+
+        [MaxLength(500)]
+        public string? Description { get; set; }
+
+        [Required]
+        [MaxLength(50)]
+        public string SessionCode { get; set; } = string.Empty; // e.g., "WG2024", "TEA001"
+
+        public DateTime StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
+
+        
+        [Required]
+        [MaxLength(20)]
+        public string Status { get; set; } = "Active"; // "Active", "Completed", "Cancelled"
+
+        // Navigation properties
+        public virtual ICollection<TokenBinding> TokenBindings { get; set; } = new List<TokenBinding>();
+    }
+
+    /// <summary>
+    /// Token Binding - Temporary binding of tokens to entities during a game session
+    /// When game ends, bindings are cleared but tokens remain for reuse
+    /// </summary>
+    [Table("TokenBindings")]
+    public class TokenBinding : BaseEntity
+    {
+        [Required]
+        public Guid GameSessionId { get; set; }
+
+        [Required]
+        public long TokenId { get; set; } // Direct reference to Token.Id
+
+        public Guid? TokenGroupId { get; set; } // Optional group reference
+
+        public Guid? TeamId { get; set; } // Optional team reference
+
+        [MaxLength(100)]
+        public string? EntityName { get; set; } // e.g., "Company A", "Brigade 1"
+
+        [MaxLength(50)]
+        public string? EntityCode { get; set; } // e.g., "COMP_A", "BRIG_1"
+
+        [MaxLength(500)]
+        public string? EntityDescription { get; set; }
+
+        [MaxLength(20)]
+        public string BindingType { get; set; } = "manual"; // "automatic" or "manual"
+
+        public int Priority { get; set; } = 2; // 1=High, 2=Medium, 3=Low
+
+        [MaxLength(1000)]
+        public string? Notes { get; set; }
+
+        public bool IsActive { get; set; } = true;
+
+        public DateTime BoundAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime? UnboundAt { get; set; }
+
+        // Additional binding-specific fields
+        [MaxLength(50)]
+        public string? BoundByUserId { get; set; }
+
+        [MaxLength(50)]
+        public string? BoundByUserName { get; set; }
+
+        [MaxLength(50)]
+        public string? UnboundByUserId { get; set; }
+
+        [MaxLength(50)]
+        public string? UnboundByUserName { get; set; }
+
+        // Navigation properties
+        public virtual GameSession GameSession { get; set; } = null!;
+        public virtual Token Token { get; set; } = null!;
+        public virtual TokenGroup? TokenGroup { get; set; }
+        public virtual Team? Team { get; set; }
+    }
+
+    /// <summary>
+    /// Free Token - Tokens that are not currently bound to any game session
+    /// These can be assigned to new entities in new games
+    /// </summary>
+    [Table("FreeTokens")]
+    public class FreeToken
+    {
+        [Key]
+        public long Id { get; set; }
+
+        [Required]
+        [MaxLength(100)]
+        public string Name { get; set; } = string.Empty;
+
+        [MaxLength(500)]
+        public string? Description { get; set; }
+
+        [MaxLength(50)]
+        public string? Category { get; set; }
+
+        public int TouchCount { get; set; }
+
+        [MaxLength(20)]
+        public string System { get; set; } = string.Empty; // "simplified" or "complex"
+
+        public DateTime CreatedAt { get; set; }
+
+        public DateTime? LastUsed { get; set; }
+
+        public int UsageCount { get; set; } = 0;
+
+        [Required]
+        [MaxLength(50)]
+        public string CreatedByUserId { get; set; } = string.Empty;
+
+        [MaxLength(50)]
+        public string? CreatedByUserName { get; set; }
+
+        [MaxLength(50)]
+        public string? UnboundByUserId { get; set; }
+
+        [MaxLength(50)]
+        public string? UnboundByUserName { get; set; }
+
+        // Token signature data (simplified)
+        [MaxLength(1000)]
+        public string? Distances { get; set; } // JSON
+
+        [MaxLength(1000)]
+        public string? Angles { get; set; } // JSON
+
+        [MaxLength(100)]
+        public string? Center { get; set; } // JSON
+
+        // Token signature data (complex)
+        [MaxLength(2000)]
+        public string? ComplexSignature { get; set; } // JSON for complex tokens
+    }
+}

@@ -1,16 +1,16 @@
-using TechWebSol.Filters;
-using TechWebSol.Services;
-using TechWebSol.Data;
-using TechWebSol.Models;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using System.Globalization;
+using TechWebSol.Data;
+using TechWebSol.Models;
+using TechWebSol.Services;
+using TechWebSol.Services.TokenManagement;
 
 var builder = WebApplication.CreateBuilder(args);
  
@@ -37,6 +37,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 errorNumbersToAdd: null);
         }));
 
+
 // Configure Identity
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 {
@@ -55,13 +56,12 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.Name = "techwebsolCookie";
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";
-    options.ExpireTimeSpan = TimeSpan.FromMinutes(300);
-});
-
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-.AddCookie(options =>
-{
-    options.LoginPath = "/Account/Login";
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(30); // Reduced from 300 minutes
+    options.SlidingExpiration = true; // Reset expiration on activity
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    // Authentication cookie expires when browser closes (non-persistent)
+    options.Cookie.Expiration = null; // This makes it a session cookie
 });
 
 // MVC, JSON, and Custom Configurations
@@ -84,6 +84,8 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
     options.Cookie.Name = "TechWebSolSession";
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 builder.Services.Configure<CookiePolicyOptions>(options =>
@@ -112,7 +114,17 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 // Custom Services - Local implementations
 builder.Services.AddSingleton<IMvcControllerDiscovery, MvcControllerDiscovery>();
 builder.Services.AddScoped<IUserSessionService, UserSessionService>();
+builder.Services.AddScoped<DbInitializer>();
+builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 
+// Pattern Matching Services
+builder.Services.AddScoped<IPatternMatchingService, PatternMatchingService>();
+builder.Services.AddScoped<PatternAnalysisEngine>();
+
+// Simplified Pattern Matching Services
+
+// Unified Token Identification DAL
+builder.Services.AddScoped<TokenIdentificationDAL>();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
@@ -128,10 +140,9 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
-        var context = services.GetRequiredService<ApplicationDbContext>();
-        var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
-        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-        await DbInitializer.Initialize(context, roleManager, userManager);
+        var initializer = scope.ServiceProvider.GetRequiredService<DbInitializer>();
+        await initializer.InitializeAsync();
+
     }
     catch (Exception ex)
     {

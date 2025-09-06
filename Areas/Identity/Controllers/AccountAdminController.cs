@@ -62,7 +62,7 @@ namespace TechWebSol.Areas.Identity.Controllers
             {
                 return View();
             }
-            var AppUserUrl = await _context.Users.FirstOrDefaultAsync(x => x.Id.Equals(applicationUserApp.Id));
+            var AppUserUrl = await _context.Users.FirstOrDefaultAsync(x => x.Id.Equals(CurrentUser.ApplicationUserId));
 
             if (AppUserUrl == null)
             {
@@ -189,7 +189,7 @@ namespace TechWebSol.Areas.Identity.Controllers
                 DeleteUser.IsActive = false;
                 await _context.SaveChangesAsync();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
             return RedirectToAction("Index");
@@ -251,7 +251,14 @@ namespace TechWebSol.Areas.Identity.Controllers
                                         {
                                             Value = r.Name,
                                             Text = r.Name,
-                                        }).ToListAsync()
+                                        }).ToListAsync(),
+                TeamList = await _context.Teams
+                    .Where(t => t.IsActive)
+                    .Select(t => new SelectListItem
+                    {
+                        Value = t.Id.ToString(),
+                        Text = $"{t.Name} ({t.TeamCode})"
+                    }).ToListAsync()
             };
             ViewData["DesignationId"] = "";
             ViewData["SystemUser"] =  "";
