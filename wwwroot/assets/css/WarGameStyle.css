@@ -569,57 +569,82 @@
    TOKEN SYSTEM DATA PANEL STYLES
    ======================================== */
 .data-panel {
-    width: 400px;
-    background: rgba(0, 0, 0, 0.4);
+    position: fixed;
+    top: 105px;
+    right: 0;
+    width: 320px;
+    height: calc(100vh - 105px);
+    background: rgba(0, 0, 0, 0.85);
+    border-radius: 2px 0 0 2px;
+    border: 1px solid rgba(76, 175, 80, 0.5);
+    border-right: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    flex-shrink: 0; /* Prevent sidebar from shrinking */
 }
 
 .panel-header {
-    padding: 15px;
-    background: rgba(0, 0, 0, 0.3);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    font-weight: bold;
-    font-size: 16px;
+    background: #4CAF50;
     color: white;
+    padding: 12px 15px;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .panel-content {
     flex: 1;
     padding: 15px;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .data-section {
-    margin-bottom: 20px;
-    padding: 15px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 12px;
+    border: 1px solid rgba(76, 175, 80, 0.3);
 }
 
 .data-section h3 {
-    margin-bottom: 10px;
     color: #4CAF50;
-    font-size: 16px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(76, 175, 80, 0.4);
+    padding-bottom: 4px;
 }
 
 .data-item {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 8px;
-    padding: 5px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 11px;
+}
+
+.data-item:last-child {
+    margin-bottom: 0;
 }
 
 .data-label {
-    font-weight: bold;
     color: #E0E0E0;
+    font-weight: 500;
+    min-width: 80px;
 }
 
 .data-value {
     color: #4CAF50;
-    font-family: monospace;
+    font-weight: bold;
+    text-align: right;
+    flex: 1;
 }
 
 /* ========================================

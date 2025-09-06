@@ -1,0 +1,1786 @@
+/* Global Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #ffffff;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+#app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.header {
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.mode-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+}
+
+#currentMode {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #4CAF50;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+#tokenCount {
+    font-size: 0.9rem;
+    color: #E0E0E0;
+}
+
+/* Control Panel */
+.control-panel {
+    padding: 1rem 2rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #6c757d, #5a6268);
+    color: white;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+}
+
+.btn-icon {
+    font-size: 1.2rem;
+}
+
+/* Training Status */
+.training-status {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-right: 1rem;
+}
+
+#trainingPosition {
+    font-weight: bold;
+    color: #FFD700;
+}
+
+.progress-bar {
+    width: 200px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+/* Identification Result */
+.identification-result {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem 1rem;
+    background: rgba(76, 175, 80, 0.2);
+    border-radius: 6px;
+    border-left: 4px solid #4CAF50;
+}
+
+.result-text {
+    font-size: 1rem;
+    color: #ffffff;
+}
+
+.confidence {
+    font-size: 0.9rem;
+    color: #8BC34A;
+    font-weight: bold;
+}
+
+/* Canvas Container */
+.canvas-container {
+    flex: 1;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+}
+
+#touchCanvas {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.1);
+    cursor: crosshair;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(5px);
+}
+
+#touchCanvas:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Training Positions */
+.training-positions {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.position-indicator {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
+    transform: translate(-50%, -50%);
+}
+
+.position-indicator.pending {
+    background: rgba(108, 117, 125, 0.7);
+    border: 2px solid #6c757d;
+}
+
+.position-indicator.current {
+    background: rgba(255, 193, 7, 0.8);
+    border: 3px solid #FFC107;
+    animation: pulse 2s infinite;
+    box-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
+}
+
+.position-indicator.completed {
+    background: rgba(40, 167, 69, 0.8);
+    border: 2px solid #28a745;
+    box-shadow: 0 0 15px rgba(40, 167, 69, 0.3);
+}
+
+@keyframes pulse {
+    0% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.1); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Touch Feedback */
+.touch-feedback {
+    position: absolute;
+    pointer-events: none;
+}
+
+.touch-count {
+    position: absolute;
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.detection-area {
+    position: absolute;
+    border: 3px solid rgba(0, 123, 255, 0.7);
+    border-radius: 50%;
+    background: rgba(0, 123, 255, 0.1);
+    transform: translate(-50%, -50%);
+    animation: detectPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes detectPulse {
+    0% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+    100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes touchPulse {
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.8; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+/* Individual Touch Points */
+.individual-touch-point {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    animation: touchPulse 1s ease-in-out infinite;
+}
+
+/* Touch Area Statistics */
+.touch-area-stats {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    min-width: 180px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    z-index: 101;
+    pointer-events: none;
+    font-family: 'Segoe UI', monospace;
+}
+
+.stats-header {
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: #4CAF50;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 4px;
+}
+
+.stats-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    align-items: center;
+}
+
+.stats-label {
+    color: #E0E0E0;
+    font-size: 11px;
+}
+
+.stats-value {
+    color: #FFFFFF;
+    font-weight: bold;
+    font-size: 11px;
+}
+
+.stats-value.fits {
+    color: #4CAF50;
+}
+
+.stats-value.overflow {
+    color: #FF9800;
+}
+
+.stats-status {
+    margin-top: 8px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.stats-status.status-good {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.stats-status.status-warning {
+    background: rgba(255, 152, 0, 0.2);
+    color: #FF9800;
+    border: 1px solid rgba(255, 152, 0, 0.3);
+}
+
+/* Instant Token Label */
+.instant-token-label {
+    position: absolute;
+    background: rgba(76, 175, 80, 0.95);
+    color: white;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    border: 2px solid rgba(76, 175, 80, 1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    z-index: 200;
+    pointer-events: none;
+    font-family: 'Segoe UI', sans-serif;
+    max-width: 300px;
+    min-width: 250px;
+}
+
+.token-main-info {
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 8px;
+}
+
+.token-name {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 4px;
+    color: #ffffff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.token-name.unknown {
+    color: #FFE0B2;
+}
+
+.token-confidence {
+    font-size: 14px;
+    color: #E8F5E8;
+    font-weight: 500;
+}
+
+.token-details {
+    margin-bottom: 12px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 12px;
+}
+
+.detail-row:last-child {
+    margin-bottom: 0;
+}
+
+.detail-label {
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+    min-width: 80px;
+}
+
+.detail-value {
+    color: #ffffff;
+    font-weight: bold;
+    text-align: right;
+    flex: 1;
+}
+
+.token-status {
+    text-align: center;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.token-status.status-identified {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.token-status.status-unknown {
+    background: rgba(255, 255, 255, 0.2);
+    color: #FFE0B2;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+/* Connection Line */
+.connection-line {
+    position: absolute;
+    background: rgba(76, 175, 80, 0.8);
+    height: 2px;
+    z-index: 199;
+    pointer-events: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Animations */
+@keyframes tokenLabelAppear {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes tokenLabelDisappear {
+    0% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.8) translateY(-20px);
+    }
+}
+
+@keyframes connectionLineAppear {
+    0% {
+        opacity: 0;
+        transform: scaleX(0);
+    }
+    100% {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+}
+
+/* Permanent Labels and Pin Markers */
+.permanent-pin-marker {
+    position: absolute;
+    z-index: 300;
+    pointer-events: none;
+}
+
+.pin-head {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.pin-head.pin-identified {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    border: 2px solid #2e7d32;
+}
+
+.pin-head.pin-unknown {
+    background: linear-gradient(135deg, #FF9800 0%, #f57c00 100%);
+    border: 2px solid #ef6c00;
+}
+
+.pin-pulse {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: inherit;
+    opacity: 0.6;
+    animation: pinPulse 2s infinite;
+}
+
+.pin-point {
+    width: 4px;
+    height: 8px;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(0, 0, 0, 0.3));
+    margin: 0 auto;
+    border-radius: 0 0 2px 2px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.pin-icon {
+    position: relative;
+    z-index: 1;
+}
+
+.permanent-token-label {
+    position: absolute;
+    z-index: 250;
+    pointer-events: auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-sizing: border-box;
+}
+
+.permanent-token-label .token-main-info {
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 8px;
+}
+
+.permanent-token-label .token-number {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    text-align: center;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.permanent-token-label .token-number.unknown {
+    color: #ffcc80;
+    font-size: 18px;
+}
+
+.permanent-token-label .token-name {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 4px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.permanent-token-label .token-name.unknown {
+    color: #ffcc80;
+}
+
+.permanent-token-label .token-confidence {
+    font-size: 12px;
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+.permanent-token-label .token-details {
+    margin-bottom: 12px;
+}
+
+.permanent-token-label .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    font-size: 12px;
+}
+
+.permanent-token-label .detail-label {
+    font-weight: 500;
+    opacity: 0.8;
+    min-width: 60px;
+}
+
+.permanent-token-label .detail-value {
+    font-weight: 400;
+    text-align: right;
+    flex: 1;
+}
+
+.permanent-token-label .token-status {
+    text-align: center;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 6px 8px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.permanent-token-label .status-identified {
+    background: rgba(255, 255, 255, 0.2);
+    color: #c8e6c9;
+}
+
+.permanent-token-label .status-unknown {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffcc80;
+}
+
+.remove-label-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 50%;
+    background: #f44336;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+    z-index: 260;
+}
+
+.remove-label-btn:hover {
+    background: #d32f2f;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.remove-label-btn:active {
+    transform: scale(0.95);
+}
+
+.remove-icon {
+    line-height: 1;
+    margin-top: -1px;
+}
+
+.permanent-connection-line {
+    position: absolute;
+    z-index: 240;
+    pointer-events: none;
+}
+
+/* Animations */
+@keyframes pinDrop {
+    0% {
+        transform: translateY(-20px) scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: translateY(2px) scale(1.1);
+    }
+    100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes pinPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.6;
+    }
+    50% {
+        transform: scale(1.3);
+        opacity: 0.2;
+    }
+}
+
+@keyframes permanentLabelAppear {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes permanentLabelDisappear {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+}
+
+@keyframes pinRemove {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0);
+        opacity: 0;
+    }
+}
+
+@keyframes permanentConnectionAppear {
+    0% {
+        width: 0;
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+/* Test Result Display */
+.test-result {
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 12px;
+    padding: 16px;
+    margin: 10px 0;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(76, 175, 80, 0.6);
+    animation: testResultAppear 0.3s ease-out;
+}
+
+.test-result .result-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.test-result .result-icon {
+    font-size: 18px;
+}
+
+.test-result .result-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4CAF50;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.test-result .result-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.test-result .token-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.test-result .token-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+    flex: 1;
+}
+
+.test-result .token-name.unknown {
+    color: #FF9800;
+}
+
+.test-result .token-name.identified {
+    color: #4CAF50;
+}
+
+.test-result .confidence-badge {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    min-width: 50px;
+    text-align: center;
+}
+
+.test-result .confidence-badge.low {
+    background: linear-gradient(135deg, #FF5722, #f44336);
+}
+
+.test-result .confidence-badge.medium {
+    background: linear-gradient(135deg, #FF9800, #f57c00);
+}
+
+.test-result .test-details {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 12px;
+    color: #ccc;
+}
+
+.test-result .detail-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.test-result .detail-item span:last-child {
+    color: #fff;
+    font-weight: 500;
+}
+
+@keyframes testResultAppear {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Token Management Interface */
+.large-modal {
+    max-width: 800px;
+    width: 90vw;
+    max-height: 80vh;
+}
+
+.token-management-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.token-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.token-stats span {
+    font-size: 14px;
+    color: #ccc;
+}
+
+.token-stats span:first-child {
+    font-size: 16px;
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+.management-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.management-actions .btn {
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+.token-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.token-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+}
+
+.token-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+.token-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.token-item-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+.token-item-id {
+    font-size: 12px;
+    color: #999;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.token-item-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 13px;
+}
+
+.token-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.token-detail-label {
+    color: #999;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.token-detail-value {
+    color: #fff;
+    font-weight: 500;
+}
+
+.token-item-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.token-item-actions .btn {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 11px;
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+    border: 1px solid #1976D2;
+}
+
+.btn-info:hover {
+    background: linear-gradient(135deg, #1976D2, #1565C0);
+}
+
+.no-tokens {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+}
+
+.no-tokens-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.no-tokens h3 {
+    margin-bottom: 8px;
+    color: #ccc;
+}
+
+.no-tokens p {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.token-preview {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 12px;
+}
+
+.token-preview-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #FF5722;
+    margin-bottom: 8px;
+}
+
+.token-preview-details {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    font-size: 12px;
+    color: #ccc;
+}
+
+/* Delete confirmation modal */
+#deleteConfirmModal .modal-content {
+    border: 2px solid #FF5722;
+}
+
+#deleteConfirmModal .modal-header h2 {
+    color: #FF5722;
+}
+
+/* Scrollbar styling for token list */
+.token-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.token-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.token-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.token-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Enhanced analysis styles */
+.inter-point-distances {
+    margin-top: 10px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.geometric-signature {
+    margin-top: 10px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.analysis-details {
+    animation: analysisAppear 0.3s ease-out;
+}
+
+@keyframes analysisAppear {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Training Summary Enhancements */
+.training-summary-grid {
+    margin-bottom: 15px;
+}
+
+.summary-stats p {
+    margin: 8px 0;
+    font-size: 14px;
+}
+
+.pattern-detail {
+    background: rgba(255, 255, 255, 0.05);
+    border-left: 3px solid #2196F3;
+    padding: 8px 12px;
+    margin: 8px 0;
+    border-radius: 0 4px 4px 0;
+}
+
+.pattern-center {
+    color: #81C784;
+    font-size: 11px;
+}
+
+.pattern-distances {
+    color: #FFB74D;
+    font-size: 11px;
+}
+
+.signature-data p {
+    margin: 6px 0;
+    color: #E0E0E0;
+}
+
+.distance-matrix {
+    margin-top: 12px;
+}
+
+.matrix-table {
+    border-collapse: collapse;
+    font-size: 11px;
+    width: 100%;
+    max-width: 300px;
+}
+
+.matrix-table th,
+.matrix-table td {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 4px 6px;
+    text-align: center;
+    min-width: 35px;
+}
+
+.matrix-table th {
+    background: rgba(255, 255, 255, 0.1);
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+.matrix-table td {
+    background: rgba(255, 255, 255, 0.05);
+    color: #E0E0E0;
+}
+
+.matrix-table .diagonal {
+    background: rgba(255, 255, 255, 0.1);
+    color: #999;
+    font-style: italic;
+}
+
+/* Token Name Modal Enhancements */
+.training-summary {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.training-summary details {
+    margin: 8px 0;
+}
+
+.training-summary summary {
+    padding: 8px 0;
+    font-size: 13px;
+}
+
+.training-summary summary:hover {
+    color: #fff !important;
+}
+
+/* Unknown token styling */
+.instant-token-label[style*="255, 152, 0"] {
+    background: rgba(255, 152, 0, 0.95) !important;
+    border-color: rgba(255, 152, 0, 1) !important;
+}
+
+.instant-token-label[style*="255, 152, 0"] .token-name {
+    color: #FFF3E0;
+}
+
+.instant-token-label[style*="255, 152, 0"] .token-confidence {
+    color: #FFE0B2;
+}
+
+/* Instructions */
+.instructions {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    padding: 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 600px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.instructions p {
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+.instructions p:last-child {
+    margin-bottom: 0;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: linear-gradient(135deg, #2c3e50, #3498db);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: #ffffff;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #ffffff;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+/* Form Elements */
+.setting-group {
+    margin-bottom: 1.5rem;
+}
+
+.setting-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.setting-group input,
+.setting-group select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-size: 1rem;
+}
+
+.setting-group input[type="checkbox"] {
+    width: auto;
+    margin-right: 0.5rem;
+}
+
+.setting-group input[type="range"] {
+    width: calc(100% - 60px);
+    margin-right: 10px;
+}
+
+#confidenceValue {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+#tokenNameInput {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+#tokenNameInput:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
+.training-summary {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #4CAF50;
+}
+
+/* Token List */
+.token-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.token-item {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.token-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.token-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #4CAF50;
+    margin-bottom: 0.5rem;
+}
+
+.token-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #E0E0E0;
+}
+
+.token-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-small {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    border-radius: 4px;
+}
+
+/* Loading */
+.loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid #4CAF50;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Toast Notifications */
+.toast-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 3000;
+}
+
+.toast {
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(10px);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-left: 4px solid #4CAF50;
+    animation: slideIn 0.3s ease-out;
+    max-width: 300px;
+}
+
+.toast.error {
+    border-left-color: #dc3545;
+}
+
+.toast.warning {
+    border-left-color: #ffc107;
+}
+
+.toast.info {
+    border-left-color: #17a2b8;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes stableResultAppear {
+    from {
+        transform: translateX(-50%) scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(-50%) scale(1);
+        opacity: 1;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .control-panel {
+        padding: 1rem;
+    }
+    
+    .button-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .btn {
+        justify-content: center;
+    }
+    
+    #touchCanvas {
+        width: 100%;
+        max-width: 400px;
+        height: 300px;
+    }
+    
+    .instructions {
+        position: relative;
+        margin-top: 2rem;
+        transform: none;
+        left: auto;
+        bottom: auto;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 1rem;
+    }
+}
+
+/* Touch-specific styles */
+@media (hover: none) and (pointer: coarse) {
+    .btn {
+        padding: 1rem 1.5rem;
+        font-size: 1.1rem;
+    }
+    
+    #touchCanvas {
+        cursor: none;
+    }
+    
+    .position-indicator {
+        width: 80px;
+        height: 80px;
+        font-size: 1.8rem;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    body {
+        background: #000000;
+        color: #ffffff;
+    }
+    
+    .btn {
+        border: 2px solid currentColor;
+    }
+    
+    #touchCanvas {
+        border-color: #ffffff;
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Map View Styles */
+#mapContainer {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: #f5f5f5;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+#map {
+    border-radius: 0 !important;
+    overflow: hidden;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+#mapControls {
+    background: rgba(255,255,255,0.95) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #ddd;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1001 !important;
+    padding: 20px !important;
+    display: flex !important;
+    gap: 20px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+#mapControls input {
+    font-family: monospace;
+    font-size: 14px;
+    padding: 12px !important;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    transition: border-color 0.3s ease;
+}
+
+#mapControls input:focus {
+    border-color: #4CAF50;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+#mapControls .btn {
+    font-size: 14px !important;
+    padding: 12px 20px !important;
+    min-height: auto;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+#mapControls .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.map-touch-marker {
+    background: transparent !important;
+}
+
+.map-success-marker {
+    background: transparent !important;
+}
+
+.map-location-marker {
+    background: transparent !important;
+}
+
+.map-current-marker {
+    background: transparent !important;
+}
+
+.map-demo-marker {
+    background: transparent !important;
+}
+
+/* Token marker styles */
+.map-token-marker {
+    background: transparent !important;
+}
+
+/* Token marker highlight styles */
+.map-token-marker-highlight {
+    background: transparent !important;
+}
+
+/* Token marker popup styles */
+.token-marker-popup {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.token-marker-popup .leaflet-popup-content {
+    margin: 8px 12px;
+    line-height: 1.4;
+}
+
+.token-marker-popup .leaflet-popup-content strong {
+    color: #4CAF50;
+    font-size: 16px;
+}
+
+.token-marker-popup .leaflet-popup-content button {
+    margin-top: 8px;
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    background: #f44336;
+    color: white;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.3s ease;
+}
+
+.token-marker-popup .leaflet-popup-content button:hover {
+    background: #d32f2f;
+}
+
+/* Map view button active state */
+#toggleMapViewBtn.active {
+    background: linear-gradient(135deg, #2196F3, #1976D2) !important;
+    color: white;
+}
+
+/* Map container transitions */
+#mapContainer {
+    transition: all 0.3s ease-in-out;
+}
+
+#mapContainer.hidden {
+    opacity: 0;
+    transform: scale(0.95);
+}
+
+#mapContainer.visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Responsive map sizing */
+@media (max-width: 768px) {
+    #mapContainer {
+        width: 100vw !important;
+        height: 100vh !important;
+        margin: 0 !important;
+        position: fixed !important;
+    }
+    
+    #mapControls {
+        flex-direction: column !important;
+        gap: 15px !important;
+        padding: 15px !important;
+    }
+    
+    #mapControls input {
+        width: 200px !important;
+        text-align: center;
+    }
+    
+    #touchCanvas {
+        width: 100% !important;
+        height: 100% !important;
+    }
+}

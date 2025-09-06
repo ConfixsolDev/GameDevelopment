@@ -8,10 +8,12 @@ class TokenSystem {
             if (!this.canvas) {
                 throw new Error('Canvas element not found');
             }
+            console.log('✅ Canvas element found:', this.canvas);
             this.ctx = this.canvas.getContext('2d');
             if (!this.ctx) {
                 throw new Error('Canvas context not available');
             }
+            console.log('✅ Canvas context created successfully');
             console.log('Canvas initialized successfully');
 
             this.activeTouches = new Map();
@@ -85,12 +87,124 @@ class TokenSystem {
         this.showToast('System initialized successfully!', 'success');
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
-
+        
         // 🎯 NEW: Activate distance monitoring
         this.monitorDistanceCalculations();
-
+        
         // 🗺️ NEW: Try to restore map markers if everything is ready
+        
+        // 🧭 NEW: Initialize navigation active states
+        this.initializeNavigation();
         setTimeout(() => this.tryRestoreMapMarkers(), 100);
+        
+        // Ensure grid is drawn after canvas is properly initialized
+        setTimeout(() => {
+            this.draw();
+        }, 100);
+        
+        // Test touch functionality
+        this.testTouchFunctionality();
+    }
+    
+    initializeNavigation() {
+        try {
+            // Set default active state to first navigation item
+            const navItems = document.querySelectorAll('.header-nav a, .navbar-nav a, .nav-item a, .nav-btn, .menu-btn, .header-btn');
+            
+            if (navItems.length > 0) {
+                // Remove any existing active classes from ALL items
+                navItems.forEach(item => {
+                    item.classList.remove('nav-active', 'active-nav', 'current-page');
+                });
+                
+                // Set first item as active by default
+                navItems[0].classList.add('nav-active');
+                console.log('✅ Navigation initialized with active state:', navItems[0].textContent.trim());
+            }
+            
+            // Add click handlers to all navigation items
+            navItems.forEach((item, index) => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.setActiveNavigation(item);
+                });
+            });
+            
+        } catch (error) {
+            console.error('Error initializing navigation:', error);
+        }
+    }
+    
+    setActiveNavigation(activeElement) {
+        try {
+            // Get ALL navigation items
+            const navItems = document.querySelectorAll('.header-nav a, .navbar-nav a, .nav-item a, .nav-btn, .menu-btn, .header-btn');
+            
+            // Remove active class from ALL navigation items first
+            navItems.forEach(item => {
+                item.classList.remove('nav-active', 'active-nav', 'current-page');
+            });
+            
+            // Add active class ONLY to the clicked element
+            activeElement.classList.add('nav-active');
+            
+            console.log('✅ Active navigation updated:', activeElement.textContent.trim());
+            console.log('📊 Total navigation items:', navItems.length);
+            
+            // Verify only one item is active
+            const activeItems = document.querySelectorAll('.nav-active, .active-nav, .current-page');
+            console.log('🎯 Currently active items:', activeItems.length);
+            
+            // Optional: Update page content based on active navigation
+            this.updatePageContent(activeElement);
+            
+        } catch (error) {
+            console.error('Error setting active navigation:', error);
+        }
+    }
+    
+    updatePageContent(activeElement) {
+        try {
+            const text = activeElement.textContent.trim().toLowerCase();
+            console.log('🔄 Updating page content for:', text);
+            
+            // Add your page content update logic here
+            // This is where you would show/hide different sections based on the active navigation
+            
+        } catch (error) {
+            console.error('Error updating page content:', error);
+        }
+    }
+    
+    testTouchFunctionality() {
+        console.log('🧪 Testing touch functionality...');
+        console.log('Canvas element:', this.canvas);
+        console.log('Canvas dimensions:', this.canvas.width, 'x', this.canvas.height);
+        console.log('Canvas style dimensions:', this.canvas.style.width, 'x', this.canvas.style.height);
+        
+        // Test if touch events are attached
+        const touchStartHandler = this.canvas.ontouchstart;
+        console.log('Touch start handler attached:', !!touchStartHandler);
+        
+        // Test canvas click events
+        this.canvas.addEventListener('click', (e) => {
+            console.log('🖱️ Canvas clicked at:', e.clientX, e.clientY);
+        });
+        
+        // Test if canvas is visible and interactive
+        const rect = this.canvas.getBoundingClientRect();
+        console.log('Canvas position and size:', rect);
+        console.log('Canvas computed style:', window.getComputedStyle(this.canvas));
+        
+        // Test if canvas is covered by other elements
+        const elementAtCenter = document.elementFromPoint(rect.left + rect.width/2, rect.top + rect.height/2);
+        console.log('Element at canvas center:', elementAtCenter);
+        console.log('Is canvas at center?', elementAtCenter === this.canvas);
+        
+        // Add a simple test - draw a test pattern
+        this.ctx.fillStyle = '#00FF00';
+        this.ctx.fillRect(10, 10, 50, 50);
+        console.log('Drew green test rectangle');
     }
 
     resizeCanvas() {
@@ -98,8 +212,9 @@ class TokenSystem {
         const rect = container.getBoundingClientRect();
 
         const dpr = window.devicePixelRatio || 1;
-        const displayWidth = Math.min(1200, rect.width - 100);
-        const displayHeight = Math.min(800, rect.height - 100);
+        // Use full available space instead of limiting size
+        const displayWidth = rect.width;
+        const displayHeight = rect.height;
 
         this.canvas.width = displayWidth * dpr;
         this.canvas.height = displayHeight * dpr;
@@ -108,6 +223,9 @@ class TokenSystem {
 
         this.ctx.scale(dpr, dpr);
         this.canvasRect = this.canvas.getBoundingClientRect();
+        
+        // Redraw the canvas after resize to ensure grid covers full area
+        this.draw();
     }
 
     setupEventListeners() {
@@ -271,12 +389,14 @@ class TokenSystem {
         }
 
         // Canvas event listeners
+        console.log('🎯 Setting up canvas event listeners...');
         this.canvas.addEventListener('touchstart', (e) => this.handleTouchStart(e));
         this.canvas.addEventListener('touchmove', (e) => this.handleTouchMove(e));
         this.canvas.addEventListener('touchend', (e) => this.handleTouchEnd(e));
         this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
         this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
         this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+        console.log('✅ Canvas event listeners set up successfully');
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => this.handleKeyDown(e));
@@ -527,11 +647,27 @@ class TokenSystem {
     }
 
     handleTouchStart(e) {
+        console.log('🖐️ Touch Start Event Detected!', e.touches.length, 'touches');
+        console.log('Touch coordinates:', Array.from(e.touches).map(t => ({x: t.clientX, y: t.clientY})));
         e.preventDefault();
+        
+        // Visual feedback - draw a circle at touch point
+        const rect = this.canvas.getBoundingClientRect();
+        Array.from(e.touches).forEach(touch => {
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            this.ctx.fillStyle = '#FF0000';
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, 20, 0, Math.PI * 2);
+            this.ctx.fill();
+            console.log('Drew red circle at:', x, y);
+        });
+        
         this.processTouchEvent('start', e.touches);
     }
 
     handleTouchMove(e) {
+        console.log('🖐️ Touch Move Event Detected!', e.touches.length, 'touches');
         // Only prevent default if we have active touches to avoid scrolling interference
         if (this.activeTouches.size > 0) {
             e.preventDefault();
@@ -540,11 +676,24 @@ class TokenSystem {
     }
 
     handleTouchEnd(e) {
+        console.log('🖐️ Touch End Event Detected!', e.changedTouches.length, 'touches');
         e.preventDefault();
         this.processTouchEvent('end', e.changedTouches);
     }
 
     handleMouseDown(e) {
+        console.log('🖱️ Mouse Down Event Detected!', e.clientX, e.clientY);
+        
+        // Visual feedback - draw a blue circle at mouse point
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        this.ctx.fillStyle = '#0000FF';
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, 15, 0, Math.PI * 2);
+        this.ctx.fill();
+        console.log('Drew blue circle at:', x, y);
+        
         this.processMouseEvent('start', e);
     }
 
@@ -3348,23 +3497,53 @@ class TokenSystem {
 
     drawGrid() {
         try {
-            this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            // Set grid style for better visibility on light background
+            this.ctx.strokeStyle = 'rgba(34, 197, 94, 0.15)'; // Premium green grid lines - matches CSS variable --color-primary
             this.ctx.lineWidth = 1;
+            this.ctx.setLineDash([]);
 
-            const gridSize = 50;
-            for (let x = 0; x < this.canvas.width; x += gridSize) {
+            const gridSize = 40; // Optimal grid size for visibility
+            
+            // Get the actual display dimensions from the canvas style
+            const displayWidth = parseInt(this.canvas.style.width) || this.canvas.width;
+            const displayHeight = parseInt(this.canvas.style.height) || this.canvas.height;
+            
+            // Calculate grid offset to center the grid properly
+            const offsetX = (displayWidth % gridSize) / 2;
+            const offsetY = (displayHeight % gridSize) / 2;
+            
+            // Draw vertical lines
+            for (let x = offsetX; x <= displayWidth; x += gridSize) {
                 this.ctx.beginPath();
                 this.ctx.moveTo(x, 0);
-                this.ctx.lineTo(x, this.canvas.height);
+                this.ctx.lineTo(x, displayHeight);
                 this.ctx.stroke();
             }
 
-            for (let y = 0; y < this.canvas.height; y += gridSize) {
+            // Draw horizontal lines
+            for (let y = offsetY; y <= displayHeight; y += gridSize) {
                 this.ctx.beginPath();
                 this.ctx.moveTo(0, y);
-                this.ctx.lineTo(this.canvas.width, y);
+                this.ctx.lineTo(displayWidth, y);
                 this.ctx.stroke();
             }
+            
+            // Draw center lines with premium accent color - matches CSS variable --secondary-500
+            this.ctx.strokeStyle = 'rgba(16, 185, 129, 0.6)';
+            this.ctx.lineWidth = 2;
+            
+            // Center vertical line
+            this.ctx.beginPath();
+            this.ctx.moveTo(displayWidth / 2, 0);
+            this.ctx.lineTo(displayWidth / 2, displayHeight);
+            this.ctx.stroke();
+            
+            // Center horizontal line
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, displayHeight / 2);
+            this.ctx.lineTo(displayWidth, displayHeight / 2);
+            this.ctx.stroke();
+            
         } catch (error) {
             console.error('Error drawing grid:', error);
         }
@@ -6216,4 +6395,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Error initializing TokenSystem:', error);
     }
 });
+
+// Navigation functions are now methods of the TokenSystem class
 
