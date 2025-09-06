@@ -96,8 +96,6 @@ namespace TechWebSol.Controllers
                     Description = request.Description,
                     Status = "Active",
                     CreatedAt = DateTime.UtcNow,
-                    CreatedByUserId = currentUser.ApplicationUserId,
-                    CreatedByUserName = currentUser.FullName
                 };
 
                 _context.GameSessions.Add(gameSession);
@@ -118,7 +116,6 @@ namespace TechWebSol.Controllers
                         description = gameSession.Description,
                         status = gameSession.Status,
                         createdAt = gameSession.CreatedAt,
-                        createdByUserName = gameSession.CreatedByUserName
                     }
                 });
             }

@@ -69,8 +69,8 @@ namespace TechWebSol.Controllers
         /// <summary>
         /// Create a new team
         /// </summary>
-        [HttpPost("create-team")]
-        public async Task<IActionResult> CreateTeam([FromBody] CreateTeamRequest request)
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] CreateTeamRequest request)
         {
             try
             {

@@ -338,7 +338,7 @@ dotnet run --verbosity detailed
 #### Admin Operations
 - `POST /api/admin/AdminToken/create-group` - Create token group
 - `GET /api/admin/AdminToken/groups` - Get token groups
-- `POST /api/admin/AdminToken/create` - Create manual token
+- `POST /api/admin/AdminToken/create` - Create token
 
 #### Team Operations
 - `POST /api/admin/TeamManagementApi/create-team` - Create team
