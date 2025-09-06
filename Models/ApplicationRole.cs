@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TechWebSol.Models
 {
@@ -14,6 +15,7 @@ namespace TechWebSol.Models
 
         // Custom properties that the existing code expects
         public string ApplicationId { get; set; } = string.Empty;
+        [Column(TypeName = "nvarchar(max)")]
         public string Access { get; set; } = string.Empty;
     }
 }

@@ -6,12 +6,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Net.Mail;
 using System.Net.Sockets;
-using TechWebSol.Areas.Mail.Models;
 using TechWebSol.Constants;
 using TechWebSol.Extensions;
 using TechWebSol.Models;
 using TechWebSol.Models.DocumentModal;
-using TechWebSol.Models.PersonalModals;
 using TechWebSol.ViewModels;
 
 namespace TechWebSol.Data
@@ -31,7 +29,6 @@ namespace TechWebSol.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            
             // Configure Identity tables
             modelBuilder.Entity<ApplicationUser>(entity =>
             {
@@ -71,6 +68,129 @@ namespace TechWebSol.Data
             {
                 entity.ToTable("AspNetRoleClaims");
             });
+
+            modelBuilder.Entity<Token>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Description).HasMaxLength(500);
+                entity.Property(e => e.Category).HasMaxLength(50);
+                entity.Property(e => e.CreatedBy).HasMaxLength(100);
+                entity.Property(e => e.Notes).HasMaxLength(1000);
+                entity.Property(e => e.TrainingConsistency).HasColumnType("decimal(5,2)");
+
+                entity.HasIndex(e => e.Name).IsUnique();
+                entity.HasIndex(e => e.CreatedAt);
+                entity.HasIndex(e => e.IsActive);
+                entity.Property(e=>e.Id).ValueGeneratedNever();
+
+            });
+
+            // Configure TokenSignature entity
+            modelBuilder.Entity<TokenSignature>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.TokenHash).HasMaxLength(500);
+                entity.Property(e => e.OriginalTouches).HasColumnType("nvarchar(max)");
+
+                entity.HasOne(e => e.Token)
+                    .WithOne(e => e.Signature)
+                    .HasForeignKey<TokenSignature>(e => e.TokenId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.TokenId);
+                entity.HasIndex(e => e.Timestamp);
+            });
+
+            // Configure StabilityInfo entity
+            modelBuilder.Entity<StabilityInfo>(entity =>
+            {
+                entity.HasKey(e => e.TokenSignatureId);
+                entity.HasOne(e => e.TokenSignature)
+                    .WithOne(e => e.Stability)
+                    .HasForeignKey<StabilityInfo>(e => e.TokenSignatureId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure TouchGeometry entity
+            modelBuilder.Entity<TouchGeometry>(entity =>
+            {
+                entity.HasKey(e => e.TokenSignatureId);
+                entity.Property(e => e.RadiusValues).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.RotationValues).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.AvgRadius).HasColumnType("decimal(10,4)");
+                entity.Property(e => e.AvgRotation).HasColumnType("decimal(10,4)");
+                entity.Property(e => e.RadiusVariance).HasColumnType("decimal(10,4)");
+
+                entity.HasOne(e => e.TokenSignature)
+                    .WithOne(e => e.TouchProperties)
+                    .HasForeignKey<TouchGeometry>(e => e.TokenSignatureId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure TouchPattern entity
+            modelBuilder.Entity<TouchPattern>(entity =>
+            {
+                entity.HasKey(e => e.TokenSignatureId);
+                entity.Property(e => e.Type).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Distances).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.DistancePairs).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.GeometricCenter).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.DistanceSignature).HasMaxLength(500);
+                entity.Property(e => e.AvgDistance).HasColumnType("decimal(10,4)");
+                entity.Property(e => e.MinDistance).HasColumnType("decimal(10,4)");
+                entity.Property(e => e.MaxDistance).HasColumnType("decimal(10,4)");
+                entity.Property(e => e.DistanceRange).HasColumnType("decimal(10,4)");
+                entity.Property(e => e.DistanceVariance).HasColumnType("decimal(10,4)");
+                entity.Property(e => e.AngleSpread).HasColumnType("decimal(10,4)");
+
+                entity.HasOne(e => e.TokenSignature)
+                    .WithOne(e => e.TouchPattern)
+                    .HasForeignKey<TouchPattern>(e => e.TokenSignatureId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure MultiTouchGeometry entity
+            modelBuilder.Entity<MultiTouchGeometry>(entity =>
+            {
+                entity.HasKey(e => e.TokenSignatureId);
+                entity.Property(e => e.AspectRatio).HasColumnType("decimal(10,4)");
+                entity.Property(e => e.BoundingBoxWidth).HasColumnType("decimal(10,4)");
+                entity.Property(e => e.BoundingBoxHeight).HasColumnType("decimal(10,4)");
+                entity.Property(e => e.BoundingBoxArea).HasColumnType("decimal(10,4)");
+                entity.Property(e => e.CenterX).HasColumnType("decimal(10,4)");
+                entity.Property(e => e.CenterY).HasColumnType("decimal(10,4)");
+                entity.Property(e => e.Spread).HasColumnType("decimal(10,4)");
+                entity.Property(e => e.Density).HasColumnType("decimal(10,4)");
+
+                entity.HasOne(e => e.TokenSignature)
+                    .WithOne(e => e.MultiTouchGeometry)
+                    .HasForeignKey<MultiTouchGeometry>(e => e.TokenSignatureId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure MapMarker entity
+            modelBuilder.Entity<MapMarker>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.TokenName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Location).IsRequired().HasColumnType("nvarchar(max)");
+                entity.Property(e => e.Description).HasMaxLength(500);
+                entity.Property(e => e.Category).HasMaxLength(50);
+                entity.Property(e => e.CreatedBy).HasMaxLength(100);
+                entity.Property(e => e.Notes).HasMaxLength(1000);
+
+                entity.HasOne(e => e.Token)
+                    .WithMany(e => e.MapMarkers)
+                    .HasForeignKey(e => e.TokenId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.TokenId);
+                entity.HasIndex(e => e.CreatedAt);
+                entity.HasIndex(e => e.IsActive);
+            });
+
         }
         
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -138,7 +258,14 @@ namespace TechWebSol.Data
         }
         
         public DbSet<AppRoles> AppRoles { get; set; }
-        
+        public DbSet<Token> Tokens { get; set; }
+        public DbSet<TokenSignature> TokenSignatures { get; set; }
+        public DbSet<StabilityInfo> StabilityInfo { get; set; }
+        public DbSet<TouchGeometry> TouchGeometry { get; set; }
+        public DbSet<TouchPattern> TouchPatterns { get; set; }
+        public DbSet<MultiTouchGeometry> MultiTouchGeometry { get; set; }
+        public DbSet<MapMarker> MapMarkers { get; set; }
+
         private T GenerateOriginalEntity<T>(PropertyValues values) where T : new()
         {
             T entity = new T();

@@ -20,30 +20,30 @@ namespace TechWebSol.DAL
             _context = context;
             Configuration = configuration;
         }
-        public string GetFileFirstorDefault(Guid? Id)
-        {
-            var documentEntity = _context.DocumentEntity.OrderByDescending(x => x.CreatedDate).Where(x => x.ForiegnEntityId.Equals(Id)).FirstOrDefault();
-            if (documentEntity != null)
-            {
-                return documentEntity.FileURL;
-            }
-            else
-            {
-                return "/Avatar/Default.jpg";
-            }
-        }
-        public string GetFileFirstorDefault(Guid? Id, string Title)
-        {
-            var documentEntity = _context.DocumentEntity.OrderByDescending(x => x.CreatedDate).Where(x => x.ForiegnEntityId.Equals(Id) && x.FileTitle == Title).FirstOrDefault();
-            if (documentEntity != null)
-            {
-                return documentEntity.FileURL;
-            }
-            else
-            {
-                return "/Avatar/Default.jpg";
-            }
-        }
+        //public string GetFileFirstorDefault(Guid? Id)
+        //{
+        //    var documentEntity = _context.DocumentEntity.OrderByDescending(x => x.CreatedDate).Where(x => x.ForiegnEntityId.Equals(Id)).FirstOrDefault();
+        //    if (documentEntity != null)
+        //    {
+        //        return documentEntity.FileURL;
+        //    }
+        //    else
+        //    {
+        //        return "/Avatar/Default.jpg";
+        //    }
+        //}
+        //public string GetFileFirstorDefault(Guid? Id, string Title)
+        //{
+        //    var documentEntity = _context.DocumentEntity.OrderByDescending(x => x.CreatedDate).Where(x => x.ForiegnEntityId.Equals(Id) && x.FileTitle == Title).FirstOrDefault();
+        //    if (documentEntity != null)
+        //    {
+        //        return documentEntity.FileURL;
+        //    }
+        //    else
+        //    {
+        //        return "/Avatar/Default.jpg";
+        //    }
+        //}
 
 
         public async Task<String> UploadDocument(FileUploadVM fileUpload)
@@ -131,10 +131,10 @@ namespace TechWebSol.DAL
 
             if (fileUpload.FormFiles.Count == 0)
             {
-                var documentEntity = _context.DocumentEntity.FirstOrDefault(x => x.Id.Equals(fileUpload.Id));
-                documentEntity.FileTitle = fileUpload.FileTitle;
-                documentEntity.PriorityOrder = fileUpload.PriorityOrder;
-                _context.Update(documentEntity);
+                //var documentEntity = _context.DocumentEntity.FirstOrDefault(x => x.Id.Equals(fileUpload.Id));
+                //documentEntity.FileTitle = fileUpload.FileTitle;
+                //documentEntity.PriorityOrder = fileUpload.PriorityOrder;
+                //_context.Update(documentEntity);
             }
             await _context.SaveChangesAsync();
             return ($"{fileUpload.FormFiles.Count} files uploaded!!");

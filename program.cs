@@ -1,16 +1,17 @@
-using TechWebSol.Filters;
-using TechWebSol.Services;
-using TechWebSol.Data;
-using TechWebSol.Models;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using System.Globalization;
+using TechWebSol.Data;
+using TechWebSol.Filters;
+using TechWebSol.Models;
+using TechWebSol.Services;
+using TechWebSol.Services.TokenManagement;
 
 var builder = WebApplication.CreateBuilder(args);
  
@@ -112,7 +113,8 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 // Custom Services - Local implementations
 builder.Services.AddSingleton<IMvcControllerDiscovery, MvcControllerDiscovery>();
 builder.Services.AddScoped<IUserSessionService, UserSessionService>();
-
+builder.Services.AddScoped<DbInitializer>();
+builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
@@ -128,10 +130,9 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
-        var context = services.GetRequiredService<ApplicationDbContext>();
-        var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
-        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-        await DbInitializer.Initialize(context, roleManager, userManager);
+        var initializer = scope.ServiceProvider.GetRequiredService<DbInitializer>();
+        await initializer.InitializeAsync();
+
     }
     catch (Exception ex)
     {

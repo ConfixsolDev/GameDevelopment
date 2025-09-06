@@ -18,7 +18,7 @@ namespace TechWebSol.ViewModels
     public class MvcControllerInfoArea
     {
         public string AreaName { get; set; }
-        public List<MvcControllerInfoCont> Controller { get; set; }
+        public List<MvcControllerInfoCont> Controller { get; set; } = new();
     }
 
     public class MvcControllerInfoCont

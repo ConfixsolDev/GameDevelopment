@@ -62,7 +62,7 @@ namespace TechWebSol.Areas.Identity.Controllers
             {
                 return View();
             }
-            var AppUserUrl = await _context.Users.FirstOrDefaultAsync(x => x.Id.Equals(applicationUserApp.Id));
+            var AppUserUrl = await _context.Users.FirstOrDefaultAsync(x => x.Id.Equals(CurrentUser.ApplicationUserId));
 
             if (AppUserUrl == null)
             {

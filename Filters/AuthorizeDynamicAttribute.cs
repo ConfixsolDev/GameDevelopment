@@ -37,7 +37,7 @@ namespace TechWebSol.Filters
             if (user == null)
             {
                 // Redirect to the correct login page in the Identity area
-                context.Result = new RedirectToActionResult("Login", "Account", new { area = "Identity" });
+                context.Result = new RedirectToActionResult("Login", "Account", null);
                 return;
             }
 

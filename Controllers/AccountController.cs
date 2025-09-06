@@ -112,10 +112,6 @@ namespace TechWebSol.Controllers
                                 select role
                             ).AsNoTracking().FirstOrDefault();
 
-                            if (roles == null)
-                            {
-                                roles = _Appcontext.Roles.FirstOrDefault(x => x.ApplicationId == AppConstants.Id && x.Id == "e7fd028f-98d4-4901-8f2d-89c9cf5c8722");
-                            }
 
                             ApplicationUserVM applicaitonUserVM = new ApplicationUserVM
                             {
