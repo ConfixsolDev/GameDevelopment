@@ -10,6 +10,7 @@ using TechWebSol.Constants;
 using TechWebSol.Extensions;
 using TechWebSol.Models;
 using TechWebSol.Models.DocumentModal;
+using TechWebSol.ViewModels;
 
 namespace TechWebSol.Data
 {
@@ -293,6 +294,59 @@ namespace TechWebSol.Data
                     .WithMany()
                     .HasForeignKey(e => e.ScenarioId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+        }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var changeSet = this.ChangeTracker.Entries<BaseEntity>();
+            var userDetails = Session.GetObject<ApplicationUserVM>(AppConstants.UserSessionKey);
+
+            // Get Pakistan Standard Time zone
+            TimeZoneInfo pakistanTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Pakistan Standard Time");
+            if (changeSet != null)
+            {
+                foreach (var entry in changeSet.Where(c => c.State != EntityState.Unchanged))
+                {
+                    // Convert current UTC time to Pakistan Standard Time
+                    var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, pakistanTimeZone);
+
+                    if (entry.State == EntityState.Added)
+                    {
+                        entry.Entity.Id = Guid.NewGuid();
+                        entry.Entity.CreatedBy = userDetails.ApplicationUserId;
+                        entry.Entity.CreatedDate = now;
+                        entry.Entity.UpdatedBy = userDetails.ApplicationUserId;
+                        entry.Entity.UpdatedDate = now;
+                        entry.Entity.TeamId = userDetails.TeamId;
+                    }
+                    else if (entry.State == EntityState.Modified)
+                    {
+                        var original = await GenerateOriginalEntityAsync<BaseEntity>(entry.GetDatabaseValues());
+                        entry.Entity.UpdatedBy = userDetails.ApplicationUserId;
+                        entry.Entity.UpdatedDate = now;
+
+                        entry.Entity.CreatedDate = original.CreatedDate;
+                        entry.Entity.CreatedBy = original.CreatedBy;
+                        entry.Entity.TeamId = original.TeamId;
+                    }
+                }
+            }
+            return await base.SaveChangesAsync();
+        }
+
+        private async Task<T> GenerateOriginalEntityAsync<T>(PropertyValues values) where T : new()
+        {
+            return await Task.Run(() =>
+            {
+                T entity = new T();
+                Type type = typeof(T);
+                var baseProperties = type.GetProperties();
+                foreach (var property in baseProperties)
+                {
+                    property.SetValue(entity, values[property.Name]);
+                }
+                return entity;
             });
         }
     }

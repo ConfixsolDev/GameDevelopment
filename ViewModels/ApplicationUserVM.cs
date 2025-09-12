@@ -15,6 +15,7 @@ namespace TechWebSol.ViewModels
         public string Theme { get; set; } = string.Empty;
         public string HomeURL { get; set; } = string.Empty;
         public string Country { get; set; } = string.Empty;
+        public Guid? TeamId { get; set; }
     }
 
     public class ApplicationUserShort

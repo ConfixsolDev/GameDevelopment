@@ -140,6 +140,7 @@ namespace TechWebSol.Controllers
                                 RoleName = roles?.Name ?? "User",
                                 DepartmentId = "HR",
                                 DesignationId = "Manager",
+                                TeamId = user.TeamId,
                             };
 
                             HttpContext.Session.SetObject<ApplicationUserVM>(SessionKeyName, applicaitonUserVM);
