@@ -10,7 +10,6 @@ using TechWebSol.Constants;
 using TechWebSol.Extensions;
 using TechWebSol.Models;
 using TechWebSol.Models.DocumentModal;
-using TechWebSol.ViewModels;
 
 namespace TechWebSol.Data
 {
@@ -363,71 +362,6 @@ namespace TechWebSol.Data
 
         }
         
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                var changeSet = this.ChangeTracker.Entries();
-                ApplicationUserVM userDetails = null;
-                
-                // Safely get user details from session if available
-                if (Session != null)
-                {
-                    try
-                    {
-                        userDetails = Session.GetObject<ApplicationUserVM>(AppConstants.UserSessionKey);
-                    }
-                    catch
-                    {
-                        // Session might not be available during database operations
-                        userDetails = null;
-                    }
-                }
-
-                if (changeSet != null)
-                {
-                    foreach (var entry in changeSet.Where(c => c.State != EntityState.Unchanged))
-                    {
-                        // Only process entities that inherit from BaseEntity
-                        if (entry.Entity is BaseEntity baseEntity)
-                        {
-                            var now = DateTime.Now;
-                            if (entry.State == EntityState.Added)
-                            {
-                                baseEntity.Id = Guid.NewGuid();
-                                baseEntity.CreatedBy = userDetails?.UserCode ?? "System";
-                                baseEntity.CreatedDate = now;
-                                baseEntity.CreatedAt = now;
-                                baseEntity.UpdatedBy = userDetails?.UserCode ?? "System";
-                                baseEntity.UpdatedDate = now;
-                            }
-                            else if (entry.State == EntityState.Modified)
-                            {
-                                var originalValues = entry.GetDatabaseValues();
-                                if (originalValues != null)
-                                {
-                                    baseEntity.UpdatedBy = userDetails?.UserCode ?? "System";
-                                    baseEntity.UpdatedDate = now;
-
-                                    // Preserve original creation values
-                                    if (originalValues["CreatedDate"] != null)
-                                        baseEntity.CreatedDate = (DateTime)originalValues["CreatedDate"];
-                                    if (originalValues["CreatedBy"] != null)
-                                        baseEntity.CreatedBy = (string)originalValues["CreatedBy"];
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // Log error if needed, but don't fail the save operation
-            }
-            
-            return await base.SaveChangesAsync(cancellationToken);
-        }
-        
         public DbSet<AppRoles> AppRoles { get; set; }
         public DbSet<Token> Tokens { get; set; }
         public DbSet<TokenSignature> TokenSignatures { get; set; }
@@ -443,19 +377,5 @@ namespace TechWebSol.Data
         public DbSet<TokenBinding> TokenBindings { get; set; }
         public DbSet<FreeToken> FreeTokens { get; set; }
 
-        private T GenerateOriginalEntity<T>(PropertyValues values) where T : new()
-        {
-            T entity = new T();
-            Type type = typeof(T);
-            var baseProperties = type.GetProperties();
-            foreach (var property in baseProperties)
-            {
-                if (values[property.Name] != null)
-                {
-                    property.SetValue(entity, values[property.Name]);
-                }
-            }
-            return entity;
-        }
     }
 }
