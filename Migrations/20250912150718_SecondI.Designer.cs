@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TechWebSol.Data;
 
@@ -11,9 +12,11 @@ using TechWebSol.Data;
 namespace TechWebSol.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250912150718_SecondI")]
+    partial class SecondI
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -617,17 +620,20 @@ namespace TechWebSol.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("CreatedByUserName")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsManualToken")
@@ -645,7 +651,7 @@ namespace TechWebSol.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<Guid?>("TeamId")
+                    b.Property<Guid>("TeamId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("TokenGroupId")
@@ -653,13 +659,6 @@ namespace TechWebSol.Migrations
 
                     b.Property<decimal>("TrainingConsistency")
                         .HasColumnType("decimal(5,2)");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<int>("UsageCount")
                         .HasColumnType("int");
@@ -982,14 +981,18 @@ namespace TechWebSol.Migrations
 
             modelBuilder.Entity("TechWebSol.Models.Token", b =>
                 {
-                    b.HasOne("TechWebSol.Models.Team", null)
+                    b.HasOne("TechWebSol.Models.Team", "Team")
                         .WithMany("Tokens")
-                        .HasForeignKey("TeamId");
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("TechWebSol.Models.TokenGroup", "TokenGroup")
                         .WithMany("Tokens")
                         .HasForeignKey("TokenGroupId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Team");
 
                     b.Navigation("TokenGroup");
                 });

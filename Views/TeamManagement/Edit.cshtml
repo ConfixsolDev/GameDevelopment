@@ -93,7 +93,7 @@
                 return;
             }
 
-            $.get('/api/admin/TeamManagementApi/teams')
+            $.get('/TeamManagement/getteams')
                 .done(function(teams) {
                     const team = teams.find(t => t.id === teamId);
                     if (team) {
@@ -127,7 +127,7 @@
             }
 
             $.ajax({
-                url: `/api/admin/TeamManagementApi/update-team/${teamId}`,
+                url: `/TeamManagement/update-team/${teamId}`,
                 type: 'PUT',
                 data: JSON.stringify(data),
                 contentType: 'application/json'

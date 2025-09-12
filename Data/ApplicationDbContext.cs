@@ -84,10 +84,6 @@ namespace TechWebSol.Data
                 entity.Property(e => e.Notes).HasMaxLength(1000);
                 entity.Property(e => e.TrainingConsistency).HasColumnType("decimal(5,2)");
 
-                entity.HasOne(e => e.Team)
-                    .WithMany(e => e.Tokens)
-                    .HasForeignKey(e => e.TeamId)
-                    .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(e => e.TokenGroup)
                     .WithMany(e => e.Tokens)
@@ -97,7 +93,6 @@ namespace TechWebSol.Data
                 entity.HasIndex(e => e.Name).IsUnique();
                 entity.HasIndex(e => e.CreatedAt);
                 entity.HasIndex(e => e.IsActive);
-                entity.HasIndex(e => e.TeamId);
                 entity.Property(e=>e.Id).ValueGeneratedNever();
 
             });
@@ -192,8 +187,6 @@ namespace TechWebSol.Data
                 entity.Property(e => e.Id).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.TokenName).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Location).IsRequired().HasColumnType("nvarchar(max)");
-                entity.Property(e => e.Description).HasMaxLength(500);
-                entity.Property(e => e.Category).HasMaxLength(50);
                 entity.Property(e => e.CreatedBy).HasMaxLength(100);
                 entity.Property(e => e.Notes).HasMaxLength(1000);
 
@@ -275,69 +268,7 @@ namespace TechWebSol.Data
                 entity.HasIndex(e => e.StartTime);
             });
 
-            // Configure TokenBinding entity
-            modelBuilder.Entity<TokenBinding>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.EntityName).HasMaxLength(100);
-                entity.Property(e => e.EntityCode).HasMaxLength(50);
-                entity.Property(e => e.EntityDescription).HasMaxLength(500);
-                entity.Property(e => e.BindingType).IsRequired().HasMaxLength(20);
-                entity.Property(e => e.Notes).HasMaxLength(1000);
-                entity.Property(e => e.BoundByUserId).HasMaxLength(50);
-                entity.Property(e => e.BoundByUserName).HasMaxLength(50);
-                entity.Property(e => e.UnboundByUserId).HasMaxLength(50);
-                entity.Property(e => e.UnboundByUserName).HasMaxLength(50);
 
-                entity.HasOne(e => e.GameSession)
-                    .WithMany(e => e.TokenBindings)
-                    .HasForeignKey(e => e.GameSessionId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(e => e.Token)
-                    .WithMany()
-                    .HasForeignKey(e => e.TokenId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(e => e.TokenGroup)
-                    .WithMany()
-                    .HasForeignKey(e => e.TokenGroupId)
-                    .OnDelete(DeleteBehavior.SetNull);
-
-                entity.HasOne(e => e.Team)
-                    .WithMany()
-                    .HasForeignKey(e => e.TeamId)
-                    .OnDelete(DeleteBehavior.SetNull);
-
-                entity.HasIndex(e => e.GameSessionId);
-                entity.HasIndex(e => e.TokenId);
-                entity.HasIndex(e => e.TokenGroupId);
-                entity.HasIndex(e => e.TeamId);
-                entity.HasIndex(e => e.IsActive);
-                entity.HasIndex(e => e.BoundAt);
-            });
-
-            // Configure FreeToken entity
-            modelBuilder.Entity<FreeToken>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Description).HasMaxLength(500);
-                entity.Property(e => e.Category).HasMaxLength(50);
-                entity.Property(e => e.System).IsRequired().HasMaxLength(20);
-                entity.Property(e => e.CreatedByUserId).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.CreatedByUserName).HasMaxLength(50);
-                entity.Property(e => e.UnboundByUserId).HasMaxLength(50);
-                entity.Property(e => e.UnboundByUserName).HasMaxLength(50);
-                entity.Property(e => e.Distances).HasMaxLength(1000);
-                entity.Property(e => e.Angles).HasMaxLength(1000);
-                entity.Property(e => e.Center).HasMaxLength(100);
-                entity.Property(e => e.ComplexSignature).HasMaxLength(2000);
-
-                entity.HasIndex(e => e.CreatedAt);
-                entity.HasIndex(e => e.System);
-                entity.HasIndex(e => e.LastUsed);
-            });
 
             // Configure MapMarker entity (keep for map functionality)
             modelBuilder.Entity<MapMarker>(entity =>
@@ -346,8 +277,6 @@ namespace TechWebSol.Data
                 entity.Property(e => e.Id).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.TokenName).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Location).IsRequired().HasColumnType("nvarchar(max)");
-                entity.Property(e => e.Description).HasMaxLength(500);
-                entity.Property(e => e.Category).HasMaxLength(50);
                 entity.Property(e => e.CreatedBy).HasMaxLength(100);
                 entity.Property(e => e.Notes).HasMaxLength(1000);
 
@@ -440,22 +369,6 @@ namespace TechWebSol.Data
         public DbSet<Team> Teams { get; set; }
         public DbSet<TeamTokenGroupAssignment> TeamTokenGroupAssignments { get; set; }
         public DbSet<GameSession> GameSessions { get; set; }
-        public DbSet<TokenBinding> TokenBindings { get; set; }
-        public DbSet<FreeToken> FreeTokens { get; set; }
 
-        private T GenerateOriginalEntity<T>(PropertyValues values) where T : new()
-        {
-            T entity = new T();
-            Type type = typeof(T);
-            var baseProperties = type.GetProperties();
-            foreach (var property in baseProperties)
-            {
-                if (values[property.Name] != null)
-                {
-                    property.SetValue(entity, values[property.Name]);
-                }
-            }
-            return entity;
-        }
     }
 }

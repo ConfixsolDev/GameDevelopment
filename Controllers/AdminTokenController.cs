@@ -29,10 +29,103 @@ namespace TechWebSol.Controllers
         /// Display admin token management dashboard
         /// </summary>
         [HttpGet]
+        public async Task<IActionResult> Groups()
+        {
+            var groups = await _context.TokenGroups
+            .OrderBy(g => g.Name)
+            .Select(g => new { g.Id, g.Name })
+            .ToListAsync();
+            return Json(groups);
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> ById([FromQuery] long id)
+        {
+            var t = await _context.Tokens.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+            if (t == null) return NotFound();
+            return Json(new TokenEditDto
+            {
+                Id = t.Id,
+                Name = t.Name,
+                Category = t.Category,
+                TokenGroupId = t.TokenGroupId,
+                Description = t.Description,
+                IsManualToken = t.IsManualToken,
+                Notes = t.Notes
+            });
+        }
+
+
+
+        [HttpPost]
+        public async Task<IActionResult> Update([FromBody] CreateOrUpdateTokenRequest req)
+        {
+            if (req.Id == null) return BadRequest(new { success = false, message = "Missing token id" });
+            var token = await _context.Tokens.FirstOrDefaultAsync(x => x.Id == req.Id.Value);
+            if (token == null) return NotFound(new { success = false, message = "Token not found" });
+
+
+            if (!string.IsNullOrWhiteSpace(req.Name)) token.Name = req.Name.Trim();
+            token.Category = string.IsNullOrWhiteSpace(req.Category) ? null : req.Category.Trim();
+            token.TokenGroupId = req.TokenGroupId;
+            token.Description = string.IsNullOrWhiteSpace(req.Description) ? null : req.Description.Trim();
+            token.IsManualToken = req.IsManualToken;
+            token.Notes = string.IsNullOrWhiteSpace(req.Notes) ? null : req.Notes.Trim();
+
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Token updated" });
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> ToggleActive([FromQuery] long id, [FromQuery] bool active)
+        {
+            var token = await _context.Tokens.FirstOrDefaultAsync(x => x.Id == id);
+            if (token == null) return NotFound(new { success = false, message = "Token not found" });
+            token.IsActive = active;
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = active ? "Token activated" : "Token deactivated" });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetTokens()
+        {
+            var tokens = await _context.Tokens
+                .Include(t => t.TokenGroup)
+                .OrderBy(t => t.Name)
+                .Select(t => new TokenListItemDto
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    Category = t.Category,
+                    TokenGroupId = t.TokenGroupId,
+                    TokenGroupName = t.TokenGroup != null ? t.TokenGroup.Name : null,
+                    IsActive = t.IsActive,
+                    IsManualToken = t.IsManualToken,
+                    LastUsed = t.LastUsed,
+                    UsageCount = t.UsageCount,
+                    Notes = t.Notes
+                })
+                .ToListAsync();
+
+            return Json(tokens);
+        }
+
+        [HttpGet]
         public IActionResult Index()
         {
+
             return View();
         }
+        [HttpGet]
+        public IActionResult Dashboard()
+        {
+            
+            return View();
+        }
+
 
         /// <summary>
         /// Display token group management page
@@ -95,6 +188,8 @@ namespace TechWebSol.Controllers
 
             return View(viewModel);
         }
+
+
 
         /// <summary>
         /// Display token creation page
@@ -340,73 +435,6 @@ namespace TechWebSol.Controllers
             }
         }
 
-        // ===== API ENDPOINTS FOR AJAX CALLS =====
-
-        /// <summary>
-        /// Create a new token group (e.g., "Company A", "Brigade 1")
-        /// </summary>
-        [HttpPost("create-group")]
-        public async Task<IActionResult> CreateTokenGroup([FromBody] CreateTokenGroupRequest request)
-        {
-            try
-            {
-                var currentUser = _userSessionService.GetCurrentUser();
-                if (currentUser == null)
-                {
-                    return Json(new { success = false, message = "User not authenticated" });
-                }
-
-                // Check if group code already exists
-                var existingGroup = await _context.TokenGroups
-                    .FirstOrDefaultAsync(g => g.GroupCode == request.GroupCode);
-
-                if (existingGroup != null)
-                {
-                    return Json(new { success = false, message = $"Token group with code '{request.GroupCode}' already exists" });
-                }
-
-                var tokenGroup = new TokenGroup
-                {
-                    Name = request.Name,
-                    Description = request.Description,
-                    GroupCode = request.GroupCode,
-                    Category = request.Category,
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedByUserId = currentUser.ApplicationUserId,
-                    CreatedByUserName = currentUser.FullName
-                };
-
-                _context.TokenGroups.Add(tokenGroup);
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation("Created token group: {GroupName} ({GroupCode}) by user {UserId}", 
-                    request.Name, request.GroupCode, currentUser.ApplicationUserId);
-
-                return Json(new
-                {
-                    success = true,
-                    message = "Token group created successfully",
-                    tokenGroup = new
-                    {
-                        id = tokenGroup.Id,
-                        name = tokenGroup.Name,
-                        description = tokenGroup.Description,
-                        groupCode = tokenGroup.GroupCode,
-                        category = tokenGroup.Category,
-                        isActive = tokenGroup.IsActive,
-                        createdAt = tokenGroup.CreatedAt,
-                        createdByUserName = tokenGroup.CreatedByUserName
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating token group");
-                return Json(new { success = false, message = "Internal server error" });
-            }
-        }
-
         /// <summary>
         /// Get all token groups for admin management
         /// </summary>
@@ -467,39 +495,17 @@ namespace TechWebSol.Controllers
                     return View(model);
                 }
 
-                // Get user details to determine team
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == currentUser.ApplicationUserId);
-                if (user == null)
-                {
-                    ModelState.AddModelError("", "User not found");
-                    return View(model);
-                }
 
-                // Find the team by TeamCode and SubTeamCode
-                var team = await _context.Teams.FirstOrDefaultAsync(t => t.TeamCode == user.TeamCode && t.SubTeamCode == user.SubTeamCode);
-                if (team == null)
-                {
-                    ModelState.AddModelError("", "User team not found");
-                    return View(model);
-                }
-
-                // Generate a unique token ID
-                var tokenId = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
-                // Create the token
                 var token = new Token
                 {
-                    Id = tokenId,
                     Name = model.Name,
                     Description = model.Description,
                     Category = model.Category,
                     TokenGroupId = model.TokenGroupId,
-                    TeamId = team.Id,
                     IsManualToken = true,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow,
-                    CreatedByUserId = currentUser.ApplicationUserId,
-                    CreatedByUserName = currentUser.FullName
+                    CreatedBy = currentUser.ApplicationUserId,
                 };
 
                 _context.Tokens.Add(token);
@@ -568,5 +574,43 @@ namespace TechWebSol.Controllers
         public string Description { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
         public Guid? TokenGroupId { get; set; }
+    }
+
+    public class TokenListItemDto
+    {
+        public long Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Category { get; set; }
+        public Guid? TokenGroupId { get; set; }
+        public string? TokenGroupName { get; set; }
+        public bool IsActive { get; set; }
+        public bool IsManualToken { get; set; }
+        public DateTime? LastUsed { get; set; }
+        public int UsageCount { get; set; }
+        public string? Notes { get; set; }
+    }
+
+
+    public class TokenEditDto
+    {
+        public long Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Category { get; set; }
+        public Guid? TokenGroupId { get; set; }
+        public string? Description { get; set; }
+        public bool IsManualToken { get; set; }
+        public string? Notes { get; set; }
+    }
+
+
+    public class CreateOrUpdateTokenRequest
+    {
+        public long? Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Category { get; set; }
+        public Guid? TokenGroupId { get; set; }
+        public string? Description { get; set; }
+        public bool IsManualToken { get; set; }
+        public string? Notes { get; set; }
     }
 }

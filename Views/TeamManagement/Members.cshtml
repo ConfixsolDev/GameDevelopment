@@ -95,7 +95,7 @@
         });
 
         function loadTeamData() {
-            $.get('/api/admin/TeamManagementApi/teams')
+            $.get('/TeamManagement/Getteams')
                 .done(function(teams) {
                     const team = teams.find(t => t.id === currentTeamId);
                     if (team) {
@@ -109,7 +109,7 @@
         }
 
         function loadTeamMembers() {
-            $.get(`/api/admin/TeamManagementApi/team-members/${currentTeamId}`)
+            $.get(`/TeamManagement/team-members/${currentTeamId}`)
                 .done(function(members) {
                     const tbody = $('#teamMembersTable tbody');
                     tbody.empty();
@@ -141,7 +141,7 @@
         }
 
         function loadUsers() {
-            $.get('/api/admin/TeamManagementApi/users')
+            $.get('/TeamManagementApi/getusers')
                 .done(function(users) {
                     const select = $('#userSelect');
                     select.empty().append('<option value="">-- Select User --</option>');

@@ -27,12 +27,6 @@ namespace TechWebSol.Models
         [MaxLength(100)]
         public string TokenName { get; set; } = string.Empty;
 
-        [MaxLength(500)]
-        public string? Description { get; set; }
-
-        [MaxLength(50)]
-        public string? Category { get; set; }
-
         [MaxLength(100)]
         public string? CreatedBy { get; set; }
 

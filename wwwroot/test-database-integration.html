@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Integration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #45a049;
+        }
+        .btn.danger {
+            background: #f44336;
+        }
+        .btn.danger:hover {
+            background: #da190b;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Database Integration Test</h1>
+        <p>This page tests the migration from localStorage to database operations.</p>
+
+        <div class="test-section">
+            <h3>1. API Service Test</h3>
+            <button class="btn" onclick="testApiService()">Test API Service</button>
+            <div id="apiResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Token Operations Test</h3>
+            <button class="btn" onclick="testTokenOperations()">Test Token CRUD</button>
+            <button class="btn danger" onclick="clearTestData()">Clear Test Data</button>
+            <div id="tokenResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Map Marker Operations Test</h3>
+            <button class="btn" onclick="testMapMarkerOperations()">Test Map Marker CRUD</button>
+            <div id="markerResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Migration Test</h3>
+            <button class="btn" onclick="testMigration()">Test localStorage Migration</button>
+            <div id="migrationResult" class="result"></div>
+        </div>
+    </div>
+
+    <!-- Include the API service -->
+    <script src="~/js/api-service.js"></script>
+    <script>
+        // Test functions
+        async function testApiService() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.textContent = 'Testing API service...';
+            
+            try {
+                if (typeof window.apiService === 'undefined') {
+                    throw new Error('API service not loaded');
+                }
+                
+                // Test basic API call
+                const tokens = await window.apiService.loadTokens();
+                resultDiv.textContent = `✅ API Service loaded successfully\nFound ${tokens.length} tokens in database`;
+                resultDiv.className = 'result success';
+            } catch (error) {
+                resultDiv.textContent = `❌ API Service test failed: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testTokenOperations() {
+            const resultDiv = document.getElementById('tokenResult');
+            resultDiv.textContent = 'Testing token operations...';
+            
+            try {
+                // Create a test token
+                const testToken = {
+                    id: Date.now(),
+                    name: 'Test Token ' + Date.now(),
+                    signature: {
+                        touchCount: 2,
+                        touchPattern: {
+                            type: 'test',
+                            distances: [100, 150],
+                            distanceSignature: 'test-signature'
+                        }
+                    },
+                    trainingConsistency: {
+                        avg: 85.5,
+                        min: 80,
+                        max: 90
+                    },
+                    createdAt: new Date().toISOString()
+                };
+
+                // Convert to database format
+                const dbToken = window.apiService.convertTokenToDbFormat(testToken);
+                
+                // Save to database
+                const savedToken = await window.apiService.saveToken(dbToken);
+                resultDiv.textContent = `✅ Token operations successful\nCreated token: ${savedToken.name}\nID: ${savedToken.id}`;
+                resultDiv.className = 'result success';
+            } catch (error) {
+                resultDiv.textContent = `❌ Token operations failed: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testMapMarkerOperations() {
+            const resultDiv = document.getElementById('markerResult');
+            resultDiv.textContent = 'Testing map marker operations...';
+            
+            try {
+                // Create a test marker
+                const testMarker = {
+                    id: 'test_marker_' + Date.now(),
+                    tokenId: 1, // Assuming we have a token with ID 1
+                    location: {
+                        lat: 40.7128,
+                        lng: -74.0060
+                    },
+                    createdAt: new Date().toISOString(),
+                    tokenName: 'Test Token'
+                };
+
+                // Convert to database format
+                const dbMarker = window.apiService.convertMapMarkerToDbFormat(testMarker);
+                
+                // Save to database
+                const savedMarker = await window.apiService.saveMapMarker(dbMarker);
+                resultDiv.textContent = `✅ Map marker operations successful\nCreated marker: ${savedMarker.id}`;
+                resultDiv.className = 'result success';
+            } catch (error) {
+                resultDiv.textContent = `❌ Map marker operations failed: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testMigration() {
+            const resultDiv = document.getElementById('migrationResult');
+            resultDiv.textContent = 'Testing migration...';
+            
+            try {
+                // Create some test data in localStorage
+                const testTokens = [
+                    {
+                        id: Date.now(),
+                        name: 'Migrated Token 1',
+                        signature: { touchCount: 2 },
+                        trainingConsistency: { avg: 85 },
+                        createdAt: new Date().toISOString()
+                    }
+                ];
+                
+                const testMarkers = [
+                    {
+                        id: 'migrated_marker_1',
+                        tokenId: testTokens[0].id,
+                        location: { lat: 40.7128, lng: -74.0060 },
+                        createdAt: new Date().toISOString(),
+                        tokenName: 'Migrated Token 1'
+                    }
+                ];
+
+                // Store in localStorage
+                localStorage.setItem('learnedTokens', JSON.stringify(testTokens));
+                localStorage.setItem('mapTokenMarkers', JSON.stringify(testMarkers));
+                
+                resultDiv.textContent = `✅ Migration test data created in localStorage\nTokens: ${testTokens.length}\nMarkers: ${testMarkers.length}`;
+                resultDiv.className = 'result success';
+            } catch (error) {
+                resultDiv.textContent = `❌ Migration test failed: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function clearTestData() {
+            const resultDiv = document.getElementById('tokenResult');
+            resultDiv.textContent = 'Clearing test data...';
+            
+            try {
+                // This would need to be implemented in the API service
+                resultDiv.textContent = '⚠️ Clear test data not implemented in this demo';
+                resultDiv.className = 'result';
+            } catch (error) {
+                resultDiv.textContent = `❌ Clear test data failed: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            console.log('Database integration test page loaded');
+        });
+    </script>
+</body>
+</html>
+

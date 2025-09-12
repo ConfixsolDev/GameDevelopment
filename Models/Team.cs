@@ -28,14 +28,12 @@ namespace TechWebSol.Models
 
         public bool IsActive { get; set; } = true;
 
-        // Additional team-specific fields
         [MaxLength(50)]
         public string? CreatedByUserId { get; set; }
 
         [MaxLength(50)]
         public string? CreatedByUserName { get; set; }
 
-        // Navigation properties
         public virtual ICollection<ApplicationUser> Users { get; set; } = new List<ApplicationUser>();
         public virtual ICollection<Token> Tokens { get; set; } = new List<Token>();
         public virtual ICollection<TeamTokenGroupAssignment> TokenGroupAssignments { get; set; } = new List<TeamTokenGroupAssignment>();

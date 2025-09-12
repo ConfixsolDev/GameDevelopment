@@ -37,39 +37,18 @@ namespace TechWebSol.Controllers
             return View();
         }
 
-        /// <summary>
-        /// Display active game sessions
-        /// </summary>
         [HttpGet]
-        public IActionResult ActiveSessions()
+        public IActionResult Create()
         {
             return View();
         }
 
-        /// <summary>
-        /// Display free tokens management
-        /// </summary>
-        [HttpGet]
-        public IActionResult FreeTokens()
-        {
-            return View();
-        }
-
-        /// <summary>
-        /// Display token binding management
-        /// </summary>
-        [HttpGet]
-        public IActionResult TokenBinding()
-        {
-            return View();
-        }
 
         // ===== API ENDPOINTS FOR AJAX CALLS =====
 
         /// <summary>
         /// Start a new game session
         /// </summary>
-        [HttpPost("start-session")]
         public async Task<IActionResult> StartGameSession([FromBody] StartGameSessionRequest request)
         {
             try
@@ -129,7 +108,6 @@ namespace TechWebSol.Controllers
         /// <summary>
         /// End a game session
         /// </summary>
-        [HttpPost("end-session/{sessionId}")]
         public async Task<IActionResult> EndGameSession(int sessionId)
         {
             try
@@ -169,7 +147,6 @@ namespace TechWebSol.Controllers
         /// <summary>
         /// Get active game sessions
         /// </summary>
-        [HttpGet("active-sessions")]
         public async Task<IActionResult> GetActiveSessions()
         {
             try

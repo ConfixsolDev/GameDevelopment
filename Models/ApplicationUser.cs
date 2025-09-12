@@ -57,6 +57,7 @@ namespace TechWebSol.Models
         [ScaffoldColumn(false)]
         [DisplayName("Sub-Team")]
         public string SubTeamCode { get; set; } = string.Empty;
+        public DateTime? AssignDate { get; set; }
 
         // Foreign key to Team
         public Guid? TeamId { get; set; }

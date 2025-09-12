@@ -24,7 +24,7 @@ window.API_CONFIG = {
     TeamManagement: {
         baseUrl: '/TeamManagement',
         endpoints: {
-            teams: '/teams',
+            teams: '/getteams',
             createTeam: '/create-team',
             updateTeam: '/update-team',
             deleteTeam: '/delete-team',

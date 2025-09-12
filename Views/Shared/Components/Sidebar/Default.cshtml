@@ -26,7 +26,7 @@
                 
                 <secure-content asp-area="" asp-controller="AdminToken" asp-action="Index">
                     <li>
-                        <a asp-area="" asp-controller="AdminToken" asp-action="Index">
+                        <a asp-area="" asp-controller="AdminToken" asp-action="Dashboard">
                             <i class="fas fa-cogs"></i>
                             <span>Admin Dashboard </span>
                         </a>
@@ -42,11 +42,11 @@
                     </li>
                 </secure-content>
 
-                <secure-content asp-area="" asp-controller="AdminToken" asp-action="Create">
+                <secure-content asp-area="" asp-controller="AdminToken" asp-action="Index">
                     <li>
-                        <a asp-area="" asp-controller="AdminToken" asp-action="Create">
+                        <a asp-area="" asp-controller="AdminToken" asp-action="Index">
                             <i class="fas fa-plus-circle"></i>
-                            <span>Create Token </span>
+                            <span>Tokens </span>
                         </a>
                     </li>
                 </secure-content>
@@ -69,14 +69,7 @@
                     </li>
                 </secure-content>
 
-                <secure-content asp-area="" asp-controller="GameManagement" asp-action="FreeTokens">
-                    <li>
-                        <a asp-area="" asp-controller="GameManagement" asp-action="FreeTokens">
-                            <i class="fas fa-unlock"></i>
-                            <span>Free Tokens </span>
-                        </a>
-                    </li>
-                </secure-content>
+                
 
                 <secure-content asp-area="" asp-controller="GamePlay" asp-action="Index">
                     <li>

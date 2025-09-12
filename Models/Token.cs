@@ -5,17 +5,17 @@ using System.Text.Json.Serialization;
 namespace TechWebSol.Models
 {
     [Table("Tokens")]
-    public class Token
+    public class Token:BaseEntity
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.None)]
-        public long Id { get; set; }  // pre-generated ID (e.g. 1757013297849L)
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public virtual new long Id { get; set; }
+
 
         [Required]
         [MaxLength(100)]
         public string Name { get; set; } = string.Empty;
 
-        public DateTime CreatedAt { get; set; }
+     
 
         [Column(TypeName = "decimal(5,2)")]
         public decimal TrainingConsistency { get; set; }
@@ -36,29 +36,9 @@ namespace TechWebSol.Models
         public DateTime? LastUsed { get; set; }
 
         public int UsageCount { get; set; } = 0;
-
-        [MaxLength(100)]
-        public string? CreatedBy { get; set; }
-
         [MaxLength(1000)]
         public string? Notes { get; set; }
-
-        // Team isolation - tokens are team-specific
-        [Required]
-        public Guid TeamId { get; set; } // Foreign key to Team.Id
-
-        [Required]
-        [MaxLength(50)]
-        public string CreatedByUserId { get; set; } = string.Empty;
-
-        [MaxLength(50)]
-        public string? CreatedByUserName { get; set; }
-
-        // Token group assignment - tokens belong to administrator-managed groups
         public Guid? TokenGroupId { get; set; }
-
-        // Navigation properties
-        public virtual Team Team { get; set; } = null!;
         public virtual TokenGroup? TokenGroup { get; set; }
         public virtual ICollection<MapMarker> MapMarkers { get; set; } = new List<MapMarker>();
     }

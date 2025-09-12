@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TechWebSol.Data;
+using TechWebSol.DTOs;
 using TechWebSol.Filters;
 using TechWebSol.Models;
 using TechWebSol.Services;
@@ -18,57 +19,37 @@ namespace TechWebSol.Controllers
         private readonly IUserSessionService _userSessionService;
         private readonly ILogger<TeamManagementController> _logger;
 
-        public TeamManagementController(
-            ApplicationDbContext context,
-            IUserSessionService userSessionService,
-            ILogger<TeamManagementController> logger)
+        public TeamManagementController( ApplicationDbContext context,IUserSessionService userSessionService,ILogger<TeamManagementController> logger)
         {
             _context = context;
             _userSessionService = userSessionService;
             _logger = logger;
         }
 
-        /// <summary>
-        /// Display team management page
-        /// </summary>
         [HttpGet]
         public IActionResult Index()
         {
             return View();
         }
 
-        /// <summary>
-        /// Display team creation page
-        /// </summary>
         [HttpGet]
         public IActionResult Create()
         {
             return View();
         }
 
-        /// <summary>
-        /// Display team edit page
-        /// </summary>
         [HttpGet]
         public IActionResult Edit(int id)
         {
             return View();
         }
 
-        /// <summary>
-        /// Display team members page
-        /// </summary>
         [HttpGet]
         public IActionResult Members(int id)
         {
             return View();
         }
 
-        // ===== API ENDPOINTS FOR AJAX CALLS =====
-
-        /// <summary>
-        /// Create a new team
-        /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateTeamRequest request)
@@ -99,7 +80,8 @@ namespace TechWebSol.Controllers
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow,
                     CreatedByUserId = currentUser.ApplicationUserId,
-                    CreatedByUserName = currentUser.FullName
+                    CreatedByUserName = currentUser.FullName,
+                    Category=request.TeamCategory
                 };
 
                 _context.Teams.Add(team);
@@ -108,22 +90,7 @@ namespace TechWebSol.Controllers
                 _logger.LogInformation("Created team: {TeamName} ({TeamCode}) by user {UserId}", 
                     request.Name, request.TeamCode, currentUser.ApplicationUserId);
 
-                return Json(new
-                {
-                    success = true,
-                    message = "Team created successfully",
-                    team = new
-                    {
-                        id = team.Id,
-                        name = team.Name,
-                        teamCode = team.TeamCode,
-                        subTeamCode = team.SubTeamCode,
-                        description = team.Description,
-                        isActive = team.IsActive,
-                        createdAt = team.CreatedAt,
-                        createdByUserName = team.CreatedByUserName
-                    }
-                });
+                return RedirectToAction("Index", "TeamManagement");
             }
             catch (Exception ex)
             {
@@ -132,10 +99,120 @@ namespace TechWebSol.Controllers
             }
         }
 
-        /// <summary>
-        /// Get all teams
-        /// </summary>
-        [HttpGet("teams")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateTeam([FromBody] CreateTeamRequest request)
+        {
+            try
+            {
+                var currentUser = _userSessionService.GetCurrentUser();
+                if (currentUser == null)
+                {
+                    return Json(new { success = false, message = "User not authenticated" });
+                }
+
+                // Find existing team by Id
+                var team = await _context.Teams.FirstOrDefaultAsync(t => t.Id == (Guid)request.id);
+                if (team == null)
+                {
+                    return Json(new { success = false, message = "Team not found" });
+                }
+
+                
+
+                // Update existing team
+                team.Name = request.Name;
+                team.TeamCode = request.TeamCode;
+                team.SubTeamCode = request.SubTeamCode;
+                team.Description = request.Description;
+                team.Category = request.TeamCategory;
+                team.UpdatedDate = DateTime.UtcNow;
+                team.UpdatedBy = currentUser.ApplicationUserId;
+
+                _context.Teams.Update(team);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Updated team: {TeamName} ({TeamCode}) by user {UserId}",
+                    request.Name, request.TeamCode, currentUser.ApplicationUserId);
+
+                return Json(new { success = true, message = "Team updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating team");
+                return Json(new { success = false, message = "Internal server error" });
+            }
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteTeam(Guid teamId)
+        {
+            try
+            {
+                var currentUser = _userSessionService.GetCurrentUser();
+                if (currentUser == null)
+                {
+                    return Json(new { success = false, message = "User not authenticated" });
+                }
+
+                var team = await _context.Teams.FirstOrDefaultAsync(t => t.Id == teamId);
+                if (team == null)
+                {
+                    return Json(new { success = false, message = "Team not found" });
+                }
+
+                // Hard delete (permanent)
+                _context.Teams.Remove(team);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Hard deleted team: {TeamName} ({TeamCode}) by user {UserId}",
+                    team.Name, team.TeamCode, currentUser.ApplicationUserId);
+
+                return Json(new { success = true, message = "Team deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting team");
+                return Json(new { success = false, message = "Internal server error" });
+            }
+        }
+
+
+
+        [HttpGet]
+        public async Task<IActionResult> GetTeam(Guid id)
+        {
+            try
+            {
+                var teams = await _context.Teams
+                    .Where(t => t.IsActive)
+                    .OrderBy(t => t.Name)
+                    .Select(t => new
+                    {
+                        id = t.Id,
+                        name = t.Name,
+                        teamCode = t.TeamCode,
+                        subTeamCode = t.SubTeamCode,
+                        description = t.Description,
+                        isActive = t.IsActive,
+                        createdAt = t.CreatedAt,
+                        createdByUserName = t.CreatedByUserName,
+                        category = t.Category
+                    })
+                    .FirstOrDefaultAsync(c=>c.id==id);
+
+                return Json(teams);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting team");
+                return Json(new { success = false, message = "Internal server error" });
+            }
+        }
+
+        [HttpGet]
         public async Task<IActionResult> GetTeams()
         {
             try
@@ -152,7 +229,8 @@ namespace TechWebSol.Controllers
                         description = t.Description,
                         isActive = t.IsActive,
                         createdAt = t.CreatedAt,
-                        createdByUserName = t.CreatedByUserName
+                        createdByUserName = t.CreatedByUserName,
+                        category=t.Category
                     })
                     .ToListAsync();
 
@@ -165,10 +243,9 @@ namespace TechWebSol.Controllers
             }
         }
 
-        /// <summary>
-        /// Get team members
-        /// </summary>
-        [HttpGet("team-members/{teamId}")]
+
+        
+        [HttpGet]
         public async Task<IActionResult> GetTeamMembers(Guid? teamId)
         {
             try
@@ -183,7 +260,8 @@ namespace TechWebSol.Controllers
                         email = u.Email,
                         teamId = u.TeamId,
                         teamCode = u.TeamCode,
-                        subTeamCode = u.SubTeamCode
+                        subTeamCode = u.SubTeamCode,
+                        assignedDate=u.AssignDate,
                     })
                     .ToListAsync();
 
@@ -196,10 +274,6 @@ namespace TechWebSol.Controllers
             }
         }
 
-        /// <summary>
-        /// Assign user to team
-        /// </summary>
-        [HttpPost("assign-user-to-team")]
         public async Task<IActionResult> AssignUserToTeam([FromBody] AssignUserToTeamRequest request)
         {
             try
@@ -225,6 +299,7 @@ namespace TechWebSol.Controllers
                 user.TeamId = request.TeamId;
                 user.TeamCode = team.TeamCode;
                 user.SubTeamCode = team.SubTeamCode;
+                user.AssignDate = DateTime.UtcNow;
 
                 await _context.SaveChangesAsync();
 
@@ -244,17 +319,52 @@ namespace TechWebSol.Controllers
             }
         }
 
-        /// <summary>
-        /// Get all users
-        /// </summary>
-        [HttpGet("users")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveUserFromTeam(string userId, Guid teamId)
+        {
+            try
+            {
+                var currentUser = _userSessionService.GetCurrentUser();
+                if (currentUser == null)
+                {
+                    return Json(new { success = false, message = "User not authenticated" });
+                }
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.TeamId == teamId);
+                if (user == null)
+                {
+                    return Json(new { success = false, message = "User is not a member of this team" });
+                }
+
+                // Unassign user from team
+                user.TeamId = null;
+                user.TeamCode = null;
+                user.SubTeamCode = null;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Removed user {UserId} from team {TeamId} by {AdminUserId}",
+                    userId, teamId, currentUser.ApplicationUserId);
+
+                return Json(new { success = true, message = "User removed from team successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error removing user {UserId} from team {TeamId}", userId, teamId);
+                return Json(new { success = false, message = "Internal server error" });
+            }
+        }
+
+
+
+        [HttpGet]
         public async Task<IActionResult> GetUsers()
         {
             try
             {
                 var users = await _context.Users
                     .Where(u => u.IsActive)
-                    .OrderBy(u => u.FullName)
                     .Select(u => new
                     {
                         id = u.Id,
@@ -276,21 +386,5 @@ namespace TechWebSol.Controllers
                 return Json(new { success = false, message = "Internal server error" });
             }
         }
-    }
-
-    // ===== REQUEST/RESPONSE MODELS =====
-
-    public class CreateTeamRequest
-    {
-        public string Name { get; set; } = string.Empty;
-        public string TeamCode { get; set; } = string.Empty;
-        public string SubTeamCode { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-    }
-
-    public class AssignUserToTeamRequest
-    {
-        public string UserId { get; set; } = string.Empty;
-        public Guid? TeamId { get; set; }
     }
 }

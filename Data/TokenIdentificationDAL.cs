@@ -116,14 +116,10 @@ namespace TechWebSol.Data
 
                 // Get active game sessions and bindings for this team
                 var activeSessionIds = await _context.GameSessions.Where(s => s.Status == "Active").Select(s => s.Id).ToListAsync();
-                var boundGroupIds = await _context.TokenBindings
-                    .Where(b => b.TeamId == teamId && activeSessionIds.Contains(b.GameSessionId) && b.IsActive)
-                    .Select(b => b.TokenGroupId)
-                    .ToListAsync();
-
+            
                 var teamTokens = await _context.Tokens
                     .Include(t => t.Signature)
-                    .Where(t => boundGroupIds.Contains(t.TokenGroupId.Value) && t.IsActive)
+                    .Where(t => t.IsActive)
                     .ToListAsync();
 
                 if (!teamTokens.Any())
@@ -503,9 +499,6 @@ namespace TechWebSol.Data
                             CreatedAt = DateTime.UtcNow,
                             UsageCount = 0,
                             TrainingConsistency = 0,
-                            TeamId = request.TeamId,
-                            CreatedByUserId = request.CreatedByUserId,
-                            CreatedByUserName = GetCurrentUserName(),
                             TokenGroupId = request.TokenGroupId
                         };
 
@@ -636,25 +629,17 @@ namespace TechWebSol.Data
 
                 // Get token bindings for this team in active sessions
                 var activeSessionIds = activeSessions.Select(s => s.Id).ToList();
-                var teamBindings = await _context.TokenBindings
-                    .Where(b => b.TeamId == teamId && activeSessionIds.Contains(b.GameSessionId) && b.IsActive)
-                    .ToListAsync();
+               
 
-                if (!teamBindings.Any())
-                {
-                    return groupedTokens; // No bindings for this team
-                }
 
                 // Get token groups for the bindings
-                var boundGroupIds = teamBindings.Select(b => b.TokenGroupId).ToList();
                 var tokenGroups = await _context.TokenGroups
-                    .Where(g => boundGroupIds.Contains(g.Id) && g.IsActive)
+                    .Where(g =>g.IsActive)
                     .OrderBy(g => g.Name)
                     .ToListAsync();
 
                 foreach (var group in tokenGroups)
                 {
-                    var binding = teamBindings.First(b => b.TokenGroupId == group.Id);
                     var groupTokens = new List<TeamTokenInfo>();
 
                     // Get all tokens for this group (both simplified and complex are now in same table)
@@ -684,8 +669,6 @@ namespace TechWebSol.Data
                             GroupName = group.Name,
                             GroupCode = group.GroupCode,
                             GroupCategory = group.Category,
-                            EntityName = binding.EntityName,
-                            EntityCode = binding.EntityCode,
                             Tokens = groupTokens.OrderBy(t => t.Name).ToList()
                         });
                     }
@@ -722,7 +705,7 @@ namespace TechWebSol.Data
                     // Find the token and verify it belongs to the current team
                     var token = await _context.Tokens
                         .Include(t => t.Signature)
-                        .FirstOrDefaultAsync(t => t.Id == tokenId && t.TeamId == teamId);
+                        .FirstOrDefaultAsync(t => t.Id == tokenId);
 
                     if (token == null)
                     {

@@ -87,7 +87,7 @@
         });
 
         function loadGameSessions() {
-            $.get(getApiUrl('GameManagement', 'activeSessions'))
+            $.get(getApiUrl('GameManagement', 'GetActiveSessions'))
                 .done(function(sessions) {
                     const tbody = $('#gameSessionsTable tbody');
                     tbody.empty();
@@ -160,7 +160,14 @@
                     });
             }
         }
+                 function getApiUrl(controller, action) {
+            return `/${controller}/${action}`;
+        }
 
+        function getApiUrlWithParams(controller, action, params) {
+            const query = new URLSearchParams(params).toString();
+            return `/${controller}/${action}?${query}`;
+        }
         // showAlert function is now provided by the centralized AlertSystem
     </script>
 }
