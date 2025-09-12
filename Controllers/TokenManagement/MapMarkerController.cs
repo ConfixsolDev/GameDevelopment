@@ -47,7 +47,7 @@ namespace TechWebSol.Controllers.TokenManagement
         /// Get map markers by token ID
         /// </summary>
         [HttpGet("by-token/{tokenId}")]
-        public async Task<ActionResult<IEnumerable<MapMarker>>> GetMapMarkersByToken(long tokenId)
+        public async Task<ActionResult<IEnumerable<MapMarker>>> GetMapMarkersByToken(Guid? tokenId)
         {
             try
             {
@@ -102,7 +102,7 @@ namespace TechWebSol.Controllers.TokenManagement
                 if (string.IsNullOrWhiteSpace(marker.Location))
                     return BadRequest("Location data is required");
 
-                if (marker.TokenId <= 0)
+                if (marker.TokenId <= Guid.Empty)
                     return BadRequest("Valid Token ID is required");
 
                 // Check if token exists
@@ -186,7 +186,7 @@ namespace TechWebSol.Controllers.TokenManagement
         /// Delete all map markers for a specific token
         /// </summary>
         [HttpDelete("by-token/{tokenId}")]
-        public async Task<IActionResult> DeleteMapMarkersByToken(long tokenId)
+        public async Task<IActionResult> DeleteMapMarkersByToken(Guid? tokenId)
         {
             try
             {
@@ -230,7 +230,7 @@ namespace TechWebSol.Controllers.TokenManagement
 
                     // Batch fetch to reduce per-item queries
                     var markerIds = markers.Select(m => m.Id).Where(id => !string.IsNullOrWhiteSpace(id)).ToList();
-                    var tokenIds = markers.Select(m => m.TokenId).Where(id => id > 0).Distinct().ToList();
+                    var tokenIds = markers.Select(m => m.TokenId).Where(id => id > Guid.NewGuid()).Distinct().ToList();
 
                     // Replace this line:
                     // var existingMarkerIds = await _context.MapMarkers
@@ -265,17 +265,17 @@ namespace TechWebSol.Controllers.TokenManagement
                                 continue;
                             }
 
-                            if (marker.TokenId <= 0)
+                            if (marker.TokenId <= Guid.Empty)
                             {
                                 results.Add(new { marker.Id, Success = false, Error = "Valid Token ID is required" });
                                 continue;
                             }
 
-                            if (!tokensById.TryGetValue(marker.TokenId, out var token))
-                            {
-                                results.Add(new { marker.Id, Success = false, Error = "Token not found" });
-                                continue;
-                            }
+                            //if (!tokensById.TryGetValue(marker.TokenId, out var token))
+                            //{
+                            //    results.Add(new { marker.Id, Success = false, Error = "Token not found" });
+                            //    continue;
+                            //}
 
                             if (existingMarkerIds.Contains(marker.Id))
                             {
@@ -284,7 +284,7 @@ namespace TechWebSol.Controllers.TokenManagement
                             }
 
                             marker.CreatedAt = DateTime.UtcNow;
-                            marker.TokenName = token.Name;
+                            //marker.TokenName = token.Name;
 
                             _context.MapMarkers.Add(marker);
                             existingMarkerIds.Add(marker.Id); // prevent duplicates within the same payload

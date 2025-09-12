@@ -26,7 +26,6 @@ namespace TechWebSol.Models
         [MaxLength(50)]
         public string? Category { get; set; } // e.g., "Company", "Brigade", "Department"
 
-        public bool IsActive { get; set; } = true;
 
         [MaxLength(50)]
         public string? CreatedByUserId { get; set; }

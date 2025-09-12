@@ -14,7 +14,7 @@ namespace TechWebSol.Models
 
         [Required]
         [ForeignKey("Token")]
-        public long TokenId { get; set; }  // matches Token.Id type (long)
+        public Guid? TokenId { get; set; }  // matches Token.Id type (Guid from BaseEntity)
 
         [Required]
         [Column(TypeName = "nvarchar(max)")]

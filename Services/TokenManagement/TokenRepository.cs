@@ -27,11 +27,11 @@ namespace TechWebSol.Services.TokenManagement
                     .ThenInclude(s => s!.TouchPattern)
                 .Include(t => t.Signature)
                     .ThenInclude(s => s!.MultiTouchGeometry)
-                .OrderByDescending(t => t.CreatedAt)
+                .OrderByDescending(t => t.CreatedDate)
                 .ToListAsync();
         }
 
-        public async Task<Token?> GetTokenByIdAsync(long id)
+        public async Task<Token?> GetTokenByIdAsync(Guid id)
         {
             return await _context.Tokens
                 .Include(t => t.Signature)
@@ -112,19 +112,19 @@ namespace TechWebSol.Services.TokenManagement
                 ?? throw new InvalidOperationException("Token was updated but could not be retrieved");
         }
 
-        public async Task<bool> DeleteTokenAsync(long id)
+        public async Task<bool> DeleteTokenAsync(Guid id)
         {
             // Use unified DAL for token deletion
             var result = await _tokenDAL.DeleteTokenAsync(id);
             return result.Success;
         }
 
-        public async Task<bool> TokenExistsAsync(long id)
+        public async Task<bool> TokenExistsAsync(Guid id)
         {
             return await _context.Tokens.AnyAsync(t => t.Id == id);
         }
 
-        public async Task<bool> TokenNameExistsAsync(string name, long? excludeId = null)
+        public async Task<bool> TokenNameExistsAsync(string name, Guid? excludeId = null)
         {
             var query = _context.Tokens.Where(t => t.Name == name);
             if (excludeId.HasValue)
@@ -140,7 +140,7 @@ namespace TechWebSol.Services.TokenManagement
                            (t.Description != null && t.Description.Contains(searchTerm)) ||
                            (t.Category != null && t.Category.Contains(searchTerm)))
                 .Include(t => t.Signature)
-                .OrderByDescending(t => t.CreatedAt)
+                .OrderByDescending(t => t.CreatedDate)
                 .ToListAsync();
         }
 
@@ -149,7 +149,7 @@ namespace TechWebSol.Services.TokenManagement
             var totalTokens = await _context.Tokens.CountAsync();
             var activeTokens = await _context.Tokens.CountAsync(t => t.IsActive);
             var inactiveTokens = totalTokens - activeTokens;
-            var lastTokenCreated = await _context.Tokens.MaxAsync(t => (DateTime?)t.CreatedAt);
+            var lastTokenCreated = await _context.Tokens.MaxAsync(t => t.CreatedDate);
             var lastTokenUsed = await _context.Tokens.MaxAsync(t => (DateTime?)t.LastUsed);
 
             return new TokenStatistics

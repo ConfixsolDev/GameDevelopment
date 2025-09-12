@@ -40,7 +40,7 @@ namespace TechWebSol.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> ById([FromQuery] long id)
+        public async Task<IActionResult> ById([FromQuery] Guid id)
         {
             var t = await _context.Tokens.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
             if (t == null) return NotFound();
@@ -62,7 +62,7 @@ namespace TechWebSol.Controllers
         public async Task<IActionResult> Update([FromBody] CreateOrUpdateTokenRequest req)
         {
             if (req.Id == null) return BadRequest(new { success = false, message = "Missing token id" });
-            var token = await _context.Tokens.FirstOrDefaultAsync(x => x.Id == req.Id.Value);
+            var token = await _context.Tokens.FirstOrDefaultAsync(x => x.Id == req.Id);
             if (token == null) return NotFound(new { success = false, message = "Token not found" });
 
 
@@ -80,7 +80,7 @@ namespace TechWebSol.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> ToggleActive([FromQuery] long id, [FromQuery] bool active)
+        public async Task<IActionResult> ToggleActive([FromQuery] Guid id, [FromQuery] bool active)
         {
             var token = await _context.Tokens.FirstOrDefaultAsync(x => x.Id == id);
             if (token == null) return NotFound(new { success = false, message = "Token not found" });
@@ -163,8 +163,8 @@ namespace TechWebSol.Controllers
                     Category = g.Category,
                     Description = g.Description,
                     IsActive = g.IsActive,
-                    CreatedByUserName = g.CreatedByUserName,
-                    CreatedAt = g.CreatedAt,
+                    CreatedByUserName = g.CreatedBy,
+                    CreatedAt = g.CreatedDate ?? DateTime.Now,
                     TokenCount = g.Tokens.Count(t => t.IsActive),
                     TeamAssignmentCount = g.TeamAssignments.Count(a => a.IsActive)
                 })
@@ -257,9 +257,7 @@ namespace TechWebSol.Controllers
                     Category = model.Category,
                     Description = model.Description,
                     IsActive = model.IsActive,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedByUserId = currentUser.ApplicationUserId,
-                    CreatedByUserName = currentUser.FullName
+                    CreatedBy = currentUser.FullName
                 };
 
                 _context.TokenGroups.Add(tokenGroup);
@@ -304,8 +302,8 @@ namespace TechWebSol.Controllers
                 Category = tokenGroup.Category,
                 Description = tokenGroup.Description,
                 IsActive = tokenGroup.IsActive,
-                CreatedByUserName = tokenGroup.CreatedByUserName,
-                CreatedAt = tokenGroup.CreatedAt,
+                CreatedByUserName = tokenGroup.CreatedBy,
+                CreatedAt = tokenGroup.CreatedDate ?? DateTime.Now,
                 TokenCount = tokenGroup.Tokens.Count,
                 TeamAssignmentCount = tokenGroup.TeamAssignments.Count,
                 Tokens = tokenGroup.Tokens.ToList(),
@@ -454,8 +452,8 @@ namespace TechWebSol.Controllers
                         groupCode = g.GroupCode,
                         category = g.Category,
                         isActive = g.IsActive,
-                        createdAt = g.CreatedAt,
-                        createdByUserName = g.CreatedByUserName
+                        createdAt = g.CreatedDate ?? DateTime.Now,
+                        createdByUserName = g.CreatedBy
                     })
                     .ToListAsync();
 
@@ -504,8 +502,6 @@ namespace TechWebSol.Controllers
                     TokenGroupId = model.TokenGroupId,
                     IsManualToken = true,
                     IsActive = true,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = currentUser.ApplicationUserId,
                 };
 
                 _context.Tokens.Add(token);
@@ -544,7 +540,7 @@ namespace TechWebSol.Controllers
                         subTeamCode = t.SubTeamCode,
                         description = t.Description,
                         isActive = t.IsActive,
-                        createdAt = t.CreatedAt
+                        createdAt = t.CreatedDate ?? DateTime.Now
                     })
                     .ToListAsync();
 
@@ -578,11 +574,11 @@ namespace TechWebSol.Controllers
 
     public class TokenListItemDto
     {
-        public long Id { get; set; }
+        public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public string? Category { get; set; }
+        public string Category { get; set; }
         public Guid? TokenGroupId { get; set; }
-        public string? TokenGroupName { get; set; }
+        public string TokenGroupName { get; set; }
         public bool IsActive { get; set; }
         public bool IsManualToken { get; set; }
         public DateTime? LastUsed { get; set; }
@@ -593,7 +589,7 @@ namespace TechWebSol.Controllers
 
     public class TokenEditDto
     {
-        public long Id { get; set; }
+        public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? Category { get; set; }
         public Guid? TokenGroupId { get; set; }
@@ -605,7 +601,7 @@ namespace TechWebSol.Controllers
 
     public class CreateOrUpdateTokenRequest
     {
-        public long? Id { get; set; }
+        public Guid? Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? Category { get; set; }
         public Guid? TokenGroupId { get; set; }

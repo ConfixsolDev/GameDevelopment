@@ -24,16 +24,49 @@ namespace TechWebSol.Data
             this.httpContextAccessor = httpContextAccessor;
         }
 
+        
+        public DbSet<AppRoles> AppRoles { get; set; }
+        public DbSet<Token> Tokens { get; set; }
+        public DbSet<TokenSignature> TokenSignatures { get; set; }
+        public DbSet<StabilityInfo> StabilityInfo { get; set; }
+        public DbSet<TouchGeometry> TouchGeometry { get; set; }
+        public DbSet<TouchPattern> TouchPatterns { get; set; }
+        public DbSet<MultiTouchGeometry> MultiTouchGeometry { get; set; }
+        public DbSet<MapMarker> MapMarkers { get; set; }
+        public DbSet<TokenGroup> TokenGroups { get; set; }
+        public DbSet<Team> Teams { get; set; }
+        public DbSet<TeamTokenGroupAssignment> TeamTokenGroupAssignments { get; set; }
+        public DbSet<GameSession> GameSessions { get; set; }
+        
+        // Military Unit DbSets
+        public DbSet<InfantryBattalion> InfantryBattalions { get; set; }
+        public DbSet<ArmouredRegiment> ArmouredRegiments { get; set; }
+        public DbSet<ArtilleryRegiment> ArtilleryRegiments { get; set; }
+        public DbSet<TerrainMobilityFactor> TerrainMobilityFactors { get; set; }
+        public DbSet<ForceProtection> ForceProtections { get; set; }
+        public DbSet<Brigade> Brigades { get; set; }
+
+        // War Game Simulation DbSets
+        public DbSet<WarGameScenario> WarGameScenarios { get; set; }
+        public DbSet<UnitDeployment> UnitDeployments { get; set; }
+        public DbSet<MovementOrder> MovementOrders { get; set; }
+        public DbSet<Battle> Battles { get; set; }
+        public DbSet<BattleParticipant> BattleParticipants { get; set; }
+        public DbSet<CombatResult> CombatResults { get; set; }
+        public DbSet<Objective> Objectives { get; set; }
+        public DbSet<SimulationEvent> SimulationEvents { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
+
             base.OnModelCreating(modelBuilder);
             // Configure Identity tables
             modelBuilder.Entity<ApplicationUser>(entity =>
             {
                 entity.ToTable("AspNetUsers");
                 entity.Property(e => e.isSuperAdmin).HasDefaultValue(false);
-                
+
                 entity.HasOne(e => e.Team)
                     .WithMany(e => e.Users)
                     .HasForeignKey(e => e.TeamId)
@@ -73,236 +106,194 @@ namespace TechWebSol.Data
                 entity.ToTable("AspNetRoleClaims");
             });
 
-            modelBuilder.Entity<Token>(entity =>
+            // Configure Military Unit entities
+            modelBuilder.Entity<InfantryBattalion>(entity =>
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Description).HasMaxLength(500);
-                entity.Property(e => e.Category).HasMaxLength(50);
-                entity.Property(e => e.CreatedBy).HasMaxLength(100);
-                entity.Property(e => e.Notes).HasMaxLength(1000);
-                entity.Property(e => e.TrainingConsistency).HasColumnType("decimal(5,2)");
-
-
-                entity.HasOne(e => e.TokenGroup)
-                    .WithMany(e => e.Tokens)
-                    .HasForeignKey(e => e.TokenGroupId)
-                    .OnDelete(DeleteBehavior.SetNull);
-
-                entity.HasIndex(e => e.Name).IsUnique();
-                entity.HasIndex(e => e.CreatedAt);
-                entity.HasIndex(e => e.IsActive);
-                entity.Property(e=>e.Id).ValueGeneratedNever();
-
-            });
-
-            // Configure TokenSignature entity
-            modelBuilder.Entity<TokenSignature>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.TokenHash).HasMaxLength(500);
-                entity.Property(e => e.OriginalTouches).HasColumnType("nvarchar(max)");
-
-                entity.HasOne(e => e.Token)
-                    .WithOne(e => e.Signature)
-                    .HasForeignKey<TokenSignature>(e => e.TokenId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasIndex(e => e.TokenId);
-                entity.HasIndex(e => e.Timestamp);
-            });
-
-            // Configure StabilityInfo entity
-            modelBuilder.Entity<StabilityInfo>(entity =>
-            {
-                entity.HasKey(e => e.TokenSignatureId);
-                entity.HasOne(e => e.TokenSignature)
-                    .WithOne(e => e.Stability)
-                    .HasForeignKey<StabilityInfo>(e => e.TokenSignatureId)
-                    .OnDelete(DeleteBehavior.Cascade);
-            });
-
-            // Configure TouchGeometry entity
-            modelBuilder.Entity<TouchGeometry>(entity =>
-            {
-                entity.HasKey(e => e.TokenSignatureId);
-                entity.Property(e => e.RadiusValues).HasColumnType("nvarchar(max)");
-                entity.Property(e => e.RotationValues).HasColumnType("nvarchar(max)");
-                entity.Property(e => e.AvgRadius).HasColumnType("decimal(10,4)");
-                entity.Property(e => e.AvgRotation).HasColumnType("decimal(10,4)");
-                entity.Property(e => e.RadiusVariance).HasColumnType("decimal(10,4)");
-
-                entity.HasOne(e => e.TokenSignature)
-                    .WithOne(e => e.TouchProperties)
-                    .HasForeignKey<TouchGeometry>(e => e.TokenSignatureId)
-                    .OnDelete(DeleteBehavior.Cascade);
-            });
-
-            // Configure TouchPattern entity
-            modelBuilder.Entity<TouchPattern>(entity =>
-            {
-                entity.HasKey(e => e.TokenSignatureId);
-                entity.Property(e => e.Type).IsRequired().HasMaxLength(20);
-                entity.Property(e => e.Distances).HasColumnType("nvarchar(max)");
-                entity.Property(e => e.DistancePairs).HasColumnType("nvarchar(max)");
-                entity.Property(e => e.GeometricCenter).HasColumnType("nvarchar(max)");
-                entity.Property(e => e.DistanceSignature).HasMaxLength(500);
-                entity.Property(e => e.AvgDistance).HasColumnType("decimal(10,4)");
-                entity.Property(e => e.MinDistance).HasColumnType("decimal(10,4)");
-                entity.Property(e => e.MaxDistance).HasColumnType("decimal(10,4)");
-                entity.Property(e => e.DistanceRange).HasColumnType("decimal(10,4)");
-                entity.Property(e => e.DistanceVariance).HasColumnType("decimal(10,4)");
-                entity.Property(e => e.AngleSpread).HasColumnType("decimal(10,4)");
-
-                entity.HasOne(e => e.TokenSignature)
-                    .WithOne(e => e.TouchPattern)
-                    .HasForeignKey<TouchPattern>(e => e.TokenSignatureId)
-                    .OnDelete(DeleteBehavior.Cascade);
-            });
-
-            // Configure MultiTouchGeometry entity
-            modelBuilder.Entity<MultiTouchGeometry>(entity =>
-            {
-                entity.HasKey(e => e.TokenSignatureId);
-                entity.Property(e => e.AspectRatio).HasColumnType("decimal(10,4)");
-                entity.Property(e => e.BoundingBoxWidth).HasColumnType("decimal(10,4)");
-                entity.Property(e => e.BoundingBoxHeight).HasColumnType("decimal(10,4)");
-                entity.Property(e => e.BoundingBoxArea).HasColumnType("decimal(10,4)");
-                entity.Property(e => e.CenterX).HasColumnType("decimal(10,4)");
-                entity.Property(e => e.CenterY).HasColumnType("decimal(10,4)");
-                entity.Property(e => e.Spread).HasColumnType("decimal(10,4)");
-                entity.Property(e => e.Density).HasColumnType("decimal(10,4)");
-
-                entity.HasOne(e => e.TokenSignature)
-                    .WithOne(e => e.MultiTouchGeometry)
-                    .HasForeignKey<MultiTouchGeometry>(e => e.TokenSignatureId)
-                    .OnDelete(DeleteBehavior.Cascade);
-            });
-
-            // Configure MapMarker entity
-            modelBuilder.Entity<MapMarker>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.TokenName).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Location).IsRequired().HasColumnType("nvarchar(max)");
-                entity.Property(e => e.CreatedBy).HasMaxLength(100);
-                entity.Property(e => e.Notes).HasMaxLength(1000);
-
-                entity.HasOne(e => e.Token)
-                    .WithMany(e => e.MapMarkers)
-                    .HasForeignKey(e => e.TokenId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasIndex(e => e.TokenId);
-                entity.HasIndex(e => e.CreatedAt);
-                entity.HasIndex(e => e.IsActive);
-            });
-
-
-            // Configure Team entity
-            modelBuilder.Entity<Team>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.TeamCode).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.SubTeamCode).HasMaxLength(50);
-                entity.Property(e => e.Description).HasMaxLength(500);
-                entity.Property(e => e.Category).HasMaxLength(50);
-                entity.Property(e => e.CreatedByUserId).HasMaxLength(50);
-                entity.Property(e => e.CreatedByUserName).HasMaxLength(50);
-
-                entity.HasIndex(e => e.TeamCode);
-                entity.HasIndex(e => e.IsActive);
-            });
-
-            // Configure TokenGroup entity
-            modelBuilder.Entity<TokenGroup>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Description).HasMaxLength(500);
-                entity.Property(e => e.GroupCode).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.Category).HasMaxLength(50);
-                entity.Property(e => e.CreatedByUserId).HasMaxLength(50);
-                entity.Property(e => e.CreatedByUserName).HasMaxLength(50);
-
-                entity.HasIndex(e => e.GroupCode);
-                entity.HasIndex(e => e.IsActive);
-            });
-
-            // Configure TeamTokenGroupAssignment entity
-            modelBuilder.Entity<TeamTokenGroupAssignment>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.AssignedByUserId).HasMaxLength(50);
-                entity.Property(e => e.AssignedByUserName).HasMaxLength(50);
+                entity.Property(e => e.UnitCode).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.ForceType).IsRequired().HasMaxLength(50);
 
                 entity.HasOne(e => e.Team)
-                    .WithMany(e => e.TokenGroupAssignments)
+                    .WithMany()
                     .HasForeignKey(e => e.TeamId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(e => e.TokenGroup)
-                    .WithMany(e => e.TeamAssignments)
-                    .HasForeignKey(e => e.TokenGroupId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasIndex(e => e.TeamId);
-                entity.HasIndex(e => e.TokenGroupId);
-                entity.HasIndex(e => e.IsActive);
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
-            // Configure GameSession entity
-            modelBuilder.Entity<GameSession>(entity =>
+            modelBuilder.Entity<ArmouredRegiment>(entity =>
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Description).HasMaxLength(500);
-                entity.Property(e => e.SessionCode).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.UnitCode).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.ForceType).IsRequired().HasMaxLength(50);
 
-                entity.HasIndex(e => e.SessionCode);
-                entity.HasIndex(e => e.Status);
-                entity.HasIndex(e => e.StartTime);
+                entity.HasOne(e => e.Team)
+                    .WithMany()
+                    .HasForeignKey(e => e.TeamId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
-
-
-            // Configure MapMarker entity (keep for map functionality)
-            modelBuilder.Entity<MapMarker>(entity =>
+            modelBuilder.Entity<ArtilleryRegiment>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.TokenName).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Location).IsRequired().HasColumnType("nvarchar(max)");
-                entity.Property(e => e.CreatedBy).HasMaxLength(100);
-                entity.Property(e => e.Notes).HasMaxLength(1000);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.UnitCode).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.ForceType).IsRequired().HasMaxLength(50);
 
-                entity.HasOne(e => e.Token)
-                    .WithMany(e => e.MapMarkers)
-                    .HasForeignKey(e => e.TokenId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasIndex(e => e.TokenId);
-                entity.HasIndex(e => e.CreatedAt);
-                entity.HasIndex(e => e.IsActive);
+                entity.HasOne(e => e.Team)
+                    .WithMany()
+                    .HasForeignKey(e => e.TeamId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
-        }
-        
-        public DbSet<AppRoles> AppRoles { get; set; }
-        public DbSet<Token> Tokens { get; set; }
-        public DbSet<TokenSignature> TokenSignatures { get; set; }
-        public DbSet<StabilityInfo> StabilityInfo { get; set; }
-        public DbSet<TouchGeometry> TouchGeometry { get; set; }
-        public DbSet<TouchPattern> TouchPatterns { get; set; }
-        public DbSet<MultiTouchGeometry> MultiTouchGeometry { get; set; }
-        public DbSet<MapMarker> MapMarkers { get; set; }
-        public DbSet<TokenGroup> TokenGroups { get; set; }
-        public DbSet<Team> Teams { get; set; }
-        public DbSet<TeamTokenGroupAssignment> TeamTokenGroupAssignments { get; set; }
-        public DbSet<GameSession> GameSessions { get; set; }
+            modelBuilder.Entity<TerrainMobilityFactor>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.TerrainType).IsRequired().HasMaxLength(100);
 
+                entity.HasOne(e => e.Team)
+                    .WithMany()
+                    .HasForeignKey(e => e.TeamId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<ForceProtection>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ForceType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.ProtectionType).IsRequired().HasMaxLength(100);
+
+                entity.HasOne(e => e.Team)
+                    .WithMany()
+                    .HasForeignKey(e => e.TeamId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<Brigade>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.BrigadeCode).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.ForceType).IsRequired().HasMaxLength(50);
+
+                entity.HasOne(e => e.Team)
+                    .WithMany()
+                    .HasForeignKey(e => e.TeamId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(e => e.Token)
+                    .WithMany()
+                    .HasForeignKey(e => e.TokenId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // Configure War Game Simulation entities
+            modelBuilder.Entity<WarGameScenario>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.ScenarioCode).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+
+                entity.HasOne(e => e.GameSession)
+                    .WithMany()
+                    .HasForeignKey(e => e.GameSessionId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<UnitDeployment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.UnitType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.UnitName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.ForceType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Position).IsRequired().HasColumnType("nvarchar(max)");
+
+                entity.HasOne(e => e.Scenario)
+                    .WithMany(e => e.UnitDeployments)
+                    .HasForeignKey(e => e.ScenarioId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<MovementOrder>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.StartPosition).IsRequired().HasColumnType("nvarchar(max)");
+                entity.Property(e => e.EndPosition).IsRequired().HasColumnType("nvarchar(max)");
+                entity.Property(e => e.MovementType).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+
+                entity.HasOne(e => e.UnitDeployment)
+                    .WithMany(e => e.MovementOrders)
+                    .HasForeignKey(e => e.UnitDeploymentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Battle>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.BattleName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.BattleLocation).IsRequired().HasColumnType("nvarchar(max)");
+                entity.Property(e => e.BattleType).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+
+                entity.HasOne(e => e.Scenario)
+                    .WithMany(e => e.Battles)
+                    .HasForeignKey(e => e.ScenarioId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<BattleParticipant>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Role).IsRequired().HasMaxLength(20);
+
+                entity.HasOne(e => e.Battle)
+                    .WithMany(e => e.Participants)
+                    .HasForeignKey(e => e.BattleId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.UnitDeployment)
+                    .WithMany(e => e.BattleParticipations)
+                    .HasForeignKey(e => e.UnitDeploymentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<CombatResult>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Result).HasMaxLength(20);
+
+                entity.HasOne(e => e.Battle)
+                    .WithMany(e => e.CombatResults)
+                    .HasForeignKey(e => e.BattleId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Objective>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ObjectiveName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.ObjectiveType).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.ObjectiveLocation).IsRequired().HasColumnType("nvarchar(max)");
+
+                entity.HasOne(e => e.Scenario)
+                    .WithMany(e => e.Objectives)
+                    .HasForeignKey(e => e.ScenarioId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<SimulationEvent>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.EventType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.EventData).IsRequired().HasColumnType("nvarchar(max)");
+
+                entity.HasOne(e => e.Scenario)
+                    .WithMany()
+                    .HasForeignKey(e => e.ScenarioId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+        }
     }
 }

@@ -48,7 +48,7 @@ namespace TechWebSol.Services.TokenManagement
 
                 var bestMatch = new TokenMatch
                 {
-                    TokenId = 0,
+                    TokenId = Guid.NewGuid(),
                     TokenName = string.Empty,
                     Confidence = 0,
                     DistanceSimilarity = 0,
@@ -202,7 +202,7 @@ namespace TechWebSol.Services.TokenManagement
             }
         }
 
-        public async Task<PatternStatistics> GetPatternStatisticsAsync(long tokenId)
+        public async Task<PatternStatistics> GetPatternStatisticsAsync(Guid tokenId)
         {
             try
             {
@@ -285,7 +285,7 @@ namespace TechWebSol.Services.TokenManagement
 
         private class TokenMatch
         {
-            public long TokenId { get; set; }
+            public Guid? TokenId { get; set; }
             public string TokenName { get; set; } = string.Empty;
             public double Confidence { get; set; }
             public double DistanceSimilarity { get; set; }

@@ -59,6 +59,44 @@
                 </button>
             </div>
         </div>
+
+        <div class="overlay-control-group">
+            <h6>War Game Tools</h6>
+            <div class="control-row">
+                <button class="overlay-btn" onclick="deployUnit()">
+                    <i class="fas fa-chess-knight"></i>
+                    <span>Deploy Unit</span>
+                </button>
+                <button class="overlay-btn" onclick="planMovement()">
+                    <i class="fas fa-route"></i>
+                    <span>Plan Move</span>
+                </button>
+            </div>
+            <div class="control-row">
+                <button class="overlay-btn" onclick="createObjective()">
+                    <i class="fas fa-flag"></i>
+                    <span>Objective</span>
+                </button>
+                <button class="overlay-btn" onclick="initiateBattle()">
+                    <i class="fas fa-crosshairs"></i>
+                    <span>Battle</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="overlay-control-group">
+            <h6>Simulation</h6>
+            <div class="control-row">
+                <button class="overlay-btn" id="simulationToggle" onclick="toggleSimulation()">
+                    <i class="fas fa-play"></i>
+                    <span>Start Sim</span>
+                </button>
+                <button class="overlay-btn" onclick="openSimulationPanel()">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Control</span>
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Team Status Panel -->
@@ -111,18 +149,204 @@
 
 <!-- Data Entry Modal -->
 <div id="dataEntryModal" class="gameplay-modal">
-    <div class="gameplay-modal-content">
+    <div class="gameplay-modal-content large">
         <div class="gameplay-modal-header">
-            <h3><i class="fas fa-database"></i> Data Entry</h3>
+            <h3><i class="fas fa-database"></i> Military Data Management</h3>
             <button class="gameplay-modal-close" onclick="closeModal('dataEntryModal')">&times;</button>
         </div>
         <div class="gameplay-modal-body">
-            <p>Data entry functionality will be implemented here.</p>
-            <!-- TODO: Add data entry form -->
+            <!-- Data Management Tabs -->
+            <div class="data-management-tabs">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="switchTab('brigades')">
+                        <i class="fas fa-flag"></i> Brigades
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('infantry')">
+                        <i class="fas fa-user-soldier"></i> Infantry Battalions
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('armoured')">
+                        <i class="fas fa-tank"></i> Armoured Regiments
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('artillery')">
+                        <i class="fas fa-bomb"></i> Artillery Regiments
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('terrain')">
+                        <i class="fas fa-mountain"></i> Terrain Factors
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('protection')">
+                        <i class="fas fa-shield-alt"></i> Force Protection
+                    </button>
+                </div>
+
+                <!-- Brigade Tab -->
+                <div id="brigades-tab" class="tab-content active">
+                    <div class="data-section-header">
+                        <h4>Brigade Management</h4>
+                        <button class="btn btn-primary" onclick="openBrigadeForm()">
+                            <i class="fas fa-plus"></i> Add Brigade
+                        </button>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table" id="brigadesTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Code</th>
+                                    <th>Force Type</th>
+                                    <th>Strength</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="brigadesTableBody">
+                                <!-- Data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Infantry Battalion Tab -->
+                <div id="infantry-tab" class="tab-content">
+                    <div class="data-section-header">
+                        <h4>Infantry Battalion Management</h4>
+                        <button class="btn btn-primary" onclick="openInfantryForm()">
+                            <i class="fas fa-plus"></i> Add Infantry Battalion
+                        </button>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table" id="infantryTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Code</th>
+                                    <th>Force Type</th>
+                                    <th>Strength</th>
+                                    <th>Companies</th>
+                                    <th>Tanks</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="infantryTableBody">
+                                <!-- Data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Armoured Regiment Tab -->
+                <div id="armoured-tab" class="tab-content">
+                    <div class="data-section-header">
+                        <h4>Armoured Regiment Management</h4>
+                        <button class="btn btn-primary" onclick="openArmouredForm()">
+                            <i class="fas fa-plus"></i> Add Armoured Regiment
+                        </button>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table" id="armouredTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Code</th>
+                                    <th>Force Type</th>
+                                    <th>Strength</th>
+                                    <th>Squadrons</th>
+                                    <th>Tanks</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="armouredTableBody">
+                                <!-- Data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Artillery Regiment Tab -->
+                <div id="artillery-tab" class="tab-content">
+                    <div class="data-section-header">
+                        <h4>Artillery Regiment Management</h4>
+                        <button class="btn btn-primary" onclick="openArtilleryForm()">
+                            <i class="fas fa-plus"></i> Add Artillery Regiment
+                        </button>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table" id="artilleryTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Code</th>
+                                    <th>Force Type</th>
+                                    <th>Strength</th>
+                                    <th>Batteries</th>
+                                    <th>Guns</th>
+                                    <th>Range (km)</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="artilleryTableBody">
+                                <!-- Data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Terrain Factors Tab -->
+                <div id="terrain-tab" class="tab-content">
+                    <div class="data-section-header">
+                        <h4>Terrain Mobility Factors</h4>
+                        <button class="btn btn-primary" onclick="openTerrainForm()">
+                            <i class="fas fa-plus"></i> Add Terrain Factor
+                        </button>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table" id="terrainTable">
+                            <thead>
+                                <tr>
+                                    <th>Terrain Type</th>
+                                    <th>X Factor</th>
+                                    <th>Tank PSI Range</th>
+                                    <th>APC PSI Range</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="terrainTableBody">
+                                <!-- Data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Force Protection Tab -->
+                <div id="protection-tab" class="tab-content">
+                    <div class="data-section-header">
+                        <h4>Force Protection Systems</h4>
+                        <button class="btn btn-primary" onclick="openProtectionForm()">
+                            <i class="fas fa-plus"></i> Add Protection Type
+                        </button>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table" id="protectionTable">
+                            <thead>
+                                <tr>
+                                    <th>Force Type</th>
+                                    <th>Protection Type</th>
+                                    <th>Degree of Prep</th>
+                                    <th>Protection Factor</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="protectionTableBody">
+                                <!-- Data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="gameplay-modal-footer">
-            <button class="gameplay-btn" onclick="closeModal('dataEntryModal')">Cancel</button>
-            <button class="gameplay-btn primary" onclick="saveData()">Save Data</button>
+            <button class="gameplay-btn" onclick="exportTeamData()">
+                <i class="fas fa-download"></i> Export Data
+            </button>
+            <button class="gameplay-btn" onclick="closeModal('dataEntryModal')">Close</button>
         </div>
     </div>
 </div>
@@ -157,6 +381,602 @@
         </div>
         <div class="gameplay-modal-footer">
             <button class="gameplay-btn" onclick="closeModal('settingsModal')">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Brigade Form Modal -->
+<div id="brigadeFormModal" class="gameplay-modal">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-flag"></i> Brigade Form</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('brigadeFormModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <form id="brigadeForm">
+                <div class="form-group">
+                    <label for="brigadeName">Brigade Name *</label>
+                    <input type="text" id="brigadeName" name="Name" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="brigadeCode">Brigade Code *</label>
+                    <input type="text" id="brigadeCode" name="BrigadeCode" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="brigadeForceType">Force Type *</label>
+                    <select id="brigadeForceType" name="ForceType" required class="form-control">
+                        <option value="">Select Force Type</option>
+                        <option value="Blue">Blue Force</option>
+                        <option value="Red">Red Force</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="brigadeDescription">Description</label>
+                    <textarea id="brigadeDescription" name="Description" class="form-control" rows="3"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('brigadeFormModal')">Cancel</button>
+            <button class="gameplay-btn primary" onclick="saveBrigade()">Save Brigade</button>
+        </div>
+    </div>
+</div>
+
+<!-- Infantry Battalion Form Modal -->
+<div id="infantryFormModal" class="gameplay-modal">
+    <div class="gameplay-modal-content large">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-user-soldier"></i> Infantry Battalion Form</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('infantryFormModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <form id="infantryForm">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="infantryName">Battalion Name *</label>
+                        <input type="text" id="infantryName" name="Name" required class="form-control">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="infantryCode">Unit Code *</label>
+                        <input type="text" id="infantryCode" name="UnitCode" required class="form-control">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="infantryForceType">Force Type *</label>
+                        <select id="infantryForceType" name="ForceType" required class="form-control">
+                            <option value="">Select Force Type</option>
+                            <option value="Blue">Blue Force</option>
+                            <option value="Red">Red Force</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="infantryStrength">Strength *</label>
+                        <input type="number" id="infantryStrength" name="Strength" required class="form-control">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="infantryCompanies">Companies *</label>
+                        <input type="number" id="infantryCompanies" name="Companies" required class="form-control">
+                    </div>
+                </div>
+                
+                <h5>Equipment & Weapons</h5>
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label for="infantryATGMS">ATGMS</label>
+                        <input type="number" id="infantryATGMS" name="ATGMS" class="form-control" value="0">
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="infantryRocketLauncher">Rocket Launcher</label>
+                        <input type="number" id="infantryRocketLauncher" name="RocketLauncher" class="form-control" value="0">
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="infantryMortars81">Mortars (81mm)</label>
+                        <input type="number" id="infantryMortars81" name="Mortars81mm" class="form-control" value="0">
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="infantryMortars120">Mortars (120mm)</label>
+                        <input type="number" id="infantryMortars120" name="Mortars120mm" class="form-control" value="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label for="infantryGrenadeLaunchers">Grenade Launchers</label>
+                        <input type="number" id="infantryGrenadeLaunchers" name="GrenadeLaunchers" class="form-control" value="0">
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="infantryHMG_AGL">HMG/AGL</label>
+                        <input type="number" id="infantryHMG_AGL" name="HMG_AGL" class="form-control" value="0">
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="infantryMG_LMG">MG/LMG</label>
+                        <input type="number" id="infantryMG_LMG" name="MG_LMG" class="form-control" value="0">
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="infantryMANPADS">MANPADS</label>
+                        <input type="number" id="infantryMANPADS" name="MANPADS" class="form-control" value="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="infantryGrenades">Grenades</label>
+                        <input type="number" id="infantryGrenades" name="Grenades" class="form-control" value="0">
+                    </div>
+                </div>
+
+                <h5>Mobility Data</h5>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="infantrySpeedTrucks">Trucks on Roads (kmph)</label>
+                        <input type="number" id="infantrySpeedTrucks" name="MarchingSpeedTrucksRoads" class="form-control" value="30" step="0.1">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="infantrySpeedAPCs">APCs (kmph)</label>
+                        <input type="number" id="infantrySpeedAPCs" name="MarchingSpeedAPCs" class="form-control" value="20" step="0.1">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="infantrySpeedCrossCountry">Cross Country (kmph)</label>
+                        <input type="number" id="infantrySpeedCrossCountry" name="MarchingSpeedCrossCountry" class="form-control" value="5" step="0.1">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="infantrySpeedAPCsCross">APCs Cross Country (kmph)</label>
+                        <input type="number" id="infantrySpeedAPCsCross" name="MarchingSpeedAPCsCrossCountry" class="form-control" value="10" step="0.1">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="infantryCombatAdvance">Combat Advance (kmph)</label>
+                        <input type="number" id="infantryCombatAdvance" name="CombatAdvanceSpeed" class="form-control" value="1" step="0.1">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="infantryDescription">Description</label>
+                    <textarea id="infantryDescription" name="Description" class="form-control" rows="3"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('infantryFormModal')">Cancel</button>
+            <button class="gameplay-btn primary" onclick="saveInfantryBattalion()">Save Battalion</button>
+        </div>
+    </div>
+</div>
+
+<!-- Armoured Regiment Form Modal -->
+<div id="armouredFormModal" class="gameplay-modal">
+    <div class="gameplay-modal-content large">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-tank"></i> Armoured Regiment Form</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('armouredFormModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <form id="armouredForm">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="armouredName">Regiment Name *</label>
+                        <input type="text" id="armouredName" name="Name" required class="form-control">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="armouredCode">Unit Code *</label>
+                        <input type="text" id="armouredCode" name="UnitCode" required class="form-control">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="armouredForceType">Force Type *</label>
+                        <select id="armouredForceType" name="ForceType" required class="form-control">
+                            <option value="">Select Force Type</option>
+                            <option value="Blue">Blue Force</option>
+                            <option value="Red">Red Force</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="armouredStrength">Strength *</label>
+                        <input type="number" id="armouredStrength" name="Strength" required class="form-control">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="armouredSquadrons">Squadrons *</label>
+                        <input type="number" id="armouredSquadrons" name="Squadrons" required class="form-control">
+                    </div>
+                </div>
+                
+                <h5>Equipment & Weapons</h5>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="armouredTanks">Tanks</label>
+                        <input type="number" id="armouredTanks" name="Tanks" class="form-control" value="0">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="armouredATGMS">ATGMS</label>
+                        <input type="number" id="armouredATGMS" name="ATGMS" class="form-control" value="0">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="armouredMortars120">Mortars (120mm)</label>
+                        <input type="number" id="armouredMortars120" name="Mortars120mm" class="form-control" value="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="armouredHMG">HMG</label>
+                        <input type="number" id="armouredHMG" name="HMG" class="form-control" value="0">
+                    </div>
+                </div>
+
+                <h5>Mobility Data</h5>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="armouredSpeedRoads">Roads (kmph)</label>
+                        <input type="number" id="armouredSpeedRoads" name="MarchingSpeedRoads" class="form-control" value="15" step="0.1">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="armouredSpeedCrossCountry">Cross Country (kmph)</label>
+                        <input type="number" id="armouredSpeedCrossCountry" name="MarchingSpeedCrossCountry" class="form-control" value="10" step="0.1">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="armouredCombatAdvance">Combat Advance (kmph)</label>
+                        <input type="number" id="armouredCombatAdvance" name="CombatAdvanceSpeed" class="form-control" value="1" step="0.1">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="armouredDescription">Description</label>
+                    <textarea id="armouredDescription" name="Description" class="form-control" rows="3"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('armouredFormModal')">Cancel</button>
+            <button class="gameplay-btn primary" onclick="saveArmouredRegiment()">Save Regiment</button>
+        </div>
+    </div>
+</div>
+
+<!-- Artillery Regiment Form Modal -->
+<div id="artilleryFormModal" class="gameplay-modal">
+    <div class="gameplay-modal-content large">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-bomb"></i> Artillery Regiment Form</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('artilleryFormModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <form id="artilleryForm">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="artilleryName">Regiment Name *</label>
+                        <input type="text" id="artilleryName" name="Name" required class="form-control">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="artilleryCode">Unit Code *</label>
+                        <input type="text" id="artilleryCode" name="UnitCode" required class="form-control">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="artilleryForceType">Force Type *</label>
+                        <select id="artilleryForceType" name="ForceType" required class="form-control">
+                            <option value="">Select Force Type</option>
+                            <option value="Blue">Blue Force</option>
+                            <option value="Red">Red Force</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="artilleryStrength">Strength *</label>
+                        <input type="number" id="artilleryStrength" name="Strength" required class="form-control">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="artilleryBatteries">Batteries *</label>
+                        <input type="number" id="artilleryBatteries" name="Batteries" required class="form-control">
+                    </div>
+                </div>
+                
+                <h5>Artillery Equipment</h5>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="artilleryGuns">Guns</label>
+                        <input type="number" id="artilleryGuns" name="Guns" class="form-control" value="0">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="artilleryGunRange">Gun Range (km)</label>
+                        <input type="number" id="artilleryGunRange" name="GunRange" class="form-control" value="0" step="0.1">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="artilleryGunCaliber">Gun Caliber</label>
+                        <input type="text" id="artilleryGunCaliber" name="GunCaliber" class="form-control" value="155mm SP">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="artilleryHMG">HMG</label>
+                        <input type="number" id="artilleryHMG" name="HMG" class="form-control" value="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="artilleryDescription">Description</label>
+                    <textarea id="artilleryDescription" name="Description" class="form-control" rows="3"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('artilleryFormModal')">Cancel</button>
+            <button class="gameplay-btn primary" onclick="saveArtilleryRegiment()">Save Regiment</button>
+        </div>
+    </div>
+</div>
+
+<!-- Simulation Control Panel -->
+<div id="simulationPanel" class="gameplay-modal">
+    <div class="gameplay-modal-content large">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-tachometer-alt"></i> War Game Simulation Control</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('simulationPanel')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <div class="simulation-tabs">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="switchSimTab('scenario')">
+                        <i class="fas fa-map"></i> Scenario
+                    </button>
+                    <button class="tab-btn" onclick="switchSimTab('units')">
+                        <i class="fas fa-chess-knight"></i> Units
+                    </button>
+                    <button class="tab-btn" onclick="switchSimTab('battles')">
+                        <i class="fas fa-crosshairs"></i> Battles
+                    </button>
+                    <button class="tab-btn" onclick="switchSimTab('objectives')">
+                        <i class="fas fa-flag"></i> Objectives
+                    </button>
+                </div>
+
+                <!-- Scenario Tab -->
+                <div id="scenario-sim-tab" class="tab-content active">
+                    <div class="sim-section-header">
+                        <h4>Current Scenario</h4>
+                        <div class="scenario-controls">
+                            <button class="btn btn-success" onclick="createNewScenario()">
+                                <i class="fas fa-plus"></i> New Scenario
+                            </button>
+                            <button class="btn btn-primary" id="startScenarioBtn" onclick="startCurrentScenario()">
+                                <i class="fas fa-play"></i> Start Scenario
+                            </button>
+                        </div>
+                    </div>
+                    <div class="scenario-info" id="scenarioInfo">
+                        <p>No active scenario. Create a new scenario to begin.</p>
+                    </div>
+                </div>
+
+                <!-- Units Tab -->
+                <div id="units-sim-tab" class="tab-content">
+                    <div class="sim-section-header">
+                        <h4>Deployed Units</h4>
+                        <button class="btn btn-primary" onclick="showAvailableUnits()">
+                            <i class="fas fa-plus"></i> Deploy Unit
+                        </button>
+                    </div>
+                    <div class="units-grid" id="deployedUnitsGrid">
+                        <!-- Deployed units will be shown here -->
+                    </div>
+                </div>
+
+                <!-- Battles Tab -->
+                <div id="battles-sim-tab" class="tab-content">
+                    <div class="sim-section-header">
+                        <h4>Active Battles</h4>
+                    </div>
+                    <div class="battles-list" id="activeBattlesList">
+                        <!-- Active battles will be shown here -->
+                    </div>
+                </div>
+
+                <!-- Objectives Tab -->
+                <div id="objectives-sim-tab" class="tab-content">
+                    <div class="sim-section-header">
+                        <h4>Mission Objectives</h4>
+                        <button class="btn btn-primary" onclick="createNewObjective()">
+                            <i class="fas fa-plus"></i> New Objective
+                        </button>
+                    </div>
+                    <div class="objectives-list" id="objectivesList">
+                        <!-- Objectives will be shown here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('simulationPanel')">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Unit Deployment Modal -->
+<div id="unitDeploymentModal" class="gameplay-modal">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-chess-knight"></i> Deploy Unit</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('unitDeploymentModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <div class="deployment-step" id="selectUnitStep">
+                <h4>Select Unit to Deploy</h4>
+                <div class="unit-selection-grid" id="availableUnitsGrid">
+                    <!-- Available units will be loaded here -->
+                </div>
+            </div>
+            <div class="deployment-step" id="selectPositionStep" style="display: none;">
+                <h4>Click on Map to Select Position</h4>
+                <p>Selected Unit: <span id="selectedUnitName"></span></p>
+                <div class="deployment-options">
+                    <label>Formation:</label>
+                    <select id="deploymentFormation" class="form-control">
+                        <option value="Line">Line Formation</option>
+                        <option value="Column">Column Formation</option>
+                        <option value="Wedge">Wedge Formation</option>
+                        <option value="Square">Square Formation</option>
+                        <option value="Dispersed">Dispersed Formation</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('unitDeploymentModal')">Cancel</button>
+            <button class="gameplay-btn primary" id="confirmDeploymentBtn" onclick="confirmDeployment()" style="display: none;">Confirm Deployment</button>
+        </div>
+    </div>
+</div>
+
+<!-- Movement Planning Modal -->
+<div id="movementPlanModal" class="gameplay-modal">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-route"></i> Plan Unit Movement</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('movementPlanModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <div class="movement-planning">
+                <h4>Select Unit and Destination</h4>
+                <div class="form-group">
+                    <label>Unit:</label>
+                    <select id="movementUnitSelect" class="form-control">
+                        <option value="">Select a deployed unit...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Movement Type:</label>
+                    <select id="movementType" class="form-control">
+                        <option value="March">March (Fast)</option>
+                        <option value="Tactical">Tactical (Medium)</option>
+                        <option value="Combat">Combat (Slow)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Terrain Type:</label>
+                    <select id="terrainType" class="form-control">
+                        <option value="Plain">Plain Ground</option>
+                        <option value="Forest">Forest</option>
+                        <option value="Mountain">Mountain</option>
+                        <option value="Desert">Desert</option>
+                        <option value="Swamp">Swamp</option>
+                        <option value="Urban">Urban</option>
+                    </select>
+                </div>
+                <p><strong>Instructions:</strong> Click on the map to set the destination.</p>
+                <div id="movementCalculation" class="calculation-display" style="display: none;">
+                    <!-- Movement calculation results will show here -->
+                </div>
+            </div>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('movementPlanModal')">Cancel</button>
+            <button class="gameplay-btn primary" id="executeMovementBtn" onclick="executeMovement()" disabled>Execute Movement</button>
+        </div>
+    </div>
+</div>
+
+<!-- Battle Initiation Modal -->
+<div id="battleModal" class="gameplay-modal">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-crosshairs"></i> Initiate Battle</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('battleModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <form id="battleForm">
+                <div class="form-group">
+                    <label>Battle Name:</label>
+                    <input type="text" id="battleName" class="form-control" placeholder="Enter battle name...">
+                </div>
+                <div class="form-group">
+                    <label>Battle Type:</label>
+                    <select id="battleType" class="form-control">
+                        <option value="Engagement">Engagement</option>
+                        <option value="Assault">Assault</option>
+                        <option value="Defense">Defense</option>
+                        <option value="Withdrawal">Withdrawal</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Terrain Type:</label>
+                    <select id="battleTerrain" class="form-control">
+                        <option value="Plain">Plain Ground</option>
+                        <option value="Forest">Forest</option>
+                        <option value="Mountain">Mountain</option>
+                        <option value="Desert">Desert</option>
+                        <option value="Swamp">Swamp</option>
+                        <option value="Urban">Urban</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Weather Conditions:</label>
+                    <select id="weatherConditions" class="form-control">
+                        <option value="Clear">Clear</option>
+                        <option value="Rain">Rain</option>
+                        <option value="Snow">Snow</option>
+                        <option value="Fog">Fog</option>
+                        <option value="Storm">Storm</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Participating Units:</label>
+                    <div id="participatingUnits" class="units-checklist">
+                        <!-- Units will be loaded here -->
+                    </div>
+                </div>
+                <p><strong>Instructions:</strong> Click on the map to set the battle location.</p>
+            </form>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('battleModal')">Cancel</button>
+            <button class="gameplay-btn primary" id="initiateBattleBtn" onclick="confirmBattle()" disabled>Initiate Battle</button>
+        </div>
+    </div>
+</div>
+
+<!-- Objective Creation Modal -->
+<div id="objectiveModal" class="gameplay-modal">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-flag"></i> Create Objective</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('objectiveModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <form id="objectiveForm">
+                <div class="form-group">
+                    <label>Objective Name:</label>
+                    <input type="text" id="objectiveName" class="form-control" placeholder="Enter objective name...">
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <textarea id="objectiveDescription" class="form-control" rows="3" placeholder="Describe the objective..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Objective Type:</label>
+                    <select id="objectiveType" class="form-control">
+                        <option value="Capture">Capture Area</option>
+                        <option value="Defend">Defend Position</option>
+                        <option value="Destroy">Destroy Target</option>
+                        <option value="Reach">Reach Location</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Assigned to Force:</label>
+                    <select id="assignedForce" class="form-control">
+                        <option value="Blue">Blue Force</option>
+                        <option value="Red">Red Force</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Point Value:</label>
+                    <input type="number" id="pointValue" class="form-control" value="100" min="0">
+                </div>
+                <p><strong>Instructions:</strong> Click on the map to set the objective location.</p>
+            </form>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('objectiveModal')">Cancel</button>
+            <button class="gameplay-btn primary" id="createObjectiveBtn" onclick="confirmObjective()" disabled>Create Objective</button>
         </div>
     </div>
 </div>
@@ -341,7 +1161,71 @@
 
     function selectToken() {
         console.log('Select token mode activated');
-        // TODO: Implement token selection mode
+        currentMapMode = 'select-token';
+        
+        // Change cursor style
+        $('#mapContainer').css('cursor', 'pointer');
+        
+        // Add click handlers to existing token markers
+        tokens.forEach(token => {
+            if (token.marker) {
+                token.marker.off('click').on('click', function(e) {
+                    selectTokenForDataEntry(token);
+                    e.originalEvent.stopPropagation();
+                });
+            }
+        });
+        
+        showNotification('Click on a token to manage its brigade data', 'info');
+    }
+
+    function selectTokenForDataEntry(token) {
+        console.log('Token selected for data entry:', token);
+        selectedToken = token;
+        
+        // Reset map mode
+        currentMapMode = 'normal';
+        $('#mapContainer').css('cursor', 'grab');
+        
+        // Open the token brigade data modal
+        openTokenBrigadeDataModal(token.id);
+    }
+
+    function openTokenBrigadeDataModal(tokenId) {
+        // Set the token ID for the modal
+        $('#tokenBrigadeDataModal').data('token-id', tokenId);
+        
+        // Load existing brigade data for this token if any
+        loadTokenBrigadeData(tokenId);
+        
+        // Show the modal
+        $('#tokenBrigadeDataModal').show();
+        
+        showNotification('Managing data for token: ' + tokenId, 'success');
+    }
+
+    function loadTokenBrigadeData(tokenId) {
+        // Load existing brigade data associated with this token
+        $.ajax({
+            url: '/DataManagement/GetBrigadeByToken',
+            type: 'GET',
+            data: { tokenId: tokenId },
+            success: function(response) {
+                if (response.success && response.data) {
+                    // Populate the brigade form with existing data
+                    populateBrigadeForm(response.data);
+                    // Load associated military units
+                    loadTokenMilitaryUnits(response.data.id);
+                } else {
+                    // No existing data, start fresh
+                    clearBrigadeForm();
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading token brigade data:', error);
+                showNotification('Error loading brigade data', 'error');
+            }
+        });
     }
 
     function measureDistance() {
@@ -390,6 +1274,7 @@
 
     window.openDataEntry = function() {
         openModal('dataEntryModal');
+        loadDataManagementData();
     };
 
     window.manageTokens = function() {
@@ -399,4 +1284,1080 @@
     window.openSettings = function() {
         openModal('settingsModal');
     };
+
+    // Data Management Functions
+    let currentEditingId = null;
+
+    function switchTab(tabName) {
+        // Hide all tab contents
+        $('.tab-content').removeClass('active');
+        $('.tab-btn').removeClass('active');
+        
+        // Show selected tab content
+        $('#' + tabName + '-tab').addClass('active');
+        $('button[onclick="switchTab(\'' + tabName + '\')"]').addClass('active');
+    }
+
+    function loadDataManagementData() {
+        loadBrigades();
+        loadInfantryBattalions();
+        loadArmouredRegiments();
+        loadArtilleryRegiments();
+        loadTerrainFactors();
+        loadForceProtections();
+    }
+
+    // Brigade Management
+    function loadBrigades() {
+        $.get('/DataManagement/GetBrigades')
+            .done(function(data) {
+                const tbody = $('#brigadesTableBody');
+                tbody.empty();
+                data.forEach(function(brigade) {
+                    tbody.append(`
+                        <tr>
+                            <td>${brigade.name}</td>
+                            <td>${brigade.brigadeCode}</td>
+                            <td>${brigade.forceType}</td>
+                            <td>${brigade.strength || 'N/A'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="editBrigade('${brigade.id}')">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteBrigade('${brigade.id}')">Delete</button>
+                            </td>
+                        </tr>
+                    `);
+                });
+            })
+            .fail(function() {
+                console.error('Failed to load brigades');
+            });
+    }
+
+    function openBrigadeForm() {
+        currentEditingId = null;
+        $('#brigadeForm')[0].reset();
+        openModal('brigadeFormModal');
+    }
+
+    function editBrigade(id) {
+        currentEditingId = id;
+        // Load brigade data and populate form
+        // Implementation would load data and open form
+        openModal('brigadeFormModal');
+    }
+
+    function saveBrigade() {
+        const formData = {
+            Name: $('#brigadeName').val(),
+            BrigadeCode: $('#brigadeCode').val(),
+            ForceType: $('#brigadeForceType').val(),
+            Description: $('#brigadeDescription').val()
+        };
+
+        const url = currentEditingId ? '/DataManagement/UpdateBrigade' : '/DataManagement/CreateBrigade';
+        if (currentEditingId) formData.Id = currentEditingId;
+
+        $.ajax({
+            url: url,
+            method: currentEditingId ? 'PUT' : 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData)
+        })
+        .done(function(response) {
+            if (response.success) {
+                closeModal('brigadeFormModal');
+                loadBrigades();
+                showNotification('Brigade saved successfully', 'success');
+            } else {
+                showNotification('Error: ' + response.message, 'error');
+            }
+        })
+        .fail(function() {
+            showNotification('Failed to save brigade', 'error');
+        });
+    }
+
+    function deleteBrigade(id) {
+        if (confirm('Are you sure you want to delete this brigade?')) {
+            $.ajax({
+                url: '/DataManagement/DeleteBrigade',
+                method: 'DELETE',
+                data: { id: id }
+            })
+            .done(function(response) {
+                if (response.success) {
+                    loadBrigades();
+                    showNotification('Brigade deleted successfully', 'success');
+                } else {
+                    showNotification('Error: ' + response.message, 'error');
+                }
+            })
+            .fail(function() {
+                showNotification('Failed to delete brigade', 'error');
+            });
+        }
+    }
+
+    // Infantry Battalion Management
+    function loadInfantryBattalions() {
+        $.get('/DataManagement/GetInfantryBattalions')
+            .done(function(data) {
+                const tbody = $('#infantryTableBody');
+                tbody.empty();
+                data.forEach(function(battalion) {
+                    tbody.append(`
+                        <tr>
+                            <td>${battalion.name}</td>
+                            <td>${battalion.unitCode}</td>
+                            <td>${battalion.forceType}</td>
+                            <td>${battalion.strength}</td>
+                            <td>${battalion.companies}</td>
+                            <td>${battalion.tanks || 'N/A'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="editInfantryBattalion('${battalion.id}')">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteInfantryBattalion('${battalion.id}')">Delete</button>
+                            </td>
+                        </tr>
+                    `);
+                });
+            })
+            .fail(function() {
+                console.error('Failed to load infantry battalions');
+            });
+    }
+
+    function openInfantryForm() {
+        currentEditingId = null;
+        $('#infantryForm')[0].reset();
+        openModal('infantryFormModal');
+    }
+
+    function editInfantryBattalion(id) {
+        currentEditingId = id;
+        // Load battalion data and populate form
+        openModal('infantryFormModal');
+    }
+
+    function saveInfantryBattalion() {
+        const formData = {
+            Name: $('#infantryName').val(),
+            UnitCode: $('#infantryCode').val(),
+            ForceType: $('#infantryForceType').val(),
+            Strength: parseInt($('#infantryStrength').val()),
+            Companies: parseInt($('#infantryCompanies').val()),
+            ATGMS: parseInt($('#infantryATGMS').val()),
+            RocketLauncher: parseInt($('#infantryRocketLauncher').val()),
+            Mortars81mm: parseInt($('#infantryMortars81').val()),
+            Mortars120mm: parseInt($('#infantryMortars120').val()),
+            GrenadeLaunchers: parseInt($('#infantryGrenadeLaunchers').val()),
+            HMG_AGL: parseInt($('#infantryHMG_AGL').val()),
+            MG_LMG: parseInt($('#infantryMG_LMG').val()),
+            MANPADS: parseInt($('#infantryMANPADS').val()),
+            Grenades: parseInt($('#infantryGrenades').val()),
+            MarchingSpeedTrucksRoads: parseFloat($('#infantrySpeedTrucks').val()),
+            MarchingSpeedAPCs: parseFloat($('#infantrySpeedAPCs').val()),
+            MarchingSpeedCrossCountry: parseFloat($('#infantrySpeedCrossCountry').val()),
+            MarchingSpeedAPCsCrossCountry: parseFloat($('#infantrySpeedAPCsCross').val()),
+            CombatAdvanceSpeed: parseFloat($('#infantryCombatAdvance').val()),
+            Description: $('#infantryDescription').val()
+        };
+
+        const url = currentEditingId ? '/DataManagement/UpdateInfantryBattalion' : '/DataManagement/CreateInfantryBattalion';
+        if (currentEditingId) formData.Id = currentEditingId;
+
+        $.ajax({
+            url: url,
+            method: currentEditingId ? 'PUT' : 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData)
+        })
+        .done(function(response) {
+            if (response.success) {
+                closeModal('infantryFormModal');
+                loadInfantryBattalions();
+                showNotification('Infantry Battalion saved successfully', 'success');
+            } else {
+                showNotification('Error: ' + response.message, 'error');
+            }
+        })
+        .fail(function() {
+            showNotification('Failed to save infantry battalion', 'error');
+        });
+    }
+
+    function deleteInfantryBattalion(id) {
+        if (confirm('Are you sure you want to delete this infantry battalion?')) {
+            $.ajax({
+                url: '/DataManagement/DeleteInfantryBattalion',
+                method: 'DELETE',
+                data: { id: id }
+            })
+            .done(function(response) {
+                if (response.success) {
+                    loadInfantryBattalions();
+                    showNotification('Infantry Battalion deleted successfully', 'success');
+                } else {
+                    showNotification('Error: ' + response.message, 'error');
+                }
+            })
+            .fail(function() {
+                showNotification('Failed to delete infantry battalion', 'error');
+            });
+        }
+    }
+
+    // Armoured Regiment Management
+    function loadArmouredRegiments() {
+        $.get('/DataManagement/GetArmouredRegiments')
+            .done(function(data) {
+                const tbody = $('#armouredTableBody');
+                tbody.empty();
+                data.forEach(function(regiment) {
+                    tbody.append(`
+                        <tr>
+                            <td>${regiment.name}</td>
+                            <td>${regiment.unitCode}</td>
+                            <td>${regiment.forceType}</td>
+                            <td>${regiment.strength}</td>
+                            <td>${regiment.squadrons}</td>
+                            <td>${regiment.tanks}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="editArmouredRegiment('${regiment.id}')">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteArmouredRegiment('${regiment.id}')">Delete</button>
+                            </td>
+                        </tr>
+                    `);
+                });
+            })
+            .fail(function() {
+                console.error('Failed to load armoured regiments');
+            });
+    }
+
+    function openArmouredForm() {
+        currentEditingId = null;
+        $('#armouredForm')[0].reset();
+        openModal('armouredFormModal');
+    }
+
+    function editArmouredRegiment(id) {
+        currentEditingId = id;
+        openModal('armouredFormModal');
+    }
+
+    function saveArmouredRegiment() {
+        const formData = {
+            Name: $('#armouredName').val(),
+            UnitCode: $('#armouredCode').val(),
+            ForceType: $('#armouredForceType').val(),
+            Strength: parseInt($('#armouredStrength').val()),
+            Squadrons: parseInt($('#armouredSquadrons').val()),
+            Tanks: parseInt($('#armouredTanks').val()),
+            ATGMS: parseInt($('#armouredATGMS').val()),
+            Mortars120mm: parseInt($('#armouredMortars120').val()),
+            HMG: parseInt($('#armouredHMG').val()),
+            MarchingSpeedRoads: parseFloat($('#armouredSpeedRoads').val()),
+            MarchingSpeedCrossCountry: parseFloat($('#armouredSpeedCrossCountry').val()),
+            CombatAdvanceSpeed: parseFloat($('#armouredCombatAdvance').val()),
+            Description: $('#armouredDescription').val()
+        };
+
+        const url = currentEditingId ? '/DataManagement/UpdateArmouredRegiment' : '/DataManagement/CreateArmouredRegiment';
+        if (currentEditingId) formData.Id = currentEditingId;
+
+        $.ajax({
+            url: url,
+            method: currentEditingId ? 'PUT' : 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData)
+        })
+        .done(function(response) {
+            if (response.success) {
+                closeModal('armouredFormModal');
+                loadArmouredRegiments();
+                showNotification('Armoured Regiment saved successfully', 'success');
+            } else {
+                showNotification('Error: ' + response.message, 'error');
+            }
+        })
+        .fail(function() {
+            showNotification('Failed to save armoured regiment', 'error');
+        });
+    }
+
+    function deleteArmouredRegiment(id) {
+        if (confirm('Are you sure you want to delete this armoured regiment?')) {
+            $.ajax({
+                url: '/DataManagement/DeleteArmouredRegiment',
+                method: 'DELETE',
+                data: { id: id }
+            })
+            .done(function(response) {
+                if (response.success) {
+                    loadArmouredRegiments();
+                    showNotification('Armoured Regiment deleted successfully', 'success');
+                } else {
+                    showNotification('Error: ' + response.message, 'error');
+                }
+            })
+            .fail(function() {
+                showNotification('Failed to delete armoured regiment', 'error');
+            });
+        }
+    }
+
+    // Artillery Regiment Management
+    function loadArtilleryRegiments() {
+        $.get('/DataManagement/GetArtilleryRegiments')
+            .done(function(data) {
+                const tbody = $('#artilleryTableBody');
+                tbody.empty();
+                data.forEach(function(regiment) {
+                    tbody.append(`
+                        <tr>
+                            <td>${regiment.name}</td>
+                            <td>${regiment.unitCode}</td>
+                            <td>${regiment.forceType}</td>
+                            <td>${regiment.strength}</td>
+                            <td>${regiment.batteries}</td>
+                            <td>${regiment.guns}</td>
+                            <td>${regiment.gunRange}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="editArtilleryRegiment('${regiment.id}')">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteArtilleryRegiment('${regiment.id}')">Delete</button>
+                            </td>
+                        </tr>
+                    `);
+                });
+            })
+            .fail(function() {
+                console.error('Failed to load artillery regiments');
+            });
+    }
+
+    function openArtilleryForm() {
+        currentEditingId = null;
+        $('#artilleryForm')[0].reset();
+        openModal('artilleryFormModal');
+    }
+
+    function editArtilleryRegiment(id) {
+        currentEditingId = id;
+        openModal('artilleryFormModal');
+    }
+
+    function saveArtilleryRegiment() {
+        const formData = {
+            Name: $('#artilleryName').val(),
+            UnitCode: $('#artilleryCode').val(),
+            ForceType: $('#artilleryForceType').val(),
+            Strength: parseInt($('#artilleryStrength').val()),
+            Batteries: parseInt($('#artilleryBatteries').val()),
+            Guns: parseInt($('#artilleryGuns').val()),
+            GunRange: parseFloat($('#artilleryGunRange').val()),
+            HMG: parseInt($('#artilleryHMG').val()),
+            GunCaliber: $('#artilleryGunCaliber').val(),
+            Description: $('#artilleryDescription').val()
+        };
+
+        const url = currentEditingId ? '/DataManagement/UpdateArtilleryRegiment' : '/DataManagement/CreateArtilleryRegiment';
+        if (currentEditingId) formData.Id = currentEditingId;
+
+        $.ajax({
+            url: url,
+            method: currentEditingId ? 'PUT' : 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData)
+        })
+        .done(function(response) {
+            if (response.success) {
+                closeModal('artilleryFormModal');
+                loadArtilleryRegiments();
+                showNotification('Artillery Regiment saved successfully', 'success');
+            } else {
+                showNotification('Error: ' + response.message, 'error');
+            }
+        })
+        .fail(function() {
+            showNotification('Failed to save artillery regiment', 'error');
+        });
+    }
+
+    function deleteArtilleryRegiment(id) {
+        if (confirm('Are you sure you want to delete this artillery regiment?')) {
+            $.ajax({
+                url: '/DataManagement/DeleteArtilleryRegiment',
+                method: 'DELETE',
+                data: { id: id }
+            })
+            .done(function(response) {
+                if (response.success) {
+                    loadArtilleryRegiments();
+                    showNotification('Artillery Regiment deleted successfully', 'success');
+                } else {
+                    showNotification('Error: ' + response.message, 'error');
+                }
+            })
+            .fail(function() {
+                showNotification('Failed to delete artillery regiment', 'error');
+            });
+        }
+    }
+
+    // Terrain and Protection Management (simplified for now)
+    function loadTerrainFactors() {
+        // Implementation for terrain factors
+    }
+
+    function loadForceProtections() {
+        // Implementation for force protections
+    }
+
+    function openTerrainForm() {
+        showNotification('Terrain form coming soon', 'info');
+    }
+
+    function openProtectionForm() {
+        showNotification('Protection form coming soon', 'info');
+    }
+
+    // Export functionality
+    function exportTeamData() {
+        $.get('/DataManagement/ExportTeamData')
+            .done(function(response) {
+                if (response.success) {
+                    const dataStr = JSON.stringify(response.data, null, 2);
+                    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                    const url = URL.createObjectURL(dataBlob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'team-military-data.json';
+                    link.click();
+                    URL.revokeObjectURL(url);
+                    showNotification('Data exported successfully', 'success');
+                } else {
+                    showNotification('Error: ' + response.message, 'error');
+                }
+            })
+            .fail(function() {
+                showNotification('Failed to export data', 'error');
+            });
+    }
+
+    // Utility functions
+    function showNotification(message, type) {
+        // Simple notification system - can be enhanced
+        const notification = $(`
+            <div class="notification notification-${type}" style="
+                position: fixed; top: 20px; right: 20px; z-index: 9999;
+                padding: 15px 20px; border-radius: 5px; color: white;
+                background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8'};
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            ">
+                ${message}
+            </div>
+        `);
+        
+        $('body').append(notification);
+        setTimeout(() => notification.fadeOut(), 3000);
+    }
+
+    // War Game Simulation Functions
+    let currentScenario = null;
+    let deployedUnits = [];
+    let activeBattles = [];
+    let objectives = [];
+    let simulationRunning = false;
+    let currentMapMode = 'normal'; // normal, deploy, move, battle, objective
+    let selectedUnit = null;
+    let selectedPosition = null;
+    let movementDestination = null;
+
+    // Simulation Tab Management
+    function switchSimTab(tabName) {
+        $('.tab-content').removeClass('active');
+        $('.tab-btn').removeClass('active');
+        
+        $('#' + tabName + '-sim-tab').addClass('active');
+        $('button[onclick="switchSimTab(\'' + tabName + '\')"]').addClass('active');
+        
+        // Load data for the selected tab
+        switch(tabName) {
+            case 'units':
+                loadDeployedUnits();
+                break;
+            case 'battles':
+                loadActiveBattles();
+                break;
+            case 'objectives':
+                loadObjectives();
+                break;
+        }
+    }
+
+    // Scenario Management
+    function createNewScenario() {
+        const scenarioName = prompt('Enter scenario name:');
+        if (!scenarioName) return;
+
+        const scenarioData = {
+            Name: scenarioName,
+            Description: 'War game simulation scenario',
+            ScenarioCode: 'SC_' + Date.now(),
+            Status: 'Planning'
+        };
+
+        $.ajax({
+            url: '/Simulation/CreateScenario',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(scenarioData)
+        })
+        .done(function(response) {
+            if (response.success) {
+                currentScenario = response.data;
+                updateScenarioDisplay();
+                showNotification('Scenario created successfully', 'success');
+            } else {
+                showNotification('Error: ' + response.message, 'error');
+            }
+        })
+        .fail(function() {
+            showNotification('Failed to create scenario', 'error');
+        });
+    }
+
+    function startCurrentScenario() {
+        if (!currentScenario) {
+            showNotification('No scenario selected', 'error');
+            return;
+        }
+
+        $.ajax({
+            url: '/Simulation/StartScenario',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ ScenarioId: currentScenario.id })
+        })
+        .done(function(response) {
+            if (response.success) {
+                currentScenario.status = 'Active';
+                updateScenarioDisplay();
+                showNotification('Scenario started', 'success');
+            } else {
+                showNotification('Error: ' + response.message, 'error');
+            }
+        })
+        .fail(function() {
+            showNotification('Failed to start scenario', 'error');
+        });
+    }
+
+    function updateScenarioDisplay() {
+        const scenarioInfo = $('#scenarioInfo');
+        if (currentScenario) {
+            scenarioInfo.html(`
+                <div class="scenario-card">
+                    <h5>${currentScenario.name}</h5>
+                    <p><strong>Status:</strong> <span class="status-${currentScenario.status.toLowerCase()}">${currentScenario.status}</span></p>
+                    <p><strong>Code:</strong> ${currentScenario.scenarioCode}</p>
+                    <p><strong>Description:</strong> ${currentScenario.description}</p>
+                </div>
+            `);
+            $('#startScenarioBtn').prop('disabled', currentScenario.status === 'Active');
+        } else {
+            scenarioInfo.html('<p>No active scenario. Create a new scenario to begin.</p>');
+        }
+    }
+
+    // Unit Deployment Functions
+    function deployUnit() {
+        currentMapMode = 'deploy';
+        openModal('unitDeploymentModal');
+        loadAvailableUnits();
+    }
+
+    function loadAvailableUnits() {
+        const unitsGrid = $('#availableUnitsGrid');
+        unitsGrid.empty();
+
+        // Load all unit types
+        Promise.all([
+            $.get('/DataManagement/GetInfantryBattalions'),
+            $.get('/DataManagement/GetArmouredRegiments'),
+            $.get('/DataManagement/GetArtilleryRegiments')
+        ]).then(([infantry, armoured, artillery]) => {
+            const allUnits = [
+                ...infantry.map(u => ({...u, type: 'Infantry'})),
+                ...armoured.map(u => ({...u, type: 'Armoured'})),
+                ...artillery.map(u => ({...u, type: 'Artillery'}))
+            ];
+
+            allUnits.forEach(unit => {
+                unitsGrid.append(`
+                    <div class="unit-card" onclick="selectUnitForDeployment('${unit.id}', '${unit.type}', '${unit.name}')">
+                        <div class="unit-icon">
+                            <i class="fas fa-${getUnitIcon(unit.type)}"></i>
+                        </div>
+                        <div class="unit-info">
+                            <h6>${unit.name}</h6>
+                            <p>${unit.type} - ${unit.forceType}</p>
+                            <p>Strength: ${unit.strength}</p>
+                        </div>
+                    </div>
+                `);
+            });
+        });
+    }
+
+    function selectUnitForDeployment(unitId, unitType, unitName) {
+        selectedUnit = { id: unitId, type: unitType, name: unitName };
+        $('#selectedUnitName').text(unitName);
+        $('#selectUnitStep').hide();
+        $('#selectPositionStep').show();
+        $('#confirmDeploymentBtn').show();
+        
+        showNotification('Click on the map to select deployment position', 'info');
+    }
+
+    function confirmDeployment() {
+        if (!selectedUnit || !selectedPosition) {
+            showNotification('Please select a unit and position', 'error');
+            return;
+        }
+
+        const deploymentData = {
+            ScenarioId: currentScenario?.id,
+            UnitId: selectedUnit.id,
+            UnitType: selectedUnit.type,
+            Position: selectedPosition,
+            Formation: $('#deploymentFormation').val()
+        };
+
+        $.ajax({
+            url: '/Simulation/DeployUnit',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(deploymentData)
+        })
+        .done(function(response) {
+            if (response.success) {
+                deployedUnits.push(response.data);
+                addUnitToMap(response.data);
+                closeModal('unitDeploymentModal');
+                resetDeploymentModal();
+                showNotification('Unit deployed successfully', 'success');
+            } else {
+                showNotification('Error: ' + response.message, 'error');
+            }
+        })
+        .fail(function() {
+            showNotification('Failed to deploy unit', 'error');
+        });
+    }
+
+    function resetDeploymentModal() {
+        selectedUnit = null;
+        selectedPosition = null;
+        currentMapMode = 'normal';
+        $('#selectUnitStep').show();
+        $('#selectPositionStep').hide();
+        $('#confirmDeploymentBtn').hide();
+    }
+
+    // Movement Planning Functions
+    function planMovement() {
+        currentMapMode = 'move';
+        openModal('movementPlanModal');
+        loadDeployedUnitsForMovement();
+    }
+
+    function loadDeployedUnitsForMovement() {
+        const unitSelect = $('#movementUnitSelect');
+        unitSelect.empty().append('<option value="">Select a deployed unit...</option>');
+        
+        deployedUnits.forEach(unit => {
+            unitSelect.append(`<option value="${unit.id}">${unit.unitName} (${unit.unitType})</option>`);
+        });
+    }
+
+    function executeMovement() {
+        const unitId = $('#movementUnitSelect').val();
+        const movementType = $('#movementType').val();
+        const terrainType = $('#terrainType').val();
+
+        if (!unitId || !movementDestination) {
+            showNotification('Please select a unit and destination', 'error');
+            return;
+        }
+
+        const movementData = {
+            UnitDeploymentId: unitId,
+            EndPosition: movementDestination,
+            MovementType: movementType,
+            TerrainType: terrainType
+        };
+
+        $.ajax({
+            url: '/Simulation/IssueMovementOrder',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(movementData)
+        })
+        .done(function(response) {
+            if (response.success) {
+                showMovementCalculation(response.calculation);
+                showNotification('Movement order issued', 'success');
+                closeModal('movementPlanModal');
+                currentMapMode = 'normal';
+            } else {
+                showNotification('Error: ' + response.message, 'error');
+            }
+        })
+        .fail(function() {
+            showNotification('Failed to issue movement order', 'error');
+        });
+    }
+
+    function showMovementCalculation(calc) {
+        $('#movementCalculation').html(`
+            <h5>Movement Calculation</h5>
+            <p><strong>Distance:</strong> ${calc.distance.toFixed(2)} km</p>
+            <p><strong>Speed:</strong> ${calc.effectiveSpeed.toFixed(2)} km/h</p>
+            <p><strong>Travel Time:</strong> ${calc.travelTime.toFixed(2)} hours</p>
+            <p><strong>Terrain:</strong> ${calc.terrainTypes}</p>
+        `).show();
+        $('#executeMovementBtn').prop('disabled', false);
+    }
+
+    // Battle System Functions
+    function initiateBattle() {
+        currentMapMode = 'battle';
+        openModal('battleModal');
+        loadParticipatingUnits();
+    }
+
+    function loadParticipatingUnits() {
+        const unitsDiv = $('#participatingUnits');
+        unitsDiv.empty();
+        
+        deployedUnits.forEach(unit => {
+            unitsDiv.append(`
+                <label class="unit-checkbox">
+                    <input type="checkbox" value="${unit.id}">
+                    ${unit.unitName} (${unit.unitType}) - ${unit.forceType}
+                </label>
+            `);
+        });
+    }
+
+    function confirmBattle() {
+        const battleName = $('#battleName').val();
+        const battleType = $('#battleType').val();
+        const terrainType = $('#battleTerrain').val();
+        const weather = $('#weatherConditions').val();
+        const participatingUnits = [];
+        
+        $('#participatingUnits input:checked').each(function() {
+            participatingUnits.push($(this).val());
+        });
+
+        if (!battleName || !selectedPosition || participatingUnits.length === 0) {
+            showNotification('Please fill all required fields and select units', 'error');
+            return;
+        }
+
+        const battleData = {
+            ScenarioId: currentScenario?.id,
+            BattleName: battleName,
+            BattleLocation: selectedPosition,
+            BattleType: battleType,
+            TerrainType: terrainType,
+            WeatherConditions: weather,
+            ParticipatingUnits: participatingUnits
+        };
+
+        $.ajax({
+            url: '/Simulation/InitiateBattle',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(battleData)
+        })
+        .done(function(response) {
+            if (response.success) {
+                activeBattles.push(response.data);
+                addBattleToMap(response.data);
+                closeModal('battleModal');
+                showNotification('Battle initiated', 'success');
+                
+                // Auto-resolve battle after a moment
+                setTimeout(() => resolveBattle(response.data.id), 2000);
+            } else {
+                showNotification('Error: ' + response.message, 'error');
+            }
+        })
+        .fail(function() {
+            showNotification('Failed to initiate battle', 'error');
+        });
+    }
+
+    function resolveBattle(battleId) {
+        $.ajax({
+            url: '/Simulation/ResolveBattle',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ BattleId: battleId })
+        })
+        .done(function(response) {
+            if (response.success) {
+                showBattleResults(response.result);
+            }
+        });
+    }
+
+    function showBattleResults(result) {
+        const resultsHtml = `
+            <div class="battle-results">
+                <h4>Battle Results</h4>
+                <p><strong>Victor:</strong> ${result.victor}</p>
+                <p><strong>Attacker Casualties:</strong> ${result.attackerCasualties.toFixed(1)}%</p>
+                <p><strong>Defender Casualties:</strong> ${result.defenderCasualties.toFixed(1)}%</p>
+                <p><strong>Victory Margin:</strong> ${(result.victoryMargin * 100).toFixed(1)}%</p>
+            </div>
+        `;
+        
+        showNotification('Battle resolved: ' + result.victor + ' wins!', 'success');
+        
+        // Show detailed results in a modal or notification
+        const notification = $(resultsHtml);
+        $('body').append(notification);
+        setTimeout(() => notification.fadeOut(), 10000);
+    }
+
+    // Objective Management
+    function createObjective() {
+        currentMapMode = 'objective';
+        openModal('objectiveModal');
+    }
+
+    function confirmObjective() {
+        const objectiveName = $('#objectiveName').val();
+        const description = $('#objectiveDescription').val();
+        const objectiveType = $('#objectiveType').val();
+        const assignedForce = $('#assignedForce').val();
+        const pointValue = $('#pointValue').val();
+
+        if (!objectiveName || !selectedPosition) {
+            showNotification('Please fill required fields and select position', 'error');
+            return;
+        }
+
+        const objectiveData = {
+            ObjectiveName: objectiveName,
+            Description: description,
+            ScenarioId: currentScenario?.id,
+            ObjectiveLocation: JSON.stringify(selectedPosition),
+            ObjectiveType: objectiveType,
+            AssignedToForce: assignedForce,
+            PointValue: parseInt(pointValue)
+        };
+
+        $.ajax({
+            url: '/Simulation/CreateObjective',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(objectiveData)
+        })
+        .done(function(response) {
+            if (response.success) {
+                objectives.push(response.data);
+                addObjectiveToMap(response.data);
+                closeModal('objectiveModal');
+                showNotification('Objective created', 'success');
+            } else {
+                showNotification('Error: ' + response.message, 'error');
+            }
+        })
+        .fail(function() {
+            showNotification('Failed to create objective', 'error');
+        });
+    }
+
+    // Map Integration Functions
+    function addUnitToMap(unit) {
+        const position = JSON.parse(unit.position);
+        const icon = L.divIcon({
+            className: `unit-marker ${unit.forceType.toLowerCase()}`,
+            html: `<div class="unit-marker-content">
+                     <i class="fas fa-${getUnitIcon(unit.unitType)}"></i>
+                     <span class="unit-name">${unit.unitName}</span>
+                   </div>`,
+            iconSize: [60, 30],
+            iconAnchor: [30, 15]
+        });
+
+        const marker = L.marker([position.lat, position.lng], { icon: icon }).addTo(gameMap);
+        marker.bindPopup(`
+            <strong>${unit.unitName}</strong><br>
+            Type: ${unit.unitType}<br>
+            Force: ${unit.forceType}<br>
+            Strength: ${unit.currentStrength}/${unit.maxStrength}<br>
+            Status: ${unit.status}
+        `);
+
+        unit.mapMarker = marker;
+    }
+
+    function addBattleToMap(battle) {
+        const location = JSON.parse(battle.battleLocation);
+        const marker = L.marker([location.lat, location.lng], {
+            icon: L.divIcon({
+                className: 'battle-marker',
+                html: '<i class="fas fa-explosion"></i>',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            })
+        }).addTo(gameMap);
+
+        marker.bindPopup(`
+            <strong>${battle.battleName}</strong><br>
+            Type: ${battle.battleType}<br>
+            Status: ${battle.status}
+        `);
+
+        battle.mapMarker = marker;
+    }
+
+    function addObjectiveToMap(objective) {
+        const location = JSON.parse(objective.objectiveLocation);
+        const marker = L.marker([location.lat, location.lng], {
+            icon: L.divIcon({
+                className: `objective-marker ${objective.assignedToForce.toLowerCase()}`,
+                html: '<i class="fas fa-flag"></i>',
+                iconSize: [25, 25],
+                iconAnchor: [12, 25]
+            })
+        }).addTo(gameMap);
+
+        marker.bindPopup(`
+            <strong>${objective.objectiveName}</strong><br>
+            Type: ${objective.objectiveType}<br>
+            Assigned to: ${objective.assignedToForce}<br>
+            Points: ${objective.pointValue}
+        `);
+
+        objective.mapMarker = marker;
+    }
+
+    // Enhanced map click handler
+    function onMapClick(e) {
+        console.log('Map clicked at:', e.latlng);
+        
+        switch(currentMapMode) {
+            case 'deploy':
+                selectedPosition = { lat: e.latlng.lat, lng: e.latlng.lng };
+                showNotification('Position selected for deployment', 'info');
+                break;
+            case 'move':
+                movementDestination = { lat: e.latlng.lat, lng: e.latlng.lng };
+                showNotification('Movement destination selected', 'info');
+                break;
+            case 'battle':
+                selectedPosition = { lat: e.latlng.lat, lng: e.latlng.lng };
+                $('#initiateBattleBtn').prop('disabled', false);
+                showNotification('Battle location selected', 'info');
+                break;
+            case 'objective':
+                selectedPosition = { lat: e.latlng.lat, lng: e.latlng.lng };
+                $('#createObjectiveBtn').prop('disabled', false);
+                showNotification('Objective location selected', 'info');
+                break;
+            default:
+                if (currentMode === 'fox-land' || currentMode === 'blue-land') {
+                    placeTokenAtLocation(e.latlng);
+                }
+                break;
+        }
+    }
+
+    // Simulation Control
+    function toggleSimulation() {
+        simulationRunning = !simulationRunning;
+        const btn = $('#simulationToggle');
+        
+        if (simulationRunning) {
+            btn.html('<i class="fas fa-pause"></i><span>Pause Sim</span>');
+            btn.addClass('active');
+            showNotification('Simulation started', 'success');
+        } else {
+            btn.html('<i class="fas fa-play"></i><span>Start Sim</span>');
+            btn.removeClass('active');
+            showNotification('Simulation paused', 'info');
+        }
+    }
+
+    function openSimulationPanel() {
+        openModal('simulationPanel');
+    }
+
+    // Utility Functions
+    function getUnitIcon(unitType) {
+        switch(unitType.toLowerCase()) {
+            case 'infantry': return 'user-soldier';
+            case 'armoured': return 'tank';
+            case 'artillery': return 'bomb';
+            default: return 'chess-knight';
+        }
+    }
+
+    function loadDeployedUnits() {
+        if (!currentScenario) return;
+        
+        $.get(`/Simulation/GetDeployedUnits?scenarioId=${currentScenario.id}`)
+            .done(function(units) {
+                deployedUnits = units;
+                const grid = $('#deployedUnitsGrid');
+                grid.empty();
+                
+                units.forEach(unit => {
+                    grid.append(`
+                        <div class="deployed-unit-card">
+                            <h6>${unit.unitName}</h6>
+                            <p>${unit.unitType} - ${unit.forceType}</p>
+                            <p>Strength: ${unit.currentStrength}/${unit.maxStrength}</p>
+                            <p>Status: ${unit.status}</p>
+                            <p>Morale: ${unit.morale}%</p>
+                        </div>
+                    `);
+                });
+            });
+    }
+
+    function loadActiveBattles() {
+        // Implementation for loading battles
+    }
+
+    function loadObjectives() {
+        if (!currentScenario) return;
+        
+        $.get(`/Simulation/GetObjectives?scenarioId=${currentScenario.id}`)
+            .done(function(objs) {
+                objectives = objs;
+                const list = $('#objectivesList');
+                list.empty();
+                
+                objs.forEach(obj => {
+                    list.append(`
+                        <div class="objective-card">
+                            <h6>${obj.objectiveName}</h6>
+                            <p>${obj.description}</p>
+                            <p>Type: ${obj.objectiveType}</p>
+                            <p>Assigned to: ${obj.assignedToForce}</p>
+                            <p>Status: ${obj.status}</p>
+                            <p>Points: ${obj.pointValue}</p>
+                        </div>
+                    `);
+                });
+            });
+    }
 </script>

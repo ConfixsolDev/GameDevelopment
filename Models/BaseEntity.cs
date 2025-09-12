@@ -12,12 +12,15 @@ namespace TechWebSol.Models
 
         public DateTime? CreatedDate { get; set; } = DateTime.Now;
         
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-
         [StringLength(255)]
         public string UpdatedBy { get; set; } = string.Empty;
 
+        public Guid? TeamId { get; set; } 
+
         public DateTime? UpdatedDate { get; set; } = DateTime.Now;
+        
+        public bool IsActive { get; set; } = true;
+        
         public bool IsDeleted { get; set; } = false;
     }
 }

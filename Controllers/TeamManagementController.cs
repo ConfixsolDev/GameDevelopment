@@ -78,9 +78,7 @@ namespace TechWebSol.Controllers
                     SubTeamCode = request.SubTeamCode,
                     Description = request.Description,
                     IsActive = true,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedByUserId = currentUser.ApplicationUserId,
-                    CreatedByUserName = currentUser.FullName,
+                    CreatedBy = currentUser.FullName,
                     Category=request.TeamCategory
                 };
 
@@ -197,8 +195,8 @@ namespace TechWebSol.Controllers
                         subTeamCode = t.SubTeamCode,
                         description = t.Description,
                         isActive = t.IsActive,
-                        createdAt = t.CreatedAt,
-                        createdByUserName = t.CreatedByUserName,
+                        createdAt = t.CreatedDate ?? DateTime.Now,
+                        createdByUserName = t.CreatedBy,
                         category = t.Category
                     })
                     .FirstOrDefaultAsync(c=>c.id==id);
@@ -228,8 +226,8 @@ namespace TechWebSol.Controllers
                         subTeamCode = t.SubTeamCode,
                         description = t.Description,
                         isActive = t.IsActive,
-                        createdAt = t.CreatedAt,
-                        createdByUserName = t.CreatedByUserName,
+                        createdAt = t.CreatedDate ?? DateTime.Now,
+                        createdByUserName = t.CreatedBy,
                         category=t.Category
                     })
                     .ToListAsync();
