@@ -70,6 +70,7 @@ namespace TechWebSol.Models
         public decimal MarchingSpeedCrossCountry { get; set; } = 10; // kmph
         public decimal CombatAdvanceSpeed { get; set; } = 1; // kmph average
 
+        public bool IsDeleted { get; set; }
         public ArmouredRegiment()
         {
             UnitType = "Armoured";
