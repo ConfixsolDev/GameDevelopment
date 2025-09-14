@@ -1,0 +1,51 @@
+@model WargameBoard.Web.Models.ViewModels.ScenarioUnitEditVm
+
+<tr data-unit-id="@Model.Id">
+    <td>
+        <input asp-for="Id" type="hidden" />
+        <input asp-for="ScenarioId" type="hidden" />
+        <select asp-for="UnitId" asp-items="Model.Units" class="form-select form-select-sm">
+            <option value="">-- Select Unit --</option>
+        </select>
+        <span asp-validation-for="UnitId" class="text-danger"></span>
+    </td>
+    <td>
+        <select asp-for="StartHexId" asp-items="Model.Hexes" class="form-select form-select-sm">
+            <option value="">-- Select Hex --</option>
+        </select>
+        <span asp-validation-for="StartHexId" class="text-danger"></span>
+    </td>
+    <td>
+        <input asp-for="Steps" class="form-control form-control-sm" min="1" max="10" />
+        <span asp-validation-for="Steps" class="text-danger"></span>
+    </td>
+    <td>
+        <select asp-for="Posture" class="form-select form-select-sm">
+            public enum Posture { Attack = 1, Defend = 2, Reserve = 3, Screen = 4 }
+            <option value="1">Defensive</option>
+            <option value="2">Offensive</option>
+            <option value="3">Reconnaissance</option>
+            <option value="4">Support</option>
+            <option value="5">Reserve</option>
+        </select>
+        <span asp-validation-for="Posture" class="text-danger"></span>
+    </td>
+    <td>
+        <div class="form-check">
+            <input asp-for="Hidden" class="form-check-input" />
+        </div>
+    </td>
+    <td>
+        <div class="btn-group" role="group">
+            @if (Model.Id == 0)
+            {
+                <button type="button" class="btn btn-sm btn-success saveUnitBtn">
+                    <i class="fas fa-save"></i> Save
+                </button>
+            }
+            <button type="button" class="btn btn-sm btn-danger removeUnitBtn" data-unit-id="@Model.Id">
+                <i class="fas fa-trash"></i> Remove
+            </button>
+        </div>
+    </td>
+</tr>

@@ -1,0 +1,192 @@
+@model IEnumerable<WargameBoard.Web.Models.ViewModels.ScenarioObjectiveEditVm>
+
+@{
+    ViewData["Title"] = $"Objectives - {ViewBag.ScenarioName}";
+    var scenarioId = ViewBag.ScenarioId;
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title">
+                    <i class="fas fa-flag"></i> Scenario Objectives - @ViewBag.ScenarioName
+                </h3>
+                <div>
+                    <button type="button" class="btn btn-success" id="addObjectiveBtn">
+                        <i class="fas fa-plus"></i> Add Objective
+                    </button>
+                    <a asp-action="Edit" asp-route-id="@scenarioId" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Scenario
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @TempData["SuccessMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                <div id="objectivesContainer">
+                    @if (Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="objectivesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Hex</th>
+                                        <th>Side</th>
+                                        <th>Victory Points</th>
+                                        <th>Condition Kind</th>
+                                        <th>Turn Threshold</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="objectivesTableBody">
+                                    @foreach (var objective in Model)
+                                    {
+                                        <partial name="_ObjectiveRow" model="objective" />
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-flag fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No objectives defined</h5>
+                            <p class="text-muted">Add objectives to this scenario to define victory conditions.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Add Objective button click handler
+            $('#addObjectiveBtn').click(function() {
+                $.post('@Url.Action("AddObjective", "Scenarios")', { scenarioId: @scenarioId })
+                    .done(function(data) {
+                        if ($('#objectivesTableBody').length === 0) {
+                            // Create table if it doesn't exist
+                            $('#objectivesContainer').html(`
+                                <div class="table-responsive">
+                                    <table class="table table-striped" id="objectivesTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Hex</th>
+                                                <th>Side</th>
+                                                <th>Victory Points</th>
+                                                <th>Condition Kind</th>
+                                                <th>Turn Threshold</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="objectivesTableBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `);
+                        }
+                        $('#objectivesTableBody').append(data);
+                    })
+                    .fail(function() {
+                        alert('Failed to add objective row');
+                    });
+            });
+
+            // Remove Objective button click handler
+            $(document).on('click', '.removeObjectiveBtn', function() {
+                var row = $(this).closest('tr');
+                var objectiveId = $(this).data('objective-id');
+                
+                if (objectiveId) {
+                    // Existing objective - delete from database
+                    $.post('@Url.Action("DeleteObjective", "Scenarios")', { id: objectiveId })
+                        .done(function(response) {
+                            if (response.success) {
+                                row.remove();
+                                if ($('#objectivesTableBody tr').length === 0) {
+                                    $('#objectivesContainer').html(`
+                                        <div class="text-center py-4">
+                                            <i class="fas fa-flag fa-3x text-muted mb-3"></i>
+                                            <h5 class="text-muted">No objectives defined</h5>
+                                            <p class="text-muted">Add objectives to this scenario to define victory conditions.</p>
+                                        </div>
+                                    `);
+                                }
+                            } else {
+                                alert('Failed to delete objective: ' + response.message);
+                            }
+                        })
+                        .fail(function() {
+                            alert('Failed to delete objective');
+                        });
+                } else {
+                    // New objective - just remove from DOM
+                    row.remove();
+                    if ($('#objectivesTableBody tr').length === 0) {
+                        $('#objectivesContainer').html(`
+                            <div class="text-center py-4">
+                                <i class="fas fa-flag fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No objectives defined</h5>
+                                <p class="text-muted">Add objectives to this scenario to define victory conditions.</p>
+                            </div>
+                        `);
+                    }
+                }
+            });
+
+        });
+    </script>
+
+
+    <script>
+        $(document).on('click', '.saveObjectiveBtn', function () {
+          const $btn = $(this);
+          const row = $btn.closest('tr');
+
+          $btn.prop('disabled', true);
+
+          const data = {
+            ScenarioId: @scenarioId,
+            HexId: parseInt(row.find('select[name="HexId"]').val()),
+            SideId: row.find('select[name="SideId"]').val(),
+            VictoryPoints: row.find('input[name="VictoryPoints"]').val(),
+            ConditionKind: row.find('select[name="ConditionKind"]').val(),
+            TurnThreshold: row.find('input[name="TurnThreshold"]').val() || null
+          };
+
+          $.ajax({
+            url: '@Url.Action("SaveObjective", "Scenarios")',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data)
+          })
+          .done(response => {
+            if (response?.success) {
+              location.reload();
+            } else if (typeof response === 'string') {
+              row.replaceWith(response);
+            } else {
+              alert('Unexpected response from server.');
+            }
+          })
+          .fail(err => {
+            alert(`Failed to save objective: ${err.status} ${err.responseText}`);
+          })
+          .always(() => $btn.prop('disabled', false));
+        });
+    </script>
+
+
+
+}

@@ -1,0 +1,229 @@
+@model IEnumerable<WargameBoard.Core.Entities.HexFeature>
+
+<div class="hex-features-list">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="mb-0">Hex Features</h6>
+        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addFeatureModal">
+            <i class="bi bi-plus"></i> Add Feature
+        </button>
+    </div>
+    
+    @if (Model.Any())
+    {
+        <div class="list-group">
+            @foreach (var feature in Model)
+            {
+                <div class="list-group-item d-flex justify-content-between align-items-center" data-feature-id="@feature.Id">
+                    <div>
+                        <span class="badge @(feature.Side?.Color == "#0d6efd" ? "bg-primary" : feature.Side?.Color == "#dc3545" ? "bg-danger" : "bg-secondary") me-2">
+                            @feature.Side?.Name
+                        </span>
+                        <strong>@(feature.FortificationType?.Name ?? feature.ObstacleType?.Name ?? "Unknown")</strong>
+                        <small class="text-muted d-block">@feature.FeatureKind</small>
+                    </div>
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-primary" onclick="editFeature(@feature.Id)">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-danger" onclick="removeFeature(@feature.Id)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-muted text-center py-3">
+            <i class="bi bi-info-circle"></i> No features on this hex
+        </div>
+    }
+</div>
+
+<!-- Add Feature Modal -->
+<div class="modal fade" id="addFeatureModal" tabindex="-1" aria-labelledby="addFeatureModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addFeatureModalLabel">Add Hex Feature</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form data-realtime="true" id="addFeatureForm">
+                <div class="modal-body">
+                    <input type="hidden" id="featureHexId" value="@ViewBag.HexId" />
+                    
+                    <div class="mb-3">
+                        <label for="featureKind" class="form-label">Feature Type</label>
+                        <select id="featureKind" class="form-select" required>
+                            <option value="">Select Feature Type</option>
+                            <option value="Fort">Fortification</option>
+                            <option value="Obstacle">Obstacle</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3" id="fortificationTypeGroup" style="display: none;">
+                        <label for="fortificationTypeId" class="form-label">Fortification Type</label>
+                        <select id="fortificationTypeId" class="form-select">
+                            <option value="">Select Fortification Type</option>
+                            @foreach (var fort in ViewBag.FortificationTypes)
+                            {
+                                <option value="@fort.Value">@fort.Text</option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3" id="obstacleTypeGroup" style="display: none;">
+                        <label for="obstacleTypeId" class="form-label">Obstacle Type</label>
+                        <select id="obstacleTypeId" class="form-select">
+                            <option value="">Select Obstacle Type</option>
+                            @foreach (var obstacle in ViewBag.ObstacleTypes)
+                            {
+                                <option value="@obstacle.Value">@obstacle.Text</option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="featureSideId" class="form-label">Side</label>
+                        <select id="featureSideId" class="form-select">
+                            <option value="">Select Side</option>
+                            @foreach (var side in ViewBag.Sides)
+                            {
+                                <option value="@side.Value">@side.Text</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-plus"></i> Add Feature
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const featureKindSelect = document.getElementById('featureKind');
+    const fortificationGroup = document.getElementById('fortificationTypeGroup');
+    const obstacleGroup = document.getElementById('obstacleTypeGroup');
+    const addFeatureForm = document.getElementById('addFeatureForm');
+    
+    // Show/hide feature type groups based on selection
+    featureKindSelect.addEventListener('change', function() {
+        const value = this.value;
+        fortificationGroup.style.display = value === 'Fort' ? 'block' : 'none';
+        obstacleGroup.style.display = value === 'Obstacle' ? 'block' : 'none';
+        
+        // Clear other selections
+        if (value !== 'Fort') {
+            document.getElementById('fortificationTypeId').value = '';
+        }
+        if (value !== 'Obstacle') {
+            document.getElementById('obstacleTypeId').value = '';
+        }
+    });
+    
+    // Add feature form submission
+    addFeatureForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const hexId = document.getElementById('featureHexId').value;
+        const featureKind = document.getElementById('featureKind').value;
+        const sideId = document.getElementById('featureSideId').value;
+        let featureTypeId = '';
+        
+        if (featureKind === 'Fort') {
+            featureTypeId = document.getElementById('fortificationTypeId').value;
+        } else if (featureKind === 'Obstacle') {
+            featureTypeId = document.getElementById('obstacleTypeId').value;
+        }
+        
+        if (!featureTypeId) {
+            showNotification('Please select a feature type', 'warning');
+            return;
+        }
+        
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Adding...';
+        
+        // Add feature via API
+        fetch('/Map/Map/AddHexFeature', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `sessionId=${window.currentSessionId || ''}&hexId=${hexId}&featureTypeId=${featureTypeId}&featureKind=${featureKind}&sideId=${sideId}`
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Feature added successfully', 'success');
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addFeatureModal'));
+                if (modal) {
+                    modal.hide();
+                }
+                
+                // Reset form
+                addFeatureForm.reset();
+                fortificationGroup.style.display = 'none';
+                obstacleGroup.style.display = 'none';
+                
+                // Refresh features list
+                refreshData(`/Map/Map/ListHexFeatures?hexId=${hexId}`, '#hexFeaturesHost');
+            } else {
+                showNotification('Failed to add feature', 'error');
+            }
+        }).catch(error => {
+            console.error('Error adding feature:', error);
+            showNotification('Failed to add feature', 'error');
+        }).finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        });
+    });
+});
+
+// Remove feature function
+function removeFeature(featureId) {
+    if (confirm('Are you sure you want to remove this feature?')) {
+        fetch('/Map/Map/RemoveHexFeature', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `sessionId=${window.currentSessionId || ''}&featureId=${featureId}`
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Feature removed successfully', 'success');
+                
+                // Remove from UI
+                const featureElement = document.querySelector(`[data-feature-id="${featureId}"]`);
+                if (featureElement) {
+                    featureElement.remove();
+                }
+            } else {
+                showNotification('Failed to remove feature', 'error');
+            }
+        }).catch(error => {
+            console.error('Error removing feature:', error);
+            showNotification('Failed to remove feature', 'error');
+        });
+    }
+}
+
+// Edit feature function (placeholder)
+function editFeature(featureId) {
+    showNotification('Edit feature functionality coming soon', 'info');
+}
+</script>

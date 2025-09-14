@@ -1,0 +1,133 @@
+@{
+    ViewData["Title"] = "UI Components Demo";
+    ViewBag.CurrentScenario = "Operation Desert Storm";
+    ViewBag.CurrentSession = "Session 1";
+    ViewBag.GameStatus = "Active";
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Tag Helpers Demo</h5>
+            </div>
+            <div class="card-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Unit Type (Enum Dropdown)</label>
+                        <enum-dropdown asp-for="UnitType" asp-class="form-select" asp-include-empty="true" asp-empty-text="Select Unit Type"></enum-dropdown>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Hex Position (Hex Dropdown)</label>
+                        <hex-dropdown asp-for="HexPosition" asp-class="form-select" asp-max-q="5" asp-max-r="5" asp-min-q="-5" asp-min-r="-5"></hex-dropdown>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Token Chips Demo</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <span class="token-chip blue-team">Blue Team</span>
+                    <span class="token-chip red-team">Red Team</span>
+                    <span class="token-chip green-team">Green Team</span>
+                    <span class="token-chip yellow-team">Yellow Team</span>
+                    <span class="token-chip neutral">Neutral</span>
+                </div>
+                <div class="mb-3">
+                    <span class="token-chip selected">Selected Token</span>
+                    <span class="token-chip">Unselected Token</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Status Badges Demo</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <span class="status-badge active">Active</span>
+                    <span class="status-badge inactive">Inactive</span>
+                    <span class="status-badge pending">Pending</span>
+                    <span class="status-badge completed">Completed</span>
+                    <span class="status-badge warning">Warning</span>
+                    <span class="status-badge error">Error</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Unit Status Demo</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <span class="unit-status healthy">Healthy Unit</span>
+                    <span class="unit-status damaged">Damaged Unit</span>
+                    <span class="unit-status destroyed">Destroyed Unit</span>
+                    <span class="unit-status moving">Moving Unit</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Hex Grid Demo</h5>
+            </div>
+            <div class="card-body">
+                <div class="game-board">
+                    <div class="hex-grid">
+                        <div class="hex-cell">Q0,R0</div>
+                        <div class="hex-cell occupied">Q1,R0</div>
+                        <div class="hex-cell objective">Q2,R0</div>
+                        <div class="hex-cell terrain">Q0,R1</div>
+                        <div class="hex-cell water">Q1,R1</div>
+                        <div class="hex-cell forest">Q2,R1</div>
+                        <div class="hex-cell mountain">Q0,R2</div>
+                        <div class="hex-cell selected">Q1,R2</div>
+                        <div class="hex-cell">Q2,R2</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Pagination Demo</h5>
+            </div>
+            <div class="card-body">
+                @{
+                    var pagingInfo = new WargameBoard.Web.Models.PagingInfo
+                    {
+                        CurrentPage = 2,
+                        PageSize = 25,
+                        TotalItems = 150
+                    };
+                }
+                @await Html.PartialAsync("_PagingPartial", pagingInfo)
+            </div>
+        </div>
+    </div>
+</div>

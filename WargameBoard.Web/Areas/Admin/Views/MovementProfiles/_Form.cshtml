@@ -1,0 +1,53 @@
+@model WargameBoard.Core.Entities.MovementProfile
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" placeholder="Enter movement profile name" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <div class="form-check mt-4">
+                <input asp-for="IsActive" class="form-check-input" />
+                <label asp-for="IsActive" class="form-check-label">Active</label>
+            </div>
+            <div class="form-text">Inactive profiles will not appear in selection lists</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="mb-3">
+            <label asp-for="RoadKmph" class="form-label"></label>
+            <input asp-for="RoadKmph" class="form-control" type="number" min="1" max="120" />
+            <span asp-validation-for="RoadKmph" class="text-danger"></span>
+            <div class="form-text">Road movement speed (km/h)</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="mb-3">
+            <label asp-for="XCountryKmph" class="form-label"></label>
+            <input asp-for="XCountryKmph" class="form-control" type="number" min="1" max="120" />
+            <span asp-validation-for="XCountryKmph" class="text-danger"></span>
+            <div class="form-text">Cross-country speed (km/h)</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="mb-3">
+            <label asp-for="CombatAdvanceKmph" class="form-label"></label>
+            <input asp-for="CombatAdvanceKmph" class="form-control" type="number" min="1" max="10" />
+            <span asp-validation-for="CombatAdvanceKmph" class="text-danger"></span>
+            <div class="form-text">Tactical/advance speed (km/h)</div>
+        </div>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label asp-for="Description" class="form-label"></label>
+    <textarea asp-for="Description" class="form-control" rows="3" placeholder="Enter description (optional)"></textarea>
+    <span asp-validation-for="Description" class="text-danger"></span>
+</div>

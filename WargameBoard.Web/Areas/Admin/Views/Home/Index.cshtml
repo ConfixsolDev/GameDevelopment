@@ -1,0 +1,107 @@
+@{
+    ViewData["Title"] = "Admin";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Administration</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title">
+                    <i class="bi bi-people"></i> Sides
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Manage game sides and factions.</p>
+                <a asp-controller="Sides" asp-action="Index" class="btn btn-primary">Manage Sides</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title">
+                    <i class="bi bi-shield"></i> Unit Types
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Manage unit types and categories.</p>
+                <a asp-controller="UnitTypes" asp-action="Index" class="btn btn-primary">Manage Unit Types</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title">
+                    <i class="bi bi-speedometer2"></i> Movement Profiles
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Manage movement profiles and capabilities.</p>
+                <a asp-controller="MovementProfiles" asp-action="Index" class="btn btn-primary">Manage Movement Profiles</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title">
+                    <i class="bi bi-map"></i> Terrain Types
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Manage terrain types and their properties.</p>
+                <a asp-controller="TerrainTypes" asp-action="Index" class="btn btn-primary">Manage Terrain Types</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title">
+                    <i class="bi bi-building"></i> Fortification Types
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Manage fortification types and defensive structures.</p>
+                <a asp-controller="FortificationTypes" asp-action="Index" class="btn btn-primary">Manage Fortifications</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title">
+                    <i class="bi bi-barrier"></i> Obstacle Types
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Manage obstacle types and movement barriers.</p>
+                <a asp-controller="ObstacleTypes" asp-action="Index" class="btn btn-primary">Manage Obstacles</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title">
+                    <i class="bi bi-circle"></i> Token Types
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Manage token types and their properties.</p>
+                <a asp-controller="TokenGroups" asp-action="Index" class="btn btn-primary">Manage Token Types</a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,184 @@
+@model IEnumerable<WargameBoard.Web.Models.ViewModels.ScenarioUnitEditVm>
+
+@{
+    ViewData["Title"] = $"Units - {ViewBag.ScenarioName}";
+    var scenarioId = ViewBag.ScenarioId;
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title">
+                    <i class="fas fa-users"></i> Scenario Units - @ViewBag.ScenarioName
+                </h3>
+                <div>
+                    <button type="button" class="btn btn-success" id="addUnitBtn">
+                        <i class="fas fa-plus"></i> Add Unit
+                    </button>
+                    <a asp-action="Edit" asp-route-id="@scenarioId" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Scenario
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @TempData["SuccessMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                <div id="unitsContainer">
+                    @if (Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="unitsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Unit</th>
+                                        <th>Start Hex</th>
+                                        <th>Steps</th>
+                                        <th>Posture</th>
+                                        <th>Hidden</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="unitsTableBody">
+                                    @foreach (var unit in Model)
+                                    {
+                                        <partial name="_ScenarioUnitRow" model="unit" />
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No units assigned</h5>
+                            <p class="text-muted">Add units to this scenario to get started.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Add Unit button click handler
+            $('#addUnitBtn').click(function() {
+                $.post('@Url.Action("AddUnit", "Scenarios")', { scenarioId: @scenarioId })
+                    .done(function(data) {
+                        if ($('#unitsTableBody').length === 0) {
+                            // Create table if it doesn't exist
+                            $('#unitsContainer').html(`
+                                <div class="table-responsive">
+                                    <table class="table table-striped" id="unitsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Unit</th>
+                                                <th>Start Hex</th>
+                                                <th>Steps</th>
+                                                <th>Posture</th>
+                                                <th>Hidden</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="unitsTableBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `);
+                        }
+                        $('#unitsTableBody').append(data);
+                    })
+                    .fail(function() {
+                        alert('Failed to add unit row');
+                    });
+            });
+
+            // Remove Unit button click handler
+            $(document).on('click', '.removeUnitBtn', function() {
+                var row = $(this).closest('tr');
+                var unitId = $(this).data('unit-id');
+
+                if (unitId) {
+                    // Existing unit - delete from database
+                    $.post('@Url.Action("DeleteUnit", "Scenarios")', { id: unitId })
+                        .done(function(response) {
+                            if (response.success) {
+                                row.remove();
+                                if ($('#unitsTableBody tr').length === 0) {
+                                    $('#unitsContainer').html(`
+                                        <div class="text-center py-4">
+                                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                            <h5 class="text-muted">No units assigned</h5>
+                                            <p class="text-muted">Add units to this scenario to get started.</p>
+                                        </div>
+                                    `);
+                                }
+                            } else {
+                                alert('Failed to delete unit: ' + response.message);
+                            }
+                        })
+                        .fail(function() {
+                            alert('Failed to delete unit');
+                        });
+                } else {
+                    // New unit - just remove from DOM
+                    row.remove();
+                    if ($('#unitsTableBody tr').length === 0) {
+                        $('#unitsContainer').html(`
+                            <div class="text-center py-4">
+                                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No units assigned</h5>
+                                <p class="text-muted">Add units to this scenario to get started.</p>
+                            </div>
+                        `);
+                    }
+                }
+            });
+
+            // Save Unit button click handler
+            $(document).on('click', '.saveUnitBtn', function() {
+                var row = $(this).closest('tr');
+                var data = {
+                    ScenarioId: @scenarioId,
+                    UnitId: row.find('select[name$="UnitId"]').val(),
+                    StartHexId: row.find('select[name$="StartHexId"]').val(),
+                    Steps: row.find('input[name$="Steps"]').val(),
+                    Posture: row.find('select[name$="Posture"]').val(),
+                    Hidden: row.find('input[name$="Hidden"]').is(':checked')
+                };
+
+
+
+          $.ajax({
+            url: '@Url.Action("SaveUnit", "Scenarios")',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data)
+          })
+          .done(response => {
+            if (response?.success) {
+              location.reload();
+            } else if (typeof response === 'string') {
+              row.replaceWith(response);
+            } else {
+              alert('Unexpected response from server.');
+            }
+          })
+          .fail(err => {
+            alert(`Failed to save objective: ${err.status} ${err.responseText}`);
+          })
+          .always(() => $btn.prop('disabled', false));
+            });
+        });
+    </script>
+}

@@ -1,0 +1,311 @@
+@model IEnumerable<WargameBoard.Core.Entities.BoardCell>
+@using WargameBoard.Web.Models
+
+@{
+    ViewData["Title"] = "Map Board Cells";
+    var pagingInfo = ViewBag.PagingInfo as PagingInfo;
+    var hexes = ViewBag.Hexes as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title">
+                    <i class="fas fa-map"></i> Map Board Cells
+                </h3>
+                <div>
+                    <button type="button" class="btn btn-primary" id="addCellBtn">
+                        <i class="fas fa-plus"></i> Add Cell
+                    </button>
+                    <a asp-action="Diagnostics" class="btn btn-info">
+                        <i class="fas fa-microchip"></i> View Diagnostics
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @TempData["SuccessMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                @if (Model.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="boardCellsTable">
+                            <thead>
+                                <tr>
+                                    <th>Row</th>
+                                    <th>Col</th>
+                                    <th>Sensor Address</th>
+                                    <th>Hex ID</th>
+                                    <th>Threshold</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var cell in Model)
+                                {
+                                    <tr data-cell-id="@cell.Id">
+                                        <td>@cell.Row</td>
+                                        <td>@cell.Col</td>
+                                        <td>
+                                            <span class="editable-field" data-field="sensorAddress" data-value="@cell.SensorAddress">
+                                                @(cell.SensorAddress ?? "Click to set")
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="editable-field" data-field="hexId" data-value="@cell.HexId">
+                                                @if (cell.HexId.HasValue)
+                                                {
+                                                    @cell.HexId
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Click to set</span>
+                                                }
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="editable-field" data-field="threshold" data-value="@cell.Threshold">
+                                                @if (cell.Threshold.HasValue)
+                                                {
+                                                    @cell.Threshold
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Click to set</span>
+                                                }
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-outline-danger deleteCellBtn" data-cell-id="@cell.Id">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if (pagingInfo != null && pagingInfo.TotalPages > 1)
+                    {
+                        <partial name="_PagingPartial" model="pagingInfo" />
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-map fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No board cells found</h5>
+                        <p class="text-muted">Add board cells to start mapping hardware sensors to hex locations.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Cell Modal -->
+<div class="modal fade" id="addCellModal" tabindex="-1" aria-labelledby="addCellModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCellModalLabel">Add Board Cell</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="addCellModalBody">
+                <!-- Form will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Add Cell button click handler
+            $('#addCellBtn').click(function() {
+                $.get('@Url.Action("CreateBoardCell", "Hardware")')
+                    .done(function(data) {
+                        $('#addCellModalBody').html(data);
+                        $('#addCellModal').modal('show');
+                    })
+                    .fail(function() {
+                        alert('Failed to load add cell form');
+                    });
+            });
+
+            // Inline editing handlers
+            $(document).on('click', '.editable-field', function() {
+                const field = $(this).data('field');
+                const currentValue = $(this).data('value');
+                const cellId = $(this).closest('tr').data('cell-id');
+                
+                if (field === 'hexId') {
+                    // Show dropdown for hex selection
+                    showHexDropdown($(this), cellId, currentValue);
+                } else if (field === 'threshold') {
+                    // Show number input for threshold
+                    showNumberInput($(this), cellId, currentValue, 'threshold');
+                } else if (field === 'sensorAddress') {
+                    // Show text input for sensor address
+                    showTextInput($(this), cellId, currentValue, 'sensorAddress');
+                }
+            });
+
+            // Delete Cell button click handler
+            $(document).on('click', '.deleteCellBtn', function() {
+                const cellId = $(this).data('cell-id');
+                if (confirm('Are you sure you want to delete this board cell?')) {
+                    $.post('@Url.Action("DeleteBoardCell", "Hardware")', { id: cellId })
+                        .done(function(response) {
+                            if (response.success) {
+                                location.reload();
+                            } else {
+                                alert('Failed to delete cell: ' + response.message);
+                            }
+                        })
+                        .fail(function() {
+                            alert('Failed to delete cell');
+                        });
+                }
+            });
+
+            // Add Cell form submit handler
+            $(document).on('submit', '#addCellForm', function(e) {
+                e.preventDefault();
+                const formData = $(this).serialize();
+                
+                $.post('@Url.Action("CreateBoardCell", "Hardware")', formData)
+                    .done(function(response) {
+                        if (response.success) {
+                            $('#addCellModal').modal('hide');
+                            location.reload();
+                        } else {
+                            $('#addCellModalBody').html(response);
+                        }
+                    })
+                    .fail(function() {
+                        alert('Failed to create cell');
+                    });
+            });
+        });
+
+        function showHexDropdown(element, cellId, currentValue) {
+            let optionsHtml = '<option value="">-- No Hex --</option>';
+            @foreach (var hex in hexes)
+            {
+                <text>
+                optionsHtml += '<option value="@hex.Value">@hex.Text</option>';
+                </text>
+            }
+            
+            const dropdown = $(`
+                <select class="form-select form-select-sm" style="min-width: 120px;">
+                    ${optionsHtml}
+                </select>
+            `);
+            
+            // Set the selected value
+            dropdown.val(currentValue || '');
+            
+            element.html(dropdown);
+            dropdown.focus();
+            
+            dropdown.change(function() {
+                const newValue = $(this).val();
+                updateCellField(cellId, 'hexId', newValue, element);
+            });
+            
+            dropdown.blur(function() {
+                if (!$(this).is(':focus')) {
+                    updateCellField(cellId, 'hexId', $(this).val(), element);
+                }
+            });
+        }
+
+        function showNumberInput(element, cellId, currentValue, field) {
+            const input = $(`
+                <input type="number" class="form-control form-control-sm" 
+                       value="${currentValue || ''}" 
+                       min="0" max="100" 
+                       style="min-width: 80px;" />
+            `);
+            
+            element.html(input);
+            input.focus().select();
+            
+            input.blur(function() {
+                updateCellField(cellId, field, $(this).val(), element);
+            });
+            
+            input.keypress(function(e) {
+                if (e.which === 13) { // Enter key
+                    updateCellField(cellId, field, $(this).val(), element);
+                }
+            });
+        }
+
+        function showTextInput(element, cellId, currentValue, field) {
+            const input = $(`
+                <input type="text" class="form-control form-control-sm" 
+                       value="${currentValue || ''}" 
+                       placeholder="Enter sensor address"
+                       style="min-width: 150px;" />
+            `);
+            
+            element.html(input);
+            input.focus().select();
+            
+            input.blur(function() {
+                updateCellField(cellId, field, $(this).val(), element);
+            });
+            
+            input.keypress(function(e) {
+                if (e.which === 13) { // Enter key
+                    updateCellField(cellId, field, $(this).val(), element);
+                }
+            });
+        }
+
+        function updateCellField(cellId, field, value, element) {
+            const url = field === 'hexId' ? '@Url.Action("UpdateBoardCellHex", "Hardware")' :
+                       field === 'threshold' ? '@Url.Action("UpdateBoardCellThreshold", "Hardware")' :
+                       '@Url.Action("UpdateBoardCellSensorAddress", "Hardware")';
+            
+            const data = { id: cellId };
+            data[field] = value;
+            
+            $.post(url, data)
+                .done(function(response) {
+                    if (response.success) {
+                        // Update the display
+                        if (field === 'hexId') {
+                            element.html(value ? value : '<span class="text-muted">Click to set</span>');
+                            element.data('value', value);
+                        } else if (field === 'threshold') {
+                            element.html(value ? value : '<span class="text-muted">Click to set</span>');
+                            element.data('value', value);
+                        } else if (field === 'sensorAddress') {
+                            element.html(value || 'Click to set');
+                            element.data('value', value);
+                        }
+                    } else {
+                        alert('Failed to update: ' + response.message);
+                        location.reload(); // Reload to show current state
+                    }
+                })
+                .fail(function() {
+                    alert('Failed to update field');
+                    location.reload(); // Reload to show current state
+                });
+        }
+    </script>
+}

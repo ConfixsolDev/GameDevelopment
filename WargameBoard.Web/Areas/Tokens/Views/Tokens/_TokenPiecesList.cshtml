@@ -1,0 +1,66 @@
+@model IEnumerable<WargameBoard.Core.Entities.TokenPiece>
+
+@{
+    var designId = ViewBag.DesignId;
+    var designName = ViewBag.DesignName;
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+<div class="mb-3">
+    <h6 class="text-muted">@designName Pieces</h6>
+</div>
+
+@if (Model.Any())
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-sm">
+            <thead>
+                <tr>
+                    <th>Serial</th>
+                    <th>Side</th>
+                    <th>Hardware ID</th>
+                    <th>Unique</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var piece in Model)
+                {
+                    <tr>
+                        <td>@(piece.Serial ?? "N/A")</td>
+                        <td>@(piece.SideId?.ToString() ?? "N/A")</td>
+                        <td>@(piece.HardwareIdentity ?? "N/A")</td>
+                        <td>
+                            @if (piece.IsUnique)
+                            {
+                                <span class="badge bg-warning">Unique</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Standard</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-primary editPieceBtn" data-piece-id="@piece.Id">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger deletePieceBtn" data-piece-id="@piece.Id">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="text-center py-3">
+        <i class="fas fa-cubes fa-2x text-muted mb-2"></i>
+        <p class="text-muted mb-0">No pieces found for this design.</p>
+        <small class="text-muted">Click "Add Piece" to create the first piece.</small>
+    </div>
+}

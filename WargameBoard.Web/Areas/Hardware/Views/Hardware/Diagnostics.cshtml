@@ -1,0 +1,173 @@
+@model IEnumerable<WargameBoard.Core.Entities.BoardCell>
+
+@{
+    ViewData["Title"] = "Hardware Diagnostics";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title">
+                    <i class="fas fa-microchip"></i> Hardware Diagnostics
+                </h3>
+                <div>
+                    <button type="button" class="btn btn-success btn-sm" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh Now
+                    </button>
+                    <div class="form-check form-switch d-inline-block ms-3">
+                        <input class="form-check-input" type="checkbox" id="autoRefreshSwitch" checked>
+                        <label class="form-check-label" for="autoRefreshSwitch">
+                            Auto Refresh (1s)
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @TempData["SuccessMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                <div id="diagnosticsTableContainer">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="diagnosticsTable">
+                            <thead>
+                                <tr>
+                                    <th>Row</th>
+                                    <th>Col</th>
+                                    <th>Sensor Address</th>
+                                    <th>Hex ID</th>
+                                    <th>Threshold</th>
+                                    <th>Last Strength</th>
+                                    <th>Last Update</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="diagnosticsTableBody">
+                                @foreach (var cell in Model)
+                                {
+                                    <tr data-cell-id="@cell.Id" class="@(cell.LastStrength > cell.Threshold ? "table-warning" : "")">
+                                        <td>@cell.Row</td>
+                                        <td>@cell.Col</td>
+                                        <td>@(cell.SensorAddress ?? "N/A")</td>
+                                        <td>@(cell.HexId?.ToString() ?? "N/A")</td>
+                                        <td>@(cell.Threshold?.ToString() ?? "N/A")</td>
+                                        <td class="strength-cell">
+                                            @if (cell.LastStrength.HasValue)
+                                            {
+                                                <span class="badge @(cell.LastStrength > cell.Threshold ? "bg-warning" : "bg-secondary")">
+                                                    @cell.LastStrength
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">N/A</span>
+                                            }
+                                        </td>
+                                        <td class="update-time">
+                                            @if (cell.LastStrengthUpdate.HasValue)
+                                            {
+                                                <small class="text-muted">@cell.LastStrengthUpdate.Value.ToString("HH:mm:ss")</small>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Never</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (cell.LastStrength.HasValue)
+                                            {
+                                                @if (cell.LastStrength > cell.Threshold)
+                                                {
+                                                    <span class="badge bg-warning">
+                                                        <i class="fas fa-exclamation-triangle"></i> Above Threshold
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check"></i> Normal
+                                                    </span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">
+                                                    <i class="fas fa-question"></i> No Data
+                                                </span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                @if (!Model.Any())
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-microchip fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No board cells found</h5>
+                        <p class="text-muted">Configure board cells in the mapping section first.</p>
+                        <a asp-action="MapBoardCells" class="btn btn-primary">
+                            <i class="fas fa-cog"></i> Configure Board Cells
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let autoRefreshInterval;
+        const refreshInterval = 1000; // 1 second
+
+        $(document).ready(function() {
+            // Auto refresh switch handler
+            $('#autoRefreshSwitch').change(function() {
+                if (this.checked) {
+                    startAutoRefresh();
+                } else {
+                    stopAutoRefresh();
+                }
+            });
+
+            // Manual refresh button
+            $('#refreshBtn').click(function() {
+                refreshDiagnostics();
+            });
+
+            // Start auto refresh by default
+            startAutoRefresh();
+        });
+
+        function startAutoRefresh() {
+            stopAutoRefresh(); // Clear any existing interval
+            autoRefreshInterval = setInterval(refreshDiagnostics, refreshInterval);
+        }
+
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
+
+        function refreshDiagnostics() {
+            $.get('@Url.Action("Current", "Hardware")')
+                .done(function(data) {
+                    $('#diagnosticsTableContainer').html(data);
+                })
+                .fail(function() {
+                    console.error('Failed to refresh diagnostics');
+                });
+        }
+    </script>
+}

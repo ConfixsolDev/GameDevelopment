@@ -1,0 +1,43 @@
+@model WargameBoard.Core.Entities.UnitType
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" placeholder="Enter unit type name" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="Category" class="form-label"></label>
+            <select asp-for="Category" class="form-select">
+                <option value="">-- Select Category --</option>
+                <option value="Infantry">Infantry</option>
+                <option value="Armor">Armor</option>
+                <option value="Artillery">Artillery</option>
+                <option value="Air Defense">Air Defense</option>
+                <option value="Engineer">Engineer</option>
+                <option value="Reconnaissance">Reconnaissance</option>
+                <option value="Support">Support</option>
+            </select>
+            <span asp-validation-for="Category" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label asp-for="Description" class="form-label"></label>
+    <textarea asp-for="Description" class="form-control" rows="3" placeholder="Enter description (optional)"></textarea>
+    <span asp-validation-for="Description" class="text-danger"></span>
+</div>
+
+<div class="mb-3">
+    <div class="form-check">
+        <input asp-for="IsActive" class="form-check-input" />
+        <label asp-for="IsActive" class="form-check-label">
+            Active
+        </label>
+    </div>
+    <div class="form-text">Inactive unit types will not appear in selection lists</div>
+</div>
