@@ -253,7 +253,7 @@ namespace TechWebSol.Controllers
             var teamId = user?.TeamId;
 
             var regiments = await _context.ArmouredRegiments
-                .Where(r => r.TeamId == teamId && r.IsDeleted)
+                .Where(r => r.TeamId == teamId && r.IsActive)
                 .OrderBy(r => r.Name)
                 .ToListAsync();
 
