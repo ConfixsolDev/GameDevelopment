@@ -257,7 +257,7 @@ namespace TechWebSol.Data
                 entity.HasOne(e => e.UnitDeployment)
                     .WithMany(e => e.BattleParticipations)
                     .HasForeignKey(e => e.UnitDeploymentId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             modelBuilder.Entity<CombatResult>(entity =>

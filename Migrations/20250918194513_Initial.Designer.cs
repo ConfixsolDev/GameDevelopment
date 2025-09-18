@@ -12,8 +12,8 @@ using TechWebSol.Data;
 namespace TechWebSol.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250912202329_dataabaseCodeupdate")]
-    partial class dataabaseCodeupdate
+    [Migration("20250918194513_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -148,9 +148,6 @@ namespace TechWebSol.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("RoleAccess")
@@ -476,9 +473,6 @@ namespace TechWebSol.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -553,9 +547,6 @@ namespace TechWebSol.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<Guid?>("ScenarioId")
@@ -637,9 +628,6 @@ namespace TechWebSol.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Position")
                         .HasColumnType("nvarchar(max)");
 
@@ -705,9 +693,6 @@ namespace TechWebSol.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
@@ -786,9 +771,6 @@ namespace TechWebSol.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<decimal>("ProtectionModifier")
                         .HasColumnType("decimal(18,2)");
 
@@ -842,9 +824,6 @@ namespace TechWebSol.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Notes")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
@@ -895,9 +874,6 @@ namespace TechWebSol.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
@@ -977,9 +953,6 @@ namespace TechWebSol.Migrations
                         .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<int>("MANPADS")
@@ -1117,9 +1090,6 @@ namespace TechWebSol.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<string>("IssuedByUserId")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
@@ -1247,9 +1217,6 @@ namespace TechWebSol.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<string>("ObjectiveLocation")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -1321,9 +1288,6 @@ namespace TechWebSol.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsProcessed")
@@ -1408,9 +1372,6 @@ namespace TechWebSol.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1467,9 +1428,6 @@ namespace TechWebSol.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<Guid?>("TeamId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1516,9 +1474,6 @@ namespace TechWebSol.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<decimal>("TankPSIMax")
@@ -1574,9 +1529,6 @@ namespace TechWebSol.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsManualToken")
@@ -1651,9 +1603,6 @@ namespace TechWebSol.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1697,9 +1646,6 @@ namespace TechWebSol.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("OriginalTouches")
@@ -1846,9 +1792,6 @@ namespace TechWebSol.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<int>("MaxStrength")
                         .HasColumnType("int");
 
@@ -1922,9 +1865,6 @@ namespace TechWebSol.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
@@ -2073,7 +2013,7 @@ namespace TechWebSol.Migrations
                     b.HasOne("TechWebSol.Models.UnitDeployment", "UnitDeployment")
                         .WithMany("BattleParticipations")
                         .HasForeignKey("UnitDeploymentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Battle");
