@@ -1,0 +1,64 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> _userManager
+@{
+    var ShortName = "";
+    var DisplayName = "";
+    var user = await _userManager.GetUserAsync(User);
+    if (user?.FullName != null)
+    {
+        DisplayName = user.FullName;
+        var parts = user.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var first = parts.Length > 0 ? parts[0] : "";
+        var second = parts.Length > 1 ? parts[1] : "";
+        var c1 = string.IsNullOrEmpty(first) ? "" : first.Substring(0, 1);
+        var c2 = string.IsNullOrEmpty(second) ? "" : second.Substring(0, 1);
+        ShortName = (c1 + c2).ToUpperInvariant();
+    }
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - IDS</title>
+    <link rel="shortcut icon" href="~/assets/images/favicon.ico">
+
+    <!-- Keep your theme CSS; ensure it matches your Bootstrap JS version -->
+    <link href="~/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="~/css/gameplay.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/metismenu/dist/metisMenu.min.css">
+
+    <!-- Sweetalert / Fonts / Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet">
+
+    <!-- Core scripts (order matters) -->
+    <script src="~/assets/js/jquery.min.js"></script>
+    <!-- Bootstrap 5 bundle (includes Popper + Modal plugin) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+
+
+
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+
+    @RenderBody()
+
+
+
+
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/metismenu"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplebar/5.3.6/simplebar.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</body>
+</html>

@@ -70,6 +70,24 @@ namespace TechWebSol.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "MapDocuments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    RegionsJson = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ObstaclesJson = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SafeJson = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedUtc = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MapDocuments", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Teams",
                 columns: table => new
                 {
@@ -1217,6 +1235,9 @@ namespace TechWebSol.Migrations
 
             migrationBuilder.DropTable(
                 name: "InfantryBattalions");
+
+            migrationBuilder.DropTable(
+                name: "MapDocuments");
 
             migrationBuilder.DropTable(
                 name: "MapMarkers");

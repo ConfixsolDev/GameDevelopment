@@ -12,7 +12,7 @@ using TechWebSol.Data;
 namespace TechWebSol.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250918194513_Initial")]
+    [Migration("20250920003521_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -1016,6 +1016,38 @@ namespace TechWebSol.Migrations
                     b.HasIndex("TeamId");
 
                     b.ToTable("InfantryBattalions");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.Map.MapDocument", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ObstaclesJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RegionsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SafeJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MapDocuments");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.MapMarker", b =>

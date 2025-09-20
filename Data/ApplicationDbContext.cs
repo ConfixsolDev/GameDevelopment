@@ -10,6 +10,7 @@ using TechWebSol.Constants;
 using TechWebSol.Extensions;
 using TechWebSol.Models;
 using TechWebSol.Models.DocumentModal;
+using TechWebSol.Models.Map;
 using TechWebSol.ViewModels;
 
 namespace TechWebSol.Data
@@ -56,6 +57,8 @@ namespace TechWebSol.Data
         public DbSet<CombatResult> CombatResults { get; set; }
         public DbSet<Objective> Objectives { get; set; }
         public DbSet<SimulationEvent> SimulationEvents { get; set; }
+
+        public DbSet<MapDocument> MapDocuments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -294,6 +297,13 @@ namespace TechWebSol.Data
                     .WithMany()
                     .HasForeignKey(e => e.ScenarioId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<MapDocument>(entity =>
+            {
+                entity.Property(p => p.RegionsJson).HasColumnType("nvarchar(max)");
+                entity.Property(p => p.ObstaclesJson).HasColumnType("nvarchar(max)");
+                entity.Property(p => p.SafeJson).HasColumnType("nvarchar(max)");
             });
         }
 
