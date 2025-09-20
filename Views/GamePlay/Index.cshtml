@@ -110,6 +110,29 @@
         .leaflet-draw-toolbar a {
             margin: 0 6px;
         }
+    /* Improve Data Entry contrast */
+    .gameplay-modal-content {
+        background: #0f172a; /* slate-900 */
+        color: #e5e7eb;      /* gray-200 */
+    }
+    .gameplay-modal-header, .gameplay-modal-footer {
+        background: #111827; /* gray-900 */
+        color: #e5e7eb;
+        border-color: #1f2937;
+    }
+    .data-table thead th { background:#1f2937; color:#e5e7eb; }
+    .data-table tbody tr:nth-child(even){ background:#0b1220; }
+    .data-table tbody tr:nth-child(odd){ background:#0d1628; }
+    .form-control, select.form-control, textarea.form-control {
+        background:#0b1220; color:#e5e7eb; border:1px solid #1f2937;
+    }
+    .btn, .gameplay-btn { background:#334155; color:#e5e7eb; border:1px solid #1f2937; }
+    .btn:hover, .gameplay-btn:hover { background:#475569; }
+    .btn-primary, .gameplay-btn.primary { background:#1d4ed8; border-color:#1e40af; color:white; }
+    .btn-danger, .gameplay-btn.danger { background:#b91c1c; border-color:#7f1d1d; color:white; }
+    label { color:#e5e7eb; }
+    .tab-btn { background:#0b1220; color:#e5e7eb; border:1px solid #1f2937; }
+    .tab-btn.active { background:#1f2937; }
 </style>
 
 
@@ -286,6 +309,64 @@
                     </button>
                 </div>
             </div>
+
+            <div class="overlay-control-group">
+                <h6>Intel & Recon</h6>
+                <div class="control-row">
+                    <button class="overlay-btn" onclick="openIntelForm()">
+                        <i class="fas fa-eye"></i>
+                        <span>Add Intel</span>
+                    </button>
+                    <button class="overlay-btn" onclick="openReconForm()">
+                        <i class="fas fa-binoculars"></i>
+                        <span>Add Recon</span>
+                    </button>
+                </div>
+                <div class="control-row">
+                    <button class="overlay-btn" id="btnToggleIntel" onclick="toggleIntelLayer(this)">
+                        <i class="fas fa-toggle-on"></i>
+                        <span>Toggle Intel</span>
+                    </button>
+                    <button class="overlay-btn" id="btnToggleRecon" onclick="toggleReconLayer(this)">
+                        <i class="fas fa-toggle-on"></i>
+                        <span>Toggle Recon</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="overlay-control-group">
+                <h6>Tools</h6>
+                <div class="control-row">
+                    <button class="overlay-btn" onclick="manageTokens()">
+                        <i class="fas fa-crosshairs"></i>
+                        <span>Tokens</span>
+                    </button>
+                    <button class="overlay-btn" onclick="beginTemplatePlacement()">
+                        <i class="fas fa-plus"></i>
+                        <span>Place Selected</span>
+                    </button>
+                </div>
+                <div class="control-row">
+                    <button class="overlay-btn" onclick="advanceTime()">
+                        <i class="fas fa-forward"></i>
+                        <span>Advance</span>
+                    </button>
+                    <button class="overlay-btn" onclick="runScenarioPointCheck()">
+                        <i class="fas fa-calculator"></i>
+                        <span>Points</span>
+                    </button>
+                </div>
+                <div class="control-row">
+                    <button class="overlay-btn" onclick="importTeamData()">
+                        <i class="fas fa-upload"></i>
+                        <span>Import</span>
+                    </button>
+                    <button class="overlay-btn" onclick="exportTeamData()">
+                        <i class="fas fa-download"></i>
+                        <span>Export</span>
+                    </button>
+                </div>
+            </div>
         </div>
         <!-- BOTTOM-LEFT: Coordinates -->
         <div class="coordinates-display slide-up" id="coordsBox">
@@ -425,6 +506,12 @@
                     </button>
                     <button class="tab-btn" onclick="switchTab('protection')">
                         <i class="fas fa-shield-alt"></i> Force Protection
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('intel')">
+                        <i class="fas fa-eye"></i> Intelligence
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('recon')">
+                        <i class="fas fa-binoculars"></i> Recon
                     </button>
                 </div>
 
@@ -590,11 +677,63 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Intelligence Tab -->
+                <div id="intel-tab" class="tab-content">
+                    <div class="data-section-header">
+                        <h4>Intelligence Reports</h4>
+                        <button class="btn btn-primary" onclick="openIntelForm()">
+                            <i class="fas fa-plus"></i> Add Report
+                        </button>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table" id="intelTable">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Summary</th>
+                                    <th>Priority</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="intelTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Recon Tab -->
+                <div id="recon-tab" class="tab-content">
+                    <div class="data-section-header">
+                        <h4>Recon Units / Sightings</h4>
+                        <button class="btn btn-primary" onclick="openReconForm()">
+                            <i class="fas fa-plus"></i> Add Recon Entry
+                        </button>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table" id="reconTable">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Confidence</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reconTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="gameplay-modal-footer">
             <button class="gameplay-btn" onclick="exportTeamData()">
                 <i class="fas fa-download"></i> Export Data
+            </button>
+            <button class="gameplay-btn" onclick="importTeamData()">
+                <i class="fas fa-upload"></i> Import Data
+            </button>
+            <button class="gameplay-btn" onclick="runAutomatedTests()">
+                <i class="fas fa-vial"></i> Run Auto Tests
             </button>
             <button class="gameplay-btn" onclick="closeModal('dataEntryModal')">Close</button>
         </div>
@@ -608,11 +747,30 @@
             <h3><i class="fas fa-crosshairs"></i> Token Management</h3>
             <button class="gameplay-modal-close" onclick="closeModal('tokenManagementModal')">&times;</button>
         </div>
-        <div class="gameplay-modal-body">
-            <p>Token management functionality will be implemented here.</p>
-            <!-- TODO: Add token management interface -->
+            <div class="gameplay-modal-body">
+            <div style="display:flex; gap:10px; margin-bottom:8px">
+                <select id="tokenFilterSide" class="form-control" style="max-width:160px">
+                    <option value="">All Sides</option>
+                    <option value="blue-land">Blue</option>
+                    <option value="fox-land">Fox</option>
+                </select>
+                <select id="tokenTemplate" class="form-control" style="max-width:240px">
+                    <option value="">(choose token to place)</option>
+                    <option value="Brigade">Brigade unit</option>
+                    <option value="Division Infantry">Div infantry unit</option>
+                    <option value="Armoured">Armored unit</option>
+                    <option value="Artillery">Artillery unit</option>
+                    <option value="Recon">Recon unit</option>
+                    <option value="HQ">HQ</option>
+                    <option value="Supply">Supply</option>
+                </select>
+                <input id="tokenSearch" class="form-control" placeholder="Search by name..." style="flex:1">
+                <button class="btn" onclick="beginTemplatePlacement()"><i class="fas fa-plus"></i> Place Selected</button>
+            </div>
+            <div id="tokenList" class="data-table-container"></div>
         </div>
         <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="refreshTokenList()">Refresh</button>
             <button class="gameplay-btn" onclick="closeModal('tokenManagementModal')">Close</button>
         </div>
     </div>
@@ -728,6 +886,12 @@
                     <div class="form-group col-md-6">
                         <label for="infantryCode">Unit Code *</label>
                         <input type="text" id="infantryCode" name="UnitCode" required class="form-control">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="infantryBrigade">Brigade</label>
+                        <select id="infantryBrigade" class="form-control"></select>
                     </div>
                 </div>
                 <div class="form-row">
@@ -852,6 +1016,12 @@
                     </div>
                 </div>
                 <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="armouredBrigade">Brigade</label>
+                        <select id="armouredBrigade" class="form-control"></select>
+                    </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group col-md-4">
                         <label for="armouredForceType">Force Type *</label>
                         <select id="armouredForceType" name="ForceType" required class="form-control">
@@ -938,6 +1108,12 @@
                     <div class="form-group col-md-6">
                         <label for="artilleryCode">Unit Code *</label>
                         <input type="text" id="artilleryCode" name="UnitCode" required class="form-control">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="artilleryBrigade">Brigade</label>
+                        <select id="artilleryBrigade" class="form-control"></select>
                     </div>
                 </div>
                 <div class="form-row">
@@ -1029,10 +1205,22 @@
                             <button class="btn btn-primary" id="startScenarioBtn" onclick="startCurrentScenario()">
                                 <i class="fas fa-play"></i> Start Scenario
                             </button>
+                            <button class="btn" onclick="setScenarioTargetPoints()">
+                                <i class="fas fa-bullseye"></i> Set Target Points
+                            </button>
+                            <button class="btn" onclick="runScenarioPointCheck()">
+                                <i class="fas fa-calculator"></i> Check Points
+                            </button>
+                            <button class="btn" onclick="advanceTime()">
+                                <i class="fas fa-forward"></i> Advance Time
+                            </button>
                         </div>
                     </div>
                     <div class="scenario-info" id="scenarioInfo">
                         <p>No active scenario. Create a new scenario to begin.</p>
+                    </div>
+                    <div id="scenarioPoints" style="margin-top:10px; font-size:14px; opacity:.9;">
+                        Points: —
                     </div>
                 </div>
 
@@ -1273,6 +1461,7 @@
     let gameMap;
     let currentMode = 'fox-land';
     let tokens = [];
+    const tokenIdToMarker = {};
     let isFullscreen = false;
 
     // Token local storage helpers (tokens only)
@@ -1286,6 +1475,39 @@
             localStorage.setItem(TOKEN_STORE_KEY, JSON.stringify(serializable));
         } catch {}
     }
+
+    // ===== Local Storage model for Data Management & Simulation =====
+    const LS_KEYS = {
+        BRIGADES: 'sim_brigades_v1',
+        INFANTRY: 'sim_infantry_v1',
+        ARMOURED: 'sim_armoured_v1',
+        ARTILLERY:'sim_artillery_v1',
+        SCENARIOS:'sim_scenarios_v1',
+        DEPLOYMENTS:'sim_deployments_v1',
+        BATTLES: 'sim_battles_v1',
+        OBJECTIVES:'sim_objectives_v1',
+        MOVEMENTS:'sim_movements_v1',
+        INTEL:'sim_intel_v1',
+        RECON:'sim_recon_v1',
+        TERRAIN:'sim_terrain_v1',
+        PROTECTION:'sim_protection_v1'
+    };
+    function lsRead(key, d){ try{ return JSON.parse(localStorage.getItem(key)) || (d ?? []);}catch{ return d ?? []; } }
+    function lsWrite(key, v){ try{ localStorage.setItem(key, JSON.stringify(v)); }catch{} }
+    function lsUpsert(key, obj, idField='id'){
+        const arr = lsRead(key, []);
+        if (!obj[idField]) obj[idField] = localId();
+        const i = arr.findIndex(x=> x[idField]===obj[idField]);
+        if (i>=0) arr[i] = obj; else arr.push(obj);
+        lsWrite(key, arr);
+        return obj;
+    }
+    function lsRemove(key, id, idField='id'){
+        const arr = lsRead(key, []);
+        const i = arr.findIndex(x=> x[idField]===id);
+        if (i>=0){ arr.splice(i,1); lsWrite(key, arr);} 
+    }
+    function localId(){ return 'ls_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8); }
 
     // Wait for jQuery to be available
     function waitForJQuery() {
@@ -1353,6 +1575,24 @@
         const tokenId = 'token_' + Date.now();
         const tokenType = currentMode; // 'fox-land' | 'blue-land'
 
+        // Enforce token placement inside saved region
+        try {
+            const regionStr = localStorage.getItem('leaflet_saved_region');
+            const region = regionStr ? JSON.parse(regionStr) : null;
+            if (!region){
+                showNotification('Save the main region first.', 'error');
+                return;
+            }
+            if (window.turf){
+                const pt = turf.point([latlng.lng, latlng.lat]);
+                const inside = turf.booleanPointInPolygon(pt, region);
+                if (!inside){
+                    showNotification('Token must be inside the saved region.', 'error');
+                    return;
+                }
+            }
+        } catch {}
+
         // Create token marker
         const marker = L.marker(latlng, {
             icon: L.divIcon({
@@ -1379,6 +1619,7 @@
         marker.on('click', function(){
             openTokenInfoPopup(tokenData);
         });
+        tokenIdToMarker[tokenId] = marker;
 
         tokens.push(tokenData);
         saveTokensLocal();
@@ -1422,8 +1663,9 @@
                     <input id="${notesId}" type="text" class="form-control" value="${(token.notes||'').replace(/"/g,'&quot;')}">
                 </div>
                 <div style="display:flex;gap:6px;justify-content:flex-end">
-                    <button class="gameplay-btn danger" onclick="window.deleteTokenById('${token.id}')">Delete</button>
-                    <button class="gameplay-btn primary" onclick="window.saveTokenInfoById('${token.id}')">Save</button>
+                    <button class="btn btn-danger" onclick="window.deleteTokenById('${token.id}')">Delete</button>
+                    <button class="btn" onclick="window.deployFromToken('${token.id}')">Deploy</button>
+                    <button class="btn btn-primary" onclick="window.saveTokenInfoById('${token.id}')">Save</button>
                 </div>
             </div>`;
         try { token.marker.bindPopup(html, { closeButton:true, autoClose:true }).openPopup(); } catch {}
@@ -1442,7 +1684,7 @@
                 'Supply': 'Logistics or supply node'
             };
             if (sel) {
-                sel.value = token.category || '';
+                sel.value = token.category || (window._tokenTemplate||'');
                 if (help) help.textContent = desc[sel.value] || '';
                 sel.addEventListener('change', function(){ if (help) help.textContent = desc[this.value] || ''; });
                 sel.addEventListener('mouseover', function(){ if (help) help.textContent = desc[this.value] || ''; });
@@ -1464,16 +1706,63 @@
         try { token.marker && token.marker.closePopup && token.marker.closePopup(); } catch {}
     }
 
+    // Deploy via token only
+    window.deployFromToken = function(tokenId){
+        const token = tokens.find(t=> t.id===tokenId);
+        if (!token) { showNotification('Token not found', 'error'); return; }
+        if (!currentScenario) { showNotification('Create/Start a scenario first', 'error'); return; }
+        // Choose a unit from local DB
+        const all = [
+            ...lsRead(LS_KEYS.INFANTRY, []).map(u=> ({...u, unitType:'Infantry'})),
+            ...lsRead(LS_KEYS.ARMOURED, []).map(u=> ({...u, unitType:'Armoured'})),
+            ...lsRead(LS_KEYS.ARTILLERY, []).map(u=> ({...u, unitType:'Artillery'}))
+        ];
+        if (!all.length){ showNotification('No units in database', 'error'); return; }
+        const list = all.map((u,i)=> `${i+1}. [${u.unitType}] ${u.name}`).join('\n');
+        const pick = prompt(`Select unit number to deploy at token:\n${list}`, '1');
+        const idx = (parseInt(pick||'1',10)-1);
+        if (isNaN(idx) || idx<0 || idx>=all.length){ showNotification('Invalid selection', 'error'); return; }
+        const u = all[idx];
+        const deployment = {
+            id: localId(),
+            scenarioId: currentScenario.id,
+            unitId: u.id,
+            unitType: u.unitType,
+            unitName: u.name,
+            forceType: u.forceType||'',
+            position: token.position,
+            formation: 'Line',
+            currentStrength: 0,
+            maxStrength: 0,
+            status: 'Deployed',
+            morale: 100
+        };
+        const ds = lsRead(LS_KEYS.DEPLOYMENTS, []); ds.push(deployment); lsWrite(LS_KEYS.DEPLOYMENTS, ds);
+        deployedUnits.push(deployment);
+        addUnitToMap(deployment);
+        showNotification(`Deployed ${u.name} at token`, 'success');
+        try { token.marker && token.marker.closePopup && token.marker.closePopup(); } catch {}
+    }
+
     window.deleteTokenById = function(tokenId){
-        const idx = tokens.findIndex(t=> t.id===tokenId);
-        if (idx<0) return;
-        const token = tokens[idx];
+        // Remove marker from map if present
         try {
             const m = (typeof map !== 'undefined') ? map : gameMap;
-            if (token.marker && m && typeof m.removeLayer === 'function') m.removeLayer(token.marker);
+            const token = tokens.find(t=> t.id===tokenId);
+            const marker = (token && token.marker) || tokenIdToMarker[tokenId];
+            if (marker && m && typeof m.removeLayer === 'function'){
+                m.removeLayer(marker);
+            }
+            if (tokenIdToMarker[tokenId]) delete tokenIdToMarker[tokenId];
         } catch {}
-        tokens.splice(idx,1);
-        saveTokensLocal();
+        // Remove from in-memory tokens
+        const idx = tokens.findIndex(t=> t.id===tokenId);
+        if (idx>=0) tokens.splice(idx,1);
+        // Remove from localStorage
+        try{
+            const arr = loadTokensLocal([]).filter(t=> t.id!==tokenId);
+            localStorage.setItem(TOKEN_STORE_KEY, JSON.stringify(arr));
+        }catch{}
         updateTokenCount();
         showNotification('Token deleted', 'info');
     }
@@ -1547,15 +1836,13 @@
         // Guide the user
         showNotification('Click on the map to place a token.', 'info');
         $('#gameMap').css('cursor', 'crosshair');
-        // Ensure a one-time placement even if other handlers exist
-        try {
-            const m = (typeof map !== 'undefined') ? map : gameMap;
-            if (m && typeof m.once === 'function') {
-                m.once('click', function(e){
-                    placeTokenAtLocation(e.latlng);
-                });
-            }
-        } catch {}
+    }
+
+    function beginTemplatePlacement(){
+        const tpl = $('#tokenTemplate').val();
+        if (!tpl){ showNotification('Select a token type first', 'error'); return; }
+        window._tokenTemplate = tpl;
+        placeToken();
     }
 
     function selectToken() {
@@ -1604,27 +1891,12 @@
     }
 
     function loadTokenBrigadeData(tokenId) {
-        // Load existing brigade data associated with this token
-        $.ajax({
-            url: '/DataManagement/GetBrigadeByToken',
-            type: 'GET',
-            data: { tokenId: tokenId },
-            success: function(response) {
-                if (response.success && response.data) {
-                    // Populate the brigade form with existing data
-                    populateBrigadeForm(response.data);
-                    // Load associated military units
-                    loadTokenMilitaryUnits(response.data.id);
-                } else {
-                    // No existing data, start fresh
-                    clearBrigadeForm();
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error loading token brigade data:', error);
-                showNotification('Error loading brigade data', 'error');
-            }
-        });
+        // Populate brigade dropdown from local brigades
+        const brigades = lsRead(LS_KEYS.BRIGADES, []);
+        const sel = $('#tbBrigadeId');
+        sel.empty();
+        sel.append('<option value="">Select a brigade…</option>');
+        brigades.forEach(b=> sel.append(`<option value="${b.id}">${b.name} (${b.brigadeCode||''})</option>`));
     }
 
     // Placeholders to prevent runtime errors if backend not ready
@@ -1645,15 +1917,15 @@
     }
 
     function loadTokenMilitaryUnits(brigadeId) {
-        if (!brigadeId) { $('#tokenUnitsList').empty(); return; }
-        $.get('/DataManagement/GetUnitsByBrigade', { id: brigadeId })
-            .done(function(units) {
-                const c = $('#tokenUnitsList');
-                c.empty();
-                if (!units || !units.length) { c.html('<p>No units linked.</p>'); return; }
-                units.forEach(u => c.append(`<div>${u.unitType || 'Unit'} - ${u.name || u.unitName || ''}</div>`));
-            })
-            .fail(function(){ $('#tokenUnitsList').html('<p>Failed to load units.</p>'); });
+        const c = $('#tokenUnitsList');
+        if (!brigadeId) { c.empty(); return; }
+        const inf = lsRead(LS_KEYS.INFANTRY, []).filter(u=> u.brigadeId===brigadeId).map(u=> ({ unitType:'Infantry', name:u.name }));
+        const arm = lsRead(LS_KEYS.ARMOURED, []).filter(u=> u.brigadeId===brigadeId).map(u=> ({ unitType:'Armoured', name:u.name }));
+        const art = lsRead(LS_KEYS.ARTILLERY, []).filter(u=> u.brigadeId===brigadeId).map(u=> ({ unitType:'Artillery', name:u.name }));
+        const units = [...inf, ...arm, ...art];
+        c.empty();
+        if (!units.length) { c.html('<p>No units linked.</p>'); return; }
+        units.forEach(u => c.append(`<div>${u.unitType} - ${u.name}</div>`));
     }
 
     function saveTokenBrigadeLink() {
@@ -1661,15 +1933,13 @@
         const brigadeId = $('#tbBrigadeId').val();
         const notes = $('#tbNotes').val();
         if (!tokenId || !brigadeId) { showNotification('Select a brigade first', 'error'); return; }
-        $.ajax({
-            url: '/DataManagement/LinkTokenBrigade',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ tokenId, brigadeId, notes })
-        }).done(function(resp){
-            if (resp && resp.success) { showNotification('Linked successfully', 'success'); closeModal('tokenBrigadeDataModal'); }
-            else { showNotification('Failed to link', 'error'); }
-        }).fail(function(){ showNotification('Failed to link', 'error'); });
+        const token = tokens.find(t=> t.id===tokenId);
+        if (!token) { showNotification('Token not found', 'error'); return; }
+        token.linkedBrigadeId = brigadeId;
+        token.notes = notes || token.notes || '';
+        saveTokensLocal();
+        showNotification('Token linked to brigade (local)', 'success');
+        closeModal('tokenBrigadeDataModal');
     }
 
     function measureDistance() {
@@ -1692,6 +1962,25 @@
         } catch (err) {
             console.warn('drawArea error', err);
         }
+    }
+
+    function toggleIntelLayer(btn){
+        try{
+            const m = (typeof map!=='undefined')?map:gameMap; if(!m) return;
+            if (m.hasLayer && m.hasLayer(intelGroup)){
+                if (m.hasLayer(intelGroup)){ m.removeLayer(intelGroup); btn && btn.classList.remove('active'); }
+                else { intelGroup.addTo(m); btn && btn.classList.add('active'); }
+            }
+        }catch{}
+    }
+    function toggleReconLayer(btn){
+        try{
+            const m = (typeof map!=='undefined')?map:gameMap; if(!m) return;
+            if (m.hasLayer && m.hasLayer(reconGroup)){
+                if (m.hasLayer(reconGroup)){ m.removeLayer(reconGroup); btn && btn.classList.remove('active'); }
+                else { reconGroup.addTo(m); btn && btn.classList.add('active'); }
+            }
+        }catch{}
     }
 
     // Modal Functions
@@ -1741,6 +2030,7 @@
 
     window.manageTokens = function() {
         openModal('tokenManagementModal');
+        setTimeout(refreshTokenList, 0);
     };
 
     window.openSettings = function() {
@@ -1767,32 +2057,29 @@
         loadArtilleryRegiments();
         loadTerrainFactors();
         loadForceProtections();
+        loadIntel();
+        loadRecon();
     }
 
     // Brigade Management
     function loadBrigades() {
-        $.get('/DataManagement/GetBrigades')
-            .done(function(data) {
-                const tbody = $('#brigadesTableBody');
-                tbody.empty();
-                data.forEach(function(brigade) {
-                    tbody.append(`
-                        <tr>
-                            <td>${brigade.name}</td>
-                            <td>${brigade.brigadeCode}</td>
-                            <td>${brigade.forceType}</td>
-                            <td>${brigade.strength || 'N/A'}</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary" onclick="editBrigade('${brigade.id}')">Edit</button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteBrigade('${brigade.id}')">Delete</button>
-                            </td>
-                        </tr>
-                    `);
-                });
-            })
-            .fail(function() {
-                console.error('Failed to load brigades');
-            });
+        const data = lsRead(LS_KEYS.BRIGADES, []);
+        const tbody = $('#brigadesTableBody');
+        tbody.empty();
+        data.forEach(function(brigade) {
+            tbody.append(`
+                <tr>
+                    <td>${brigade.name}</td>
+                    <td>${brigade.brigadeCode}</td>
+                    <td>${brigade.forceType}</td>
+                    <td>${brigade.strength || 'N/A'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="editBrigade('${brigade.id}')">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteBrigade('${brigade.id}')">Delete</button>
+                    </td>
+                </tr>
+            `);
+        });
     }
 
     function openBrigadeForm() {
@@ -1803,110 +2090,106 @@
 
     function editBrigade(id) {
         currentEditingId = id;
-        // Load brigade data and populate form
-        // Implementation would load data and open form
+        const b = lsRead(LS_KEYS.BRIGADES, []).find(x=> x.id===id);
+        if (b){
+            $('#brigadeName').val(b.name||'');
+            $('#brigadeCode').val(b.brigadeCode||'');
+            $('#brigadeForceType').val(b.forceType||'');
+            $('#brigadeDescription').val(b.description||'');
+        }
         openModal('brigadeFormModal');
     }
 
     function saveBrigade() {
-        const formData = {
-            Name: $('#brigadeName').val(),
-            BrigadeCode: $('#brigadeCode').val(),
-            ForceType: $('#brigadeForceType').val(),
-            Description: $('#brigadeDescription').val()
+        const obj = {
+            id: currentEditingId || localId(),
+            name: $('#brigadeName').val(),
+            brigadeCode: $('#brigadeCode').val(),
+            forceType: $('#brigadeForceType').val(),
+            description: $('#brigadeDescription').val()
         };
-
-        const url = currentEditingId ? '/DataManagement/UpdateBrigade' : '/DataManagement/CreateBrigade';
-        if (currentEditingId) formData.Id = currentEditingId;
-
-        $.ajax({
-            url: url,
-            method: currentEditingId ? 'PUT' : 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(formData)
-        })
-        .done(function(response) {
-            if (response.success) {
-                closeModal('brigadeFormModal');
-                loadBrigades();
-                showNotification('Brigade saved successfully', 'success');
-            } else {
-                showNotification('Error: ' + response.message, 'error');
-            }
-        })
-        .fail(function() {
-            showNotification('Failed to save brigade', 'error');
-        });
+        lsUpsert(LS_KEYS.BRIGADES, obj);
+        closeModal('brigadeFormModal');
+        loadBrigades();
+        showNotification('Brigade saved locally', 'success');
+        currentEditingId = null;
     }
 
     function deleteBrigade(id) {
-        if (confirm('Are you sure you want to delete this brigade?')) {
-            $.ajax({
-                url: '/DataManagement/DeleteBrigade',
-                method: 'DELETE',
-                data: { id: id }
-            })
-            .done(function(response) {
-                if (response.success) {
-                    loadBrigades();
-                    showNotification('Brigade deleted successfully', 'success');
-                } else {
-                    showNotification('Error: ' + response.message, 'error');
-                }
-            })
-            .fail(function() {
-                showNotification('Failed to delete brigade', 'error');
-            });
-        }
+        if (!confirm('Are you sure you want to delete this brigade?')) return;
+        lsRemove(LS_KEYS.BRIGADES, id);
+        loadBrigades();
+        showNotification('Brigade deleted', 'success');
     }
 
     // Infantry Battalion Management
     function loadInfantryBattalions() {
-        $.get('/DataManagement/GetInfantryBattalions')
-            .done(function(data) {
-                const tbody = $('#infantryTableBody');
-                tbody.empty();
-                data.forEach(function(battalion) {
-                    tbody.append(`
-                        <tr>
-                            <td>${battalion.name}</td>
-                            <td>${battalion.unitCode}</td>
-                            <td>${battalion.forceType}</td>
-                            <td>${battalion.strength}</td>
-                            <td>${battalion.companies}</td>
-                            <td>${battalion.tanks || 'N/A'}</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary" onclick="editInfantryBattalion('${battalion.id}')">Edit</button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteInfantryBattalion('${battalion.id}')">Delete</button>
-                            </td>
-                        </tr>
-                    `);
-                });
-            })
-            .fail(function() {
-                console.error('Failed to load infantry battalions');
-            });
+        const data = lsRead(LS_KEYS.INFANTRY, []);
+        const tbody = $('#infantryTableBody');
+        tbody.empty();
+        data.forEach(function(battalion) {
+            tbody.append(`
+                <tr>
+                    <td>${battalion.name}</td>
+                    <td>${battalion.unitCode}</td>
+                    <td>${battalion.forceType}</td>
+                    <td>${battalion.strength}</td>
+                    <td>${battalion.companies}</td>
+                    <td>${battalion.tanks || 'N/A'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="editInfantryBattalion('${battalion.id}')">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteInfantryBattalion('${battalion.id}')">Delete</button>
+                    </td>
+                </tr>
+            `);
+        });
     }
 
     function openInfantryForm() {
         currentEditingId = null;
         $('#infantryForm')[0].reset();
+        populateBrigadeDropdown('#infantryBrigade');
         openModal('infantryFormModal');
     }
 
     function editInfantryBattalion(id) {
         currentEditingId = id;
-        // Load battalion data and populate form
+        const b = lsRead(LS_KEYS.INFANTRY, []).find(x=> x.id===id);
+        if (b){
+            $('#infantryName').val(b.name||'');
+            $('#infantryCode').val(b.unitCode||'');
+            $('#infantryForceType').val(b.forceType||'');
+            populateBrigadeDropdown('#infantryBrigade');
+            $('#infantryBrigade').val(b.brigadeId||'');
+            $('#infantryStrength').val(b.strength||0);
+            $('#infantryCompanies').val(b.companies||0);
+            $('#infantryATGMS').val(b.ATGMS||0);
+            $('#infantryRocketLauncher').val(b.RocketLauncher||0);
+            $('#infantryMortars81').val(b.Mortars81mm||0);
+            $('#infantryMortars120').val(b.Mortars120mm||0);
+            $('#infantryGrenadeLaunchers').val(b.GrenadeLaunchers||0);
+            $('#infantryHMG_AGL').val(b.HMG_AGL||0);
+            $('#infantryMG_LMG').val(b.MG_LMG||0);
+            $('#infantryMANPADS').val(b.MANPADS||0);
+            $('#infantryGrenades').val(b.Grenades||0);
+            $('#infantrySpeedTrucks').val(b.MarchingSpeedTrucksRoads||30);
+            $('#infantrySpeedAPCs').val(b.MarchingSpeedAPCs||20);
+            $('#infantrySpeedCrossCountry').val(b.MarchingSpeedCrossCountry||5);
+            $('#infantrySpeedAPCsCross').val(b.MarchingSpeedAPCsCrossCountry||10);
+            $('#infantryCombatAdvance').val(b.CombatAdvanceSpeed||1);
+            $('#infantryDescription').val(b.Description||'');
+        }
         openModal('infantryFormModal');
     }
 
     function saveInfantryBattalion() {
-        const formData = {
-            Name: $('#infantryName').val(),
-            UnitCode: $('#infantryCode').val(),
-            ForceType: $('#infantryForceType').val(),
-            Strength: parseInt($('#infantryStrength').val()),
-            Companies: parseInt($('#infantryCompanies').val()),
+        const obj = {
+            id: currentEditingId || localId(),
+            name: $('#infantryName').val(),
+            unitCode: $('#infantryCode').val(),
+            forceType: $('#infantryForceType').val(),
+            strength: parseInt($('#infantryStrength').val()),
+            companies: parseInt($('#infantryCompanies').val()),
             ATGMS: parseInt($('#infantryATGMS').val()),
             RocketLauncher: parseInt($('#infantryRocketLauncher').val()),
             Mortars81mm: parseInt($('#infantryMortars81').val()),
@@ -1921,289 +2204,493 @@
             MarchingSpeedCrossCountry: parseFloat($('#infantrySpeedCrossCountry').val()),
             MarchingSpeedAPCsCrossCountry: parseFloat($('#infantrySpeedAPCsCross').val()),
             CombatAdvanceSpeed: parseFloat($('#infantryCombatAdvance').val()),
-            Description: $('#infantryDescription').val()
+            Description: $('#infantryDescription').val(),
+            brigadeId: $('#infantryBrigade').val() || ''
         };
-
-        const url = currentEditingId ? '/DataManagement/UpdateInfantryBattalion' : '/DataManagement/CreateInfantryBattalion';
-        if (currentEditingId) formData.Id = currentEditingId;
-
-        $.ajax({
-            url: url,
-            method: currentEditingId ? 'PUT' : 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(formData)
-        })
-        .done(function(response) {
-            if (response.success) {
-                closeModal('infantryFormModal');
-                loadInfantryBattalions();
-                showNotification('Infantry Battalion saved successfully', 'success');
-            } else {
-                showNotification('Error: ' + response.message, 'error');
-            }
-        })
-        .fail(function() {
-            showNotification('Failed to save infantry battalion', 'error');
-        });
+        lsUpsert(LS_KEYS.INFANTRY, obj);
+        closeModal('infantryFormModal');
+        loadInfantryBattalions();
+        showNotification('Infantry battalion saved locally', 'success');
+        currentEditingId = null;
     }
 
     function deleteInfantryBattalion(id) {
-        if (confirm('Are you sure you want to delete this infantry battalion?')) {
-            $.ajax({
-                url: '/DataManagement/DeleteInfantryBattalion',
-                method: 'DELETE',
-                data: { id: id }
-            })
-            .done(function(response) {
-                if (response.success) {
-                    loadInfantryBattalions();
-                    showNotification('Infantry Battalion deleted successfully', 'success');
-                } else {
-                    showNotification('Error: ' + response.message, 'error');
-                }
-            })
-            .fail(function() {
-                showNotification('Failed to delete infantry battalion', 'error');
-            });
-        }
+        if (!confirm('Are you sure you want to delete this infantry battalion?')) return;
+        lsRemove(LS_KEYS.INFANTRY, id);
+        loadInfantryBattalions();
+        showNotification('Infantry battalion deleted', 'success');
     }
 
     // Armoured Regiment Management
     function loadArmouredRegiments() {
-        $.get('/DataManagement/GetArmouredRegiments')
-            .done(function(data) {
-                const tbody = $('#armouredTableBody');
-                tbody.empty();
-                data.forEach(function(regiment) {
-                    tbody.append(`
-                        <tr>
-                            <td>${regiment.name}</td>
-                            <td>${regiment.unitCode}</td>
-                            <td>${regiment.forceType}</td>
-                            <td>${regiment.strength}</td>
-                            <td>${regiment.squadrons}</td>
-                            <td>${regiment.tanks}</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary" onclick="editArmouredRegiment('${regiment.id}')">Edit</button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteArmouredRegiment('${regiment.id}')">Delete</button>
-                            </td>
-                        </tr>
-                    `);
-                });
-            })
-            .fail(function() {
-                console.error('Failed to load armoured regiments');
-            });
+        const data = lsRead(LS_KEYS.ARMOURED, []);
+        const tbody = $('#armouredTableBody');
+        tbody.empty();
+        data.forEach(function(regiment) {
+            tbody.append(`
+                <tr>
+                    <td>${regiment.name}</td>
+                    <td>${regiment.unitCode}</td>
+                    <td>${regiment.forceType}</td>
+                    <td>${regiment.strength}</td>
+                    <td>${regiment.squadrons}</td>
+                    <td>${regiment.tanks || 0}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="editArmouredRegiment('${regiment.id}')">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteArmouredRegiment('${regiment.id}')">Delete</button>
+                    </td>
+                </tr>
+            `);
+        });
     }
 
     function openArmouredForm() {
         currentEditingId = null;
         $('#armouredForm')[0].reset();
+        populateBrigadeDropdown('#armouredBrigade');
         openModal('armouredFormModal');
     }
 
     function editArmouredRegiment(id) {
         currentEditingId = id;
+        const r = lsRead(LS_KEYS.ARMOURED, []).find(x=> x.id===id);
+        if (r){
+            $('#armouredName').val(r.name||'');
+            $('#armouredCode').val(r.unitCode||'');
+            $('#armouredForceType').val(r.forceType||'');
+            populateBrigadeDropdown('#armouredBrigade');
+            $('#armouredBrigade').val(r.brigadeId||'');
+            $('#armouredStrength').val(r.strength||0);
+            $('#armouredSquadrons').val(r.squadrons||0);
+            $('#armouredTanks').val(r.tanks||0);
+            $('#armouredATGMS').val(r.ATGMS||0);
+            $('#armouredMortars120').val(r.Mortars120mm||0);
+            $('#armouredHMG').val(r.HMG||0);
+            $('#armouredSpeedRoads').val(r.MarchingSpeedRoads||15);
+            $('#armouredSpeedCrossCountry').val(r.MarchingSpeedCrossCountry||10);
+            $('#armouredCombatAdvance').val(r.CombatAdvanceSpeed||1);
+            $('#armouredDescription').val(r.Description||'');
+        }
         openModal('armouredFormModal');
     }
 
     function saveArmouredRegiment() {
-        const formData = {
-            Name: $('#armouredName').val(),
-            UnitCode: $('#armouredCode').val(),
-            ForceType: $('#armouredForceType').val(),
-            Strength: parseInt($('#armouredStrength').val()),
-            Squadrons: parseInt($('#armouredSquadrons').val()),
-            Tanks: parseInt($('#armouredTanks').val()),
+        const obj = {
+            id: currentEditingId || localId(),
+            name: $('#armouredName').val(),
+            unitCode: $('#armouredCode').val(),
+            forceType: $('#armouredForceType').val(),
+            strength: parseInt($('#armouredStrength').val()),
+            squadrons: parseInt($('#armouredSquadrons').val()),
+            tanks: parseInt($('#armouredTanks').val()),
             ATGMS: parseInt($('#armouredATGMS').val()),
             Mortars120mm: parseInt($('#armouredMortars120').val()),
             HMG: parseInt($('#armouredHMG').val()),
             MarchingSpeedRoads: parseFloat($('#armouredSpeedRoads').val()),
             MarchingSpeedCrossCountry: parseFloat($('#armouredSpeedCrossCountry').val()),
             CombatAdvanceSpeed: parseFloat($('#armouredCombatAdvance').val()),
-            Description: $('#armouredDescription').val()
+            Description: $('#armouredDescription').val(),
+            brigadeId: $('#armouredBrigade').val() || ''
         };
-
-        const url = currentEditingId ? '/DataManagement/UpdateArmouredRegiment' : '/DataManagement/CreateArmouredRegiment';
-        if (currentEditingId) formData.Id = currentEditingId;
-
-        $.ajax({
-            url: url,
-            method: currentEditingId ? 'PUT' : 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(formData)
-        })
-        .done(function(response) {
-            if (response.success) {
-                closeModal('armouredFormModal');
-                loadArmouredRegiments();
-                showNotification('Armoured Regiment saved successfully', 'success');
-            } else {
-                showNotification('Error: ' + response.message, 'error');
-            }
-        })
-        .fail(function() {
-            showNotification('Failed to save armoured regiment', 'error');
-        });
+        lsUpsert(LS_KEYS.ARMOURED, obj);
+        closeModal('armouredFormModal');
+        loadArmouredRegiments();
+        showNotification('Armoured regiment saved locally', 'success');
+        currentEditingId = null;
     }
 
     function deleteArmouredRegiment(id) {
-        if (confirm('Are you sure you want to delete this armoured regiment?')) {
-            $.ajax({
-                url: '/DataManagement/DeleteArmouredRegiment',
-                method: 'DELETE',
-                data: { id: id }
-            })
-            .done(function(response) {
-                if (response.success) {
-                    loadArmouredRegiments();
-                    showNotification('Armoured Regiment deleted successfully', 'success');
-                } else {
-                    showNotification('Error: ' + response.message, 'error');
-                }
-            })
-            .fail(function() {
-                showNotification('Failed to delete armoured regiment', 'error');
-            });
-        }
+        if (!confirm('Are you sure you want to delete this armoured regiment?')) return;
+        lsRemove(LS_KEYS.ARMOURED, id);
+        loadArmouredRegiments();
+        showNotification('Armoured regiment deleted', 'success');
     }
 
     // Artillery Regiment Management
     function loadArtilleryRegiments() {
-        $.get('/DataManagement/GetArtilleryRegiments')
-            .done(function(data) {
-                const tbody = $('#artilleryTableBody');
-                tbody.empty();
-                data.forEach(function(regiment) {
-                    tbody.append(`
-                        <tr>
-                            <td>${regiment.name}</td>
-                            <td>${regiment.unitCode}</td>
-                            <td>${regiment.forceType}</td>
-                            <td>${regiment.strength}</td>
-                            <td>${regiment.batteries}</td>
-                            <td>${regiment.guns}</td>
-                            <td>${regiment.gunRange}</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary" onclick="editArtilleryRegiment('${regiment.id}')">Edit</button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteArtilleryRegiment('${regiment.id}')">Delete</button>
-                            </td>
-                        </tr>
-                    `);
-                });
-            })
-            .fail(function() {
-                console.error('Failed to load artillery regiments');
-            });
+        const data = lsRead(LS_KEYS.ARTILLERY, []);
+        const tbody = $('#artilleryTableBody');
+        tbody.empty();
+        data.forEach(function(regiment) {
+            tbody.append(`
+                <tr>
+                    <td>${regiment.name}</td>
+                    <td>${regiment.unitCode}</td>
+                    <td>${regiment.forceType}</td>
+                    <td>${regiment.strength}</td>
+                    <td>${regiment.batteries}</td>
+                    <td>${regiment.guns}</td>
+                    <td>${regiment.gunRange}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="editArtilleryRegiment('${regiment.id}')">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteArtilleryRegiment('${regiment.id}')">Delete</button>
+                    </td>
+                </tr>
+            `);
+        });
     }
 
     function openArtilleryForm() {
         currentEditingId = null;
         $('#artilleryForm')[0].reset();
+        populateBrigadeDropdown('#artilleryBrigade');
         openModal('artilleryFormModal');
     }
 
     function editArtilleryRegiment(id) {
         currentEditingId = id;
+        const r = lsRead(LS_KEYS.ARTILLERY, []).find(x=> x.id===id);
+        if (r){
+            $('#artilleryName').val(r.name||'');
+            $('#artilleryCode').val(r.unitCode||'');
+            $('#artilleryForceType').val(r.forceType||'');
+            populateBrigadeDropdown('#artilleryBrigade');
+            $('#artilleryBrigade').val(r.brigadeId||'');
+            $('#artilleryStrength').val(r.strength||0);
+            $('#artilleryBatteries').val(r.batteries||0);
+            $('#artilleryGuns').val(r.guns||0);
+            $('#artilleryGunRange').val(r.gunRange||0);
+            $('#artilleryHMG').val(r.HMG||0);
+            $('#artilleryGunCaliber').val(r.GunCaliber||'155mm SP');
+            $('#artilleryDescription').val(r.Description||'');
+        }
         openModal('artilleryFormModal');
     }
 
     function saveArtilleryRegiment() {
-        const formData = {
-            Name: $('#artilleryName').val(),
-            UnitCode: $('#artilleryCode').val(),
-            ForceType: $('#artilleryForceType').val(),
-            Strength: parseInt($('#artilleryStrength').val()),
-            Batteries: parseInt($('#artilleryBatteries').val()),
-            Guns: parseInt($('#artilleryGuns').val()),
-            GunRange: parseFloat($('#artilleryGunRange').val()),
+        const obj = {
+            id: currentEditingId || localId(),
+            name: $('#artilleryName').val(),
+            unitCode: $('#artilleryCode').val(),
+            forceType: $('#artilleryForceType').val(),
+            strength: parseInt($('#artilleryStrength').val()),
+            batteries: parseInt($('#artilleryBatteries').val()),
+            guns: parseInt($('#artilleryGuns').val()),
+            gunRange: parseFloat($('#artilleryGunRange').val()),
             HMG: parseInt($('#artilleryHMG').val()),
             GunCaliber: $('#artilleryGunCaliber').val(),
-            Description: $('#artilleryDescription').val()
+            Description: $('#artilleryDescription').val(),
+            brigadeId: $('#artilleryBrigade').val() || ''
         };
-
-        const url = currentEditingId ? '/DataManagement/UpdateArtilleryRegiment' : '/DataManagement/CreateArtilleryRegiment';
-        if (currentEditingId) formData.Id = currentEditingId;
-
-        $.ajax({
-            url: url,
-            method: currentEditingId ? 'PUT' : 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(formData)
-        })
-        .done(function(response) {
-            if (response.success) {
-                closeModal('artilleryFormModal');
-                loadArtilleryRegiments();
-                showNotification('Artillery Regiment saved successfully', 'success');
-            } else {
-                showNotification('Error: ' + response.message, 'error');
-            }
-        })
-        .fail(function() {
-            showNotification('Failed to save artillery regiment', 'error');
-        });
+        lsUpsert(LS_KEYS.ARTILLERY, obj);
+        closeModal('artilleryFormModal');
+        loadArtilleryRegiments();
+        showNotification('Artillery regiment saved locally', 'success');
+        currentEditingId = null;
     }
 
     function deleteArtilleryRegiment(id) {
-        if (confirm('Are you sure you want to delete this artillery regiment?')) {
-            $.ajax({
-                url: '/DataManagement/DeleteArtilleryRegiment',
-                method: 'DELETE',
-                data: { id: id }
-            })
-            .done(function(response) {
-                if (response.success) {
-                    loadArtilleryRegiments();
-                    showNotification('Artillery Regiment deleted successfully', 'success');
-                } else {
-                    showNotification('Error: ' + response.message, 'error');
-                }
-            })
-            .fail(function() {
-                showNotification('Failed to delete artillery regiment', 'error');
-            });
-        }
+        if (!confirm('Are you sure you want to delete this artillery regiment?')) return;
+        lsRemove(LS_KEYS.ARTILLERY, id);
+        loadArtilleryRegiments();
+        showNotification('Artillery regiment deleted', 'success');
     }
 
     // Terrain and Protection Management (simplified for now)
     function loadTerrainFactors() {
-        // Implementation for terrain factors
+        const data = lsRead(LS_KEYS.TERRAIN, []);
+        const tbody = $('#terrainTableBody');
+        tbody.empty();
+        data.forEach(t=> tbody.append(`
+            <tr>
+                <td>${t.terrainType}</td>
+                <td>${t.xFactor}</td>
+                <td>${t.tankPsi||''}</td>
+                <td>${t.apcPsi||''}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="editTerrain('${t.id}')">Edit</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteTerrain('${t.id}')">Delete</button>
+                </td>
+            </tr>`));
     }
 
     function loadForceProtections() {
-        // Implementation for force protections
+        const data = lsRead(LS_KEYS.PROTECTION, []);
+        const tbody = $('#protectionTableBody');
+        tbody.empty();
+        data.forEach(p=> tbody.append(`
+            <tr>
+                <td>${p.forceType}</td>
+                <td>${p.protectionType}</td>
+                <td>${p.prep||'Normal'}</td>
+                <td>${p.factor}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="editProtection('${p.id}')">Edit</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteProtection('${p.id}')">Delete</button>
+                </td>
+            </tr>`));
     }
 
     function openTerrainForm() {
-        showNotification('Terrain form coming soon', 'info');
+        const terrainType = prompt('Terrain Type (Plain/Forest/Mountain/Desert/Swamp/Urban):','Plain')||'Plain';
+        const xFactor = parseFloat(prompt('X Factor (mobility modifier):','1')||'1');
+        const tankPsi = prompt('Tank PSI Range','');
+        const apcPsi = prompt('APC PSI Range','');
+        const obj = { id: localId(), terrainType, xFactor, tankPsi, apcPsi };
+        const arr = lsRead(LS_KEYS.TERRAIN, []); arr.push(obj); lsWrite(LS_KEYS.TERRAIN, arr);
+        loadTerrainFactors(); showNotification('Terrain factor saved', 'success');
+    }
+    function editTerrain(id){
+        const arr = lsRead(LS_KEYS.TERRAIN, []); const t = arr.find(x=> x.id===id); if(!t) return;
+        const terrainType = prompt('Terrain Type:', t.terrainType)||t.terrainType;
+        const xFactor = parseFloat(prompt('X Factor:', t.xFactor)||t.xFactor);
+        const tankPsi = prompt('Tank PSI Range', t.tankPsi||'');
+        const apcPsi = prompt('APC PSI Range', t.apcPsi||'');
+        Object.assign(t,{terrainType,xFactor,tankPsi,apcPsi}); lsWrite(LS_KEYS.TERRAIN, arr);
+        loadTerrainFactors(); showNotification('Terrain updated', 'success');
+    }
+    function deleteTerrain(id){
+        const arr = lsRead(LS_KEYS.TERRAIN, []); const i = arr.findIndex(x=> x.id===id); if(i<0) return;
+        arr.splice(i,1); lsWrite(LS_KEYS.TERRAIN, arr); loadTerrainFactors(); showNotification('Terrain deleted', 'success');
     }
 
     function openProtectionForm() {
-        showNotification('Protection form coming soon', 'info');
+        const forceType = prompt('Force Type (Blue/Red):','Blue')||'Blue';
+        const protectionType = prompt('Protection Type (Berm/Trench/Fortify):','Berm')||'Berm';
+        const prep = prompt('Degree of Prep (Low/Normal/High):','Normal')||'Normal';
+        const factor = parseFloat(prompt('Protection Factor (0-1):','0.5')||'0.5');
+        const obj = { id: localId(), forceType, protectionType, prep, factor };
+        const arr = lsRead(LS_KEYS.PROTECTION, []); arr.push(obj); lsWrite(LS_KEYS.PROTECTION, arr);
+        loadForceProtections(); showNotification('Protection saved', 'success');
+    }
+    function editProtection(id){
+        const arr = lsRead(LS_KEYS.PROTECTION, []); const p = arr.find(x=> x.id===id); if(!p) return;
+        const forceType = prompt('Force Type:', p.forceType)||p.forceType;
+        const protectionType = prompt('Protection Type:', p.protectionType)||p.protectionType;
+        const prep = prompt('Degree of Prep (Low/Normal/High):', p.prep||'Normal')||'Normal';
+        const factor = parseFloat(prompt('Protection Factor (0-1):', p.factor)||p.factor);
+        Object.assign(p,{forceType,protectionType,prep,factor}); lsWrite(LS_KEYS.PROTECTION, arr);
+        loadForceProtections(); showNotification('Protection updated', 'success');
+    }
+    function deleteProtection(id){
+        const arr = lsRead(LS_KEYS.PROTECTION, []); const i = arr.findIndex(x=> x.id===id); if(i<0) return;
+        arr.splice(i,1); lsWrite(LS_KEYS.PROTECTION, arr); loadForceProtections(); showNotification('Protection deleted', 'success');
+    }
+
+    // Intelligence (local CRUD)
+    function loadIntel(){
+        const data = lsRead(LS_KEYS.INTEL, []);
+        const tbody = $('#intelTableBody');
+        tbody.empty();
+        data.forEach(r=> tbody.append(`
+            <tr>
+                <td>${r.title}</td>
+                <td>${r.summary}</td>
+                <td>${r.priority||'Normal'}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="editIntel('${r.id}')">Edit</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteIntel('${r.id}')">Delete</button>
+                </td>
+            </tr>`));
+    }
+    function openIntelForm(){
+        const title = prompt('Intel title:'); if(!title) return;
+        const summary = prompt('Summary:')||'';
+        const priority = prompt('Priority (Low/Normal/High):','Normal')||'Normal';
+        let pos = null; if (confirm('Attach map location? Click OK then click on the map.')){
+            showNotification('Click map to set intel location', 'info');
+            const off = (typeof map!=='undefined')?map:gameMap; if (off && off.once){ off.once('click', (e)=>{ saveIntelWithPos({ id: localId(), title, summary, priority, position:{lat:e.latlng.lat,lng:e.latlng.lng} }); }); return; }
+        }
+        const obj = { id: localId(), title, summary, priority, position: pos };
+        const arr = lsRead(LS_KEYS.INTEL, []); arr.push(obj); lsWrite(LS_KEYS.INTEL, arr);
+        loadIntel(); showNotification('Intel added', 'success');
+    }
+    function saveIntelWithPos(obj){ const arr = lsRead(LS_KEYS.INTEL, []); arr.push(obj); lsWrite(LS_KEYS.INTEL, arr); loadIntel(); showNotification('Intel added with location', 'success'); }
+    function editIntel(id){
+        const arr = lsRead(LS_KEYS.INTEL, []);
+        const r = arr.find(x=> x.id===id); if(!r) return;
+        const title = prompt('Intel title:', r.title); if(!title) return;
+        const summary = prompt('Summary:', r.summary)||'';
+        const priority = prompt('Priority (Low/Normal/High):', r.priority||'Normal')||'Normal';
+        Object.assign(r,{title,summary,priority}); lsWrite(LS_KEYS.INTEL, arr);
+        loadIntel(); showNotification('Intel updated', 'success');
+    }
+    function deleteIntel(id){
+        const arr = lsRead(LS_KEYS.INTEL, []);
+        const i = arr.findIndex(x=> x.id===id); if(i<0) return;
+        arr.splice(i,1); lsWrite(LS_KEYS.INTEL, arr);
+        loadIntel(); showNotification('Intel deleted', 'success');
+    }
+
+    // Recon (local CRUD)
+    function loadRecon(){
+        const data = lsRead(LS_KEYS.RECON, []);
+        const tbody = $('#reconTableBody');
+        tbody.empty();
+        data.forEach(r=> tbody.append(`
+            <tr>
+                <td>${r.reconType}</td>
+                <td>${r.description}</td>
+                <td>${r.confidence||'Medium'}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="editRecon('${r.id}')">Edit</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteRecon('${r.id}')">Delete</button>
+                </td>
+            </tr>`));
+    }
+    function openReconForm(){
+        const reconType = prompt('Recon type (Patrol/UAV/Sighting):','Patrol')||'Patrol';
+        const description = prompt('Description:')||'';
+        const confidence = prompt('Confidence (Low/Medium/High):','Medium')||'Medium';
+        let pos = null; if (confirm('Attach map location? Click OK then click on the map.')){
+            showNotification('Click map to set recon location', 'info');
+            const off = (typeof map!=='undefined')?map:gameMap; if (off && off.once){ off.once('click', (e)=>{ saveReconWithPos({ id: localId(), reconType, description, confidence, position:{lat:e.latlng.lat,lng:e.latlng.lng} }); }); return; }
+        }
+        const obj = { id: localId(), reconType, description, confidence, position: pos };
+        const arr = lsRead(LS_KEYS.RECON, []); arr.push(obj); lsWrite(LS_KEYS.RECON, arr);
+        loadRecon(); showNotification('Recon entry added', 'success');
+    }
+    function saveReconWithPos(obj){ const arr = lsRead(LS_KEYS.RECON, []); arr.push(obj); lsWrite(LS_KEYS.RECON, arr); loadRecon(); showNotification('Recon added with location', 'success'); }
+    function editRecon(id){
+        const arr = lsRead(LS_KEYS.RECON, []);
+        const r = arr.find(x=> x.id===id); if(!r) return;
+        const reconType = prompt('Recon type:', r.reconType)||r.reconType;
+        const description = prompt('Description:', r.description)||r.description;
+        const confidence = prompt('Confidence (Low/Medium/High):', r.confidence||'Medium')||'Medium';
+        Object.assign(r,{reconType,description,confidence}); lsWrite(LS_KEYS.RECON, arr);
+        loadRecon(); showNotification('Recon updated', 'success');
+    }
+    function deleteRecon(id){
+        const arr = lsRead(LS_KEYS.RECON, []);
+        const i = arr.findIndex(x=> x.id===id); if(i<0) return;
+        arr.splice(i,1); lsWrite(LS_KEYS.RECON, arr);
+        loadRecon(); showNotification('Recon deleted', 'success');
     }
 
     // Export functionality
     function exportTeamData() {
-        $.get('/DataManagement/ExportTeamData')
-            .done(function(response) {
-                if (response.success) {
-                    const dataStr = JSON.stringify(response.data, null, 2);
-                    const dataBlob = new Blob([dataStr], {type: 'application/json'});
-                    const url = URL.createObjectURL(dataBlob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = 'team-military-data.json';
-                    link.click();
-                    URL.revokeObjectURL(url);
-                    showNotification('Data exported successfully', 'success');
-                } else {
-                    showNotification('Error: ' + response.message, 'error');
+        const payload = {
+            brigades: lsRead(LS_KEYS.BRIGADES, []),
+            infantry: lsRead(LS_KEYS.INFANTRY, []),
+            armoured: lsRead(LS_KEYS.ARMOURED, []),
+            artillery: lsRead(LS_KEYS.ARTILLERY, []),
+            scenarios: lsRead(LS_KEYS.SCENARIOS, []),
+            deployments: lsRead(LS_KEYS.DEPLOYMENTS, []),
+            battles: lsRead(LS_KEYS.BATTLES, []),
+            objectives: lsRead(LS_KEYS.OBJECTIVES, []),
+            tokens: loadTokensLocal([])
+        };
+        const dataStr = JSON.stringify(payload, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'wargame-data.json';
+        link.click();
+        URL.revokeObjectURL(url);
+        showNotification('Data exported locally', 'success');
+    }
+
+    function importTeamData() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'application/json';
+        input.onchange = e => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const data = JSON.parse(String(reader.result||'{}'));
+                    if (data.brigades) lsWrite(LS_KEYS.BRIGADES, data.brigades);
+                    if (data.infantry) lsWrite(LS_KEYS.INFANTRY, data.infantry);
+                    if (data.armoured) lsWrite(LS_KEYS.ARMOURED, data.armoured);
+                    if (data.artillery) lsWrite(LS_KEYS.ARTILLERY, data.artillery);
+                    if (data.scenarios) lsWrite(LS_KEYS.SCENARIOS, data.scenarios);
+                    if (data.deployments) lsWrite(LS_KEYS.DEPLOYMENTS, data.deployments);
+                    if (data.battles) lsWrite(LS_KEYS.BATTLES, data.battles);
+                    if (data.objectives) lsWrite(LS_KEYS.OBJECTIVES, data.objectives);
+                    if (data.tokens) localStorage.setItem(TOKEN_STORE_KEY, JSON.stringify(data.tokens));
+                    // Refresh visible tables if modal is open
+                    loadDataManagementData();
+                    showNotification('Data imported locally', 'success');
+                } catch(err){
+                    showNotification('Import failed: invalid JSON', 'error');
                 }
-            })
-            .fail(function() {
-                showNotification('Failed to export data', 'error');
-            });
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+    }
+
+    function runAutomatedTests() {
+        const results = [];
+        function assert(name, cond){ results.push({ name, ok: !!cond }); }
+        try {
+            // 1) Brigade CRUD
+            const b = { id: localId(), name:'Test Brigade', brigadeCode:'TB-1', forceType:'Blue' };
+            lsUpsert(LS_KEYS.BRIGADES, b);
+            const bRead = lsRead(LS_KEYS.BRIGADES, []).find(x=> x.id===b.id);
+            assert('Brigade saved', !!bRead && bRead.name==='Test Brigade');
+
+            // 2) Infantry Save
+            const i = { id: localId(), name:'Test Inf', unitCode:'INF-1', forceType:'Blue', strength:500, companies:3 };
+            lsUpsert(LS_KEYS.INFANTRY, i);
+            assert('Infantry saved', !!lsRead(LS_KEYS.INFANTRY, []).find(x=> x.id===i.id));
+
+            // 3) Scenario create/start
+            const sc = { id: localId(), name:'Test Scenario', scenarioCode:'SC_T', status:'Planning' };
+            const scs = lsRead(LS_KEYS.SCENARIOS, []); scs.push(sc); lsWrite(LS_KEYS.SCENARIOS, scs);
+            currentScenario = sc; startCurrentScenario();
+            assert('Scenario started', currentScenario && currentScenario.status==='Active');
+
+            // 4) Deployment
+            const dep = { id: localId(), scenarioId: currentScenario.id, unitId:i.id, unitType:'Infantry', unitName:i.name, forceType:i.forceType, position:{lat:25,lng:51}, formation:'Line', currentStrength:0, maxStrength:0, status:'Deployed', morale:100 };
+            const ds = lsRead(LS_KEYS.DEPLOYMENTS, []); ds.push(dep); lsWrite(LS_KEYS.DEPLOYMENTS, ds);
+            assert('Deployment saved', !!lsRead(LS_KEYS.DEPLOYMENTS, []).find(x=> x.id===dep.id));
+
+            // 5) Objective
+            const obj = { id: localId(), scenarioId: currentScenario.id, objectiveName:'OBJ', description:'', objectiveType:'Capture', assignedToForce:'Blue', pointValue:100, objectiveLocation:{lat:25.1,lng:51.1} };
+            const os = lsRead(LS_KEYS.OBJECTIVES, []); os.push(obj); lsWrite(LS_KEYS.OBJECTIVES, os);
+            assert('Objective saved', !!lsRead(LS_KEYS.OBJECTIVES, []).find(x=> x.id===obj.id));
+
+            // 6) Battle
+            const bt = { id: localId(), scenarioId: currentScenario.id, battleName:'B1', battleLocation:{lat:25.2,lng:51.2}, battleType:'Engagement', terrainType:'Plain', weather:'Clear', participatingUnits:[dep.id], status:'Active' };
+            const bs = lsRead(LS_KEYS.BATTLES, []); bs.push(bt); lsWrite(LS_KEYS.BATTLES, bs);
+            assert('Battle saved', !!lsRead(LS_KEYS.BATTLES, []).find(x=> x.id===bt.id));
+        } catch(err){
+            results.push({ name:'Exception', ok:false, error:String(err) });
+        }
+        // Display summary
+        const passed = results.filter(r=> r.ok).length;
+        const total = results.length;
+        showNotification(`Tests: ${passed}/${total} passed`, passed===total ? 'success' : 'error');
+        const list = results.map(r=> `${r.ok?'✔':'✖'} ${r.name}${r.error?(' - '+r.error):''}`).join('<br>');
+        const modal = $(`
+            <div class="gameplay-modal" id="autoTestModal">
+              <div class="gameplay-modal-content">
+                <div class="gameplay-modal-header"><h3><i class="fas fa-vial"></i> Automated Tests</h3><button class="gameplay-modal-close" onclick="$('#autoTestModal').remove()">&times;</button></div>
+                <div class="gameplay-modal-body">${list}</div>
+                <div class="gameplay-modal-footer"><button class="gameplay-btn" onclick="$('#autoTestModal').remove()">Close</button></div>
+              </div>
+            </div>`);
+        $('body').append(modal);
+    }
+
+    function refreshTokenList(){
+        const side = $('#tokenFilterSide').val();
+        const q = ($('#tokenSearch').val()||'').toLowerCase();
+        const list = $('#tokenList');
+        const all = loadTokensLocal([]);
+        const rows = all.filter(t=> (!side || t.type===side) && (!q || (t.name||'').toLowerCase().includes(q)))
+            .map(t=> `
+                <div class="deployed-unit-card" style="display:flex;justify-content:space-between;align-items:center">
+                    <div>
+                        <div><strong>${t.name||'(unnamed)'}</strong> <span style="opacity:.8">${t.category||'Generic'}</span></div>
+                        <div style="opacity:.8">${t.type} &#64; ${t.position.lat.toFixed(4)}, ${t.position.lng.toFixed(4)}</div>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-danger" onclick="window.deleteTokenById('${t.id}'); refreshTokenList()">Delete</button>
+                    </div>
+                </div>`);
+        list.html(rows.join('') || '<p>No tokens.</p>');
+    }
+
+    function populateBrigadeDropdown(selector){
+        const sel = $(selector);
+        const brigades = lsRead(LS_KEYS.BRIGADES, []);
+        sel.empty(); sel.append('<option value="">(none)</option>');
+        brigades.forEach(b=> sel.append(`<option value="${b.id}">${b.name} (${b.brigadeCode||''})</option>`));
     }
 
     // Utility functions
@@ -2261,58 +2748,30 @@
     function createNewScenario() {
         const scenarioName = prompt('Enter scenario name:');
         if (!scenarioName) return;
-
-        const scenarioData = {
-            Name: scenarioName,
-            Description: 'War game simulation scenario',
-            ScenarioCode: 'SC_' + Date.now(),
-            Status: 'Planning'
+        const obj = {
+            id: localId(),
+            name: scenarioName,
+            description: 'War game simulation scenario',
+            scenarioCode: 'SC_' + Date.now(),
+            status: 'Planning'
         };
-
-        $.ajax({
-            url: '/Simulation/CreateScenario',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(scenarioData)
-        })
-        .done(function(response) {
-            if (response.success) {
-                currentScenario = response.data;
-                updateScenarioDisplay();
-                showNotification('Scenario created successfully', 'success');
-            } else {
-                showNotification('Error: ' + response.message, 'error');
-            }
-        })
-        .fail(function() {
-            showNotification('Failed to create scenario', 'error');
-        });
+        const arr = lsRead(LS_KEYS.SCENARIOS, []);
+        arr.push(obj);
+        lsWrite(LS_KEYS.SCENARIOS, arr);
+        currentScenario = obj;
+        updateScenarioDisplay();
+        showNotification('Scenario created (local)', 'success');
     }
 
     function startCurrentScenario() {
-        if (!currentScenario) {
-            showNotification('No scenario selected', 'error');
-            return;
-        }
-
-        $.ajax({
-            url: '/Simulation/StartScenario',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ ScenarioId: currentScenario.id })
-        })
-        .done(function(response) {
-            if (response.success) {
-                currentScenario.status = 'Active';
-                updateScenarioDisplay();
-                showNotification('Scenario started', 'success');
-            } else {
-                showNotification('Error: ' + response.message, 'error');
-            }
-        })
-        .fail(function() {
-            showNotification('Failed to start scenario', 'error');
-        });
+        if (!currentScenario) { showNotification('No scenario selected', 'error'); return; }
+        currentScenario.status = 'Active';
+        const arr = lsRead(LS_KEYS.SCENARIOS, []);
+        const i = arr.findIndex(s=> s.id===currentScenario.id);
+        if (i>=0) arr[i] = currentScenario; else arr.push(currentScenario);
+        lsWrite(LS_KEYS.SCENARIOS, arr);
+        updateScenarioDisplay();
+        showNotification('Scenario started (local)', 'success');
     }
 
     function updateScenarioDisplay() {
@@ -2324,51 +2783,97 @@
                     <p><strong>Status:</strong> <span class="status-${currentScenario.status.toLowerCase()}">${currentScenario.status}</span></p>
                     <p><strong>Code:</strong> ${currentScenario.scenarioCode}</p>
                     <p><strong>Description:</strong> ${currentScenario.description}</p>
+                    <p><strong>Target Points:</strong> ${currentScenario.targetPoints ?? '—'}</p>
                 </div>
             `);
             $('#startScenarioBtn').prop('disabled', currentScenario.status === 'Active');
         } else {
             scenarioInfo.html('<p>No active scenario. Create a new scenario to begin.</p>');
         }
+        refreshScenarioPoints();
+    }
+
+    function setScenarioTargetPoints(){
+        if (!currentScenario){ showNotification('No active scenario', 'error'); return; }
+        const val = prompt('Set target points for this scenario:', currentScenario.targetPoints ?? '1000');
+        if (val===null) return;
+        const n = parseInt(val);
+        if (!isFinite(n) || n<0){ showNotification('Invalid points', 'error'); return; }
+        currentScenario.targetPoints = n;
+        const arr = lsRead(LS_KEYS.SCENARIOS, []);
+        const i = arr.findIndex(s=> s.id===currentScenario.id);
+        if (i>=0) arr[i] = currentScenario; else arr.push(currentScenario);
+        lsWrite(LS_KEYS.SCENARIOS, arr);
+        updateScenarioDisplay();
+    }
+
+    function refreshScenarioPoints(){
+        const box = document.getElementById('scenarioPoints');
+        if (!box){ return; }
+        if (!currentScenario){ box.textContent = 'Points: —'; return; }
+        const objs = lsRead(LS_KEYS.OBJECTIVES, []).filter(o=> o.scenarioId===currentScenario.id);
+        const total = objs.reduce((s,o)=> s + (parseInt(o.pointValue)||0), 0);
+        const target = parseInt(currentScenario.targetPoints)||0;
+        const missing = Math.max(target - total, 0);
+        box.textContent = `Points: total ${total}${target?` / target ${target} (missing ${missing})`:''}`;
+    }
+
+    function runScenarioPointCheck(){
+        refreshScenarioPoints();
+        showNotification('Scenario points recalculated', 'success');
+    }
+
+    function advanceTime(){
+        // Process movement orders: set unit position to destination instantly for now
+        const orders = lsRead(LS_KEYS.MOVEMENTS, []);
+        if (!orders.length){ showNotification('No movement orders', 'info'); return; }
+        let moved = 0;
+        const ds = lsRead(LS_KEYS.DEPLOYMENTS, []);
+        orders.forEach(o=>{
+            const u = ds.find(d=> d.id===o.unitDeploymentId);
+            if (u){
+                u.position = o.end;
+                moved++;
+            }
+        });
+        lsWrite(LS_KEYS.DEPLOYMENTS, ds);
+        // Clear orders after processing
+        lsWrite(LS_KEYS.MOVEMENTS, []);
+        // Refresh markers if any are on map
+        try{
+            deployedUnits = ds.filter(d=> !currentScenario || d.scenarioId===currentScenario.id);
+            deployedUnits.forEach(u=>{
+                if (u.mapMarker){ u.mapMarker.setLatLng([u.position.lat, u.position.lng]); }
+            });
+        }catch{}
+        showNotification(`Advanced time: moved ${moved} unit(s)`, 'success');
     }
 
     // Unit Deployment Functions
     function deployUnit() {
-        currentMapMode = 'deploy';
-        openModal('unitDeploymentModal');
-        loadAvailableUnits();
+        showNotification('Use Tokens → Place Selected or click a token → Deploy to place units.', 'info');
     }
 
     function loadAvailableUnits() {
         const unitsGrid = $('#availableUnitsGrid');
         unitsGrid.empty();
-
-        // Load all unit types
-        Promise.all([
-            $.get('/DataManagement/GetInfantryBattalions'),
-            $.get('/DataManagement/GetArmouredRegiments'),
-            $.get('/DataManagement/GetArtilleryRegiments')
-        ]).then(([infantry, armoured, artillery]) => {
-            const allUnits = [
-                ...infantry.map(u => ({...u, type: 'Infantry'})),
-                ...armoured.map(u => ({...u, type: 'Armoured'})),
-                ...artillery.map(u => ({...u, type: 'Artillery'}))
-            ];
-
-            allUnits.forEach(unit => {
-                unitsGrid.append(`
-                    <div class="unit-card" onclick="selectUnitForDeployment('${unit.id}', '${unit.type}', '${unit.name}')">
-                        <div class="unit-icon">
-                            <i class="fas fa-${getUnitIcon(unit.type)}"></i>
-                        </div>
-                        <div class="unit-info">
-                            <h6>${unit.name}</h6>
-                            <p>${unit.type} - ${unit.forceType}</p>
-                            <p>Strength: ${unit.strength}</p>
-                        </div>
+        const infantry = lsRead(LS_KEYS.INFANTRY, []).map(u=> ({...u, type:'Infantry'}));
+        const armoured = lsRead(LS_KEYS.ARMOURED, []).map(u=> ({...u, type:'Armoured'}));
+        const artillery = lsRead(LS_KEYS.ARTILLERY, []).map(u=> ({...u, type:'Artillery'}));
+        const allUnits = [...infantry, ...armoured, ...artillery];
+        allUnits.forEach(unit => {
+            unitsGrid.append(`
+                <div class="unit-card" onclick="selectUnitForDeployment('${unit.id}', '${unit.type}', '${unit.name}')">
+                    <div class="unit-icon">
+                        <i class="fas fa-${getUnitIcon(unit.type)}"></i>
                     </div>
-                `);
-            });
+                    <div class="unit-info">
+                        <h6>${unit.name}</h6>
+                        <p>${unit.type} - ${unit.forceType}</p>
+                        <p>Strength: ${unit.strength || 'N/A'}</p>
+                    </div>
+                </div>
+            `);
         });
     }
 
@@ -2388,34 +2893,29 @@
             return;
         }
 
-        const deploymentData = {
-            ScenarioId: currentScenario?.id,
-            UnitId: selectedUnit.id,
-            UnitType: selectedUnit.type,
-            Position: selectedPosition,
-            Formation: $('#deploymentFormation').val()
+        const deployment = {
+            id: localId(),
+            scenarioId: currentScenario?.id || null,
+            unitId: selectedUnit.id,
+            unitType: selectedUnit.type,
+            unitName: selectedUnit.name,
+            forceType: (lsRead(LS_KEYS.INFANTRY, []).find(u=>u.id===selectedUnit.id)?.forceType
+                      || lsRead(LS_KEYS.ARMOURED, []).find(u=>u.id===selectedUnit.id)?.forceType
+                      || lsRead(LS_KEYS.ARTILLERY, []).find(u=>u.id===selectedUnit.id)?.forceType
+                      || ''),
+            position: selectedPosition,
+            formation: $('#deploymentFormation').val(),
+            currentStrength: 0,
+            maxStrength: 0,
+            status: 'Deployed',
+            morale: 100
         };
-
-        $.ajax({
-            url: '/Simulation/DeployUnit',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(deploymentData)
-        })
-        .done(function(response) {
-            if (response.success) {
-                deployedUnits.push(response.data);
-                addUnitToMap(response.data);
-                closeModal('unitDeploymentModal');
-                resetDeploymentModal();
-                showNotification('Unit deployed successfully', 'success');
-            } else {
-                showNotification('Error: ' + response.message, 'error');
-            }
-        })
-        .fail(function() {
-            showNotification('Failed to deploy unit', 'error');
-        });
+        const ds = lsRead(LS_KEYS.DEPLOYMENTS, []); ds.push(deployment); lsWrite(LS_KEYS.DEPLOYMENTS, ds);
+        deployedUnits.push(deployment);
+        addUnitToMap(deployment);
+        closeModal('unitDeploymentModal');
+        resetDeploymentModal();
+        showNotification('Unit deployed (local)', 'success');
     }
 
     function resetDeploymentModal() {
@@ -2432,6 +2932,7 @@
         currentMapMode = 'move';
         openModal('movementPlanModal');
         loadDeployedUnitsForMovement();
+        showNotification('Pick a deployed unit and then click a destination on the map.', 'info');
     }
 
     function loadDeployedUnitsForMovement() {
@@ -2453,32 +2954,30 @@
             return;
         }
 
-        const movementData = {
-            UnitDeploymentId: unitId,
-            EndPosition: movementDestination,
-            MovementType: movementType,
-            TerrainType: terrainType
-        };
-
-        $.ajax({
-            url: '/Simulation/IssueMovementOrder',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(movementData)
-        })
-        .done(function(response) {
-            if (response.success) {
-                showMovementCalculation(response.calculation);
-                showNotification('Movement order issued', 'success');
-                closeModal('movementPlanModal');
-                currentMapMode = 'normal';
-            } else {
-                showNotification('Error: ' + response.message, 'error');
-            }
-        })
-        .fail(function() {
-            showNotification('Failed to issue movement order', 'error');
-        });
+        const unit = deployedUnits.find(u=> u.id===unitId) || lsRead(LS_KEYS.DEPLOYMENTS, []).find(u=> u.id===unitId);
+        if (!unit) { showNotification('Deployed unit not found', 'error'); return; }
+        // Basic distance (approx haversine simplified)
+        function toRad(v){ return v*Math.PI/180; }
+        const R = 6371;
+        const dLat = toRad(movementDestination.lat - unit.position.lat);
+        const dLng = toRad(movementDestination.lng - unit.position.lng);
+        const a = Math.sin(dLat/2)**2 + Math.cos(toRad(unit.position.lat))*Math.cos(toRad(movementDestination.lat))*Math.sin(dLng/2)**2;
+        const distance = 2*R*Math.asin(Math.sqrt(a));
+        const speedMap = { March: 6, Tactical: 3, Combat: 1.5 };
+        const terrainFactor = { Plain:1, Forest:0.7, Mountain:0.5, Desert:0.8, Swamp:0.4, Urban:0.6 };
+        const base = speedMap[movementType] || 4;
+        const eff = base * (terrainFactor[terrainType] || 1);
+        const travelTime = distance / Math.max(eff, 0.1);
+        const calc = { distance, effectiveSpeed: eff, travelTime, terrainTypes: terrainType };
+        // Save order locally
+        const orders = lsRead(LS_KEYS.MOVEMENTS, []);
+        orders.push({ id: localId(), unitDeploymentId: unit.id, start: unit.position, end: movementDestination, movementType, terrainType, calc });
+        lsWrite(LS_KEYS.MOVEMENTS, orders);
+        // Update UI
+        showMovementCalculation(calc);
+        showNotification('Movement order issued (local)', 'success');
+        closeModal('movementPlanModal');
+        currentMapMode = 'normal';
     }
 
     function showMovementCalculation(calc) {
@@ -2614,40 +3113,26 @@
             return;
         }
 
-        const objectiveData = {
-            ObjectiveName: objectiveName,
-            Description: description,
-            ScenarioId: currentScenario?.id,
-            ObjectiveLocation: JSON.stringify(selectedPosition),
-            ObjectiveType: objectiveType,
-            AssignedToForce: assignedForce,
-            PointValue: parseInt(pointValue)
+        const obj = {
+            id: localId(),
+            scenarioId: currentScenario?.id || null,
+            objectiveName,
+            description,
+            objectiveType,
+            assignedToForce: assignedForce,
+            pointValue: parseInt(pointValue),
+            objectiveLocation: selectedPosition
         };
-
-        $.ajax({
-            url: '/Simulation/CreateObjective',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(objectiveData)
-        })
-        .done(function(response) {
-            if (response.success) {
-                objectives.push(response.data);
-                addObjectiveToMap(response.data);
-                closeModal('objectiveModal');
-                showNotification('Objective created', 'success');
-            } else {
-                showNotification('Error: ' + response.message, 'error');
-            }
-        })
-        .fail(function() {
-            showNotification('Failed to create objective', 'error');
-        });
+        const arr = lsRead(LS_KEYS.OBJECTIVES, []); arr.push(obj); lsWrite(LS_KEYS.OBJECTIVES, arr);
+        objectives.push(obj);
+        addObjectiveToMap(obj);
+        closeModal('objectiveModal');
+        showNotification('Objective created (local)', 'success');
     }
 
     // Map Integration Functions
     function addUnitToMap(unit) {
-        const position = JSON.parse(unit.position);
+        const position = unit.position || (typeof unit.Position==='string' ? JSON.parse(unit.Position) : unit.Position);
         const icon = L.divIcon({
             className: `unit-marker ${unit.forceType.toLowerCase()}`,
             html: `<div class="unit-marker-content">
@@ -2658,7 +3143,7 @@
             iconAnchor: [30, 15]
         });
 
-        const marker = L.marker([position.lat, position.lng], { icon: icon }).addTo(gameMap);
+        const marker = L.marker([position.lat, position.lng], { icon: icon }).addTo((typeof map!=='undefined')?map:gameMap);
         marker.bindPopup(`
             <strong>${unit.unitName}</strong><br>
             Type: ${unit.unitType}<br>
@@ -2679,7 +3164,7 @@
                 iconSize: [30, 30],
                 iconAnchor: [15, 15]
             })
-        }).addTo(gameMap);
+        }).addTo((typeof map!=='undefined')?map:gameMap);
 
         marker.bindPopup(`
             <strong>${battle.battleName}</strong><br>
@@ -2691,21 +3176,22 @@
     }
 
     function addObjectiveToMap(objective) {
-        const location = JSON.parse(objective.objectiveLocation);
+        const location = objective.objectiveLocation
+            || (typeof objective.ObjectiveLocation === 'string' ? JSON.parse(objective.ObjectiveLocation) : objective.ObjectiveLocation);
         const marker = L.marker([location.lat, location.lng], {
             icon: L.divIcon({
-                className: `objective-marker ${objective.assignedToForce.toLowerCase()}`,
+                className: `objective-marker ${(objective.assignedToForce || objective.AssignedToForce || '').toLowerCase()}`,
                 html: '<i class="fas fa-flag"></i>',
                 iconSize: [25, 25],
                 iconAnchor: [12, 25]
             })
-        }).addTo(gameMap);
+        }).addTo((typeof map!=='undefined')?map:gameMap);
 
         marker.bindPopup(`
-            <strong>${objective.objectiveName}</strong><br>
-            Type: ${objective.objectiveType}<br>
-            Assigned to: ${objective.assignedToForce}<br>
-            Points: ${objective.pointValue}
+            <strong>${objective.objectiveName || objective.ObjectiveName}</strong><br>
+            Type: ${objective.objectiveType || objective.ObjectiveType}<br>
+            Assigned to: ${objective.assignedToForce || objective.AssignedToForce}<br>
+            Points: ${objective.pointValue || objective.PointValue}
         `);
 
         objective.mapMarker = marker;
@@ -2734,6 +3220,9 @@
                 $('#createObjectiveBtn').prop('disabled', false);
                 showNotification('Objective location selected', 'info');
                 break;
+            case 'token':
+                placeTokenAtLocation(e.latlng);
+                return;
             default:
                 if (currentMode === 'fox-land' || currentMode === 'blue-land') {
                     placeTokenAtLocation(e.latlng);
@@ -2774,53 +3263,47 @@
 
     function loadDeployedUnits() {
         if (!currentScenario) return;
-
-        $.get(`/Simulation/GetDeployedUnits?scenarioId=${currentScenario.id}`)
-            .done(function(units) {
-                deployedUnits = units;
-                const grid = $('#deployedUnitsGrid');
-                grid.empty();
-
-                units.forEach(unit => {
-                    grid.append(`
-                        <div class="deployed-unit-card">
-                            <h6>${unit.unitName}</h6>
-                            <p>${unit.unitType} - ${unit.forceType}</p>
-                            <p>Strength: ${unit.currentStrength}/${unit.maxStrength}</p>
-                            <p>Status: ${unit.status}</p>
-                            <p>Morale: ${unit.morale}%</p>
-                        </div>
-                    `);
-                });
-            });
+        deployedUnits = lsRead(LS_KEYS.DEPLOYMENTS, []).filter(d=> d.scenarioId===currentScenario.id);
+        const grid = $('#deployedUnitsGrid');
+        grid.empty();
+        deployedUnits.forEach(unit => {
+            grid.append(`
+                <div class="deployed-unit-card">
+                    <h6>${unit.unitName}</h6>
+                    <p>${unit.unitType} - ${unit.forceType}</p>
+                    <p>Strength: ${unit.currentStrength}/${unit.maxStrength}</p>
+                    <p>Status: ${unit.status}</p>
+                    <p>Morale: ${unit.morale}%</p>
+                </div>
+            `);
+        });
     }
 
     function loadActiveBattles() {
-        // Implementation for loading battles
+        if (!currentScenario) return;
+        activeBattles = lsRead(LS_KEYS.BATTLES, []).filter(b=> b.scenarioId===currentScenario.id);
+        // Optionally render a list here
     }
 
     function loadObjectives() {
         if (!currentScenario) return;
-
-        $.get(`/Simulation/GetObjectives?scenarioId=${currentScenario.id}`)
-            .done(function(objs) {
-                objectives = objs;
-                const list = $('#objectivesList');
-                list.empty();
-
-                objs.forEach(obj => {
-                    list.append(`
-                        <div class="objective-card">
-                            <h6>${obj.objectiveName}</h6>
-                            <p>${obj.description}</p>
-                            <p>Type: ${obj.objectiveType}</p>
-                            <p>Assigned to: ${obj.assignedToForce}</p>
-                            <p>Status: ${obj.status}</p>
-                            <p>Points: ${obj.pointValue}</p>
-                        </div>
-                    `);
-                });
-            });
+        objectives = lsRead(LS_KEYS.OBJECTIVES, []).filter(o=> o.scenarioId===currentScenario.id);
+        const list = $('#objectivesList');
+        list.empty();
+        objectives.forEach(obj => {
+            list.append(`
+                <div class="objective-card">
+                    <h6>${obj.objectiveName}</h6>
+                    <p>${obj.description||''}</p>
+                    <p>Type: ${obj.objectiveType}</p>
+                    <p>Assigned to: ${obj.assignedToForce}</p>
+                    <p>Points: ${obj.pointValue}</p>
+                </div>
+            `);
+            // If not already on map, add marker
+            if (!obj.mapMarker && obj.objectiveLocation){ addObjectiveToMap(obj); }
+        });
+        refreshScenarioPoints();
     }
 </script>
   <script>
@@ -2898,6 +3381,8 @@
         const BlueGroup   = new L.FeatureGroup().addTo(map);
         const foxGroup    = new L.FeatureGroup().addTo(map);
         const labelGroup  = new L.FeatureGroup().addTo(map);
+        const intelGroup  = new L.FeatureGroup().addTo(map);
+        const reconGroup  = new L.FeatureGroup().addTo(map);
 
         // Draw controls
         const drawCtl = new L.Control.Draw({

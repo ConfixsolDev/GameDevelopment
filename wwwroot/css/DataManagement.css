@@ -164,10 +164,8 @@
 .form-control {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid var(--gameplay-accent);
+    border: 1px solid darkgray;
     border-radius: 4px;
-    background: var(--gameplay-bg);
-    color: var(--gameplay-text);
     font-family: 'Roboto', sans-serif;
     font-size: 14px;
     transition: all 0.3s ease;
