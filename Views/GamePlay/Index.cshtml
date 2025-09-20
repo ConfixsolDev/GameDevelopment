@@ -618,6 +618,44 @@
     </div>
 </div>
 
+<!-- Token Brigade Data Modal (missing earlier) -->
+<div id="tokenBrigadeDataModal" class="gameplay-modal" style="display:none;">
+    <div class="gameplay-modal-content large">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-crosshairs"></i> Token Brigade Data</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('tokenBrigadeDataModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <div class="data-section-header">
+                <h4>Linked Brigade</h4>
+            </div>
+            <form id="tokenBrigadeForm">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="tbBrigadeId">Brigade</label>
+                        <select id="tbBrigadeId" class="form-control">
+                            <option value="">Select a brigade…</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="tbNotes">Notes</label>
+                        <input type="text" id="tbNotes" class="form-control" placeholder="Optional notes">
+                    </div>
+                </div>
+            </form>
+            <div class="mt-2">
+                <h5>Associated Units</h5>
+                <div id="tokenUnitsList" class="data-table-container"></div>
+            </div>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('tokenBrigadeDataModal')">Close</button>
+            <button class="gameplay-btn primary" onclick="saveTokenBrigadeLink()">Save</button>
+        </div>
+    </div>
+    
+</div>
+
 <!-- Settings Modal -->
 <div id="settingsModal" class="gameplay-modal">
     <div class="gameplay-modal-content">
@@ -1237,6 +1275,18 @@
     let tokens = [];
     let isFullscreen = false;
 
+    // Token local storage helpers (tokens only)
+    const TOKEN_STORE_KEY = 'leaflet_saved_tokens_v1';
+    function loadTokensLocal(defaultValue) {
+        try { return JSON.parse(localStorage.getItem(TOKEN_STORE_KEY)) || (defaultValue ?? []); } catch { return defaultValue ?? []; }
+    }
+    function saveTokensLocal() {
+        try {
+            const serializable = tokens.map(t => ({ id:t.id, type:t.type, position:t.position, name:t.name||'', notes:t.notes||'', category:t.category||'' }));
+            localStorage.setItem(TOKEN_STORE_KEY, JSON.stringify(serializable));
+        } catch {}
+    }
+
     // Wait for jQuery to be available
     function waitForJQuery() {
         if (typeof jQuery !== 'undefined') {
@@ -1288,7 +1338,12 @@
 
     function onMapClick(e) {
         console.log('Map clicked at:', e.latlng);
-
+        // If in explicit token placement mode, always place token
+        if (typeof currentMapMode !== 'undefined' && currentMapMode === 'token') {
+            placeTokenAtLocation(e.latlng);
+            return;
+        }
+        // Fallback: place token when in team modes
         if (currentMode === 'fox-land' || currentMode === 'blue-land') {
             placeTokenAtLocation(e.latlng);
         }
@@ -1296,7 +1351,7 @@
 
     function placeTokenAtLocation(latlng) {
         const tokenId = 'token_' + Date.now();
-        const tokenType = currentMode;
+        const tokenType = currentMode; // 'fox-land' | 'blue-land'
 
         // Create token marker
         const marker = L.marker(latlng, {
@@ -1306,21 +1361,121 @@
                 iconSize: [20, 20],
                 iconAnchor: [10, 10]
             })
-        }).addTo(gameMap);
+        }).addTo((typeof map !== 'undefined') ? map : gameMap);
 
         // Store token data
         const tokenData = {
             id: tokenId,
             type: tokenType,
             position: latlng,
+            name: '',
+            notes: '',
+            category: '',
             marker: marker,
             timestamp: new Date()
         };
 
+        // Attach click => open token info popup
+        marker.on('click', function(){
+            openTokenInfoPopup(tokenData);
+        });
+
         tokens.push(tokenData);
+        saveTokensLocal();
         updateTokenCount();
 
         console.log('Token placed:', tokenData);
+        // Exit token mode after placement
+        if (typeof currentMapMode !== 'undefined' && currentMapMode === 'token') {
+            currentMapMode = 'normal';
+            $('#gameMap').css('cursor', 'grab');
+            try { if (typeof setStatus === 'function') setStatus('Ready'); } catch {}
+        }
+    }
+
+    function openTokenInfoPopup(token) {
+        const formId = `token-form-${token.id}`;
+        const nameId = `token-name-${token.id}`;
+        const notesId = `token-notes-${token.id}`;
+        const html = `
+            <div id="${formId}" class="token-popup">
+                <div class="form-group" style="margin-bottom:6px">
+                    <label style="display:block;font-size:12px;margin-bottom:2px">Name</label>
+                    <input id="${nameId}" type="text" class="form-control" value="${(token.name||'').replace(/"/g,'&quot;')}">
+                </div>
+                <div class="form-group" style="margin-bottom:6px">
+                    <label style="display:block;font-size:12px;margin-bottom:2px">Category</label>
+                    <select id="token-category-${token.id}" class="form-control">
+                        <option value="" title="Generic marker without classification">Generic</option>
+                        <option value="Brigade" title="Brigade-level unit">Brigade unit</option>
+                        <option value="Division Infantry" title="Infantry division formation">Div infantry unit</option>
+                        <option value="Armoured" title="Armoured regiment/battalion">Armored unit</option>
+                        <option value="Artillery" title="Artillery regiment/battery">Artillery unit</option>
+                        <option value="Recon" title="Reconnaissance element">Recon unit</option>
+                        <option value="HQ" title="Headquarters/Command post">HQ</option>
+                        <option value="Supply" title="Logistics or supply node">Supply</option>
+                    </select>
+                    <small id="token-category-help-${token.id}" style="display:block;opacity:.8;margin-top:2px"></small>
+                </div>
+                <div class="form-group" style="margin-bottom:6px">
+                    <label style="display:block;font-size:12px;margin-bottom:2px">Notes</label>
+                    <input id="${notesId}" type="text" class="form-control" value="${(token.notes||'').replace(/"/g,'&quot;')}">
+                </div>
+                <div style="display:flex;gap:6px;justify-content:flex-end">
+                    <button class="gameplay-btn danger" onclick="window.deleteTokenById('${token.id}')">Delete</button>
+                    <button class="gameplay-btn primary" onclick="window.saveTokenInfoById('${token.id}')">Save</button>
+                </div>
+            </div>`;
+        try { token.marker.bindPopup(html, { closeButton:true, autoClose:true }).openPopup(); } catch {}
+        // Initialize category selection and hover/help
+        try {
+            const sel = document.getElementById(`token-category-${token.id}`);
+            const help = document.getElementById(`token-category-help-${token.id}`);
+            const desc = {
+                '': 'Generic marker without classification',
+                'Brigade': 'Brigade-level unit',
+                'Division Infantry': 'Infantry division formation',
+                'Armoured': 'Armoured regiment/battalion',
+                'Artillery': 'Artillery regiment/battery',
+                'Recon': 'Reconnaissance element',
+                'HQ': 'Headquarters/Command post',
+                'Supply': 'Logistics or supply node'
+            };
+            if (sel) {
+                sel.value = token.category || '';
+                if (help) help.textContent = desc[sel.value] || '';
+                sel.addEventListener('change', function(){ if (help) help.textContent = desc[this.value] || ''; });
+                sel.addEventListener('mouseover', function(){ if (help) help.textContent = desc[this.value] || ''; });
+            }
+        } catch {}
+    }
+
+    window.saveTokenInfoById = function(tokenId){
+        const token = tokens.find(t=> t.id===tokenId);
+        if (!token) return;
+        const nameEl = document.getElementById(`token-name-${tokenId}`);
+        const notesEl = document.getElementById(`token-notes-${tokenId}`);
+        const catEl = document.getElementById(`token-category-${tokenId}`);
+        if (nameEl) token.name = nameEl.value || '';
+        if (notesEl) token.notes = notesEl.value || '';
+        if (catEl) token.category = catEl.value || '';
+        saveTokensLocal();
+        showNotification('Token saved locally', 'success');
+        try { token.marker && token.marker.closePopup && token.marker.closePopup(); } catch {}
+    }
+
+    window.deleteTokenById = function(tokenId){
+        const idx = tokens.findIndex(t=> t.id===tokenId);
+        if (idx<0) return;
+        const token = tokens[idx];
+        try {
+            const m = (typeof map !== 'undefined') ? map : gameMap;
+            if (token.marker && m && typeof m.removeLayer === 'function') m.removeLayer(token.marker);
+        } catch {}
+        tokens.splice(idx,1);
+        saveTokensLocal();
+        updateTokenCount();
+        showNotification('Token deleted', 'info');
     }
 
     function updateTokenCount() {
@@ -1335,8 +1490,21 @@
 
     // Map Control Functions
     function toggleMapLayers() {
-        console.log('Toggling map layers...');
-        // TODO: Implement layer toggle
+        try {
+            const order = Object.keys(layers || {});
+            if (!order.length) { console.warn('No base layers defined'); return; }
+            const current = (typeof readBase === 'function') ? readBase() : order[0];
+            const next = order[(order.indexOf(current) + 1) % order.length];
+            const m = (typeof map !== 'undefined') ? map : gameMap;
+            if (!m) { console.warn('Map not initialized'); return; }
+            Object.values(layers).forEach(l => m.removeLayer(l));
+            layers[next].addTo(m);
+            if (typeof saveBase === 'function') saveBase(next);
+            if (typeof setBMActive === 'function') setBMActive(next);
+            showNotification(`Basemap: ${next}`, 'info');
+        } catch (err) {
+            console.warn('toggleMapLayers error', err);
+        }
     }
 
     function toggleFullscreen() {
@@ -1353,7 +1521,9 @@
     }
 
     function resetMapView() {
-        gameMap.setView([51.505, -0.09], 13);
+        const m = (typeof map !== 'undefined') ? map : gameMap;
+        if (!m) return;
+        m.setView([51.505, -0.09], 13);
     }
 
     function toggleCoordinates() {
@@ -1361,8 +1531,31 @@
     }
 
     function placeToken() {
-        console.log('Place token mode activated');
-        // TODO: Implement token placement mode
+        // Ensure team mode is active for token styling
+        if (typeof currentMode !== 'string' || (currentMode !== 'fox-land' && currentMode !== 'blue-land')) {
+            if (typeof window.switchToFoxLand === 'function') window.switchToFoxLand();
+        }
+        // Enter token placement mode and avoid edit conflicts
+        if (typeof currentMapMode !== 'undefined') currentMapMode = 'token';
+        if (typeof addLabelMode !== 'undefined') addLabelMode = false;
+        try {
+            if (typeof currentRegion !== 'undefined' && currentRegion && currentRegion.editing && currentRegion.editing.enabled && currentRegion.editing.enabled()){
+                currentRegion.editing.disable();
+                if (typeof btnEditRegion !== 'undefined' && btnEditRegion) btnEditRegion.textContent='Enable Edit';
+            }
+        } catch {}
+        // Guide the user
+        showNotification('Click on the map to place a token.', 'info');
+        $('#gameMap').css('cursor', 'crosshair');
+        // Ensure a one-time placement even if other handlers exist
+        try {
+            const m = (typeof map !== 'undefined') ? map : gameMap;
+            if (m && typeof m.once === 'function') {
+                m.once('click', function(e){
+                    placeTokenAtLocation(e.latlng);
+                });
+            }
+        } catch {}
     }
 
     function selectToken() {
@@ -1370,7 +1563,7 @@
         currentMapMode = 'select-token';
 
         // Change cursor style
-        $('#mapContainer').css('cursor', 'pointer');
+        $('#gameMap').css('cursor', 'pointer');
 
         // Add click handlers to existing token markers
         tokens.forEach(token => {
@@ -1391,7 +1584,7 @@
 
         // Reset map mode
         currentMapMode = 'normal';
-        $('#mapContainer').css('cursor', 'grab');
+        $('#gameMap').css('cursor', 'grab');
 
         // Open the token brigade data modal
         openTokenBrigadeDataModal(token.id);
@@ -1434,14 +1627,71 @@
         });
     }
 
+    // Placeholders to prevent runtime errors if backend not ready
+    function populateBrigadeForm(data) {
+        try {
+            if (data && data.id) {
+                $('#tbBrigadeId').val(data.id);
+            }
+            if (data && data.notes) {
+                $('#tbNotes').val(data.notes);
+            }
+        } catch {}
+    }
+
+    function clearBrigadeForm() {
+        try { $('#tokenBrigadeForm')[0].reset(); } catch {}
+        $('#tokenUnitsList').empty();
+    }
+
+    function loadTokenMilitaryUnits(brigadeId) {
+        if (!brigadeId) { $('#tokenUnitsList').empty(); return; }
+        $.get('/DataManagement/GetUnitsByBrigade', { id: brigadeId })
+            .done(function(units) {
+                const c = $('#tokenUnitsList');
+                c.empty();
+                if (!units || !units.length) { c.html('<p>No units linked.</p>'); return; }
+                units.forEach(u => c.append(`<div>${u.unitType || 'Unit'} - ${u.name || u.unitName || ''}</div>`));
+            })
+            .fail(function(){ $('#tokenUnitsList').html('<p>Failed to load units.</p>'); });
+    }
+
+    function saveTokenBrigadeLink() {
+        const tokenId = $('#tokenBrigadeDataModal').data('token-id');
+        const brigadeId = $('#tbBrigadeId').val();
+        const notes = $('#tbNotes').val();
+        if (!tokenId || !brigadeId) { showNotification('Select a brigade first', 'error'); return; }
+        $.ajax({
+            url: '/DataManagement/LinkTokenBrigade',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ tokenId, brigadeId, notes })
+        }).done(function(resp){
+            if (resp && resp.success) { showNotification('Linked successfully', 'success'); closeModal('tokenBrigadeDataModal'); }
+            else { showNotification('Failed to link', 'error'); }
+        }).fail(function(){ showNotification('Failed to link', 'error'); });
+    }
+
     function measureDistance() {
-        console.log('Measure distance mode activated');
-        // TODO: Implement distance measurement
+        try {
+            const m = (typeof map !== 'undefined') ? map : gameMap;
+            if (!m) return;
+            new L.Draw.Polyline(m).enable();
+            showNotification('Click to start measuring. Double-click to finish.', 'info');
+        } catch (err) {
+            console.warn('measureDistance error', err);
+        }
     }
 
     function drawArea() {
-        console.log('Draw area mode activated');
-        // TODO: Implement area drawing
+        try {
+            const m = (typeof map !== 'undefined') ? map : gameMap;
+            if (!m) return;
+            new L.Draw.Polygon(m).enable();
+            showNotification('Click to draw area. Double-click to finish.', 'info');
+        } catch (err) {
+            console.warn('drawArea error', err);
+        }
     }
 
     // Modal Functions
@@ -1462,14 +1712,20 @@
     // Team switching functions (called from layout)
     window.switchToFoxLand = function() {
         currentMode = 'fox-land';
+        document.body.classList.remove('blue-land');
+        document.body.classList.add('fox-land');
         updateTeamDisplay('Fox Land', 'Attacking');
         updateTokenCount();
+        setStatus && setStatus('Fox Land');
     };
 
     window.switchToBlueLand = function() {
         currentMode = 'blue-land';
+        document.body.classList.remove('fox-land');
+        document.body.classList.add('blue-land');
         updateTeamDisplay('Blue Land', 'Defending');
         updateTokenCount();
+        setStatus && setStatus('Blue Land');
     };
 
     window.switchToSpectator = function() {
@@ -2706,10 +2962,15 @@
           regionGroup.addLayer(layer);
           currentRegion = layer;
           layer.setStyle && layer.setStyle(styleRegion);
+          // Only auto-enable editing when not in token placement mode
+          if (typeof currentMapMode === 'undefined' || currentMapMode !== 'token'){
           if (layer.editing && !layer.editing.enabled) {
             // nothing
           } else if (layer.editing && !layer.editing.enabled()){
             layer.editing.enable();
+            }
+          } else {
+            try { layer.editing && layer.editing.disable && layer.editing.disable(); } catch {}
           }
           btnEditRegion.textContent = 'Disable Edit';
         }
@@ -2750,6 +3011,8 @@
           const layer = L.geoJSON(feature,{style:styleForType(type)}).getLayers()[0];
           layer._land_type = type; layer.feature = feature;
           layer.on('click', ()=>{
+            // During token mode, do not toggle sector editing
+            if (typeof currentMapMode !== 'undefined' && currentMapMode === 'token') return;
             if (!layer.editing) return;
             layer.editing.enabled() ? layer.editing.disable() : layer.editing.enable();
           });
@@ -2856,6 +3119,10 @@
         map.on('mousemove', updateHUD);
         map.on('zoomend moveend', updateHUD);
         updateHUD({latlng: map.getCenter()});
+        // Global gameplay click handler (token placement, etc.)
+        if (typeof onMapClick === 'function') {
+          map.on('click', onMapClick);
+        }
 
         /* ====== Visibility Sync (checkboxes <-> bottom buttons) ====== */
         function refreshVisibility(){
@@ -2979,6 +3246,23 @@
           const [lng,lat] = f.geometry.coordinates;
           addLabelMarker([lat,lng], (f.properties && f.properties.text) || '');
         });
+        // Tokens (local only)
+        try {
+          tokens = loadTokensLocal([]);
+          const m = (typeof map !== 'undefined') ? map : gameMap;
+          tokens.forEach(t => {
+            const marker = L.marker(t.position, {
+              icon: L.divIcon({
+                className: 'token-marker ' + (t.type || 'blue-land'),
+                html: '<i class="fas fa-crosshairs"></i>',
+                iconSize: [20, 20], iconAnchor: [10, 10]
+              })
+            }).addTo(m);
+            t.marker = marker;
+            marker.on('click', function(){ openTokenInfoPopup(t); });
+          });
+          updateTokenCount();
+        } catch {}
 
         refreshVisibility();
         updateMetrics();
