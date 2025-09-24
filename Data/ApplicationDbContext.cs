@@ -19,14 +19,14 @@ namespace TechWebSol.Data
     {
         private readonly IHttpContextAccessor httpContextAccessor;
         private ISession Session => httpContextAccessor?.HttpContext?.Session;
-        
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IHttpContextAccessor httpContextAccessor)
             : base(options)
         {
             this.httpContextAccessor = httpContextAccessor;
         }
 
-        
+
         public DbSet<AppRoles> AppRoles { get; set; }
         public DbSet<Token> Tokens { get; set; }
         public DbSet<TokenSignature> TokenSignatures { get; set; }
@@ -39,7 +39,7 @@ namespace TechWebSol.Data
         public DbSet<Team> Teams { get; set; }
         public DbSet<TeamTokenGroupAssignment> TeamTokenGroupAssignments { get; set; }
         public DbSet<GameSession> GameSessions { get; set; }
-        
+
         // Military Unit DbSets
         public DbSet<InfantryBattalion> InfantryBattalions { get; set; }
         public DbSet<ArmouredRegiment> ArmouredRegiments { get; set; }
@@ -310,35 +310,38 @@ namespace TechWebSol.Data
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             var changeSet = this.ChangeTracker.Entries<BaseEntity>();
-            var userDetails = Session.GetObject<ApplicationUserVM>(AppConstants.UserSessionKey);
-
-            // Get Pakistan Standard Time zone
-            TimeZoneInfo pakistanTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Pakistan Standard Time");
-            if (changeSet != null)
+            if (Session != null)
             {
-                foreach (var entry in changeSet.Where(c => c.State != EntityState.Unchanged))
+                var userDetails = Session.GetObject<ApplicationUserVM>(AppConstants.UserSessionKey);
+
+                // Get Pakistan Standard Time zone
+                TimeZoneInfo pakistanTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Pakistan Standard Time");
+                if (changeSet != null)
                 {
-                    // Convert current UTC time to Pakistan Standard Time
-                    var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, pakistanTimeZone);
-
-                    if (entry.State == EntityState.Added)
+                    foreach (var entry in changeSet.Where(c => c.State != EntityState.Unchanged))
                     {
-                        entry.Entity.Id = Guid.NewGuid();
-                        entry.Entity.CreatedBy = userDetails.ApplicationUserId;
-                        entry.Entity.CreatedDate = now;
-                        entry.Entity.UpdatedBy = userDetails.ApplicationUserId;
-                        entry.Entity.UpdatedDate = now;
-                        entry.Entity.TeamId = userDetails.TeamId;
-                    }
-                    else if (entry.State == EntityState.Modified)
-                    {
-                        var original = await GenerateOriginalEntityAsync<BaseEntity>(entry.GetDatabaseValues());
-                        entry.Entity.UpdatedBy = userDetails.ApplicationUserId;
-                        entry.Entity.UpdatedDate = now;
+                        // Convert current UTC time to Pakistan Standard Time
+                        var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, pakistanTimeZone);
 
-                        entry.Entity.CreatedDate = original.CreatedDate;
-                        entry.Entity.CreatedBy = original.CreatedBy;
-                        entry.Entity.TeamId = original.TeamId;
+                        if (entry.State == EntityState.Added)
+                        {
+                            entry.Entity.Id = Guid.NewGuid();
+                            entry.Entity.CreatedBy = userDetails.ApplicationUserId;
+                            entry.Entity.CreatedDate = now;
+                            entry.Entity.UpdatedBy = userDetails.ApplicationUserId;
+                            entry.Entity.UpdatedDate = now;
+                            entry.Entity.TeamId = userDetails.TeamId;
+                        }
+                        else if (entry.State == EntityState.Modified)
+                        {
+                            var original = await GenerateOriginalEntityAsync<BaseEntity>(entry.GetDatabaseValues());
+                            entry.Entity.UpdatedBy = userDetails.ApplicationUserId;
+                            entry.Entity.UpdatedDate = now;
+
+                            entry.Entity.CreatedDate = original.CreatedDate;
+                            entry.Entity.CreatedBy = original.CreatedBy;
+                            entry.Entity.TeamId = original.TeamId;
+                        }
                     }
                 }
             }

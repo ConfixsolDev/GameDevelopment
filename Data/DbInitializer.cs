@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using TechWebSol.Models;
-using TechWebSol.Constants;
 using Newtonsoft.Json;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using TechWebSol.Constants;
+using TechWebSol.Models;
 using TechWebSol.Services;
 
 namespace TechWebSol.Data
@@ -23,75 +26,113 @@ namespace TechWebSol.Data
             using var serviceScope = _serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope();
             var context = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-            // Apply pending migrations
             await context.Database.MigrateAsync().ConfigureAwait(false);
 
-            // Seed data only if there are no users yet
-            if (!await context.Users.AnyAsync())
+            if (!await context.Teams.AnyAsync())
             {
-                var roleManager = serviceScope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
-
-                // Create the "Super Administrator" role if it doesn't exist
-                if (!await roleManager.RoleExistsAsync("Super Administrator"))
+                var teamFox = new Team
                 {
-                    var mvcControllers = _mvcControllerDiscovery.GetControllers();
-
-                    // Set the controller ID on each action so the JSON is complete
-                    foreach (var controller in mvcControllers)
-                    {
-                        foreach (var action in controller.Actions)
-                        {
-                            action.ControllerId = controller.Id;
-                        }
-                    }
-
-                    var role = new ApplicationRole
-                    {
-                        Name = "Super Administrator",
-                        ApplicationId=AppConstants.Id,
-                        Access = JsonConvert.SerializeObject(mvcControllers)
-                    };
-                    try
-                    {
-                        await roleManager.CreateAsync(role);
-                    }
-                    catch (Exception ex)
-                    {
-
-                        throw;
-                    }
-                   
-
-                    var appRole = new AppRoles
-                    {
-                        AppId = AppConstants.Id,
-                        RoleAccess = JsonConvert.SerializeObject(mvcControllers)
-                    };
-                    context.AppRoles.Add(appRole);
-                    context.SaveChanges();
-                }
-
-                // Create the default administrator user
-                var userManager = serviceScope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-                var adminUser = new ApplicationUser
-                {
-                    UserName = "superadmin",
-                    Email = "superadmin@example.com",
-                    FirstName = "Super",
-                    LastName = "Admin",
+                    Name = "Fox Land",
+                    Description = "This is the default team.",
                     IsActive = true,
-                    HomeUrl= "/Home/Index"
+                    CreatedDate = DateTime.UtcNow
+                };
+                var teamBlue = new Team
+                {
+                    Name = "Blue Land",
+                    Description = "This is the default team.",
+                    IsActive = true,
+                    CreatedDate = DateTime.UtcNow
                 };
 
-                var password = "Admin123!";
-                var result = await userManager.CreateAsync(adminUser, password);
-                if (result.Succeeded)
-                {
-                    await userManager.AddToRoleAsync(adminUser, "Super Administrator");
-                }
-              
+                context.Teams.Add(teamFox);
+                context.Teams.Add(teamBlue);
+                await context.SaveChangesAsync();
             }
-           
+
+            var mvcControllers = _mvcControllerDiscovery.GetControllers();
+            foreach (var controller in mvcControllers)
+            {
+                foreach (var action in controller.Actions)
+                {
+                    action.ControllerId = controller.Id;
+                }
+            }
+            var fullAccessJson = JsonConvert.SerializeObject(mvcControllers);
+
+            var roleManager = serviceScope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+
+            async Task EnsureRoleAsync(string roleName, string? accessJson = null)
+            {
+                if (!await roleManager.RoleExistsAsync(roleName))
+                {
+                    var role = new ApplicationRole
+                    {
+                        Name = roleName,
+                        ApplicationId = AppConstants.Id,
+                        Access = accessJson ?? "[]"
+                    };
+
+                    var createResult = await roleManager.CreateAsync(role);
+                    if (!createResult.Succeeded)
+                    {
+                        var reasons = string.Join("; ", createResult.Errors.Select(e => $"{e.Code}: {e.Description}"));
+                        throw new InvalidOperationException($"Failed to create role '{roleName}': {reasons}");
+                    }
+                }
+            }
+
+            await EnsureRoleAsync("Super Administrator", fullAccessJson);
+            await EnsureRoleAsync("Control", fullAccessJson);
+            await EnsureRoleAsync("Director", fullAccessJson);
+            await EnsureRoleAsync("Fox Land", fullAccessJson);
+            await EnsureRoleAsync("Blue Land", fullAccessJson);
+
+            if (!await context.AppRoles.AnyAsync(ar => ar.AppId == AppConstants.Id))
+            {
+                var appRole = new AppRoles
+                {
+                    AppId = AppConstants.Id,
+                    RoleAccess = fullAccessJson
+                };
+                context.AppRoles.Add(appRole);
+                await context.SaveChangesAsync();
+            }
+
+            var userManager = serviceScope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var defaultPassword = "Admin123!";
+
+            async Task EnsureUserAsync(string userName, string email, string firstName, string lastName, string roleName,string homeUrl)
+            {
+                var existingUser = await userManager.FindByNameAsync(userName);
+                if (existingUser == null)
+                {
+                    var user = new ApplicationUser
+                    {
+                        UserName = userName,
+                        Email = email,
+                        FirstName = firstName,
+                        LastName = lastName,
+                        IsActive = true,
+                        HomeUrl = homeUrl 
+                    };
+
+                    var result = await userManager.CreateAsync(user, defaultPassword);
+                    if (!result.Succeeded)
+                    {
+                        var reasons = string.Join("; ", result.Errors.Select(e => $"{e.Code}: {e.Description}"));
+                        throw new InvalidOperationException($"Failed to create user '{userName}': {reasons}");
+                    }
+
+                    await userManager.AddToRoleAsync(user, roleName);
+                }
+            }
+
+            await EnsureUserAsync("superadmin", "superadmin@example.com", "Super", "Admin", "Super Administrator", "/Home/Index");
+            await EnsureUserAsync("control", "control@example.com", "Control", "User", "Control", "/GamePlay/Index");
+            await EnsureUserAsync("director", "director@example.com", "Director", "User", "Director", "/GamePlay/Index");
+            await EnsureUserAsync("foxland", "foxland@example.com", "Fox", "Land", "Fox Land", "/GamePlay/Index");
+            await EnsureUserAsync("blueland", "blueland@example.com", "Blue", "Land", "Blue Land", "/GamePlay/Index");
         }
     }
 }

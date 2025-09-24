@@ -173,12 +173,12 @@
                     <!-- Region actions -->
                     <div class="d-grid gap-10 control-section">
                         <div class="control-row">
-                            <button id="btnSaveRegion" class="gameplay-btn primary">Save Region</button>
-                            <button id="btnEditRegion" class="gameplay-btn">Enable Edit</button>
+                            <button id="btnSaveRegion" class="overlay-btn">Save Region</button>
+                            <button id="btnEditRegion" class="overlay-btn">Enable Edit</button>
                         </div>
                         <div class="control-row">
-                            <button id="btnFit" class="gameplay-btn">Fit to Screen</button>
-                            <button id="btnClearSectors" class="gameplay-btn danger">Clear Sectors</button>
+                            <button id="btnFit" class="overlay-btn">Fit to Screen</button>
+                            <button id="btnClearSectors" class="overlay-btn">Clear Sectors</button>
                         </div>
                     </div>
 
@@ -224,60 +224,14 @@
         </aside>
 
         <div class="map-overlay-controls">
-            <div class="overlay-control-group">
-                <h6>Map Controls</h6>
-                <div class="control-row">
-                    <button class="overlay-btn" onclick="toggleMapLayers()">
-                        <i class="fas fa-layer-group"></i>
-                        <span>Layers</span>
-                    </button>
-                    <button class="overlay-btn" onclick="toggleFullscreen()">
-                        <i class="fas fa-expand"></i>
-                        <span>Fullscreen</span>
-                    </button>
-                </div>
-                <div class="control-row">
-                    <button class="overlay-btn" onclick="resetMapView()">
-                        <i class="fas fa-home"></i>
-                        <span>Reset</span>
-                    </button>
-                    <button class="overlay-btn" onclick="toggleCoordinates()">
-                        <i class="fas fa-crosshairs"></i>
-                        <span>Coords</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="overlay-control-group">
-                <h6>Game Tools</h6>
-                <div class="control-row">
-                    <button class="overlay-btn" onclick="placeToken()">
-                        <i class="fas fa-plus"></i>
-                        <span>Place Token</span>
-                    </button>
-                    <button class="overlay-btn" onclick="selectToken()">
-                        <i class="fas fa-mouse-pointer"></i>
-                        <span>Select</span>
-                    </button>
-                </div>
-                <div class="control-row">
-                    <button class="overlay-btn" onclick="measureDistance()">
-                        <i class="fas fa-ruler"></i>
-                        <span>Measure</span>
-                    </button>
-                    <button class="overlay-btn" onclick="drawArea()">
-                        <i class="fas fa-draw-polygon"></i>
-                        <span>Draw Area</span>
-                    </button>
-                </div>
-            </div>
+           
 
             <div class="overlay-control-group">
                 <h6>War Game Tools</h6>
                 <div class="control-row">
-                    <button class="overlay-btn" onclick="deployUnit()">
-                        <i class="fas fa-chess-knight"></i>
-                        <span>Deploy Unit</span>
+                    <button class="overlay-btn" onclick="placeToken()">
+                        <i class="fas fa-plus"></i>
+                        <span>Place Token</span>
                     </button>
                     <button class="overlay-btn" onclick="planMovement()">
                         <i class="fas fa-route"></i>
@@ -341,9 +295,9 @@
                         <i class="fas fa-crosshairs"></i>
                         <span>Tokens</span>
                     </button>
-                    <button class="overlay-btn" onclick="beginTemplatePlacement()">
+                    <button class="overlay-btn" onclick="openDataEntry()">
                         <i class="fas fa-plus"></i>
-                        <span>Place Selected</span>
+                        <span>Data Entry</span>
                     </button>
                 </div>
                 <div class="control-row">
@@ -356,16 +310,6 @@
                         <span>Points</span>
                     </button>
                 </div>
-                <div class="control-row">
-                    <button class="overlay-btn" onclick="importTeamData()">
-                        <i class="fas fa-upload"></i>
-                        <span>Import</span>
-                    </button>
-                    <button class="overlay-btn" onclick="exportTeamData()">
-                        <i class="fas fa-download"></i>
-                        <span>Export</span>
-                    </button>
-                </div>
             </div>
         </div>
         <!-- BOTTOM-LEFT: Coordinates -->
@@ -375,35 +319,7 @@
             <div class="coord-item"><span class="coord-label">Zoom:</span><span class="coord-value" id="zoomVal">—</span></div>
         </div>
 
-        <div class="team-status-panel2">
-            <div class="team-status-header">
-                <div class="team-status-icon">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-                <div class="team-status-info">
-                    <h5 id="currentTeamName">Alpha Team</h5>
-                    <p id="currentTeamStatus">Ready for Battle</p>
-                </div>
-            </div>
-            <div class="status-metrics">
-                <div class="metric-item">
-                    <span class="metric-value" id="tokenCount">0</span>
-                    <span class="metric-label">Tokens</span>
-                </div>
-                <div class="metric-item">
-                    <span class="metric-value" id="areaCovered">0%</span>
-                    <span class="metric-label">Area</span>
-                </div>
-                <div class="metric-item">
-                    <span class="metric-value" id="score">0</span>
-                    <span class="metric-label">Score</span>
-                </div>
-                <div class="metric-item">
-                    <span class="metric-value" id="timeRemaining">∞</span>
-                    <span class="metric-label">Time</span>
-                </div>
-            </div>
-        </div>
+        
 
         <!-- Coordinates Display -->
         <div class="coordinates-display" id="coordinatesDisplay">
@@ -420,56 +336,6 @@
                 <span class="coord-value" id="currentZoom">10</span>
             </div>
         </div>
-
-        <!-- BOTTOM CONTROL BAR -->
-        <nav class="gameplay-control-panel">
-            <div class="control-panel-content">
-                <div class="team-logo-section">
-                    <div class="team-logo">AO</div>
-                    <div class="team-info">
-                        <div class="team-name">Operational Map</div>
-                        <div class="team-status" id="statusText">Ready</div>
-                    </div>
-                </div>
-                <div class="control-menu">
-                    <a href="#" class="control-btn fox-land active" id="quickAddFox" onclick="switchToFoxLand()">
-                        <i class="fas fa-fire"></i>
-                        <span>Fox Land</span>
-                    </a>
-                    <a href="#" class="control-btn blue-land" id="quickAddBlue" onclick="switchToBlueLand()">
-                        <i class="fas fa-water"></i>
-                        <span>Blue Land</span>
-                    </a>
-                    <a href="#" class="control-btn spectator" id="spectatorBtn" onclick="switchToSpectator()">
-                        <i class="fas fa-eye"></i>
-                        <span>Control</span>
-                    </a>
-                    <a href="#" class="control-btn spectator" id="spectatorBtn" onclick="switchToSpectator()">
-                        <i class="fas fa-user-tie"></i>
-                        <span>Director</span>
-                    </a>
-                    <a class="control-btn spectator" id="quickAddLabel" style="display:none">
-                        <i class="fas fa-tag"></i>
-                        <span>Label</span>
-                    </a>
-                    <a class="control-btn" id="quickFit" style="display:none">
-                        <i class="fas fa-tag"></i><span>Fit</span>
-                    </a>
-                    <a href="#" class="control-btn" id="dataEntryBtn" onclick="openDataEntry()">
-                        <i class="fas fa-database"></i>
-                        <span>Data Entry</span>
-                    </a>
-                    <a href="#" class="control-btn" id="tokensBtn" onclick="manageTokens()">
-                        <i class="fas fa-crosshairs"></i>
-                        <span>Tokens</span>
-                    </a>
-                    <a href="#" class="control-btn" id="settingsBtn" onclick="openSettings()">
-                        <i class="fas fa-cog"></i>
-                        <span>Settings</span>
-                    </a>
-                </div>
-            </div>
-        </nav>
 
 
     </main>
@@ -3418,12 +3284,6 @@
         const metricArea      = document.getElementById('metric-area');
         const metricSectors   = document.getElementById('metric-sectors');
 
-        // Bottom quick buttons
-        const quickBlue  = document.getElementById('quickAddBlue');
-        const quickFox   = document.getElementById('quickAddFox');
-        const quickLabel = document.getElementById('quickAddLabel');
-        const quickFit   = document.getElementById('quickFit');
-
         /* ====== Styles ====== */
         const styleRegion = { color:'#111827', fillColor:'#a3a3a3', weight:3, fillOpacity:.15 };
         const styleBlue   = { color:'#0000A3', fillColor:'#0000D1', weight:2, fillOpacity:.35 };
@@ -3615,15 +3475,9 @@
           if (chkShowFox.checked){ map.addLayer(foxGroup); } else { map.removeLayer(foxGroup); }
           if (chkShowLabels.checked){ map.addLayer(labelGroup); } else { map.removeLayer(labelGroup); }
           // reflect in bottom button active states
-          quickBlue.classList.toggle('active', chkShowBlue.checked);
-          quickFox.classList.toggle('active',   chkShowFox.checked);
         }
 
         // Bottom buttons toggle like Show Blue/Show Fox
-        quickBlue.onclick = ()=>{ chkShowBlue.checked = !chkShowBlue.checked; refreshVisibility(); };
-        quickFox.onclick  = ()=>{ chkShowFox.checked  = !chkShowFox.checked;  refreshVisibility(); };
-        quickLabel.onclick= ()=> document.getElementById('btnAddLabel').click();
-        quickFit.onclick  = ()=> btnFit.click();
 
         /* ====== Events ====== */
         // Draw created
