@@ -229,9 +229,9 @@
             <div class="overlay-control-group">
                 <h6>War Game Tools</h6>
                 <div class="control-row">
-                    <button class="overlay-btn" onclick="placeToken()">
+                    <button class="overlay-btn" onclick="manageTokens()">
                         <i class="fas fa-plus"></i>
-                        <span>Place Token</span>
+                        <span>Manage Tokens</span>
                     </button>
                     <button class="overlay-btn" onclick="planMovement()">
                         <i class="fas fa-route"></i>
@@ -620,18 +620,35 @@
                     <option value="blue-land">Blue</option>
                     <option value="fox-land">Fox</option>
                 </select>
-                <select id="tokenTemplate" class="form-control" style="max-width:240px">
-                    <option value="">(choose token to place)</option>
-                    <option value="Brigade">Brigade unit</option>
-                    <option value="Division Infantry">Div infantry unit</option>
-                    <option value="Armoured">Armored unit</option>
-                    <option value="Artillery">Artillery unit</option>
-                    <option value="Recon">Recon unit</option>
-                    <option value="HQ">HQ</option>
-                    <option value="Supply">Supply</option>
-                </select>
                 <input id="tokenSearch" class="form-control" placeholder="Search by name..." style="flex:1">
-                <button class="btn" onclick="beginTemplatePlacement()"><i class="fas fa-plus"></i> Place Selected</button>
+            </div>
+            
+            <!-- Token Creation Section -->
+            <div class="token-creation-section" style="border: 1px solid #1f2937; padding: 15px; margin-bottom: 15px; border-radius: 5px;">
+                <h5 style="margin-bottom: 10px; color: #e5e7eb;">Create New Token</h5>
+                <div style="display:flex; gap:10px; align-items:end;">
+                    <div style="flex:1">
+                        <label for="tokenTemplate" style="display:block; margin-bottom:5px; color: #e5e7eb;">Token Type</label>
+                        <select id="tokenTemplate" class="form-control">
+                            <option value="">Select token type...</option>
+                            <option value="Brigade">Brigade unit</option>
+                            <option value="Division Infantry">Div infantry unit</option>
+                            <option value="Armoured">Armored unit</option>
+                            <option value="Artillery">Artillery unit</option>
+                            <option value="Recon">Recon unit</option>
+                            <option value="HQ">HQ</option>
+                            <option value="Supply">Supply</option>
+                        </select>
+                    </div>
+                    <div style="flex:1">
+                        <label for="tokenName" style="display:block; margin-bottom:5px; color: #e5e7eb;">Token Name</label>
+                        <input id="tokenName" class="form-control" placeholder="Enter token name...">
+                    </div>
+                    <button class="btn btn-primary" onclick="createToken()" style="height:38px;">
+                        <i class="fas fa-plus"></i> Create Token
+                    </button>
+                </div>
+                <div id="tokenCreationStatus" style="margin-top: 10px; font-size: 12px; color: #9ca3af;"></div>
             </div>
             <div id="tokenList" class="data-table-container"></div>
         </div>
@@ -714,14 +731,7 @@
                     <label for="brigadeCode">Brigade Code *</label>
                     <input type="text" id="brigadeCode" name="BrigadeCode" required class="form-control">
                 </div>
-                <div class="form-group">
-                    <label for="brigadeForceType">Force Type *</label>
-                    <select id="brigadeForceType" name="ForceType" required class="form-control">
-                        <option value="">Select Force Type</option>
-                        <option value="Blue">Blue Force</option>
-                        <option value="Red">Red Force</option>
-                    </select>
-                </div>
+                <input type="hidden" id="brigadeForceType" name="ForceType" value="">
                 <div class="form-group">
                     <label for="brigadeDescription">Description</label>
                     <textarea id="brigadeDescription" name="Description" class="form-control" rows="3"></textarea>
@@ -761,14 +771,7 @@
                     </div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group col-md-4">
-                        <label for="infantryForceType">Force Type *</label>
-                        <select id="infantryForceType" name="ForceType" required class="form-control">
-                            <option value="">Select Force Type</option>
-                            <option value="Blue">Blue Force</option>
-                            <option value="Red">Red Force</option>
-                        </select>
-                    </div>
+                    <input type="hidden" id="infantryForceType" name="ForceType" value="">
                     <div class="form-group col-md-4">
                         <label for="infantryStrength">Strength *</label>
                         <input type="number" id="infantryStrength" name="Strength" required class="form-control">
@@ -889,12 +892,7 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group col-md-4">
-                        <label for="armouredForceType">Force Type *</label>
-                        <select id="armouredForceType" name="ForceType" required class="form-control">
-                            <option value="">Select Force Type</option>
-                            <option value="Blue">Blue Force</option>
-                            <option value="Red">Red Force</option>
-                        </select>
+                        <input type="hidden" id="armouredForceType" name="ForceType" value="">
                     </div>
                     <div class="form-group col-md-4">
                         <label for="armouredStrength">Strength *</label>
@@ -984,12 +982,7 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group col-md-4">
-                        <label for="artilleryForceType">Force Type *</label>
-                        <select id="artilleryForceType" name="ForceType" required class="form-control">
-                            <option value="">Select Force Type</option>
-                            <option value="Blue">Blue Force</option>
-                            <option value="Red">Red Force</option>
-                        </select>
+                        <input type="hidden" id="artilleryForceType" name="ForceType" value="">
                     </div>
                     <div class="form-group col-md-4">
                         <label for="artilleryStrength">Strength *</label>
@@ -1426,78 +1419,74 @@
 
     function onMapClick(e) {
         console.log('Map clicked at:', e.latlng);
-        // If in explicit token placement mode, always place token
-        if (typeof currentMapMode !== 'undefined' && currentMapMode === 'token') {
-            placeTokenAtLocation(e.latlng);
-            return;
-        }
-        // Fallback: place token when in team modes
-        if (currentMode === 'fox-land' || currentMode === 'blue-land') {
+        // Only handle clicks when explicitly placing a pre-created token
+        if (typeof currentMapMode !== 'undefined' && currentMapMode === 'place-token') {
             placeTokenAtLocation(e.latlng);
         }
+        // Ignore all other clicks for token creation/placement
     }
 
     function placeTokenAtLocation(latlng) {
-        const tokenId = 'token_' + Date.now();
-        const tokenType = currentMode; // 'fox-land' | 'blue-land'
-
-        // Enforce token placement inside saved region
-        try {
-            const regionStr = localStorage.getItem('leaflet_saved_region');
-            const region = regionStr ? JSON.parse(regionStr) : null;
-            if (!region){
-                showNotification('Save the main region first.', 'error');
+        // Check if we're placing a specific token
+        if (currentMapMode === 'place-token' && window._selectedTokenId) {
+            const token = tokens.find(t => t.id === window._selectedTokenId);
+            if (!token) {
+                showNotification('Token not found', 'error');
                 return;
             }
-            if (window.turf){
-                const pt = turf.point([latlng.lng, latlng.lat]);
-                const inside = turf.booleanPointInPolygon(pt, region);
-                if (!inside){
-                    showNotification('Token must be inside the saved region.', 'error');
+            
+            // Enforce token placement inside saved region
+            try {
+                const regionStr = localStorage.getItem('leaflet_saved_region');
+                const region = regionStr ? JSON.parse(regionStr) : null;
+                if (!region){
+                    showNotification('Save the main region first.', 'error');
                     return;
                 }
-            }
-        } catch {}
+                if (window.turf){
+                    const pt = turf.point([latlng.lng, latlng.lat]);
+                    const inside = turf.booleanPointInPolygon(pt, region);
+                    if (!inside){
+                        showNotification('Token must be inside the saved region.', 'error');
+                        return;
+                    }
+                }
+            } catch {}
 
-        // Create token marker
-        const marker = L.marker(latlng, {
-            icon: L.divIcon({
-                className: 'token-marker ' + tokenType,
-                html: '<i class="fas fa-crosshairs"></i>',
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
-            })
-        }).addTo((typeof map !== 'undefined') ? map : gameMap);
+            // Create token marker
+            const marker = L.marker(latlng, {
+                icon: L.divIcon({
+                    className: 'token-marker ' + token.type,
+                    html: '<i class="fas fa-crosshairs"></i>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                })
+            }).addTo((typeof map !== 'undefined') ? map : gameMap);
 
-        // Store token data
-        const tokenData = {
-            id: tokenId,
-            type: tokenType,
-            position: latlng,
-            name: '',
-            notes: '',
-            category: '',
-            marker: marker,
-            timestamp: new Date()
-        };
+            // Update token data
+            token.position = latlng;
+            token.marker = marker;
+            token.status = 'placed';
+            tokenIdToMarker[token.id] = marker;
 
-        // Attach click => open token info popup
-        marker.on('click', function(){
-            openTokenInfoPopup(tokenData);
-        });
-        tokenIdToMarker[tokenId] = marker;
+            // Attach click => open token info popup
+            marker.on('click', function(){
+                openTokenInfoPopup(token);
+            });
 
-        tokens.push(tokenData);
-        saveTokensLocal();
-        updateTokenCount();
-
-        console.log('Token placed:', tokenData);
-        // Exit token mode after placement
-        if (typeof currentMapMode !== 'undefined' && currentMapMode === 'token') {
+            saveTokensLocal();
+            updateTokenCount();
+            
+            // Reset map mode
             currentMapMode = 'normal';
+            window._selectedTokenId = null;
             $('#gameMap').css('cursor', 'grab');
-            try { if (typeof setStatus === 'function') setStatus('Ready'); } catch {}
+            
+            showNotification(`Token "${token.name}" placed successfully`, 'success');
+            return;
         }
+        // If no explicit token is being placed, do nothing
+        showNotification('Select a created token and click "Place on Map" first.', 'error');
     }
 
     function openTokenInfoPopup(token) {
@@ -1530,6 +1519,7 @@
                 </div>
                 <div style="display:flex;gap:6px;justify-content:flex-end">
                     <button class="btn btn-danger" onclick="window.deleteTokenById('${token.id}')">Delete</button>
+                    ${token.status === 'placed' ? `<button class="btn btn-success" onclick="assignTokenToUnit('${token.id}')">Assign to Unit</button>` : ''}
                     <button class="btn" onclick="window.deployFromToken('${token.id}')">Deploy</button>
                     <button class="btn btn-primary" onclick="window.saveTokenInfoById('${token.id}')">Save</button>
                 </div>
@@ -1662,46 +1652,104 @@
         }
     }
 
-    function toggleFullscreen() {
-        if (!isFullscreen) {
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen();
-            }
-        } else {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            }
+
+
+
+    // Deprecated legacy helper removed: token placement now requires pre-created tokens via placeTokenOnMap()
+
+    function createToken() {
+        const tokenType = $('#tokenTemplate').val();
+        const tokenName = $('#tokenName').val();
+        
+        if (!tokenType) {
+            $('#tokenCreationStatus').text('Please select a token type').css('color', '#ef4444');
+            return;
         }
-        isFullscreen = !isFullscreen;
-    }
-
-    function resetMapView() {
-        const m = (typeof map !== 'undefined') ? map : gameMap;
-        if (!m) return;
-        m.setView([51.505, -0.09], 13);
-    }
-
-    function toggleCoordinates() {
-        $('#coordinatesDisplay').toggle();
-    }
-
-    function placeToken() {
-        // Ensure team mode is active for token styling
-        if (typeof currentMode !== 'string' || (currentMode !== 'fox-land' && currentMode !== 'blue-land')) {
-            if (typeof window.switchToFoxLand === 'function') window.switchToFoxLand();
+        
+        if (!tokenName || tokenName.trim() === '') {
+            $('#tokenCreationStatus').text('Please enter a token name').css('color', '#ef4444');
+            return;
         }
-        // Enter token placement mode and avoid edit conflicts
-        if (typeof currentMapMode !== 'undefined') currentMapMode = 'token';
-        if (typeof addLabelMode !== 'undefined') addLabelMode = false;
-        try {
-            if (typeof currentRegion !== 'undefined' && currentRegion && currentRegion.editing && currentRegion.editing.enabled && currentRegion.editing.enabled()){
-                currentRegion.editing.disable();
-                if (typeof btnEditRegion !== 'undefined' && btnEditRegion) btnEditRegion.textContent='Enable Edit';
-            }
-        } catch {}
+        
+        // Create token data
+        const tokenData = {
+            id: 'token_' + Date.now(),
+            type: currentMode, // 'fox-land' | 'blue-land'
+            category: tokenType,
+            name: tokenName.trim(),
+            notes: '',
+            position: null, // Will be set when placed on map
+            marker: null,   // Will be set when placed on map
+            timestamp: new Date(),
+            status: 'created' // 'created', 'placed', 'assigned'
+        };
+        
+        // Add to tokens array
+        tokens.push(tokenData);
+        saveTokensLocal();
+        
+        // Clear form
+        $('#tokenTemplate').val('');
+        $('#tokenName').val('');
+        
+        // Show success message
+        $('#tokenCreationStatus').text(`Token "${tokenName}" created successfully. Click "Place on Map" to position it.`).css('color', '#10b981');
+        
+        // Refresh token list
+        refreshTokenList();
+        
+        showNotification(`Token "${tokenName}" created successfully`, 'success');
+    }
+
+    function placeTokenOnMap(tokenId) {
+        const token = tokens.find(t => t.id === tokenId);
+        if (!token) {
+            showNotification('Token not found', 'error');
+            return;
+        }
+        
+        if (token.status === 'placed') {
+            showNotification('Token is already placed on the map', 'info');
+            return;
+        }
+        
+        // Set up map click mode for this specific token
+        currentMapMode = 'place-token';
+        window._selectedTokenId = tokenId;
+        
+        // Close the modal
+        closeModal('tokenManagementModal');
+        
         // Guide the user
-        showNotification('Click on the map to place a token.', 'info');
+        showNotification(`Click on the map to place "${token.name}"`, 'info');
         $('#gameMap').css('cursor', 'crosshair');
+    }
+
+    function assignTokenToUnit(tokenId) {
+        const token = tokens.find(t => t.id === tokenId);
+        if (!token) {
+            showNotification('Token not found', 'error');
+            return;
+        }
+        
+        if (token.status !== 'placed') {
+            showNotification('Token must be placed on the map first', 'error');
+            return;
+        }
+        
+        // Open the token brigade data modal for assignment
+        openTokenBrigadeDataModal(tokenId);
+    }
+
+    function editToken(tokenId) {
+        const token = tokens.find(t => t.id === tokenId);
+        if (!token) {
+            showNotification('Token not found', 'error');
+            return;
+        }
+        
+        // Open token info popup for editing
+        openTokenInfoPopup(token);
     }
 
     function beginTemplatePlacement(){
@@ -1731,17 +1779,6 @@
         showNotification('Click on a token to manage its brigade data', 'info');
     }
 
-    function selectTokenForDataEntry(token) {
-        console.log('Token selected for data entry:', token);
-        selectedToken = token;
-
-        // Reset map mode
-        currentMapMode = 'normal';
-        $('#gameMap').css('cursor', 'grab');
-
-        // Open the token brigade data modal
-        openTokenBrigadeDataModal(token.id);
-    }
 
     function openTokenBrigadeDataModal(tokenId) {
         // Set the token ID for the modal
@@ -1777,22 +1814,6 @@
         } catch {}
     }
 
-    function clearBrigadeForm() {
-        try { $('#tokenBrigadeForm')[0].reset(); } catch {}
-        $('#tokenUnitsList').empty();
-    }
-
-    function loadTokenMilitaryUnits(brigadeId) {
-        const c = $('#tokenUnitsList');
-        if (!brigadeId) { c.empty(); return; }
-        const inf = lsRead(LS_KEYS.INFANTRY, []).filter(u=> u.brigadeId===brigadeId).map(u=> ({ unitType:'Infantry', name:u.name }));
-        const arm = lsRead(LS_KEYS.ARMOURED, []).filter(u=> u.brigadeId===brigadeId).map(u=> ({ unitType:'Armoured', name:u.name }));
-        const art = lsRead(LS_KEYS.ARTILLERY, []).filter(u=> u.brigadeId===brigadeId).map(u=> ({ unitType:'Artillery', name:u.name }));
-        const units = [...inf, ...arm, ...art];
-        c.empty();
-        if (!units.length) { c.html('<p>No units linked.</p>'); return; }
-        units.forEach(u => c.append(`<div>${u.unitType} - ${u.name}</div>`));
-    }
 
     function saveTokenBrigadeLink() {
         const tokenId = $('#tokenBrigadeDataModal').data('token-id');
@@ -1808,27 +1829,7 @@
         closeModal('tokenBrigadeDataModal');
     }
 
-    function measureDistance() {
-        try {
-            const m = (typeof map !== 'undefined') ? map : gameMap;
-            if (!m) return;
-            new L.Draw.Polyline(m).enable();
-            showNotification('Click to start measuring. Double-click to finish.', 'info');
-        } catch (err) {
-            console.warn('measureDistance error', err);
-        }
-    }
 
-    function drawArea() {
-        try {
-            const m = (typeof map !== 'undefined') ? map : gameMap;
-            if (!m) return;
-            new L.Draw.Polygon(m).enable();
-            showNotification('Click to draw area. Double-click to finish.', 'info');
-        } catch (err) {
-            console.warn('drawArea error', err);
-        }
-    }
 
     function toggleIntelLayer(btn){
         try{
@@ -1858,11 +1859,6 @@
         $('#' + modalId).hide();
     }
 
-    function saveData() {
-        console.log('Saving data...');
-        // TODO: Implement data saving
-        closeModal('dataEntryModal');
-    }
 
     // Team switching functions (called from layout)
     window.switchToFoxLand = function() {
@@ -1929,7 +1925,10 @@
 
     // Brigade Management
     function loadBrigades() {
-        const data = lsRead(LS_KEYS.BRIGADES, []);
+        const allData = lsRead(LS_KEYS.BRIGADES, []);
+        // Filter by current team
+        const currentTeam = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
+        const data = allData.filter(brigade => brigade.forceType === currentTeam);
         const tbody = $('#brigadesTableBody');
         tbody.empty();
         data.forEach(function(brigade) {
@@ -1951,6 +1950,9 @@
     function openBrigadeForm() {
         currentEditingId = null;
         $('#brigadeForm')[0].reset();
+        // Set force type based on current team mode
+        const forceType = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
+        $('#brigadeForceType').val(forceType);
         openModal('brigadeFormModal');
     }
 
@@ -1990,7 +1992,10 @@
 
     // Infantry Battalion Management
     function loadInfantryBattalions() {
-        const data = lsRead(LS_KEYS.INFANTRY, []);
+        const allData = lsRead(LS_KEYS.INFANTRY, []);
+        // Filter by current team
+        const currentTeam = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
+        const data = allData.filter(battalion => battalion.forceType === currentTeam);
         const tbody = $('#infantryTableBody');
         tbody.empty();
         data.forEach(function(battalion) {
@@ -2014,6 +2019,9 @@
     function openInfantryForm() {
         currentEditingId = null;
         $('#infantryForm')[0].reset();
+        // Set force type based on current team mode
+        const forceType = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
+        $('#infantryForceType').val(forceType);
         populateBrigadeDropdown('#infantryBrigade');
         openModal('infantryFormModal');
     }
@@ -2089,7 +2097,10 @@
 
     // Armoured Regiment Management
     function loadArmouredRegiments() {
-        const data = lsRead(LS_KEYS.ARMOURED, []);
+        const allData = lsRead(LS_KEYS.ARMOURED, []);
+        // Filter by current team
+        const currentTeam = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
+        const data = allData.filter(regiment => regiment.forceType === currentTeam);
         const tbody = $('#armouredTableBody');
         tbody.empty();
         data.forEach(function(regiment) {
@@ -2113,6 +2124,9 @@
     function openArmouredForm() {
         currentEditingId = null;
         $('#armouredForm')[0].reset();
+        // Set force type based on current team mode
+        const forceType = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
+        $('#armouredForceType').val(forceType);
         populateBrigadeDropdown('#armouredBrigade');
         openModal('armouredFormModal');
     }
@@ -2174,7 +2188,10 @@
 
     // Artillery Regiment Management
     function loadArtilleryRegiments() {
-        const data = lsRead(LS_KEYS.ARTILLERY, []);
+        const allData = lsRead(LS_KEYS.ARTILLERY, []);
+        // Filter by current team
+        const currentTeam = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
+        const data = allData.filter(regiment => regiment.forceType === currentTeam);
         const tbody = $('#artilleryTableBody');
         tbody.empty();
         data.forEach(function(regiment) {
@@ -2199,6 +2216,9 @@
     function openArtilleryForm() {
         currentEditingId = null;
         $('#artilleryForm')[0].reset();
+        // Set force type based on current team mode
+        const forceType = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
+        $('#artilleryForceType').val(forceType);
         populateBrigadeDropdown('#artilleryBrigade');
         openModal('artilleryFormModal');
     }
@@ -2539,17 +2559,28 @@
         const list = $('#tokenList');
         const all = loadTokensLocal([]);
         const rows = all.filter(t=> (!side || t.type===side) && (!q || (t.name||'').toLowerCase().includes(q)))
-            .map(t=> `
-                <div class="deployed-unit-card" style="display:flex;justify-content:space-between;align-items:center">
-                    <div>
+            .map(t=> {
+                const status = t.status || 'created';
+                const positionText = t.position ? `${t.position.lat.toFixed(4)}, ${t.position.lng.toFixed(4)}` : 'Not placed';
+                const statusColor = status === 'created' ? '#f59e0b' : status === 'placed' ? '#10b981' : '#3b82f6';
+                
+                return `
+                <div class="deployed-unit-card" style="display:flex;justify-content:space-between;align-items:center; margin-bottom: 10px; padding: 10px; border: 1px solid #1f2937; border-radius: 5px;">
+                    <div style="flex: 1;">
                         <div><strong>${t.name||'(unnamed)'}</strong> <span style="opacity:.8">${t.category||'Generic'}</span></div>
-                        <div style="opacity:.8">${t.type} &#64; ${t.position.lat.toFixed(4)}, ${t.position.lng.toFixed(4)}</div>
+                        <div style="opacity:.8; font-size: 12px;">
+                            <span style="color: ${statusColor};">●</span> ${status.toUpperCase()} | ${t.type} | ${positionText}
+                        </div>
                     </div>
-                    <div>
+                    <div style="display: flex; gap: 5px;">
+                        ${status === 'created' ? `<button class="btn btn-sm btn-primary" onclick="placeTokenOnMap('${t.id}')">Place on Map</button>` : ''}
+                        ${status === 'placed' ? `<button class="btn btn-sm btn-success" onclick="assignTokenToUnit('${t.id}')">Assign to Unit</button>` : ''}
+                        <button class="btn btn-sm btn-info" onclick="editToken('${t.id}')">Edit</button>
                         <button class="btn btn-sm btn-danger" onclick="window.deleteTokenById('${t.id}'); refreshTokenList()">Delete</button>
                     </div>
-                </div>`);
-        list.html(rows.join('') || '<p>No tokens.</p>');
+                </div>`;
+            });
+        list.html(rows.join('') || '<p>No tokens found.</p>');
     }
 
     function populateBrigadeDropdown(selector){
@@ -2718,6 +2749,11 @@
     // Unit Deployment Functions
     function deployUnit() {
         showNotification('Use Tokens → Place Selected or click a token → Deploy to place units.', 'info');
+    }
+
+    function showAvailableUnits() {
+        openModal('unitDeploymentModal');
+        loadAvailableUnits();
     }
 
     function loadAvailableUnits() {
@@ -2965,6 +3001,10 @@
     function createObjective() {
         currentMapMode = 'objective';
         openModal('objectiveModal');
+    }
+
+    function createNewObjective() {
+        createObjective();
     }
 
     function confirmObjective() {
@@ -3357,7 +3397,8 @@
           layer._land_type = type; layer.feature = feature;
           layer.on('click', ()=>{
             // During token mode, do not toggle sector editing
-            if (typeof currentMapMode !== 'undefined' && currentMapMode === 'token') return;
+        // prevent accidental placements if legacy token mode is referenced
+        if (typeof currentMapMode !== 'undefined' && currentMapMode === 'token') return;
             if (!layer.editing) return;
             layer.editing.enabled() ? layer.editing.disable() : layer.editing.enable();
           });
