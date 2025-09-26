@@ -133,6 +133,227 @@
     label { color:#e5e7eb; }
     .tab-btn { background:#0b1220; color:#e5e7eb; border:1px solid #1f2937; }
     .tab-btn.active { background:#1f2937; }
+
+    /* Token Details Panel Styles */
+    .token-details-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .token-details-panel {
+        background: #1f2937;
+        border: 2px solid #374151;
+        border-radius: 8px;
+        max-width: 800px;
+        max-height: 90vh;
+        width: 100%;
+        overflow-y: auto;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .token-details-header {
+        background: #111827;
+        padding: 15px 20px;
+        border-bottom: 2px solid #374151;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .token-details-header h3 {
+        color: #e5e7eb;
+        margin: 0;
+        font-size: 1.2em;
+    }
+
+    .token-details-content {
+        padding: 20px;
+    }
+
+    .token-info-section, .token-data-section {
+        margin-bottom: 25px;
+        padding: 15px;
+        background: #111827;
+        border-radius: 6px;
+        border: 1px solid #374151;
+    }
+
+    .token-info-section h4, .token-data-section h4 {
+        color: #60a5fa;
+        margin: 0 0 15px 0;
+        font-size: 1.1em;
+        border-bottom: 1px solid #374151;
+        padding-bottom: 8px;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .info-item label {
+        color: #9ca3af;
+        font-size: 0.9em;
+        font-weight: 600;
+    }
+
+    .info-item span {
+        color: #e5e7eb;
+        font-size: 0.95em;
+    }
+
+    .status-badge {
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        font-weight: 600;
+    }
+
+    .status-badge.created { background: #fbbf24; color: #92400e; }
+    .status-badge.placed { background: #10b981; color: #064e3b; }
+
+    .brigade-details {
+        margin-bottom: 15px;
+        padding: 12px;
+        background: #0f172a;
+        border-radius: 4px;
+        border-left: 3px solid #3b82f6;
+    }
+
+    .brigade-details h5 {
+        color: #e5e7eb;
+        margin: 0 0 8px 0;
+        font-size: 1em;
+    }
+
+    .brigade-info {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+    }
+
+    .brigade-info span {
+        color: #9ca3af;
+        font-size: 0.9em;
+    }
+
+    .units-list {
+        margin-top: 10px;
+    }
+
+    .unit-item {
+        padding: 8px 12px;
+        background: #1e293b;
+        border-radius: 4px;
+        margin-bottom: 6px;
+        border-left: 2px solid #10b981;
+    }
+
+    .unit-name {
+        color: #e5e7eb;
+        font-weight: 600;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .unit-details {
+        color: #9ca3af;
+        font-size: 0.85em;
+    }
+
+    .intel-list, .recon-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .intel-item, .recon-item {
+        padding: 12px;
+        background: #1e293b;
+        border-radius: 4px;
+        border-left: 3px solid #f59e0b;
+    }
+
+    .intel-title, .recon-type {
+        color: #e5e7eb;
+        font-weight: 600;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .intel-details, .recon-details {
+        color: #9ca3af;
+        font-size: 0.85em;
+        margin-bottom: 6px;
+    }
+
+    .intel-description, .recon-description {
+        color: #d1d5db;
+        font-size: 0.9em;
+        line-height: 1.4;
+    }
+
+    .no-data {
+        color: #6b7280;
+        font-style: italic;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .token-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid #374151;
+    }
+
+    .token-actions .btn {
+        padding: 8px 16px;
+        font-size: 0.9em;
+    }
+
+    /* Responsive adjustments */
+    @@media (max-width: 768px) {
+        .token-details-overlay {
+            padding: 10px;
+        }
+        
+        .token-details-panel {
+            max-height: 95vh;
+        }
+        
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .brigade-info {
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .token-actions {
+            flex-direction: column;
+        }
+    }
 </style>
 
 
@@ -264,7 +485,7 @@
                 </div>
             </div>
 
-        
+
             <div class="overlay-control-group">
                 <h6>Tools</h6>
                 
@@ -847,36 +1068,128 @@
 
 <!-- Infantry Battalion Form Modal -->
 <div id="infantryBattalionFormModal" class="gameplay-modal">
-    <div class="gameplay-modal-content">
+    <div class="gameplay-modal-content large">
         <div class="gameplay-modal-header">
-            <h3><i class="fas fa-user-soldier"></i> Add Infantry Battalion</h3>
+            <h3><i class="fas fa-user-soldier"></i> Infantry Battalion Form</h3>
             <button class="gameplay-modal-close" onclick="closeModal('infantryBattalionFormModal')">&times;</button>
         </div>
         <div class="gameplay-modal-body">
             <form id="infantryBattalionForm">
-                <div class="form-group">
-                    <label for="battalionName">Battalion Name *</label>
-                    <input type="text" id="battalionName" name="name" required class="form-control">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="battalionName">Battalion Name *</label>
+                        <input type="text" id="battalionName" name="name" required class="form-control">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="battalionCode">Unit Code *</label>
+                        <input type="text" id="battalionCode" name="unitCode" required class="form-control">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="battalionStrength">Strength *</label>
-                    <input type="number" id="battalionStrength" name="strength" required class="form-control" min="0">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="battalionStrength">Strength *</label>
+                        <input type="number" id="battalionStrength" name="strength" required class="form-control" min="0" value="3">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="battalionCompanies">Number of Companies *</label>
+                        <input type="number" id="battalionCompanies" name="companies" required class="form-control" min="0">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="battalionCompanies">Number of Companies *</label>
-                    <input type="number" id="battalionCompanies" name="companies" required class="form-control" min="0">
-                </div>
-                <div class="form-group">
-                    <label for="battalionTanks">Number of Tanks</label>
-                    <input type="number" id="battalionTanks" name="tanks" class="form-control" min="0">
-                </div>
-                <div class="form-group">
-                    <label for="battalionDrones">Number of Drones</label>
-                    <input type="number" id="battalionDrones" name="drones" class="form-control" min="0">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="battalionTanks">Number of Tanks</label>
+                        <input type="number" id="battalionTanks" name="tanks" class="form-control" min="0">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="battalionDrones">Number of Drones</label>
+                        <input type="number" id="battalionDrones" name="drones" class="form-control" min="0">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="battalionDroneTypes">Drone Types</label>
                     <input type="text" id="battalionDroneTypes" name="droneTypes" class="form-control" placeholder="e.g., Surveillance, Attack, Reconnaissance">
+                </div>
+                
+                <!-- Equipment & Weapons Section -->
+                <div class="section-header" style="color: #00ff00; text-decoration: underline; margin: 20px 0 10px 0; border-bottom: 2px solid #ff0000;">
+                    <h4>Equipment & Weapons</h4>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="battalionATGMS">ATGMS</label>
+                        <input type="number" id="battalionATGMS" name="ATGMS" class="form-control" min="0" value="0">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="battalionRocketLauncher">Rocket Launcher</label>
+                        <input type="number" id="battalionRocketLauncher" name="RocketLauncher" class="form-control" min="0" value="0">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="battalionMortars81">Mortars (81mm)</label>
+                        <input type="number" id="battalionMortars81" name="Mortars81mm" class="form-control" min="0" value="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="battalionMortars120">Mortars (120mm)</label>
+                        <input type="number" id="battalionMortars120" name="Mortars120mm" class="form-control" min="0" value="0">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="battalionGrenadeLaunchers">Grenade Launchers</label>
+                        <input type="number" id="battalionGrenadeLaunchers" name="GrenadeLaunchers" class="form-control" min="0" value="0">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="battalionHMG_AGL">HMG/AGL</label>
+                        <input type="number" id="battalionHMG_AGL" name="HMG_AGL" class="form-control" min="0" value="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="battalionMG_LMG">MG/LMG</label>
+                        <input type="number" id="battalionMG_LMG" name="MG_LMG" class="form-control" min="0" value="0">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="battalionMANPADS">MANPADS</label>
+                        <input type="number" id="battalionMANPADS" name="MANPADS" class="form-control" min="0" value="0">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="battalionGrenades">Grenades</label>
+                        <input type="number" id="battalionGrenades" name="Grenades" class="form-control" min="0" value="0">
+                    </div>
+                </div>
+                
+                <!-- Mobility Data Section -->
+                <div class="section-header" style="color: #00ff00; text-decoration: underline; margin: 20px 0 10px 0; border-bottom: 2px solid #00ff00;">
+                    <h4>Mobility Data</h4>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="battalionSpeedTrucks">Trucks on Roads (kmph)</label>
+                        <input type="number" id="battalionSpeedTrucks" name="MarchingSpeedTrucksRoads" class="form-control" min="0" step="0.1" value="30">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="battalionSpeedAPCs">APCs (kmph)</label>
+                        <input type="number" id="battalionSpeedAPCs" name="MarchingSpeedAPCs" class="form-control" min="0" step="0.1" value="20">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="battalionSpeedCrossCountry">Cross Country (kmph)</label>
+                        <input type="number" id="battalionSpeedCrossCountry" name="MarchingSpeedCrossCountry" class="form-control" min="0" step="0.1" value="5">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="battalionSpeedAPCsCross">APCs Cross Country (kmph)</label>
+                        <input type="number" id="battalionSpeedAPCsCross" name="MarchingSpeedAPCsCrossCountry" class="form-control" min="0" step="0.1" value="10">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="battalionCombatAdvance">Combat Advance (kmph)</label>
+                        <input type="number" id="battalionCombatAdvance" name="CombatAdvanceSpeed" class="form-control" min="0" step="0.1" value="1">
+                    </div>
+                </div>
+                
+                <!-- Description Section -->
+                <div class="form-group">
+                    <label for="battalionDescription">Description</label>
+                    <textarea id="battalionDescription" name="Description" class="form-control" rows="3"></textarea>
                 </div>
             </form>
         </div>
@@ -889,36 +1202,90 @@
 
 <!-- Armoured Regiment Form Modal -->
 <div id="armouredRegimentFormModal" class="gameplay-modal">
-    <div class="gameplay-modal-content">
+    <div class="gameplay-modal-content large">
         <div class="gameplay-modal-header">
-            <h3><i class="fas fa-tank"></i> Add Armoured Regiment</h3>
+            <h3><i class="fas fa-tank"></i> Armoured Regiment Form</h3>
             <button class="gameplay-modal-close" onclick="closeModal('armouredRegimentFormModal')">&times;</button>
         </div>
         <div class="gameplay-modal-body">
             <form id="armouredRegimentForm">
-                <div class="form-group">
-                    <label for="regimentName">Regiment Name *</label>
-                    <input type="text" id="regimentName" name="name" required class="form-control">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="regimentName">Regiment Name *</label>
+                        <input type="text" id="regimentName" name="name" required class="form-control">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="regimentCode">Unit Code *</label>
+                        <input type="text" id="regimentCode" name="unitCode" required class="form-control">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="regimentStrength">Strength *</label>
-                    <input type="number" id="regimentStrength" name="strength" required class="form-control" min="0">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="regimentStrength">Strength *</label>
+                        <input type="number" id="regimentStrength" name="strength" required class="form-control" min="0">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="regimentSquadrons">Number of Squadrons *</label>
+                        <input type="number" id="regimentSquadrons" name="squadrons" required class="form-control" min="0">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="regimentSquadrons">Number of Squadrons *</label>
-                    <input type="number" id="regimentSquadrons" name="squadrons" required class="form-control" min="0">
-                </div>
-                <div class="form-group">
-                    <label for="regimentTanks">Number of Tanks *</label>
-                    <input type="number" id="regimentTanks" name="tanks" required class="form-control" min="0">
-                </div>
-                <div class="form-group">
-                    <label for="regimentDrones">Number of Drones</label>
-                    <input type="number" id="regimentDrones" name="drones" class="form-control" min="0">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="regimentTanks">Number of Tanks *</label>
+                        <input type="number" id="regimentTanks" name="tanks" required class="form-control" min="0" value="0">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="regimentDrones">Number of Drones</label>
+                        <input type="number" id="regimentDrones" name="drones" class="form-control" min="0">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="regimentDroneTypes">Drone Types</label>
                     <input type="text" id="regimentDroneTypes" name="droneTypes" class="form-control" placeholder="e.g., Surveillance, Attack, Reconnaissance">
+                </div>
+                
+                <!-- Equipment & Weapons Section -->
+                <div class="section-header" style="color: #00ff00; text-decoration: underline; margin: 20px 0 10px 0; border-bottom: 2px solid #ff0000;">
+                    <h4>Equipment & Weapons</h4>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="regimentATGMS">ATGMS</label>
+                        <input type="number" id="regimentATGMS" name="ATGMS" class="form-control" min="0" value="0">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="regimentMortars120">Mortars (120mm)</label>
+                        <input type="number" id="regimentMortars120" name="Mortars120mm" class="form-control" min="0" value="0">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="regimentHMG">HMG</label>
+                        <input type="number" id="regimentHMG" name="HMG" class="form-control" min="0" value="0">
+                    </div>
+                </div>
+                
+                <!-- Mobility Data Section -->
+                <div class="section-header" style="color: #00ff00; text-decoration: underline; margin: 20px 0 10px 0; border-bottom: 2px solid #00ff00;">
+                    <h4>Mobility Data</h4>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="regimentSpeedRoads">Roads (kmph)</label>
+                        <input type="number" id="regimentSpeedRoads" name="MarchingSpeedRoads" class="form-control" min="0" step="0.1" value="15">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="regimentSpeedCrossCountry">Cross Country (kmph)</label>
+                        <input type="number" id="regimentSpeedCrossCountry" name="MarchingSpeedCrossCountry" class="form-control" min="0" step="0.1" value="10">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="regimentCombatAdvance">Combat Advance (kmph)</label>
+                        <input type="number" id="regimentCombatAdvance" name="CombatAdvanceSpeed" class="form-control" min="0" step="0.1" value="1">
+                    </div>
+                </div>
+                
+                <!-- Description Section -->
+                <div class="form-group">
+                    <label for="regimentDescription">Description</label>
+                    <textarea id="regimentDescription" name="Description" class="form-control" rows="3"></textarea>
                 </div>
             </form>
         </div>
@@ -931,40 +1298,73 @@
 
 <!-- Artillery Regiment Form Modal -->
 <div id="artilleryRegimentFormModal" class="gameplay-modal">
-    <div class="gameplay-modal-content">
+    <div class="gameplay-modal-content large">
         <div class="gameplay-modal-header">
-            <h3><i class="fas fa-bomb"></i> Add Artillery Regiment</h3>
+            <h3><i class="fas fa-bomb"></i> Artillery Regiment Form</h3>
             <button class="gameplay-modal-close" onclick="closeModal('artilleryRegimentFormModal')">&times;</button>
         </div>
         <div class="gameplay-modal-body">
             <form id="artilleryRegimentForm">
-                <div class="form-group">
-                    <label for="artilleryName">Regiment Name *</label>
-                    <input type="text" id="artilleryName" name="name" required class="form-control">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="artilleryName">Regiment Name *</label>
+                        <input type="text" id="artilleryName" name="name" required class="form-control">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="artilleryCode">Unit Code *</label>
+                        <input type="text" id="artilleryCode" name="unitCode" required class="form-control">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="artilleryStrength">Strength *</label>
-                    <input type="number" id="artilleryStrength" name="strength" required class="form-control" min="0">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="artilleryStrength">Strength *</label>
+                        <input type="number" id="artilleryStrength" name="strength" required class="form-control" min="0">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="artilleryBatteries">Number of Batteries *</label>
+                        <input type="number" id="artilleryBatteries" name="batteries" required class="form-control" min="0">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="artilleryBatteries">Number of Batteries *</label>
-                    <input type="number" id="artilleryBatteries" name="batteries" required class="form-control" min="0">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="artilleryDrones">Number of Drones</label>
+                        <input type="number" id="artilleryDrones" name="drones" class="form-control" min="0">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="artilleryDroneTypes">Drone Types</label>
+                        <input type="text" id="artilleryDroneTypes" name="droneTypes" class="form-control" placeholder="e.g., Surveillance, Attack, Reconnaissance">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="artilleryGuns">Number of Guns *</label>
-                    <input type="number" id="artilleryGuns" name="guns" required class="form-control" min="0">
+                
+                <!-- Artillery Equipment Section -->
+                <div class="section-header" style="color: #00ff00; text-decoration: underline; margin: 20px 0 10px 0; border-bottom: 2px solid #ff0000;">
+                    <h4>Artillery Equipment</h4>
                 </div>
-                <div class="form-group">
-                    <label for="artilleryGunRange">Gun Range *</label>
-                    <input type="text" id="artilleryGunRange" name="gunRange" required class="form-control">
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="artilleryGuns">Guns</label>
+                        <input type="number" id="artilleryGuns" name="guns" required class="form-control" min="0" value="0">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="artilleryGunRange">Gun Range (km)</label>
+                        <input type="number" id="artilleryGunRange" name="gunRange" required class="form-control" min="0" step="0.1" value="0">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="artilleryGunCaliber">Gun Caliber</label>
+                        <input type="text" id="artilleryGunCaliber" name="GunCaliber" class="form-control" value="155mm SP">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="artilleryDrones">Number of Drones</label>
-                    <input type="number" id="artilleryDrones" name="drones" class="form-control" min="0">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="artilleryHMG">HMG</label>
+                        <input type="number" id="artilleryHMG" name="HMG" class="form-control" min="0" value="0">
+                    </div>
                 </div>
+                
+                <!-- Description Section -->
                 <div class="form-group">
-                    <label for="artilleryDroneTypes">Drone Types</label>
-                    <input type="text" id="artilleryDroneTypes" name="droneTypes" class="form-control" placeholder="e.g., Surveillance, Attack, Reconnaissance">
+                    <label for="artilleryDescription">Description</label>
+                    <textarea id="artilleryDescription" name="Description" class="form-control" rows="3"></textarea>
                 </div>
             </form>
         </div>
@@ -1045,6 +1445,97 @@
             <button class="gameplay-btn primary" onclick="saveTokenRecon()">Save Recon</button>
         </div>
     </div>
+</div>
+
+<!-- Terrain Factor Form Modal -->
+<div id="terrainFormModal" class="gameplay-modal">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-mountain"></i> Terrain Factor</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('terrainFormModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <form id="terrainForm">
+                <div class="form-group">
+                    <label for="terrainType">Terrain Type *</label>
+                    <select id="terrainType" name="terrainType" required class="form-control">
+                        <option value="Plain">Plain</option>
+                        <option value="Forest">Forest</option>
+                        <option value="Mountain">Mountain</option>
+                        <option value="Desert">Desert</option>
+                        <option value="Swamp">Swamp</option>
+                        <option value="Urban">Urban</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="terrainXFactor">X Factor (Mobility Modifier) *</label>
+                    <input type="number" id="terrainXFactor" name="xFactor" required class="form-control" min="0" max="2" step="0.1" value="1">
+                </div>
+                <div class="form-group">
+                    <label for="terrainTankPsi">Tank PSI Range</label>
+                    <input type="text" id="terrainTankPsi" name="tankPsi" class="form-control" placeholder="e.g., 10-15">
+                </div>
+                <div class="form-group">
+                    <label for="terrainApcPsi">APC PSI Range</label>
+                    <input type="text" id="terrainApcPsi" name="apcPsi" class="form-control" placeholder="e.g., 8-12">
+                </div>
+            </form>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('terrainFormModal')">Cancel</button>
+            <button class="gameplay-btn primary" onclick="saveTerrainFactor()">Save Terrain Factor</button>
+        </div>
+    </div>
+</div>
+
+<!-- Force Protection Form Modal -->
+<div id="protectionFormModal" class="gameplay-modal">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-shield-alt"></i> Force Protection</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('protectionFormModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <form id="protectionForm">
+                <div class="form-group">
+                    <label for="protectionForceType">Force Type *</label>
+                    <select id="protectionForceType" name="forceType" required class="form-control">
+                        <option value="Blue">Blue</option>
+                        <option value="Red">Red</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="protectionType">Protection Type *</label>
+                    <select id="protectionType" name="protectionType" required class="form-control">
+                        <option value="Berm">Berm</option>
+                        <option value="Trench">Trench</option>
+                        <option value="Fortify">Fortify</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="protectionPrep">Degree of Preparation *</label>
+                    <select id="protectionPrep" name="prep" required class="form-control">
+                        <option value="Low">Low</option>
+                        <option value="Normal" selected>Normal</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="protectionFactor">Protection Factor (0-1) *</label>
+                    <input type="number" id="protectionFactor" name="factor" required class="form-control" min="0" max="1" step="0.1" value="0.5">
+                </div>
+            </form>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('protectionFormModal')">Cancel</button>
+            <button class="gameplay-btn primary" onclick="saveForceProtection()">Save Protection</button>
+        </div>
+    </div>
+</div>
+
+<!-- Token Details Panel -->
+<div id="tokenDetailsPanel" class="token-details-overlay" style="display: none;">
+    <!-- Content will be dynamically inserted here -->
 </div>
 
 <!-- Settings Modal -->
@@ -1815,10 +2306,10 @@
             token.status = 'placed';
             tokenIdToMarker[token.id] = marker;
 
-            // Attach click => open token info popup
-            marker.on('click', function(){
-                    openTokenInfoPopup(token);
-            });
+             // Attach click => show token details in panel
+             marker.on('click', function(){
+                     showTokenDetails(token);
+             });
 
             saveTokensLocal();
             updateTokenCount();
@@ -1835,75 +2326,334 @@
         showNotification('Select a created token and click "Place on Map" first.', 'error');
     }
 
-    function openTokenInfoPopup(token) {
-        const formId = `token-form-${token.id}`;
-        const nameId = `token-name-${token.id}`;
-        const notesId = `token-notes-${token.id}`;
-        const html = `
-            <div id="${formId}" class="token-popup">
-                <div class="form-group" style="margin-bottom:6px">
-                    <label style="display:block;font-size:12px;margin-bottom:2px">Name</label>
-                    <input id="${nameId}" type="text" class="form-control" value="${(token.name||'').replace(/"/g,'&quot;')}">
-                </div>
-                <div class="form-group" style="margin-bottom:6px">
-                    <label style="display:block;font-size:12px;margin-bottom:2px">Category</label>
-                    <select id="token-category-${token.id}" class="form-control">
-                        <option value="" title="Generic marker without classification">Generic</option>
-                        <option value="Brigade" title="Brigade-level unit">Brigade unit</option>
-                        <option value="Division Infantry" title="Infantry division formation">Div infantry unit</option>
-                        <option value="Armoured" title="Armoured regiment/battalion">Armored unit</option>
-                        <option value="Artillery" title="Artillery regiment/battery">Artillery unit</option>
-                        <option value="Recon" title="Reconnaissance element">Recon unit</option>
-                        <option value="HQ" title="Headquarters/Command post">HQ</option>
-                        <option value="Supply" title="Logistics or supply node">Supply</option>
-                    </select>
-                    <small id="token-category-help-${token.id}" style="display:block;opacity:.8;margin-top:2px"></small>
-                </div>
-                <div class="form-group" style="margin-bottom:6px">
-                    <label style="display:block;font-size:12px;margin-bottom:2px">Notes</label>
-                    <input id="${notesId}" type="text" class="form-control" value="${(token.notes||'').replace(/"/g,'&quot;')}">
-                </div>
-                <div style="display:flex;gap:6px;justify-content:flex-end">
-                    <button class="btn btn-danger" onclick="window.deleteTokenById('${token.id}')">Delete</button>
-                    <button class="btn btn-primary" onclick="window.saveTokenInfoById('${token.id}')">Save</button>
-                </div>
-            </div>`;
-        try { token.marker.bindPopup(html, { closeButton:true, autoClose:true }).openPopup(); } catch {}
-        // Initialize category selection and hover/help
-        try {
-            const sel = document.getElementById(`token-category-${token.id}`);
-            const help = document.getElementById(`token-category-help-${token.id}`);
-            const desc = {
-                '': 'Generic marker without classification',
-                'Brigade': 'Brigade-level unit',
-                'Division Infantry': 'Infantry division formation',
-                'Armoured': 'Armoured regiment/battalion',
-                'Artillery': 'Artillery regiment/battery',
-                'Recon': 'Reconnaissance element',
-                'HQ': 'Headquarters/Command post',
-                'Supply': 'Logistics or supply node'
-            };
-            if (sel) {
-                sel.value = token.category || (window._tokenTemplate||'');
-                if (help) help.textContent = desc[sel.value] || '';
-                sel.addEventListener('change', function(){ if (help) help.textContent = desc[this.value] || ''; });
-                sel.addEventListener('mouseover', function(){ if (help) help.textContent = desc[this.value] || ''; });
-            }
-        } catch {}
+     function showTokenDetails(token) {
+         // Load all token data
+         const brigades = lsRead(`token_${token.id}_brigades`, []);
+         const infantryBattalions = lsRead(`token_${token.id}_infantry_battalions`, []);
+         const armouredRegiments = lsRead(`token_${token.id}_armoured_regiments`, []);
+         const artilleryRegiments = lsRead(`token_${token.id}_artillery_regiments`, []);
+         const intelligence = lsRead(`token_${token.id}_intelligence`, []);
+         const recon = lsRead(`token_${token.id}_recon`, []);
+         
+         // Create comprehensive details HTML
+         let detailsHtml = `
+             <div class="token-details-panel">
+                 <div class="token-details-header">
+                     <h3><i class="fas fa-map-marker-alt"></i> ${token.name || 'Unnamed Token'}</h3>
+                     <button class="btn btn-sm btn-secondary" onclick="closeTokenDetails()">Close</button>
+                 </div>
+                 <div class="token-details-content">
+                     <div class="token-info-section">
+                         <h4><i class="fas fa-info-circle"></i> Token Information</h4>
+                         <div class="info-grid">
+                             <div class="info-item">
+                                 <label>Token ID:</label>
+                                 <span>${token.id}</span>
+                             </div>
+                             <div class="info-item">
+                                 <label>Status:</label>
+                                 <span class="status-badge ${token.status}">${token.status}</span>
+                             </div>
+                             <div class="info-item">
+                                 <label>Category:</label>
+                                 <span>${token.category || 'Generic'}</span>
+                             </div>
+                             <div class="info-item">
+                                 <label>Position:</label>
+                                 <span>${token.position ? `${token.position.lat.toFixed(4)}, ${token.position.lng.toFixed(4)}` : 'Not placed'}</span>
+                             </div>
+                             <div class="info-item">
+                                 <label>Notes:</label>
+                                 <span>${token.notes || 'No notes'}</span>
+                             </div>
+                         </div>
+                     </div>
+         `;
+         
+         // Military Units Section
+         if (brigades.length > 0) {
+             detailsHtml += `
+                 <div class="token-data-section">
+                     <h4><i class="fas fa-flag"></i> Military Units (${brigades.length} Brigades)</h4>
+             `;
+             
+             brigades.forEach(brigade => {
+                 const brigadeUnits = [
+                     ...infantryBattalions.filter(unit => unit.brigadeId === brigade.id),
+                     ...armouredRegiments.filter(unit => unit.brigadeId === brigade.id),
+                     ...artilleryRegiments.filter(unit => unit.brigadeId === brigade.id)
+                 ];
+                 
+                 detailsHtml += `
+                     <div class="brigade-details">
+                         <h5><i class="fas fa-flag"></i> ${brigade.name} (${brigade.unitCode})</h5>
+                         <div class="brigade-info">
+                             <span><strong>Force:</strong> ${brigade.forceType}</span>
+                             <span><strong>Strength:</strong> ${brigade.strength}</span>
+                             <span><strong>Units:</strong> ${brigadeUnits.length}</span>
+                         </div>
+                 `;
+                 
+                 if (brigadeUnits.length > 0) {
+                     detailsHtml += `<div class="units-list">`;
+                     brigadeUnits.forEach(unit => {
+                         const unitType = unit.id.startsWith('infantry_') ? 'Infantry Battalion' : 
+                                        unit.id.startsWith('armoured_') ? 'Armoured Regiment' : 'Artillery Regiment';
+                         detailsHtml += `
+                             <div class="unit-item">
+                                 <span class="unit-name">${unit.name} (${unit.unitCode})</span>
+                                 <span class="unit-details">
+                                     ${unitType} | Strength: ${unit.strength}
+                                     ${unit.companies ? `| Companies: ${unit.companies}` : ''}
+                                     ${unit.squadrons ? `| Squadrons: ${unit.squadrons}` : ''}
+                                     ${unit.batteries ? `| Batteries: ${unit.batteries}` : ''}
+                                     ${unit.drones > 0 ? `| Drones: ${unit.drones}` : ''}
+                                 </span>
+                             </div>
+                         `;
+                     });
+                     detailsHtml += `</div>`;
+                 }
+                 detailsHtml += `</div>`;
+             });
+             detailsHtml += `</div>`;
+         } else {
+             detailsHtml += `
+                 <div class="token-data-section">
+                     <h4><i class="fas fa-flag"></i> Military Units</h4>
+                     <p class="no-data">No brigades assigned</p>
+                 </div>
+             `;
+         }
+         
+         // Intelligence Section
+         if (intelligence.length > 0) {
+             detailsHtml += `
+                 <div class="token-data-section">
+                     <h4><i class="fas fa-eye"></i> Intelligence Reports (${intelligence.length})</h4>
+                     <div class="intel-list">
+             `;
+             intelligence.forEach(intel => {
+                 detailsHtml += `
+                     <div class="intel-item">
+                         <span class="intel-title">${intel.title}</span>
+                         <span class="intel-details">Priority: ${intel.priority} | Source: ${intel.source}</span>
+                         <div class="intel-description">${intel.description}</div>
+                     </div>
+                 `;
+             });
+             detailsHtml += `</div></div>`;
+         } else {
+             detailsHtml += `
+                 <div class="token-data-section">
+                     <h4><i class="fas fa-eye"></i> Intelligence Reports</h4>
+                     <p class="no-data">No intelligence reports</p>
+                 </div>
+             `;
+         }
+         
+         // Recon Section
+         if (recon.length > 0) {
+             detailsHtml += `
+                 <div class="token-data-section">
+                     <h4><i class="fas fa-binoculars"></i> Recon Data (${recon.length})</h4>
+                     <div class="recon-list">
+             `;
+             recon.forEach(reconItem => {
+                 detailsHtml += `
+                     <div class="recon-item">
+                         <span class="recon-type">${reconItem.reconType}</span>
+                         <span class="recon-details">Confidence: ${reconItem.confidence} | Location: ${reconItem.location}</span>
+                         <div class="recon-description">${reconItem.description}</div>
+                     </div>
+                 `;
+             });
+             detailsHtml += `</div></div>`;
+         } else {
+             detailsHtml += `
+                 <div class="token-data-section">
+                     <h4><i class="fas fa-binoculars"></i> Recon Data</h4>
+                     <p class="no-data">No recon data</p>
+                 </div>
+             `;
+         }
+         
+         detailsHtml += `
+                     <div class="token-actions">
+                         <button class="btn btn-primary" onclick="closeTokenDetails(); openTokenDataEntryModal('${token.id}')">
+                             <i class="fas fa-edit"></i> Edit Data
+                         </button>
+                         <button class="btn btn-danger" onclick="deleteTokenById('${token.id}')">
+                             <i class="fas fa-trash"></i> Delete Token
+                         </button>
+                     </div>
+                 </div>
+             </div>
+         `;
+         
+         // Show the details panel
+         $('#tokenDetailsPanel').html(detailsHtml).show();
+     }
+
+    function closeTokenDetails() {
+        $('#tokenDetailsPanel').hide();
     }
 
-    window.saveTokenInfoById = function(tokenId){
-        const token = tokens.find(t=> t.id===tokenId);
-        if (!token) return;
-        const nameEl = document.getElementById(`token-name-${tokenId}`);
-        const notesEl = document.getElementById(`token-notes-${tokenId}`);
-        const catEl = document.getElementById(`token-category-${tokenId}`);
-        if (nameEl) token.name = nameEl.value || '';
-        if (notesEl) token.notes = notesEl.value || '';
-        if (catEl) token.category = catEl.value || '';
-        saveTokensLocal();
-        showNotification('Token saved locally', 'success');
-        try { token.marker && token.marker.closePopup && token.marker.closePopup(); } catch {}
+    // Edit Functions for Token Data
+    function editTokenBrigade(tokenId, brigadeId) {
+        const brigades = lsRead(`token_${tokenId}_brigades`, []);
+        const brigade = brigades.find(b => b.id === brigadeId);
+        if (!brigade) return;
+
+        // Populate form with existing data
+        $('#brigadeName').val(brigade.name || '');
+        $('#brigadeCode').val(brigade.unitCode || '');
+        $('#brigadeStrength').val(brigade.strength || 0);
+        $('#brigadeDescription').val(brigade.description || '');
+
+        // Set editing mode
+        $('#brigadeFormModal').data('token-id', tokenId);
+        $('#brigadeFormModal').data('editing-id', brigadeId);
+        $('#brigadeFormModal').show();
+    }
+
+    function editTokenInfantryBattalion(tokenId, battalionId) {
+        const battalions = lsRead(`token_${tokenId}_infantry_battalions`, []);
+        const battalion = battalions.find(b => b.id === battalionId);
+        if (!battalion) return;
+
+        // Populate form with existing data
+        $('#battalionName').val(battalion.name || '');
+        $('#battalionCode').val(battalion.unitCode || '');
+        $('#battalionStrength').val(battalion.strength || 0);
+        $('#battalionCompanies').val(battalion.companies || 0);
+        $('#battalionTanks').val(battalion.tanks || 0);
+        $('#battalionDrones').val(battalion.drones || 0);
+        $('#battalionDroneTypes').val(battalion.droneTypes || '');
+        
+        // Equipment & Weapons
+        $('#battalionATGMS').val(battalion.ATGMS || 0);
+        $('#battalionRocketLauncher').val(battalion.RocketLauncher || 0);
+        $('#battalionMortars81').val(battalion.Mortars81mm || 0);
+        $('#battalionMortars120').val(battalion.Mortars120mm || 0);
+        $('#battalionGrenadeLaunchers').val(battalion.GrenadeLaunchers || 0);
+        $('#battalionHMG_AGL').val(battalion.HMG_AGL || 0);
+        $('#battalionMG_LMG').val(battalion.MG_LMG || 0);
+        $('#battalionMANPADS').val(battalion.MANPADS || 0);
+        $('#battalionGrenades').val(battalion.Grenades || 0);
+        
+        // Mobility Data
+        $('#battalionSpeedTrucks').val(battalion.MarchingSpeedTrucksRoads || 30);
+        $('#battalionSpeedAPCs').val(battalion.MarchingSpeedAPCs || 20);
+        $('#battalionSpeedCrossCountry').val(battalion.MarchingSpeedCrossCountry || 5);
+        $('#battalionSpeedAPCsCross').val(battalion.MarchingSpeedAPCsCrossCountry || 10);
+        $('#battalionCombatAdvance').val(battalion.CombatAdvanceSpeed || 1);
+        
+        // Description
+        $('#battalionDescription').val(battalion.Description || '');
+
+        // Set editing mode
+        $('#infantryBattalionFormModal').data('token-id', tokenId);
+        $('#infantryBattalionFormModal').data('brigade-id', battalion.brigadeId);
+        $('#infantryBattalionFormModal').data('editing-id', battalionId);
+        $('#infantryBattalionFormModal').show();
+    }
+
+    function editTokenArmouredRegiment(tokenId, regimentId) {
+        const regiments = lsRead(`token_${tokenId}_armoured_regiments`, []);
+        const regiment = regiments.find(r => r.id === regimentId);
+        if (!regiment) return;
+
+        // Populate form with existing data
+        $('#regimentName').val(regiment.name || '');
+        $('#regimentCode').val(regiment.unitCode || '');
+        $('#regimentStrength').val(regiment.strength || 0);
+        $('#regimentSquadrons').val(regiment.squadrons || 0);
+        $('#regimentTanks').val(regiment.tanks || 0);
+        $('#regimentDrones').val(regiment.drones || 0);
+        $('#regimentDroneTypes').val(regiment.droneTypes || '');
+        
+        // Equipment & Weapons
+        $('#regimentATGMS').val(regiment.ATGMS || 0);
+        $('#regimentMortars120').val(regiment.Mortars120mm || 0);
+        $('#regimentHMG').val(regiment.HMG || 0);
+        
+        // Mobility Data
+        $('#regimentSpeedRoads').val(regiment.MarchingSpeedRoads || 15);
+        $('#regimentSpeedCrossCountry').val(regiment.MarchingSpeedCrossCountry || 10);
+        $('#regimentCombatAdvance').val(regiment.CombatAdvanceSpeed || 1);
+        
+        // Description
+        $('#regimentDescription').val(regiment.Description || '');
+
+        // Set editing mode
+        $('#armouredRegimentFormModal').data('token-id', tokenId);
+        $('#armouredRegimentFormModal').data('brigade-id', regiment.brigadeId);
+        $('#armouredRegimentFormModal').data('editing-id', regimentId);
+        $('#armouredRegimentFormModal').show();
+    }
+
+    function editTokenArtilleryRegiment(tokenId, regimentId) {
+        const regiments = lsRead(`token_${tokenId}_artillery_regiments`, []);
+        const regiment = regiments.find(r => r.id === regimentId);
+        if (!regiment) return;
+
+        // Populate form with existing data
+        $('#artilleryName').val(regiment.name || '');
+        $('#artilleryCode').val(regiment.unitCode || '');
+        $('#artilleryStrength').val(regiment.strength || 0);
+        $('#artilleryBatteries').val(regiment.batteries || 0);
+        $('#artilleryDrones').val(regiment.drones || 0);
+        $('#artilleryDroneTypes').val(regiment.droneTypes || '');
+        
+        // Artillery Equipment
+        $('#artilleryGuns').val(regiment.guns || 0);
+        $('#artilleryGunRange').val(regiment.gunRange || 0);
+        $('#artilleryGunCaliber').val(regiment.GunCaliber || '155mm SP');
+        $('#artilleryHMG').val(regiment.HMG || 0);
+        
+        // Description
+        $('#artilleryDescription').val(regiment.Description || '');
+
+        // Set editing mode
+        $('#artilleryRegimentFormModal').data('token-id', tokenId);
+        $('#artilleryRegimentFormModal').data('brigade-id', regiment.brigadeId);
+        $('#artilleryRegimentFormModal').data('editing-id', regimentId);
+        $('#artilleryRegimentFormModal').show();
+    }
+
+    function editTokenIntel(tokenId, intelId) {
+        const intelligence = lsRead(`token_${tokenId}_intelligence`, []);
+        const intel = intelligence.find(i => i.id === intelId);
+        if (!intel) return;
+
+        // Populate form with existing data
+        $('#intelTitle').val(intel.title || '');
+        $('#intelSource').val(intel.source || '');
+        $('#intelPriority').val(intel.priority || '');
+        $('#intelDescription').val(intel.description || '');
+
+        // Set editing mode
+        $('#intelligenceFormModal').data('token-id', tokenId);
+        $('#intelligenceFormModal').data('editing-id', intelId);
+        $('#intelligenceFormModal').show();
+    }
+
+    function editTokenRecon(tokenId, reconId) {
+        const recon = lsRead(`token_${tokenId}_recon`, []);
+        const reconItem = recon.find(r => r.id === reconId);
+        if (!reconItem) return;
+
+        // Populate form with existing data
+        $('#reconType').val(reconItem.reconType || '');
+        $('#reconLocation').val(reconItem.location || '');
+        $('#reconConfidence').val(reconItem.confidence || '');
+        $('#reconDescription').val(reconItem.description || '');
+
+        // Set editing mode
+        $('#reconFormModal').data('token-id', tokenId);
+        $('#reconFormModal').data('editing-id', reconId);
+        $('#reconFormModal').show();
     }
 
 
@@ -2022,7 +2772,7 @@
         
         // Validate that token has required data before placement
         if (!validateTokenData(tokenId)) {
-            showNotification('Token must have at least one Brigade and Intelligence data (Intel, Recon) before placement', 'error');
+            showNotification('Token must have at least one Brigade before placement', 'error');
             return;
         }
         
@@ -2042,14 +2792,8 @@
         // Check if token has brigades (required for military units)
         const brigades = lsRead(`token_${tokenId}_brigades`, []);
         
-        // Check if token has intelligence data (at least one of: Intel, Recon)
-        const intelligence = lsRead(`token_${tokenId}_intelligence`, []);
-        const recon = lsRead(`token_${tokenId}_recon`, []);
-        
-        const hasIntelligenceData = intelligence.length > 0 || recon.length > 0;
-        
-        // Token can only be placed if it has brigades AND intelligence data
-        return brigades.length > 0 && hasIntelligenceData;
+        // Token can only be placed if it has at least one brigade
+        return brigades.length > 0;
     }
 
     function openTokenDataEntryModal(tokenId) {
@@ -2408,6 +3152,8 @@
     // Save functions for modals
     function saveTokenBrigade() {
         const tokenId = $('#brigadeFormModal').data('token-id');
+        const editingId = $('#brigadeFormModal').data('editing-id');
+        
         if (!tokenId) {
             showNotification('No token selected', 'error');
             return;
@@ -2421,27 +3167,45 @@
         
         const forceType = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
         
-        const brigade = {
-            id: 'brigade_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-            name: $('#brigadeName').val(),
-            brigadeCode: $('#brigadeCode').val(),
-            forceType: forceType,
-            strength: parseInt($('#brigadeStrength').val()) || 0
-        };
-        
         const brigades = lsRead(`token_${tokenId}_brigades`, []);
-        brigades.push(brigade);
+        
+        if (editingId) {
+            // Edit existing brigade
+            const index = brigades.findIndex(b => b.id === editingId);
+            if (index >= 0) {
+                brigades[index] = {
+                    id: editingId,
+                    name: $('#brigadeName').val(),
+                    unitCode: $('#brigadeCode').val(),
+                    forceType: forceType,
+                    strength: parseInt($('#brigadeStrength').val()) || 0
+                };
+                showNotification('Brigade updated successfully', 'success');
+            }
+        } else {
+            // Add new brigade
+            const brigade = {
+                id: 'brigade_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                name: $('#brigadeName').val(),
+                unitCode: $('#brigadeCode').val(),
+                forceType: forceType,
+                strength: parseInt($('#brigadeStrength').val()) || 0
+            };
+            brigades.push(brigade);
+            showNotification('Brigade added successfully', 'success');
+        }
+        
         lsWrite(`token_${tokenId}_brigades`, brigades);
         
         // Close modal and refresh display
         closeModal('brigadeFormModal');
         loadTokenDataEntryData(tokenId);
-        showNotification('Brigade added successfully', 'success');
     }
 
     function saveTokenInfantryBattalion() {
         const tokenId = $('#infantryBattalionFormModal').data('token-id');
         const brigadeId = $('#infantryBattalionFormModal').data('brigade-id');
+        const editingId = $('#infantryBattalionFormModal').data('editing-id');
         
         if (!tokenId || !brigadeId) {
             showNotification('Missing token or brigade information', 'error');
@@ -2456,26 +3220,85 @@
         
         const forceType = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
         
-        const battalion = {
-            id: 'infantry_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-            name: $('#battalionName').val(),
-            forceType: forceType,
-            strength: parseInt($('#battalionStrength').val()) || 0,
-            companies: parseInt($('#battalionCompanies').val()) || 0,
-            tanks: parseInt($('#battalionTanks').val()) || 0,
-            drones: parseInt($('#battalionDrones').val()) || 0,
-            droneTypes: $('#battalionDroneTypes').val() || '',
-            brigadeId: brigadeId
-        };
-        
         const battalions = lsRead(`token_${tokenId}_infantry_battalions`, []);
-        battalions.push(battalion);
+        
+        if (editingId) {
+            // Edit existing battalion
+            const index = battalions.findIndex(b => b.id === editingId);
+            if (index >= 0) {
+                battalions[index] = {
+                    id: editingId,
+                    name: $('#battalionName').val(),
+                    unitCode: $('#battalionCode').val(),
+                    forceType: forceType,
+                    strength: parseInt($('#battalionStrength').val()) || 0,
+                    companies: parseInt($('#battalionCompanies').val()) || 0,
+                    tanks: parseInt($('#battalionTanks').val()) || 0,
+                    drones: parseInt($('#battalionDrones').val()) || 0,
+                    droneTypes: $('#battalionDroneTypes').val() || '',
+                    // Equipment & Weapons
+                    ATGMS: parseInt($('#battalionATGMS').val()) || 0,
+                    RocketLauncher: parseInt($('#battalionRocketLauncher').val()) || 0,
+                    Mortars81mm: parseInt($('#battalionMortars81').val()) || 0,
+                    Mortars120mm: parseInt($('#battalionMortars120').val()) || 0,
+                    GrenadeLaunchers: parseInt($('#battalionGrenadeLaunchers').val()) || 0,
+                    HMG_AGL: parseInt($('#battalionHMG_AGL').val()) || 0,
+                    MG_LMG: parseInt($('#battalionMG_LMG').val()) || 0,
+                    MANPADS: parseInt($('#battalionMANPADS').val()) || 0,
+                    Grenades: parseInt($('#battalionGrenades').val()) || 0,
+                    // Mobility Data
+                    MarchingSpeedTrucksRoads: parseFloat($('#battalionSpeedTrucks').val()) || 30,
+                    MarchingSpeedAPCs: parseFloat($('#battalionSpeedAPCs').val()) || 20,
+                    MarchingSpeedCrossCountry: parseFloat($('#battalionSpeedCrossCountry').val()) || 5,
+                    MarchingSpeedAPCsCrossCountry: parseFloat($('#battalionSpeedAPCsCross').val()) || 10,
+                    CombatAdvanceSpeed: parseFloat($('#battalionCombatAdvance').val()) || 1,
+                    // Description
+                    Description: $('#battalionDescription').val() || '',
+                    brigadeId: brigadeId
+                };
+                showNotification('Infantry Battalion updated successfully', 'success');
+            }
+        } else {
+            // Add new battalion
+            const battalion = {
+                id: 'infantry_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                name: $('#battalionName').val(),
+                unitCode: $('#battalionCode').val(),
+                forceType: forceType,
+                strength: parseInt($('#battalionStrength').val()) || 0,
+                companies: parseInt($('#battalionCompanies').val()) || 0,
+                tanks: parseInt($('#battalionTanks').val()) || 0,
+                drones: parseInt($('#battalionDrones').val()) || 0,
+                droneTypes: $('#battalionDroneTypes').val() || '',
+                // Equipment & Weapons
+                ATGMS: parseInt($('#battalionATGMS').val()) || 0,
+                RocketLauncher: parseInt($('#battalionRocketLauncher').val()) || 0,
+                Mortars81mm: parseInt($('#battalionMortars81').val()) || 0,
+                Mortars120mm: parseInt($('#battalionMortars120').val()) || 0,
+                GrenadeLaunchers: parseInt($('#battalionGrenadeLaunchers').val()) || 0,
+                HMG_AGL: parseInt($('#battalionHMG_AGL').val()) || 0,
+                MG_LMG: parseInt($('#battalionMG_LMG').val()) || 0,
+                MANPADS: parseInt($('#battalionMANPADS').val()) || 0,
+                Grenades: parseInt($('#battalionGrenades').val()) || 0,
+                // Mobility Data
+                MarchingSpeedTrucksRoads: parseFloat($('#battalionSpeedTrucks').val()) || 30,
+                MarchingSpeedAPCs: parseFloat($('#battalionSpeedAPCs').val()) || 20,
+                MarchingSpeedCrossCountry: parseFloat($('#battalionSpeedCrossCountry').val()) || 5,
+                MarchingSpeedAPCsCrossCountry: parseFloat($('#battalionSpeedAPCsCross').val()) || 10,
+                CombatAdvanceSpeed: parseFloat($('#battalionCombatAdvance').val()) || 1,
+                // Description
+                Description: $('#battalionDescription').val() || '',
+                brigadeId: brigadeId
+            };
+            battalions.push(battalion);
+            showNotification('Infantry Battalion added successfully', 'success');
+        }
+        
         lsWrite(`token_${tokenId}_infantry_battalions`, battalions);
         
         // Close modal and refresh display
         closeModal('infantryBattalionFormModal');
         loadTokenDataEntryData(tokenId);
-        showNotification('Infantry Battalion added successfully', 'success');
     }
 
     function saveTokenArmouredRegiment() {
@@ -2498,12 +3321,23 @@
         const regiment = {
             id: 'armoured_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
             name: $('#regimentName').val(),
+            unitCode: $('#regimentCode').val(),
             forceType: forceType,
             strength: parseInt($('#regimentStrength').val()) || 0,
             squadrons: parseInt($('#regimentSquadrons').val()) || 0,
             tanks: parseInt($('#regimentTanks').val()) || 0,
             drones: parseInt($('#regimentDrones').val()) || 0,
             droneTypes: $('#regimentDroneTypes').val() || '',
+            // Equipment & Weapons
+            ATGMS: parseInt($('#regimentATGMS').val()) || 0,
+            Mortars120mm: parseInt($('#regimentMortars120').val()) || 0,
+            HMG: parseInt($('#regimentHMG').val()) || 0,
+            // Mobility Data
+            MarchingSpeedRoads: parseFloat($('#regimentSpeedRoads').val()) || 15,
+            MarchingSpeedCrossCountry: parseFloat($('#regimentSpeedCrossCountry').val()) || 10,
+            CombatAdvanceSpeed: parseFloat($('#regimentCombatAdvance').val()) || 1,
+            // Description
+            Description: $('#regimentDescription').val() || '',
             brigadeId: brigadeId
         };
         
@@ -2537,13 +3371,19 @@
         const regiment = {
             id: 'artillery_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
             name: $('#artilleryName').val(),
+            unitCode: $('#artilleryCode').val(),
             forceType: forceType,
             strength: parseInt($('#artilleryStrength').val()) || 0,
             batteries: parseInt($('#artilleryBatteries').val()) || 0,
             guns: parseInt($('#artilleryGuns').val()) || 0,
-            gunRange: $('#artilleryGunRange').val(),
+            gunRange: parseFloat($('#artilleryGunRange').val()) || 0,
             drones: parseInt($('#artilleryDrones').val()) || 0,
             droneTypes: $('#artilleryDroneTypes').val() || '',
+            // Artillery Equipment
+            GunCaliber: $('#artilleryGunCaliber').val() || '155mm SP',
+            HMG: parseInt($('#artilleryHMG').val()) || 0,
+            // Description
+            Description: $('#artilleryDescription').val() || '',
             brigadeId: brigadeId
         };
         
@@ -2679,24 +3519,6 @@
 
 
 
-    function toggleIntelLayer(btn){
-        try{
-            const m = (typeof map!=='undefined')?map:gameMap; if(!m) return;
-            if (m.hasLayer && m.hasLayer(intelGroup)){
-                if (m.hasLayer(intelGroup)){ m.removeLayer(intelGroup); btn && btn.classList.remove('active'); }
-                else { intelGroup.addTo(m); btn && btn.classList.add('active'); }
-            }
-        }catch{}
-    }
-    function toggleReconLayer(btn){
-        try{
-            const m = (typeof map!=='undefined')?map:gameMap; if(!m) return;
-            if (m.hasLayer && m.hasLayer(reconGroup)){
-                if (m.hasLayer(reconGroup)){ m.removeLayer(reconGroup); btn && btn.classList.remove('active'); }
-                else { reconGroup.addTo(m); btn && btn.classList.add('active'); }
-            }
-        }catch{}
-    }
 
     // Modal Functions
     function openModal(modalId) {
@@ -2768,355 +3590,13 @@
     }
 
     // Brigade Management
-    function loadBrigades() {
-        const allData = lsRead(LS_KEYS.BRIGADES, []);
-        // Filter by current team
-        const currentTeam = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
-        const data = allData.filter(brigade => brigade.forceType === currentTeam);
-        const tbody = $('#brigadesTableBody');
-        tbody.empty();
-        data.forEach(function(brigade) {
-            tbody.append(`
-                <tr>
-                    <td>${brigade.name}</td>
-                    <td>${brigade.brigadeCode}</td>
-                    <td>${brigade.forceType}</td>
-                    <td>${brigade.strength || 'N/A'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="editBrigade('${brigade.id}')">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteBrigade('${brigade.id}')">Delete</button>
-                    </td>
-                </tr>
-            `);
-        });
-    }
 
-    function openBrigadeForm() {
-        currentEditingId = null;
-        $('#brigadeForm')[0].reset();
-        // Set force type based on current team mode
-        const forceType = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
-        $('#brigadeForceType').val(forceType);
-        openModal('brigadeFormModal');
-    }
 
-    function editBrigade(id) {
-        currentEditingId = id;
-        const b = lsRead(LS_KEYS.BRIGADES, []).find(x=> x.id===id);
-        if (b){
-            $('#brigadeName').val(b.name||'');
-            $('#brigadeCode').val(b.brigadeCode||'');
-            $('#brigadeForceType').val(b.forceType||'');
-            $('#brigadeDescription').val(b.description||'');
-        }
-        openModal('brigadeFormModal');
-    }
 
-    function saveBrigade() {
-        const obj = {
-            id: currentEditingId || localId(),
-            name: $('#brigadeName').val(),
-            brigadeCode: $('#brigadeCode').val(),
-            forceType: $('#brigadeForceType').val(),
-            description: $('#brigadeDescription').val()
-        };
-        lsUpsert(LS_KEYS.BRIGADES, obj);
-        closeModal('brigadeFormModal');
-        loadBrigades();
-        showNotification('Brigade saved locally', 'success');
-        currentEditingId = null;
-    }
 
-    function deleteBrigade(id) {
-        if (!confirm('Are you sure you want to delete this brigade?')) return;
-        lsRemove(LS_KEYS.BRIGADES, id);
-        loadBrigades();
-        showNotification('Brigade deleted', 'success');
-    }
 
-    // Infantry Battalion Management
-    function loadInfantryBattalions() {
-        const allData = lsRead(LS_KEYS.INFANTRY, []);
-        // Filter by current team
-        const currentTeam = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
-        const data = allData.filter(battalion => battalion.forceType === currentTeam);
-        const tbody = $('#infantryTableBody');
-        tbody.empty();
-        data.forEach(function(battalion) {
-            tbody.append(`
-                <tr>
-                    <td>${battalion.name}</td>
-                    <td>${battalion.unitCode}</td>
-                    <td>${battalion.forceType}</td>
-                    <td>${battalion.strength}</td>
-                    <td>${battalion.companies}</td>
-                    <td>${battalion.tanks || 'N/A'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="editInfantryBattalion('${battalion.id}')">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteInfantryBattalion('${battalion.id}')">Delete</button>
-                    </td>
-                </tr>
-            `);
-        });
-    }
 
-    function openInfantryForm() {
-        currentEditingId = null;
-        $('#infantryForm')[0].reset();
-        // Set force type based on current team mode
-        const forceType = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
-        $('#infantryForceType').val(forceType);
-        populateBrigadeDropdown('#infantryBrigade');
-        openModal('infantryFormModal');
-    }
-
-    function editInfantryBattalion(id) {
-        currentEditingId = id;
-        const b = lsRead(LS_KEYS.INFANTRY, []).find(x=> x.id===id);
-        if (b){
-            $('#infantryName').val(b.name||'');
-            $('#infantryCode').val(b.unitCode||'');
-            $('#infantryForceType').val(b.forceType||'');
-            populateBrigadeDropdown('#infantryBrigade');
-            $('#infantryBrigade').val(b.brigadeId||'');
-            $('#infantryStrength').val(b.strength||0);
-            $('#infantryCompanies').val(b.companies||0);
-            $('#infantryATGMS').val(b.ATGMS||0);
-            $('#infantryRocketLauncher').val(b.RocketLauncher||0);
-            $('#infantryMortars81').val(b.Mortars81mm||0);
-            $('#infantryMortars120').val(b.Mortars120mm||0);
-            $('#infantryGrenadeLaunchers').val(b.GrenadeLaunchers||0);
-            $('#infantryHMG_AGL').val(b.HMG_AGL||0);
-            $('#infantryMG_LMG').val(b.MG_LMG||0);
-            $('#infantryMANPADS').val(b.MANPADS||0);
-            $('#infantryGrenades').val(b.Grenades||0);
-            $('#infantrySpeedTrucks').val(b.MarchingSpeedTrucksRoads||30);
-            $('#infantrySpeedAPCs').val(b.MarchingSpeedAPCs||20);
-            $('#infantrySpeedCrossCountry').val(b.MarchingSpeedCrossCountry||5);
-            $('#infantrySpeedAPCsCross').val(b.MarchingSpeedAPCsCrossCountry||10);
-            $('#infantryCombatAdvance').val(b.CombatAdvanceSpeed||1);
-            $('#infantryDescription').val(b.Description||'');
-        }
-        openModal('infantryFormModal');
-    }
-
-    function saveInfantryBattalion() {
-        const obj = {
-            id: currentEditingId || localId(),
-            name: $('#infantryName').val(),
-            unitCode: $('#infantryCode').val(),
-            forceType: $('#infantryForceType').val(),
-            strength: parseInt($('#infantryStrength').val()),
-            companies: parseInt($('#infantryCompanies').val()),
-            ATGMS: parseInt($('#infantryATGMS').val()),
-            RocketLauncher: parseInt($('#infantryRocketLauncher').val()),
-            Mortars81mm: parseInt($('#infantryMortars81').val()),
-            Mortars120mm: parseInt($('#infantryMortars120').val()),
-            GrenadeLaunchers: parseInt($('#infantryGrenadeLaunchers').val()),
-            HMG_AGL: parseInt($('#infantryHMG_AGL').val()),
-            MG_LMG: parseInt($('#infantryMG_LMG').val()),
-            MANPADS: parseInt($('#infantryMANPADS').val()),
-            Grenades: parseInt($('#infantryGrenades').val()),
-            MarchingSpeedTrucksRoads: parseFloat($('#infantrySpeedTrucks').val()),
-            MarchingSpeedAPCs: parseFloat($('#infantrySpeedAPCs').val()),
-            MarchingSpeedCrossCountry: parseFloat($('#infantrySpeedCrossCountry').val()),
-            MarchingSpeedAPCsCrossCountry: parseFloat($('#infantrySpeedAPCsCross').val()),
-            CombatAdvanceSpeed: parseFloat($('#infantryCombatAdvance').val()),
-            Description: $('#infantryDescription').val(),
-            brigadeId: $('#infantryBrigade').val() || ''
-        };
-        lsUpsert(LS_KEYS.INFANTRY, obj);
-        closeModal('infantryFormModal');
-        loadInfantryBattalions();
-        showNotification('Infantry battalion saved locally', 'success');
-        currentEditingId = null;
-    }
-
-    function deleteInfantryBattalion(id) {
-        if (!confirm('Are you sure you want to delete this infantry battalion?')) return;
-        lsRemove(LS_KEYS.INFANTRY, id);
-        loadInfantryBattalions();
-        showNotification('Infantry battalion deleted', 'success');
-    }
-
-    // Armoured Regiment Management
-    function loadArmouredRegiments() {
-        const allData = lsRead(LS_KEYS.ARMOURED, []);
-        // Filter by current team
-        const currentTeam = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
-        const data = allData.filter(regiment => regiment.forceType === currentTeam);
-        const tbody = $('#armouredTableBody');
-        tbody.empty();
-        data.forEach(function(regiment) {
-            tbody.append(`
-                <tr>
-                    <td>${regiment.name}</td>
-                    <td>${regiment.unitCode}</td>
-                    <td>${regiment.forceType}</td>
-                    <td>${regiment.strength}</td>
-                    <td>${regiment.squadrons}</td>
-                    <td>${regiment.tanks || 0}</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="editArmouredRegiment('${regiment.id}')">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteArmouredRegiment('${regiment.id}')">Delete</button>
-                    </td>
-                </tr>
-            `);
-        });
-    }
-
-    function openArmouredForm() {
-        currentEditingId = null;
-        $('#armouredForm')[0].reset();
-        // Set force type based on current team mode
-        const forceType = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
-        $('#armouredForceType').val(forceType);
-        populateBrigadeDropdown('#armouredBrigade');
-        openModal('armouredFormModal');
-    }
-
-    function editArmouredRegiment(id) {
-        currentEditingId = id;
-        const r = lsRead(LS_KEYS.ARMOURED, []).find(x=> x.id===id);
-        if (r){
-            $('#armouredName').val(r.name||'');
-            $('#armouredCode').val(r.unitCode||'');
-            $('#armouredForceType').val(r.forceType||'');
-            populateBrigadeDropdown('#armouredBrigade');
-            $('#armouredBrigade').val(r.brigadeId||'');
-            $('#armouredStrength').val(r.strength||0);
-            $('#armouredSquadrons').val(r.squadrons||0);
-            $('#armouredTanks').val(r.tanks||0);
-            $('#armouredATGMS').val(r.ATGMS||0);
-            $('#armouredMortars120').val(r.Mortars120mm||0);
-            $('#armouredHMG').val(r.HMG||0);
-            $('#armouredSpeedRoads').val(r.MarchingSpeedRoads||15);
-            $('#armouredSpeedCrossCountry').val(r.MarchingSpeedCrossCountry||10);
-            $('#armouredCombatAdvance').val(r.CombatAdvanceSpeed||1);
-            $('#armouredDescription').val(r.Description||'');
-        }
-        openModal('armouredFormModal');
-    }
-
-    function saveArmouredRegiment() {
-        const obj = {
-            id: currentEditingId || localId(),
-            name: $('#armouredName').val(),
-            unitCode: $('#armouredCode').val(),
-            forceType: $('#armouredForceType').val(),
-            strength: parseInt($('#armouredStrength').val()),
-            squadrons: parseInt($('#armouredSquadrons').val()),
-            tanks: parseInt($('#armouredTanks').val()),
-            ATGMS: parseInt($('#armouredATGMS').val()),
-            Mortars120mm: parseInt($('#armouredMortars120').val()),
-            HMG: parseInt($('#armouredHMG').val()),
-            MarchingSpeedRoads: parseFloat($('#armouredSpeedRoads').val()),
-            MarchingSpeedCrossCountry: parseFloat($('#armouredSpeedCrossCountry').val()),
-            CombatAdvanceSpeed: parseFloat($('#armouredCombatAdvance').val()),
-            Description: $('#armouredDescription').val(),
-            brigadeId: $('#armouredBrigade').val() || ''
-        };
-        lsUpsert(LS_KEYS.ARMOURED, obj);
-        closeModal('armouredFormModal');
-        loadArmouredRegiments();
-        showNotification('Armoured regiment saved locally', 'success');
-        currentEditingId = null;
-    }
-
-    function deleteArmouredRegiment(id) {
-        if (!confirm('Are you sure you want to delete this armoured regiment?')) return;
-        lsRemove(LS_KEYS.ARMOURED, id);
-        loadArmouredRegiments();
-        showNotification('Armoured regiment deleted', 'success');
-    }
-
-    // Artillery Regiment Management
-    function loadArtilleryRegiments() {
-        const allData = lsRead(LS_KEYS.ARTILLERY, []);
-        // Filter by current team
-        const currentTeam = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
-        const data = allData.filter(regiment => regiment.forceType === currentTeam);
-        const tbody = $('#artilleryTableBody');
-        tbody.empty();
-        data.forEach(function(regiment) {
-            tbody.append(`
-                <tr>
-                    <td>${regiment.name}</td>
-                    <td>${regiment.unitCode}</td>
-                    <td>${regiment.forceType}</td>
-                    <td>${regiment.strength}</td>
-                    <td>${regiment.batteries}</td>
-                    <td>${regiment.guns}</td>
-                    <td>${regiment.gunRange}</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="editArtilleryRegiment('${regiment.id}')">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteArtilleryRegiment('${regiment.id}')">Delete</button>
-                    </td>
-                </tr>
-            `);
-        });
-    }
-
-    function openArtilleryForm() {
-        currentEditingId = null;
-        $('#artilleryForm')[0].reset();
-        // Set force type based on current team mode
-        const forceType = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
-        $('#artilleryForceType').val(forceType);
-        populateBrigadeDropdown('#artilleryBrigade');
-        openModal('artilleryFormModal');
-    }
-
-    function editArtilleryRegiment(id) {
-        currentEditingId = id;
-        const r = lsRead(LS_KEYS.ARTILLERY, []).find(x=> x.id===id);
-        if (r){
-            $('#artilleryName').val(r.name||'');
-            $('#artilleryCode').val(r.unitCode||'');
-            $('#artilleryForceType').val(r.forceType||'');
-            populateBrigadeDropdown('#artilleryBrigade');
-            $('#artilleryBrigade').val(r.brigadeId||'');
-            $('#artilleryStrength').val(r.strength||0);
-            $('#artilleryBatteries').val(r.batteries||0);
-            $('#artilleryGuns').val(r.guns||0);
-            $('#artilleryGunRange').val(r.gunRange||0);
-            $('#artilleryHMG').val(r.HMG||0);
-            $('#artilleryGunCaliber').val(r.GunCaliber||'155mm SP');
-            $('#artilleryDescription').val(r.Description||'');
-        }
-        openModal('artilleryFormModal');
-    }
-
-    function saveArtilleryRegiment() {
-        const obj = {
-            id: currentEditingId || localId(),
-            name: $('#artilleryName').val(),
-            unitCode: $('#artilleryCode').val(),
-            forceType: $('#artilleryForceType').val(),
-            strength: parseInt($('#artilleryStrength').val()),
-            batteries: parseInt($('#artilleryBatteries').val()),
-            guns: parseInt($('#artilleryGuns').val()),
-            gunRange: parseFloat($('#artilleryGunRange').val()),
-            HMG: parseInt($('#artilleryHMG').val()),
-            GunCaliber: $('#artilleryGunCaliber').val(),
-            Description: $('#artilleryDescription').val(),
-            brigadeId: $('#artilleryBrigade').val() || ''
-        };
-        lsUpsert(LS_KEYS.ARTILLERY, obj);
-        closeModal('artilleryFormModal');
-        loadArtilleryRegiments();
-        showNotification('Artillery regiment saved locally', 'success');
-        currentEditingId = null;
-    }
-
-    function deleteArtilleryRegiment(id) {
-        if (!confirm('Are you sure you want to delete this artillery regiment?')) return;
-        lsRemove(LS_KEYS.ARTILLERY, id);
-        loadArtilleryRegiments();
-        showNotification('Artillery regiment deleted', 'success');
-    }
-
-    // Terrain and Protection Management (simplified for now)
+    // Terrain and Protection Management
     function loadTerrainFactors() {
         const data = lsRead(LS_KEYS.TERRAIN, []);
         const tbody = $('#terrainTableBody');
@@ -3152,139 +3632,115 @@
     }
 
     function openTerrainForm() {
-        const terrainType = prompt('Terrain Type (Plain/Forest/Mountain/Desert/Swamp/Urban):','Plain')||'Plain';
-        const xFactor = parseFloat(prompt('X Factor (mobility modifier):','1')||'1');
-        const tankPsi = prompt('Tank PSI Range','');
-        const apcPsi = prompt('APC PSI Range','');
-        const obj = { id: localId(), terrainType, xFactor, tankPsi, apcPsi };
-        const arr = lsRead(LS_KEYS.TERRAIN, []); arr.push(obj); lsWrite(LS_KEYS.TERRAIN, arr);
-        loadTerrainFactors(); showNotification('Terrain factor saved', 'success');
+        currentEditingId = null;
+        $('#terrainForm')[0].reset();
+        $('#terrainFormModal').show();
     }
+    
     function editTerrain(id){
-        const arr = lsRead(LS_KEYS.TERRAIN, []); const t = arr.find(x=> x.id===id); if(!t) return;
-        const terrainType = prompt('Terrain Type:', t.terrainType)||t.terrainType;
-        const xFactor = parseFloat(prompt('X Factor:', t.xFactor)||t.xFactor);
-        const tankPsi = prompt('Tank PSI Range', t.tankPsi||'');
-        const apcPsi = prompt('APC PSI Range', t.apcPsi||'');
-        Object.assign(t,{terrainType,xFactor,tankPsi,apcPsi}); lsWrite(LS_KEYS.TERRAIN, arr);
-        loadTerrainFactors(); showNotification('Terrain updated', 'success');
+        currentEditingId = id;
+        const t = lsRead(LS_KEYS.TERRAIN, []).find(x=> x.id===id);
+        if (t){
+            $('#terrainType').val(t.terrainType||'');
+            $('#terrainXFactor').val(t.xFactor||1);
+            $('#terrainTankPsi').val(t.tankPsi||'');
+            $('#terrainApcPsi').val(t.apcPsi||'');
+        }
+        $('#terrainFormModal').show();
     }
+    
     function deleteTerrain(id){
         const arr = lsRead(LS_KEYS.TERRAIN, []); const i = arr.findIndex(x=> x.id===id); if(i<0) return;
         arr.splice(i,1); lsWrite(LS_KEYS.TERRAIN, arr); loadTerrainFactors(); showNotification('Terrain deleted', 'success');
     }
 
     function openProtectionForm() {
-        const forceType = prompt('Force Type (Blue/Red):','Blue')||'Blue';
-        const protectionType = prompt('Protection Type (Berm/Trench/Fortify):','Berm')||'Berm';
-        const prep = prompt('Degree of Prep (Low/Normal/High):','Normal')||'Normal';
-        const factor = parseFloat(prompt('Protection Factor (0-1):','0.5')||'0.5');
-        const obj = { id: localId(), forceType, protectionType, prep, factor };
-        const arr = lsRead(LS_KEYS.PROTECTION, []); arr.push(obj); lsWrite(LS_KEYS.PROTECTION, arr);
-        loadForceProtections(); showNotification('Protection saved', 'success');
+        currentEditingId = null;
+        $('#protectionForm')[0].reset();
+        $('#protectionFormModal').show();
     }
+    
     function editProtection(id){
-        const arr = lsRead(LS_KEYS.PROTECTION, []); const p = arr.find(x=> x.id===id); if(!p) return;
-        const forceType = prompt('Force Type:', p.forceType)||p.forceType;
-        const protectionType = prompt('Protection Type:', p.protectionType)||p.protectionType;
-        const prep = prompt('Degree of Prep (Low/Normal/High):', p.prep||'Normal')||'Normal';
-        const factor = parseFloat(prompt('Protection Factor (0-1):', p.factor)||p.factor);
-        Object.assign(p,{forceType,protectionType,prep,factor}); lsWrite(LS_KEYS.PROTECTION, arr);
-        loadForceProtections(); showNotification('Protection updated', 'success');
+        currentEditingId = id;
+        const p = lsRead(LS_KEYS.PROTECTION, []).find(x=> x.id===id);
+        if (p){
+            $('#protectionForceType').val(p.forceType||'');
+            $('#protectionType').val(p.protectionType||'');
+            $('#protectionPrep').val(p.prep||'Normal');
+            $('#protectionFactor').val(p.factor||0.5);
+        }
+        $('#protectionFormModal').show();
     }
+    
     function deleteProtection(id){
         const arr = lsRead(LS_KEYS.PROTECTION, []); const i = arr.findIndex(x=> x.id===id); if(i<0) return;
         arr.splice(i,1); lsWrite(LS_KEYS.PROTECTION, arr); loadForceProtections(); showNotification('Protection deleted', 'success');
     }
 
-    // Intelligence (local CRUD)
-    function loadIntel(){
-        const data = lsRead(LS_KEYS.INTEL, []);
-        const tbody = $('#intelTableBody');
-        tbody.empty();
-        data.forEach(r=> tbody.append(`
-            <tr>
-                <td>${r.title}</td>
-                <td>${r.summary}</td>
-                <td>${r.priority||'Normal'}</td>
-                <td>
-                    <button class="btn btn-sm btn-primary" onclick="editIntel('${r.id}')">Edit</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteIntel('${r.id}')">Delete</button>
-                </td>
-            </tr>`));
-    }
-    function openIntelForm(){
-        const title = prompt('Intel title:'); if(!title) return;
-        const summary = prompt('Summary:')||'';
-        const priority = prompt('Priority (Low/Normal/High):','Normal')||'Normal';
-        let pos = null; if (confirm('Attach map location? Click OK then click on the map.')){
-            showNotification('Click map to set intel location', 'info');
-            const off = (typeof map!=='undefined')?map:gameMap; if (off && off.once){ off.once('click', (e)=>{ saveIntelWithPos({ id: localId(), title, summary, priority, position:{lat:e.latlng.lat,lng:e.latlng.lng} }); }); return; }
+    // Save Terrain Factor
+    function saveTerrainFactor() {
+        const terrainType = $('#terrainType').val();
+        const xFactor = parseFloat($('#terrainXFactor').val()) || 1;
+        const tankPsi = $('#terrainTankPsi').val() || '';
+        const apcPsi = $('#terrainApcPsi').val() || '';
+
+        if (!terrainType) {
+            showNotification('Please select a terrain type', 'error');
+            return;
         }
-        const obj = { id: localId(), title, summary, priority, position: pos };
-        const arr = lsRead(LS_KEYS.INTEL, []); arr.push(obj); lsWrite(LS_KEYS.INTEL, arr);
-        loadIntel(); showNotification('Intel added', 'success');
-    }
-    function saveIntelWithPos(obj){ const arr = lsRead(LS_KEYS.INTEL, []); arr.push(obj); lsWrite(LS_KEYS.INTEL, arr); loadIntel(); showNotification('Intel added with location', 'success'); }
-    function editIntel(id){
-        const arr = lsRead(LS_KEYS.INTEL, []);
-        const r = arr.find(x=> x.id===id); if(!r) return;
-        const title = prompt('Intel title:', r.title); if(!title) return;
-        const summary = prompt('Summary:', r.summary)||'';
-        const priority = prompt('Priority (Low/Normal/High):', r.priority||'Normal')||'Normal';
-        Object.assign(r,{title,summary,priority}); lsWrite(LS_KEYS.INTEL, arr);
-        loadIntel(); showNotification('Intel updated', 'success');
-    }
-    function deleteIntel(id){
-        const arr = lsRead(LS_KEYS.INTEL, []);
-        const i = arr.findIndex(x=> x.id===id); if(i<0) return;
-        arr.splice(i,1); lsWrite(LS_KEYS.INTEL, arr);
-        loadIntel(); showNotification('Intel deleted', 'success');
+
+        const arr = lsRead(LS_KEYS.TERRAIN, []);
+        
+        if (currentEditingId) {
+            // Edit existing
+            const index = arr.findIndex(x => x.id === currentEditingId);
+            if (index >= 0) {
+                arr[index] = { id: currentEditingId, terrainType, xFactor, tankPsi, apcPsi };
+                showNotification('Terrain factor updated successfully', 'success');
+            }
+        } else {
+            // Add new
+            const obj = { id: localId(), terrainType, xFactor, tankPsi, apcPsi };
+            arr.push(obj);
+            showNotification('Terrain factor saved successfully', 'success');
+        }
+        
+        lsWrite(LS_KEYS.TERRAIN, arr);
+        loadTerrainFactors();
+        closeModal('terrainFormModal');
     }
 
-    // Recon (local CRUD)
-    function loadRecon(){
-        const data = lsRead(LS_KEYS.RECON, []);
-        const tbody = $('#reconTableBody');
-        tbody.empty();
-        data.forEach(r=> tbody.append(`
-            <tr>
-                <td>${r.reconType}</td>
-                <td>${r.description}</td>
-                <td>${r.confidence||'Medium'}</td>
-                <td>
-                    <button class="btn btn-sm btn-primary" onclick="editRecon('${r.id}')">Edit</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteRecon('${r.id}')">Delete</button>
-                </td>
-            </tr>`));
-    }
-    function openReconForm(){
-        const reconType = prompt('Recon type (Patrol/UAV/Sighting):','Patrol')||'Patrol';
-        const description = prompt('Description:')||'';
-        const confidence = prompt('Confidence (Low/Medium/High):','Medium')||'Medium';
-        let pos = null; if (confirm('Attach map location? Click OK then click on the map.')){
-            showNotification('Click map to set recon location', 'info');
-            const off = (typeof map!=='undefined')?map:gameMap; if (off && off.once){ off.once('click', (e)=>{ saveReconWithPos({ id: localId(), reconType, description, confidence, position:{lat:e.latlng.lat,lng:e.latlng.lng} }); }); return; }
+    // Save Force Protection
+    function saveForceProtection() {
+        const forceType = $('#protectionForceType').val();
+        const protectionType = $('#protectionType').val();
+        const prep = $('#protectionPrep').val();
+        const factor = parseFloat($('#protectionFactor').val()) || 0.5;
+
+        if (!forceType || !protectionType || !prep) {
+            showNotification('Please fill in all required fields', 'error');
+            return;
         }
-        const obj = { id: localId(), reconType, description, confidence, position: pos };
-        const arr = lsRead(LS_KEYS.RECON, []); arr.push(obj); lsWrite(LS_KEYS.RECON, arr);
-        loadRecon(); showNotification('Recon entry added', 'success');
-    }
-    function saveReconWithPos(obj){ const arr = lsRead(LS_KEYS.RECON, []); arr.push(obj); lsWrite(LS_KEYS.RECON, arr); loadRecon(); showNotification('Recon added with location', 'success'); }
-    function editRecon(id){
-        const arr = lsRead(LS_KEYS.RECON, []);
-        const r = arr.find(x=> x.id===id); if(!r) return;
-        const reconType = prompt('Recon type:', r.reconType)||r.reconType;
-        const description = prompt('Description:', r.description)||r.description;
-        const confidence = prompt('Confidence (Low/Medium/High):', r.confidence||'Medium')||'Medium';
-        Object.assign(r,{reconType,description,confidence}); lsWrite(LS_KEYS.RECON, arr);
-        loadRecon(); showNotification('Recon updated', 'success');
-    }
-    function deleteRecon(id){
-        const arr = lsRead(LS_KEYS.RECON, []);
-        const i = arr.findIndex(x=> x.id===id); if(i<0) return;
-        arr.splice(i,1); lsWrite(LS_KEYS.RECON, arr);
-        loadRecon(); showNotification('Recon deleted', 'success');
+
+        const arr = lsRead(LS_KEYS.PROTECTION, []);
+        
+        if (currentEditingId) {
+            // Edit existing
+            const index = arr.findIndex(x => x.id === currentEditingId);
+            if (index >= 0) {
+                arr[index] = { id: currentEditingId, forceType, protectionType, prep, factor };
+                showNotification('Force protection updated successfully', 'success');
+            }
+        } else {
+            // Add new
+            const obj = { id: localId(), forceType, protectionType, prep, factor };
+            arr.push(obj);
+            showNotification('Force protection saved successfully', 'success');
+        }
+        
+        lsWrite(LS_KEYS.PROTECTION, arr);
+        loadForceProtections();
+        closeModal('protectionFormModal');
     }
 
     // Export functionality
@@ -3426,12 +3882,6 @@
         list.html(rows.join('') || '<p>No tokens found.</p>');
     }
 
-    function populateBrigadeDropdown(selector){
-        const sel = $(selector);
-        const brigades = lsRead(LS_KEYS.BRIGADES, []);
-        sel.empty(); sel.append('<option value="">(none)</option>');
-        brigades.forEach(b=> sel.append(`<option value="${b.id}">${b.name} (${b.brigadeCode||''})</option>`));
-    }
 
     // Utility functions
     function showNotification(message, type) {
@@ -3893,13 +4343,7 @@
         });
 
         const marker = L.marker([position.lat, position.lng], { icon: icon }).addTo((typeof map!=='undefined')?map:gameMap);
-        marker.bindPopup(`
-            <strong>${unit.unitName}</strong><br>
-            Type: ${unit.unitType}<br>
-            Force: ${unit.forceType}<br>
-            Strength: ${unit.currentStrength}/${unit.maxStrength}<br>
-            Status: ${unit.status}
-        `);
+         // Unit marker click handler removed (no popup required)
 
         unit.mapMarker = marker;
     }
@@ -3915,11 +4359,7 @@
             })
         }).addTo((typeof map!=='undefined')?map:gameMap);
 
-        marker.bindPopup(`
-            <strong>${battle.battleName}</strong><br>
-            Type: ${battle.battleType}<br>
-            Status: ${battle.status}
-        `);
+         // Battle marker click handler removed (no popup required)
 
         battle.mapMarker = marker;
     }
@@ -3936,12 +4376,7 @@
             })
         }).addTo((typeof map!=='undefined')?map:gameMap);
 
-        marker.bindPopup(`
-            <strong>${objective.objectiveName || objective.ObjectiveName}</strong><br>
-            Type: ${objective.objectiveType || objective.ObjectiveType}<br>
-            Assigned to: ${objective.assignedToForce || objective.AssignedToForce}<br>
-            Points: ${objective.pointValue || objective.PointValue}
-        `);
+         // Objective marker click handler removed (no popup required)
 
         objective.mapMarker = marker;
     }
@@ -4482,7 +4917,7 @@
               })
             }).addTo(m);
             t.marker = marker;
-            marker.on('click', function(){ openTokenInfoPopup(t); });
+             marker.on('click', function(){ showTokenDetails(t); });
           });
           updateTokenCount();
         } catch {}
