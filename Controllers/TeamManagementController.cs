@@ -79,7 +79,8 @@ namespace TechWebSol.Controllers
                     Description = request.Description,
                     IsActive = true,
                     CreatedBy = currentUser.FullName,
-                    Category=request.TeamCategory
+                    Category=request.TeamCategory,
+                    TeamTypeId=request.TeamTypeId
                 };
 
                 _context.Teams.Add(team);
@@ -124,6 +125,7 @@ namespace TechWebSol.Controllers
                 team.SubTeamCode = request.SubTeamCode;
                 team.Description = request.Description;
                 team.Category = request.TeamCategory;
+                team.TeamTypeId = request.TeamTypeId;
                 team.UpdatedDate = DateTime.UtcNow;
                 team.UpdatedBy = currentUser.ApplicationUserId;
 
@@ -184,7 +186,7 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var teams = await _context.Teams
+                var teams = await _context.Teams.Include(c=>c.TeamType)
                     .Where(t => t.IsActive)
                     .OrderBy(t => t.Name)
                     .Select(t => new
@@ -197,7 +199,14 @@ namespace TechWebSol.Controllers
                         isActive = t.IsActive,
                         createdAt = t.CreatedDate ?? DateTime.Now,
                         createdByUserName = t.CreatedBy,
-                        category = t.Category
+                        category = t.Category,
+                        teamType = t.TeamType != null ? new
+                        {
+                            id = t.TeamType.Id,
+                            name = t.TeamType.Name,
+                            description = t.TeamType.Description,
+                            teamTypeCode = t.TeamType.TeamTypeCode
+                        } : null
                     })
                     .FirstOrDefaultAsync(c=>c.id==id);
 
@@ -215,7 +224,7 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var teams = await _context.Teams
+                var teams = await _context.Teams.Include(c => c.TeamType)
                     .Where(t => t.IsActive)
                     .OrderBy(t => t.Name)
                     .Select(t => new
@@ -228,7 +237,14 @@ namespace TechWebSol.Controllers
                         isActive = t.IsActive,
                         createdAt = t.CreatedDate ?? DateTime.Now,
                         createdByUserName = t.CreatedBy,
-                        category=t.Category
+                        category=t.Category,
+                        teamType = t.TeamType != null ? new
+                        {
+                            id = t.TeamType.Id,
+                            name = t.TeamType.Name,
+                            description = t.TeamType.Description,
+                            teamTypeCode = t.TeamType.TeamTypeCode
+                        } : null
                     })
                     .ToListAsync();
 

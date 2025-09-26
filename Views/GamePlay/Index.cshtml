@@ -1,7 +1,8 @@
+@inject IUserSessionService _userSessionService;
 @{
+    var currentUser = _userSessionService.GetCurrentUser();
     Layout = "_GamePlayLayout";
 }
-
 <style>
     .team-status-panel {
         max-width: 340px;
@@ -804,41 +805,9 @@
         </div>
             <div class="gameplay-modal-body">
             <div style="display:flex; gap:10px; margin-bottom:8px">
-                <select id="tokenFilterSide" class="form-control" style="max-width:160px">
-                    <option value="">All Sides</option>
-                    <option value="blue-land">Blue</option>
-                    <option value="fox-land">Fox</option>
-                </select>
                 <input id="tokenSearch" class="form-control" placeholder="Search by name..." style="flex:1">
             </div>
             
-            <!-- Token Creation Section -->
-            <div class="token-creation-section" style="border: 1px solid #1f2937; padding: 15px; margin-bottom: 15px; border-radius: 5px;">
-                <h5 style="margin-bottom: 10px; color: #e5e7eb;">Create New Token</h5>
-                <div style="display:flex; gap:10px; align-items:end;">
-                    <div style="flex:1">
-                        <label for="tokenTemplate" style="display:block; margin-bottom:5px; color: #e5e7eb;">Token Group</label>
-                        <select id="tokenTemplate" class="form-control">
-                            <option value="">Select token group...</option>
-                            <option value="Brigade">Brigade unit</option>
-                            <option value="Division Infantry">Div infantry unit</option>
-                            <option value="Armoured">Armored unit</option>
-                            <option value="Artillery">Artillery unit</option>
-                            <option value="Recon">Recon unit</option>
-                            <option value="HQ">HQ</option>
-                            <option value="Supply">Supply</option>
-                        </select>
-                    </div>
-                    <div style="flex:1">
-                        <label for="tokenName" style="display:block; margin-bottom:5px; color: #e5e7eb;">Token Name</label>
-                        <input id="tokenName" class="form-control" placeholder="Enter token name...">
-                    </div>
-                    <button class="btn btn-primary" onclick="createToken()" style="height:38px;">
-                        <i class="fas fa-plus"></i> Create Token
-                    </button>
-                </div>
-                <div id="tokenCreationStatus" style="margin-top: 10px; font-size: 12px; color: #9ca3af;"></div>
-            </div>
             <div id="tokenList" class="data-table-container"></div>
         </div>
         <div class="gameplay-modal-footer">
@@ -2159,12 +2128,74 @@
 
 <script>
     let gameMap;
-    let currentMode = 'fox-land';
+      let currentMode = "@currentUser.TeamType";
     let tokens = [];
     const tokenIdToMarker = {};
     let isFullscreen = false;
 
-    // Token local storage helpers (tokens only)
+    // Token database helpers
+    async function loadTokensFromDatabase() {
+        try {
+            const response = await fetch('/GamePlay/GetTeamTokens');
+            const result = await response.json();
+            
+            if (result.success) {
+                // Convert database tokens to the format expected by the UI
+                return result.tokens.map(token => ({
+                    id: token.id,
+                    name: token.name,
+                    category: token.category || 'Generic',
+                    description: token.description || '',
+                    tokenGroupId: token.tokenGroupId,
+                    tokenGroupName: token.tokenGroupName,
+                    isActive: token.isActive,
+                    isManualToken: token.isManualToken,
+                    lastUsed: token.lastUsed,
+                    usageCount: token.usageCount,
+                    notes: token.notes || '',
+                    createdAt: token.createdAt,
+                    status: 'created', // Default status for database tokens
+                    type: currentMode, // Set based on current mode
+                    position: null // No position initially
+                }));
+            } else {
+                console.error('Failed to load tokens:', result.message);
+                return [];
+            }
+        } catch (error) {
+            console.error('Error loading tokens from database:', error);
+            return [];
+        }
+    }
+
+    // Load tokens from database and add them to the map
+    async function loadTokensAndAddToMap() {
+        try {
+            // Load tokens from database
+            tokens = await loadTokensFromDatabase();
+            const m = (typeof map !== 'undefined') ? map : gameMap;
+            
+            tokens.forEach(t => {
+                // Only add markers for tokens that have positions (placed tokens)
+                if (t.position) {
+                    const marker = L.marker(t.position, {
+                        icon: L.divIcon({
+                            className: 'token-marker ' + (t.type || 'blue-land'),
+                            html: '<i class="fas fa-crosshairs"></i>',
+                            iconSize: [20, 20], iconAnchor: [10, 10]
+                        })
+                    }).addTo(m);
+                    t.marker = marker;
+                    marker.on('click', function(){ showTokenDetails(t); });
+                }
+            });
+            updateTokenCount();
+        } catch (error) {
+            console.error('Error loading tokens and adding to map:', error);
+        }
+    }
+
+    // Token local storage helpers (for backward compatibility)
     const TOKEN_STORE_KEY = 'leaflet_saved_tokens_v1';
     function loadTokensLocal(defaultValue) {
         try { return JSON.parse(localStorage.getItem(TOKEN_STORE_KEY)) || (defaultValue ?? []); } catch { return defaultValue ?? []; }
@@ -2714,49 +2745,6 @@
 
     // Deprecated legacy helper removed: token placement now requires pre-created tokens via placeTokenOnMap()
 
-    function createToken() {
-        const tokenType = $('#tokenTemplate').val();
-        const tokenName = $('#tokenName').val();
-        
-        if (!tokenType) {
-            $('#tokenCreationStatus').text('Please select a token type').css('color', '#ef4444');
-            return;
-        }
-        
-        if (!tokenName || tokenName.trim() === '') {
-            $('#tokenCreationStatus').text('Please enter a token name').css('color', '#ef4444');
-            return;
-        }
-        
-        // Create token data
-        const tokenData = {
-            id: 'token_' + Date.now(),
-            type: currentMode, // 'fox-land' | 'blue-land'
-            category: tokenType,
-            name: tokenName.trim(),
-            notes: '',
-            position: null, // Will be set when placed on map
-            marker: null,   // Will be set when placed on map
-            timestamp: new Date(),
-            status: 'created' // 'created', 'placed', 'assigned'
-        };
-        
-        // Add to tokens array
-        tokens.push(tokenData);
-        saveTokensLocal();
-        
-        // Clear form
-        $('#tokenTemplate').val('');
-        $('#tokenName').val('');
-        
-        // Show success message
-        $('#tokenCreationStatus').text(`Token "${tokenName}" created successfully. Click "Place on Map" to position it.`).css('color', '#10b981');
-        
-        // Refresh token list
-        refreshTokenList();
-        
-        showNotification(`Token "${tokenName}" created successfully`, 'success');
-    }
 
     function placeTokenOnMap(tokenId) {
         const token = tokens.find(t => t.id === tokenId);
@@ -3957,12 +3945,13 @@
         $('body').append(modal);
     }
 
-    function refreshTokenList(){
-        const side = $('#tokenFilterSide').val();
+    async function refreshTokenList(){
         const q = ($('#tokenSearch').val()||'').toLowerCase();
         const list = $('#tokenList');
-        const all = loadTokensLocal([]);
-        const rows = all.filter(t=> (!side || t.type===side) && (!q || (t.name||'').toLowerCase().includes(q)))
+        
+        // Load tokens from database
+        const all = await loadTokensFromDatabase();
+        const rows = all.filter(t=> (!q || (t.name||'').toLowerCase().includes(q)))
             .map(t=> {
                 const status = t.status || 'created';
                 const positionText = t.position ? `${t.position.lat.toFixed(4)}, ${t.position.lng.toFixed(4)}` : 'Not placed';
@@ -3975,6 +3964,7 @@
                         <div style="opacity:.8; font-size: 12px;">
                             <span style="color: ${statusColor};">●</span> ${status.toUpperCase()} | ${t.type} | ${positionText}
                         </div>
+                        ${t.tokenGroupName ? `<div style="opacity:.6; font-size: 11px;">Group: ${t.tokenGroupName}</div>` : ''}
                     </div>
                     <div style="display: flex; gap: 5px;">
                         ${status === 'created' ? `<button class="btn btn-sm btn-primary" onclick="placeTokenOnMap('${t.id}')">Place on Map</button>` : ''}
@@ -5008,23 +4998,8 @@
           const [lng,lat] = f.geometry.coordinates;
           addLabelMarker([lat,lng], (f.properties && f.properties.text) || '');
         });
-        // Tokens (local only)
-        try {
-          tokens = loadTokensLocal([]);
-          const m = (typeof map !== 'undefined') ? map : gameMap;
-          tokens.forEach(t => {
-            const marker = L.marker(t.position, {
-              icon: L.divIcon({
-                className: 'token-marker ' + (t.type || 'blue-land'),
-                html: '<i class="fas fa-crosshairs"></i>',
-                iconSize: [20, 20], iconAnchor: [10, 10]
-              })
-            }).addTo(m);
-            t.marker = marker;
-             marker.on('click', function(){ showTokenDetails(t); });
-          });
-          updateTokenCount();
-        } catch {}
+        // Tokens (load from database)
+        loadTokensAndAddToMap();
 
         refreshVisibility();
         updateMetrics();
