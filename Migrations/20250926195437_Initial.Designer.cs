@@ -12,7 +12,7 @@ using TechWebSol.Data;
 namespace TechWebSol.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250924193629_Initial")]
+    [Migration("20250926195437_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -1421,6 +1421,12 @@ namespace TechWebSol.Migrations
                     b.Property<Guid?>("TeamId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("TeamTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("TeamTypeId1")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("UpdatedBy")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
@@ -1429,6 +1435,8 @@ namespace TechWebSol.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TeamTypeId1");
 
                     b.ToTable("Teams");
                 });
@@ -1480,6 +1488,46 @@ namespace TechWebSol.Migrations
                     b.HasIndex("TokenGroupId");
 
                     b.ToTable("TeamTokenGroupAssignments");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.TeamType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TeamTypes");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.TerrainMobilityFactor", b =>
@@ -2173,6 +2221,15 @@ namespace TechWebSol.Migrations
                         .IsRequired();
 
                     b.Navigation("TokenSignature");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.Team", b =>
+                {
+                    b.HasOne("TechWebSol.Models.TeamType", "TeamType")
+                        .WithMany()
+                        .HasForeignKey("TeamTypeId1");
+
+                    b.Navigation("TeamType");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.TeamTokenGroupAssignment", b =>

@@ -88,17 +88,12 @@ namespace TechWebSol.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Teams",
+                name: "TeamTypes",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    TeamCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    SubTeamCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    Category = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    CreatedByUserId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    CreatedByUserName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
@@ -108,7 +103,7 @@ namespace TechWebSol.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Teams", x => x.Id);
+                    table.PrimaryKey("PK_TeamTypes", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -184,179 +179,33 @@ namespace TechWebSol.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AspNetUsers",
-                columns: table => new
-                {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    FirstName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    LastName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    Designation = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    Department = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    IsOnline = table.Column<bool>(type: "bit", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    LastLoginDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LoginCount = table.Column<int>(type: "int", nullable: false),
-                    UserCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    ModifiedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    TeamCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SubTeamCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    AssignDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    HomeUrl = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: true),
-                    isSuperAdmin = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
-                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    AccessFailedCount = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AspNetUsers", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_AspNetUsers_Teams_TeamId",
-                        column: x => x.TeamId,
-                        principalTable: "Teams",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ForceProtections",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ForceType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    ProtectionType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    DegreeOfPreparation = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    ProtectionFactor = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    Notes = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ForceProtections", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ForceProtections_Teams_TeamId",
-                        column: x => x.TeamId,
-                        principalTable: "Teams",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "TerrainMobilityFactors",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TerrainType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    XFactor = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
-                    TankPSIMin = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    TankPSIMax = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    APCPsimMin = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    APCPsimMax = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TerrainMobilityFactors", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_TerrainMobilityFactors_Teams_TeamId",
-                        column: x => x.TeamId,
-                        principalTable: "Teams",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "TeamTokenGroupAssignments",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TokenGroupId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    AssignedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    AssignedByUserId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    AssignedByUserName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TeamTokenGroupAssignments", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_TeamTokenGroupAssignments_Teams_TeamId",
-                        column: x => x.TeamId,
-                        principalTable: "Teams",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_TeamTokenGroupAssignments_TokenGroups_TokenGroupId",
-                        column: x => x.TokenGroupId,
-                        principalTable: "TokenGroups",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Tokens",
+                name: "Teams",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    TrainingConsistency = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
+                    TeamCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    SubTeamCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     Category = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    IsManualToken = table.Column<bool>(type: "bit", nullable: false),
-                    LastUsed = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UsageCount = table.Column<int>(type: "int", nullable: false),
-                    Notes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
-                    TokenGroupId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    CreatedByUserName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    TeamTypeId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    TeamTypeId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Tokens", x => x.Id);
+                    table.PrimaryKey("PK_Teams", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Tokens_Teams_TeamId",
-                        column: x => x.TeamId,
-                        principalTable: "Teams",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Tokens_TokenGroups_TokenGroupId",
-                        column: x => x.TokenGroupId,
-                        principalTable: "TokenGroups",
+                        name: "FK_Teams_TeamTypes_TeamTypeId1",
+                        column: x => x.TeamTypeId1,
+                        principalTable: "TeamTypes",
                         principalColumn: "Id");
                 });
 
@@ -494,6 +343,301 @@ namespace TechWebSol.Migrations
                         principalTable: "WarGameScenarios",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AspNetUsers",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    LastName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    Designation = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    Department = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    IsOnline = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    LastLoginDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LoginCount = table.Column<int>(type: "int", nullable: false),
+                    UserCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    ModifiedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    TeamCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SubTeamCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AssignDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    HomeUrl = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: true),
+                    isSuperAdmin = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    AccessFailedCount = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AspNetUsers_Teams_TeamId",
+                        column: x => x.TeamId,
+                        principalTable: "Teams",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ForceProtections",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ForceType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ProtectionType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    DegreeOfPreparation = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ProtectionFactor = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    Notes = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ForceProtections", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ForceProtections_Teams_TeamId",
+                        column: x => x.TeamId,
+                        principalTable: "Teams",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TeamTokenGroupAssignments",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TokenGroupId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AssignedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    AssignedByUserId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    AssignedByUserName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TeamTokenGroupAssignments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TeamTokenGroupAssignments_Teams_TeamId",
+                        column: x => x.TeamId,
+                        principalTable: "Teams",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_TeamTokenGroupAssignments_TokenGroups_TokenGroupId",
+                        column: x => x.TokenGroupId,
+                        principalTable: "TokenGroups",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TerrainMobilityFactors",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TerrainType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    XFactor = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    TankPSIMin = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TankPSIMax = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    APCPsimMin = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    APCPsimMax = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TerrainMobilityFactors", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TerrainMobilityFactors_Teams_TeamId",
+                        column: x => x.TeamId,
+                        principalTable: "Teams",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Tokens",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    TrainingConsistency = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Category = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsManualToken = table.Column<bool>(type: "bit", nullable: false),
+                    LastUsed = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UsageCount = table.Column<int>(type: "int", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    TokenGroupId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tokens", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Tokens_Teams_TeamId",
+                        column: x => x.TeamId,
+                        principalTable: "Teams",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Tokens_TokenGroups_TokenGroupId",
+                        column: x => x.TokenGroupId,
+                        principalTable: "TokenGroups",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CombatResults",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    BattleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AttackerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DefenderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CombatType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    AttackerStrength = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    DefenderStrength = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    AttackerLosses = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    DefenderLosses = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TerrainModifier = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ProtectionModifier = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Result = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    CombatTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CombatDetails = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CombatResults", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CombatResults_Battles_BattleId",
+                        column: x => x.BattleId,
+                        principalTable: "Battles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BattleParticipants",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    BattleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UnitDeploymentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Role = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    InitialStrength = table.Column<int>(type: "int", nullable: false),
+                    FinalStrength = table.Column<int>(type: "int", nullable: false),
+                    Casualties = table.Column<int>(type: "int", nullable: false),
+                    CombatEffectiveness = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ProtectionFactor = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ProtectionType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Equipment = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Position = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BattleParticipants", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_BattleParticipants_Battles_BattleId",
+                        column: x => x.BattleId,
+                        principalTable: "Battles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_BattleParticipants_UnitDeployments_UnitDeploymentId",
+                        column: x => x.UnitDeploymentId,
+                        principalTable: "UnitDeployments",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "MovementOrders",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UnitDeploymentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    StartPosition = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EndPosition = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Waypoints = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MovementType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    StartTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    EstimatedArrival = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ActualArrival = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Speed = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Distance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TerrainFactors = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    IssuedByUserId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    IssuedByUserName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    WarGameScenarioId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MovementOrders", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MovementOrders_UnitDeployments_UnitDeploymentId",
+                        column: x => x.UnitDeploymentId,
+                        principalTable: "UnitDeployments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_MovementOrders_WarGameScenarios_WarGameScenarioId",
+                        column: x => x.WarGameScenarioId,
+                        principalTable: "WarGameScenarios",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -669,124 +813,6 @@ namespace TechWebSol.Migrations
                         principalTable: "Tokens",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "CombatResults",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    BattleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    AttackerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    DefenderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CombatType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
-                    AttackerStrength = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    DefenderStrength = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    AttackerLosses = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    DefenderLosses = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    TerrainModifier = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    ProtectionModifier = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    Result = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
-                    CombatTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CombatDetails = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CombatResults", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_CombatResults_Battles_BattleId",
-                        column: x => x.BattleId,
-                        principalTable: "Battles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "BattleParticipants",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    BattleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UnitDeploymentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Role = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    InitialStrength = table.Column<int>(type: "int", nullable: false),
-                    FinalStrength = table.Column<int>(type: "int", nullable: false),
-                    Casualties = table.Column<int>(type: "int", nullable: false),
-                    CombatEffectiveness = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    ProtectionFactor = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    ProtectionType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    Equipment = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Position = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_BattleParticipants", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_BattleParticipants_Battles_BattleId",
-                        column: x => x.BattleId,
-                        principalTable: "Battles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_BattleParticipants_UnitDeployments_UnitDeploymentId",
-                        column: x => x.UnitDeploymentId,
-                        principalTable: "UnitDeployments",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "MovementOrders",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UnitDeploymentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    StartPosition = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    EndPosition = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Waypoints = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    MovementType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    StartTime = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    EstimatedArrival = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    ActualArrival = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Speed = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    Distance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    TerrainFactors = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
-                    IssuedByUserId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    IssuedByUserName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    WarGameScenarioId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_MovementOrders", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_MovementOrders_UnitDeployments_UnitDeploymentId",
-                        column: x => x.UnitDeploymentId,
-                        principalTable: "UnitDeployments",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_MovementOrders_WarGameScenarios_WarGameScenarioId",
-                        column: x => x.WarGameScenarioId,
-                        principalTable: "WarGameScenarios",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -1156,6 +1182,11 @@ namespace TechWebSol.Migrations
                 column: "ScenarioId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Teams_TeamTypeId1",
+                table: "Teams",
+                column: "TeamTypeId1");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_TeamTokenGroupAssignments_TeamId",
                 table: "TeamTokenGroupAssignments",
                 column: "TeamId");
@@ -1301,6 +1332,9 @@ namespace TechWebSol.Migrations
 
             migrationBuilder.DropTable(
                 name: "TokenGroups");
+
+            migrationBuilder.DropTable(
+                name: "TeamTypes");
         }
     }
 }

@@ -111,73 +111,93 @@ namespace TechWebSol.Controllers
         public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid) return View(model);
+
+            try
             {
-                try
+                var userName = model.UserName?.Trim();
+                var password = model.Password ?? string.Empty;
+                var signInResult = await _signInManager.PasswordSignInAsync(userName, password, false, true);
+
+                if (!signInResult.Succeeded)
                 {
-                    var result = await _signInManager.PasswordSignInAsync(model.UserName.Trim(), model.Password, false, lockoutOnFailure: true);
-                    if (result.Succeeded)
-                    {
-                        var user = _Appcontext.Users.AsNoTracking().FirstOrDefault(x => x.UserName == model.UserName.Trim());
-                        if (user != null)
-                        {
-                            _logger.LogInformation("User logged in.");
-
-                            var roles = (
-                                from usr in _Appcontext.Users
-                                join userRole in _Appcontext.UserRoles on usr.Id equals userRole.UserId
-                                join role in _Appcontext.Roles.Where(x => x.ApplicationId == AppConstants.Id) on userRole.RoleId equals role.Id
-                                where usr.UserName == user.UserName
-                                select role
-                            ).AsNoTracking().FirstOrDefault();
-
-
-                            ApplicationUserVM applicaitonUserVM = new ApplicationUserVM
-                            {
-                                ApplicationUserId = user.Id,
-                                UserCode = user.UserCode,
-                                FullName = user.FullName,
-                                RoleName = roles?.Name ?? "User",
-                                DepartmentId = "HR",
-                                DesignationId = "Manager",
-                                TeamId = user.TeamId,
-                            };
-
-                            HttpContext.Session.SetObject<ApplicationUserVM>(SessionKeyName, applicaitonUserVM);
-
-                            if (roles?.Access != null)
-                            {
-                                var MvcControllerInfoAreaList = JsonConvert.DeserializeObject<IEnumerable<ViewModels.MvcControllerInfoArea>>(roles.Access);
-                                RolesList.AddValue(roles.Name, MvcControllerInfoAreaList);
-                            }
-
-                            var ant = await _Appcontext.Users.FirstOrDefaultAsync(x => x.Id == user.Id);
-                            ant.LoginCount += 1;
-                            ant.LastLoginDate = DateTime.Now;
-                            ant.IsOnline = true;
-                            await _Appcontext.SaveChangesAsync();
-
-                            if (returnUrl != null)
-                            {
-                                return Redirect(returnUrl);
-                            }
-                            if (ant.HomeUrl == null)
-                            {
-                                return Redirect("/Home");
-                            }
-                            return Redirect(ant.HomeUrl);
-                        }
-                    }
                     await _signInManager.SignOutAsync();
                     ViewBag.Error = "Invalid username or password.";
+                    return View(model);
                 }
-                catch (Exception e)
+
+                var user = await _Appcontext.Users.AsNoTracking().FirstOrDefaultAsync(x => x.UserName == userName);
+                if (user == null)
                 {
-                    ViewBag.Error = e.Message;
+                    await _signInManager.SignOutAsync();
+                    ViewBag.Error = "Account not found.";
+                    return View(model);
                 }
+
+                _logger.LogInformation("User logged in.");
+
+                string teamTypeCode = null;
+                if (user.TeamId != Guid.Empty)
+                {
+                    var team = await _Appcontext.Teams.Include(t => t.TeamType).AsNoTracking().FirstOrDefaultAsync(t => t.TeamId == user.TeamId);
+                    teamTypeCode = team?.TeamType?.TeamTypeCode;
+                }
+
+                var role = await (
+                    from usr in _Appcontext.Users
+                    join userRole in _Appcontext.UserRoles on usr.Id equals userRole.UserId
+                    join r in _Appcontext.Roles.Where(x => x.ApplicationId == AppConstants.Id) on userRole.RoleId equals r.Id
+                    where usr.UserName == user.UserName
+                    select r
+                ).AsNoTracking().FirstOrDefaultAsync();
+
+                var applicationUserVM = new ApplicationUserVM
+                {
+                    ApplicationUserId = user.Id,
+                    UserCode = user.UserCode,
+                    FullName = user.FullName,
+                    RoleName = role?.Name ?? "User",
+                    DepartmentId = "HR",
+                    DesignationId = "Manager",
+                    TeamId = user.TeamId,
+                    TeamType = teamTypeCode
+                };
+
+                HttpContext.Session.SetObject(SessionKeyName, applicationUserVM);
+
+                if (!string.IsNullOrWhiteSpace(role?.Access))
+                {
+                    try
+                    {
+                        var access = JsonConvert.DeserializeObject<IEnumerable<ViewModels.MvcControllerInfoArea>>(role.Access);
+                        if (access != null) RolesList.AddValue(role.Name, access);
+                    }
+                    catch { }
+                }
+
+                var trackedUser = await _Appcontext.Users.FirstOrDefaultAsync(x => x.Id == user.Id);
+                if (trackedUser != null)
+                {
+                    trackedUser.LoginCount = trackedUser.LoginCount + 1;
+                    trackedUser.LastLoginDate = DateTime.Now;
+                    trackedUser.IsOnline = true;
+                    await _Appcontext.SaveChangesAsync();
+                }
+
+                if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl)) return Redirect(returnUrl);
+                var homeUrl = trackedUser?.HomeUrl;
+                if (!string.IsNullOrWhiteSpace(homeUrl) && Url.IsLocalUrl(homeUrl)) return Redirect(homeUrl);
+                return Redirect("/Home");
             }
-            return View(model);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during login.");
+                ViewBag.Error = "An unexpected error occurred during login.";
+                return View(model);
+            }
         }
+
+
 
         [HttpGet]
         [DisplayName("Account : Permission for Anonymous login")]

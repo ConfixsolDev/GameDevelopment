@@ -61,6 +61,7 @@ namespace TechWebSol.Models
 
         // Foreign key to Team
         public Guid? TeamId { get; set; }
+        public string? TeamTypeCode { get; set; }
 
         // Navigation property
         public virtual Team? Team { get; set; }

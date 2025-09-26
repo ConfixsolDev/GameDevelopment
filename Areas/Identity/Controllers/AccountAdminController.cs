@@ -262,6 +262,8 @@ namespace TechWebSol.Areas.Identity.Controllers
             };
             ViewData["DesignationId"] = "";
             ViewData["SystemUser"] =  "";
+            var teamTypes = await _context.TeamTypes.AsNoTracking().Select(tt => new { tt.Id, tt.Name }).ToListAsync();
+            ViewData["TeamTypeId"] = new SelectList(teamTypes, "Id", "Name");
             return PartialView(registerView);
         }
 
@@ -335,6 +337,8 @@ namespace TechWebSol.Areas.Identity.Controllers
                 }
                 else
                 {
+                    var teamTypes = await _context.TeamTypes.AsNoTracking().Select(tt => new { tt.Id, tt.Name }).ToListAsync();
+                    ViewData["TeamTypeId"] = new SelectList(teamTypes, "Id", "Name");
                     return BadRequest();
                 }
             }
@@ -346,7 +350,7 @@ namespace TechWebSol.Areas.Identity.Controllers
         }
 
         [DisplayName("Admin:  Edit Account Details")]
-        public IActionResult EditRegister(string id)
+        public async Task<IActionResult> EditRegister(string id)
         {
             // Fetch the user details
             var UserDetails = _context.Users.AsNoTracking().FirstOrDefault(c => c.Id == id);
@@ -381,6 +385,8 @@ namespace TechWebSol.Areas.Identity.Controllers
                 UserName = UserDetails.UserName,
                 Designation = UserDetails.Designation,
             };
+            var teamTypes = await _context.TeamTypes.AsNoTracking().Select(tt => new { tt.Id, tt.Name }).ToListAsync();
+            ViewData["TeamTypeId"] = new SelectList(teamTypes, "Id", "Name");
             return PartialView(register);
         }
 

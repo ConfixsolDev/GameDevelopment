@@ -37,6 +37,7 @@ namespace TechWebSol.Data
         public DbSet<MapMarker> MapMarkers { get; set; }
         public DbSet<TokenGroup> TokenGroups { get; set; }
         public DbSet<Team> Teams { get; set; }
+        public DbSet<TeamType> TeamTypes { get; set; }
         public DbSet<TeamTokenGroupAssignment> TeamTokenGroupAssignments { get; set; }
         public DbSet<GameSession> GameSessions { get; set; }
 

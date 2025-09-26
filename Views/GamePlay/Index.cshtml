@@ -3304,6 +3304,7 @@
     function saveTokenArmouredRegiment() {
         const tokenId = $('#armouredRegimentFormModal').data('token-id');
         const brigadeId = $('#armouredRegimentFormModal').data('brigade-id');
+        const editingId = $('#armouredRegimentFormModal').data('editing-id');
         
         if (!tokenId || !brigadeId) {
             showNotification('Missing token or brigade information', 'error');
@@ -3318,42 +3319,75 @@
         
         const forceType = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
         
-        const regiment = {
-            id: 'armoured_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-            name: $('#regimentName').val(),
-            unitCode: $('#regimentCode').val(),
-            forceType: forceType,
-            strength: parseInt($('#regimentStrength').val()) || 0,
-            squadrons: parseInt($('#regimentSquadrons').val()) || 0,
-            tanks: parseInt($('#regimentTanks').val()) || 0,
-            drones: parseInt($('#regimentDrones').val()) || 0,
-            droneTypes: $('#regimentDroneTypes').val() || '',
-            // Equipment & Weapons
-            ATGMS: parseInt($('#regimentATGMS').val()) || 0,
-            Mortars120mm: parseInt($('#regimentMortars120').val()) || 0,
-            HMG: parseInt($('#regimentHMG').val()) || 0,
-            // Mobility Data
-            MarchingSpeedRoads: parseFloat($('#regimentSpeedRoads').val()) || 15,
-            MarchingSpeedCrossCountry: parseFloat($('#regimentSpeedCrossCountry').val()) || 10,
-            CombatAdvanceSpeed: parseFloat($('#regimentCombatAdvance').val()) || 1,
-            // Description
-            Description: $('#regimentDescription').val() || '',
-            brigadeId: brigadeId
-        };
-        
         const regiments = lsRead(`token_${tokenId}_armoured_regiments`, []);
-        regiments.push(regiment);
+        
+        if (editingId) {
+            // Edit existing regiment
+            const index = regiments.findIndex(r => r.id === editingId);
+            if (index >= 0) {
+                regiments[index] = {
+                    id: editingId,
+                    name: $('#regimentName').val(),
+                    unitCode: $('#regimentCode').val(),
+                    forceType: forceType,
+                    strength: parseInt($('#regimentStrength').val()) || 0,
+                    squadrons: parseInt($('#regimentSquadrons').val()) || 0,
+                    tanks: parseInt($('#regimentTanks').val()) || 0,
+                    drones: parseInt($('#regimentDrones').val()) || 0,
+                    droneTypes: $('#regimentDroneTypes').val() || '',
+                    // Equipment & Weapons
+                    ATGMS: parseInt($('#regimentATGMS').val()) || 0,
+                    Mortars120mm: parseInt($('#regimentMortars120').val()) || 0,
+                    HMG: parseInt($('#regimentHMG').val()) || 0,
+                    // Mobility Data
+                    MarchingSpeedRoads: parseFloat($('#regimentSpeedRoads').val()) || 15,
+                    MarchingSpeedCrossCountry: parseFloat($('#regimentSpeedCrossCountry').val()) || 10,
+                    CombatAdvanceSpeed: parseFloat($('#regimentCombatAdvance').val()) || 1,
+                    // Description
+                    Description: $('#regimentDescription').val() || '',
+                    brigadeId: brigadeId
+                };
+                showNotification('Armoured Regiment updated successfully', 'success');
+            }
+        } else {
+            // Add new regiment
+            const regiment = {
+                id: 'armoured_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                name: $('#regimentName').val(),
+                unitCode: $('#regimentCode').val(),
+                forceType: forceType,
+                strength: parseInt($('#regimentStrength').val()) || 0,
+                squadrons: parseInt($('#regimentSquadrons').val()) || 0,
+                tanks: parseInt($('#regimentTanks').val()) || 0,
+                drones: parseInt($('#regimentDrones').val()) || 0,
+                droneTypes: $('#regimentDroneTypes').val() || '',
+                // Equipment & Weapons
+                ATGMS: parseInt($('#regimentATGMS').val()) || 0,
+                Mortars120mm: parseInt($('#regimentMortars120').val()) || 0,
+                HMG: parseInt($('#regimentHMG').val()) || 0,
+                // Mobility Data
+                MarchingSpeedRoads: parseFloat($('#regimentSpeedRoads').val()) || 15,
+                MarchingSpeedCrossCountry: parseFloat($('#regimentSpeedCrossCountry').val()) || 10,
+                CombatAdvanceSpeed: parseFloat($('#regimentCombatAdvance').val()) || 1,
+                // Description
+                Description: $('#regimentDescription').val() || '',
+                brigadeId: brigadeId
+            };
+            regiments.push(regiment);
+            showNotification('Armoured Regiment added successfully', 'success');
+        }
+        
         lsWrite(`token_${tokenId}_armoured_regiments`, regiments);
         
         // Close modal and refresh display
         closeModal('armouredRegimentFormModal');
         loadTokenDataEntryData(tokenId);
-        showNotification('Armoured Regiment added successfully', 'success');
     }
 
     function saveTokenArtilleryRegiment() {
         const tokenId = $('#artilleryRegimentFormModal').data('token-id');
         const brigadeId = $('#artilleryRegimentFormModal').data('brigade-id');
+        const editingId = $('#artilleryRegimentFormModal').data('editing-id');
         
         if (!tokenId || !brigadeId) {
             showNotification('Missing token or brigade information', 'error');
@@ -3368,37 +3402,67 @@
         
         const forceType = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
         
-        const regiment = {
-            id: 'artillery_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-            name: $('#artilleryName').val(),
-            unitCode: $('#artilleryCode').val(),
-            forceType: forceType,
-            strength: parseInt($('#artilleryStrength').val()) || 0,
-            batteries: parseInt($('#artilleryBatteries').val()) || 0,
-            guns: parseInt($('#artilleryGuns').val()) || 0,
-            gunRange: parseFloat($('#artilleryGunRange').val()) || 0,
-            drones: parseInt($('#artilleryDrones').val()) || 0,
-            droneTypes: $('#artilleryDroneTypes').val() || '',
-            // Artillery Equipment
-            GunCaliber: $('#artilleryGunCaliber').val() || '155mm SP',
-            HMG: parseInt($('#artilleryHMG').val()) || 0,
-            // Description
-            Description: $('#artilleryDescription').val() || '',
-            brigadeId: brigadeId
-        };
-        
         const regiments = lsRead(`token_${tokenId}_artillery_regiments`, []);
-        regiments.push(regiment);
+        
+        if (editingId) {
+            // Edit existing regiment
+            const index = regiments.findIndex(r => r.id === editingId);
+            if (index >= 0) {
+                regiments[index] = {
+                    id: editingId,
+                    name: $('#artilleryName').val(),
+                    unitCode: $('#artilleryCode').val(),
+                    forceType: forceType,
+                    strength: parseInt($('#artilleryStrength').val()) || 0,
+                    batteries: parseInt($('#artilleryBatteries').val()) || 0,
+                    guns: parseInt($('#artilleryGuns').val()) || 0,
+                    gunRange: parseFloat($('#artilleryGunRange').val()) || 0,
+                    drones: parseInt($('#artilleryDrones').val()) || 0,
+                    droneTypes: $('#artilleryDroneTypes').val() || '',
+                    // Artillery Equipment
+                    GunCaliber: $('#artilleryGunCaliber').val() || '155mm SP',
+                    HMG: parseInt($('#artilleryHMG').val()) || 0,
+                    // Description
+                    Description: $('#artilleryDescription').val() || '',
+                    brigadeId: brigadeId
+                };
+                showNotification('Artillery Regiment updated successfully', 'success');
+            }
+        } else {
+            // Add new regiment
+            const regiment = {
+                id: 'artillery_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                name: $('#artilleryName').val(),
+                unitCode: $('#artilleryCode').val(),
+                forceType: forceType,
+                strength: parseInt($('#artilleryStrength').val()) || 0,
+                batteries: parseInt($('#artilleryBatteries').val()) || 0,
+                guns: parseInt($('#artilleryGuns').val()) || 0,
+                gunRange: parseFloat($('#artilleryGunRange').val()) || 0,
+                drones: parseInt($('#artilleryDrones').val()) || 0,
+                droneTypes: $('#artilleryDroneTypes').val() || '',
+                // Artillery Equipment
+                GunCaliber: $('#artilleryGunCaliber').val() || '155mm SP',
+                HMG: parseInt($('#artilleryHMG').val()) || 0,
+                // Description
+                Description: $('#artilleryDescription').val() || '',
+                brigadeId: brigadeId
+            };
+            regiments.push(regiment);
+            showNotification('Artillery Regiment added successfully', 'success');
+        }
+        
         lsWrite(`token_${tokenId}_artillery_regiments`, regiments);
         
         // Close modal and refresh display
         closeModal('artilleryRegimentFormModal');
         loadTokenDataEntryData(tokenId);
-        showNotification('Artillery Regiment added successfully', 'success');
     }
 
     function saveTokenIntelligence() {
         const tokenId = $('#intelligenceFormModal').data('token-id');
+        const editingId = $('#intelligenceFormModal').data('editing-id');
+        
         if (!tokenId) {
             showNotification('No token selected', 'error');
             return;
@@ -3410,26 +3474,47 @@
             return;
         }
         
-        const intel = {
-            id: 'intel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-            title: $('#intelTitle').val(),
-            summary: $('#intelSummary').val(),
-            priority: $('#intelPriority').val(),
-            timestamp: new Date().toISOString()
-        };
-        
         const intelligence = lsRead(`token_${tokenId}_intelligence`, []);
-        intelligence.push(intel);
+        
+        if (editingId) {
+            // Edit existing intelligence
+            const index = intelligence.findIndex(i => i.id === editingId);
+            if (index >= 0) {
+                intelligence[index] = {
+                    id: editingId,
+                    title: $('#intelTitle').val(),
+                    source: $('#intelSource').val(),
+                    priority: $('#intelPriority').val(),
+                    description: $('#intelDescription').val(),
+                    timestamp: intelligence[index].timestamp || new Date().toISOString()
+                };
+                showNotification('Intelligence report updated successfully', 'success');
+            }
+        } else {
+            // Add new intelligence
+            const intel = {
+                id: 'intel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                title: $('#intelTitle').val(),
+                source: $('#intelSource').val(),
+                priority: $('#intelPriority').val(),
+                description: $('#intelDescription').val(),
+                timestamp: new Date().toISOString()
+            };
+            intelligence.push(intel);
+            showNotification('Intelligence report added successfully', 'success');
+        }
+        
         lsWrite(`token_${tokenId}_intelligence`, intelligence);
         
         // Close modal and refresh display
         closeModal('intelligenceFormModal');
         loadTokenDataEntryData(tokenId);
-        showNotification('Intelligence report added successfully', 'success');
     }
 
     function saveTokenRecon() {
         const tokenId = $('#reconFormModal').data('token-id');
+        const editingId = $('#reconFormModal').data('editing-id');
+        
         if (!tokenId) {
             showNotification('No token selected', 'error');
             return;
@@ -3441,22 +3526,41 @@
             return;
         }
         
-        const recon = {
-            id: 'recon_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-            reconType: $('#reconType').val(),
-            description: $('#reconDescription').val(),
-            confidence: $('#reconConfidence').val(),
-            timestamp: new Date().toISOString()
-        };
-        
         const reconData = lsRead(`token_${tokenId}_recon`, []);
-        reconData.push(recon);
+        
+        if (editingId) {
+            // Edit existing recon
+            const index = reconData.findIndex(r => r.id === editingId);
+            if (index >= 0) {
+                reconData[index] = {
+                    id: editingId,
+                    reconType: $('#reconType').val(),
+                    location: $('#reconLocation').val(),
+                    confidence: $('#reconConfidence').val(),
+                    description: $('#reconDescription').val(),
+                    timestamp: reconData[index].timestamp || new Date().toISOString()
+                };
+                showNotification('Recon entry updated successfully', 'success');
+            }
+        } else {
+            // Add new recon
+            const recon = {
+                id: 'recon_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                reconType: $('#reconType').val(),
+                location: $('#reconLocation').val(),
+                confidence: $('#reconConfidence').val(),
+                description: $('#reconDescription').val(),
+                timestamp: new Date().toISOString()
+            };
+            reconData.push(recon);
+            showNotification('Recon entry added successfully', 'success');
+        }
+        
         lsWrite(`token_${tokenId}_recon`, reconData);
         
         // Close modal and refresh display
         closeModal('reconFormModal');
         loadTokenDataEntryData(tokenId);
-        showNotification('Recon entry added successfully', 'success');
     }
 
     function beginTemplatePlacement(){
