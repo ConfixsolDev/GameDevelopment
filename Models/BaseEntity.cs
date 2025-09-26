@@ -21,4 +21,10 @@ namespace TechWebSol.Models
         
         public bool IsActive { get; set; } = true;
     }
+  
+    public class BaseEntityDataEntry:BaseEntity
+    {
+        public Guid? TokenId { get; set; }
+        public Guid? BrigadeId { get; set; }
+    }
 }

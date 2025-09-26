@@ -231,7 +231,7 @@
                 <div class="control-row">
                     <button class="overlay-btn" onclick="manageTokens()">
                         <i class="fas fa-plus"></i>
-                        <span>Manage Tokens</span>
+                        <span>Place Tokens</span>
                     </button>
                     <button class="overlay-btn" onclick="planMovement()">
                         <i class="fas fa-route"></i>
@@ -264,42 +264,10 @@
                 </div>
             </div>
 
-            <div class="overlay-control-group">
-                <h6>Intel & Recon</h6>
-                <div class="control-row">
-                    <button class="overlay-btn" onclick="openIntelForm()">
-                        <i class="fas fa-eye"></i>
-                        <span>Add Intel</span>
-                    </button>
-                    <button class="overlay-btn" onclick="openReconForm()">
-                        <i class="fas fa-binoculars"></i>
-                        <span>Add Recon</span>
-                    </button>
-                </div>
-                <div class="control-row">
-                    <button class="overlay-btn" id="btnToggleIntel" onclick="toggleIntelLayer(this)">
-                        <i class="fas fa-toggle-on"></i>
-                        <span>Toggle Intel</span>
-                    </button>
-                    <button class="overlay-btn" id="btnToggleRecon" onclick="toggleReconLayer(this)">
-                        <i class="fas fa-toggle-on"></i>
-                        <span>Toggle Recon</span>
-                    </button>
-                </div>
-            </div>
-
+        
             <div class="overlay-control-group">
                 <h6>Tools</h6>
-                <div class="control-row">
-                    <button class="overlay-btn" onclick="manageTokens()">
-                        <i class="fas fa-crosshairs"></i>
-                        <span>Tokens</span>
-                    </button>
-                    <button class="overlay-btn" onclick="openDataEntry()">
-                        <i class="fas fa-plus"></i>
-                        <span>Data Entry</span>
-                    </button>
-                </div>
+                
                 <div class="control-row">
                     <button class="overlay-btn" onclick="advanceTime()">
                         <i class="fas fa-forward"></i>
@@ -695,6 +663,388 @@
         </div>
     </div>
     
+</div>
+
+<!-- Token Data Entry Modal -->
+<div id="tokenDataEntryModal" class="gameplay-modal">
+    <div class="gameplay-modal-content large">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-edit"></i> Token Data Entry</h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button class="btn btn-sm btn-danger" onclick="clearTokenData()">
+                    <i class="fas fa-trash"></i> Clear Data
+                </button>
+                <button class="gameplay-modal-close" onclick="closeModal('tokenDataEntryModal')">&times;</button>
+            </div>
+        </div>
+        <div class="gameplay-modal-body">
+            <div class="data-section-header">
+                <h4>Token Information</h4>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="tokenDataEntryName">Token Name</label>
+                    <input type="text" id="tokenDataEntryName" class="form-control" readonly>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="tokenDataEntryId">Token ID</label>
+                    <input type="text" id="tokenDataEntryId" class="form-control" readonly>
+                </div>
+            </div>
+            
+            <!-- Data Management Tabs -->
+            <div class="data-management-tabs">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="switchTokenDataTab('brigades')">
+                        <i class="fas fa-flag"></i> Military Units
+                    </button>
+                    <button class="tab-btn" onclick="switchTokenDataTab('intel')">
+                        <i class="fas fa-eye"></i> Intelligence
+                    </button>
+                    <button class="tab-btn" onclick="switchTokenDataTab('recon')">
+                        <i class="fas fa-binoculars"></i> Recon
+                    </button>
+                </div>
+                
+                <!-- Military Units Tab -->
+                <div id="tokenDataTab-brigades" class="tab-content active">
+                    <div class="data-section-header">
+                        <h4>Military Units</h4>
+                        <button class="btn btn-primary btn-sm" onclick="openTokenBrigadeForm()">
+                            <i class="fas fa-plus"></i> Add Brigade
+                        </button>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Brigade & Units</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tokenBrigadesTableBody">
+                                <!-- Brigades and their units will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Intelligence Tab -->
+                <div id="tokenDataTab-intel" class="tab-content">
+                    <div class="data-section-header">
+                        <h4>Intelligence</h4>
+                        <button class="btn btn-primary btn-sm" onclick="openTokenIntelForm()">
+                            <i class="fas fa-plus"></i> Add Intelligence
+                        </button>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Summary</th>
+                                    <th>Priority</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tokenIntelTableBody">
+                                <!-- Intelligence will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Recon Tab -->
+                <div id="tokenDataTab-recon" class="tab-content">
+                    <div class="data-section-header">
+                        <h4>Recon</h4>
+                        <button class="btn btn-primary btn-sm" onclick="openTokenReconForm()">
+                            <i class="fas fa-plus"></i> Add Recon
+                        </button>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Recon Type</th>
+                                    <th>Description</th>
+                                    <th>Confidence</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tokenReconTableBody">
+                                <!-- Recon will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('tokenDataEntryModal')">Close</button>
+            <button class="gameplay-btn primary" onclick="saveTokenDataEntry()">Save Data</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Unit Modal -->
+<div id="addUnitModal" class="gameplay-modal">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-plus"></i> Add Unit to Brigade</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('addUnitModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <div class="form-group">
+                <label>Select Unit Type:</label>
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                    <button class="btn btn-primary" onclick="addUnitType('infantry')">
+                        <i class="fas fa-user-soldier"></i> Infantry Battalion
+                    </button>
+                    <button class="btn btn-primary" onclick="addUnitType('armoured')">
+                        <i class="fas fa-tank"></i> Armoured Regiment
+                    </button>
+                    <button class="btn btn-primary" onclick="addUnitType('artillery')">
+                        <i class="fas fa-bomb"></i> Artillery Regiment
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('addUnitModal')">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Brigade Form Modal -->
+<div id="brigadeFormModal" class="gameplay-modal">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-flag"></i> Add Brigade</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('brigadeFormModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <form id="brigadeForm">
+                <div class="form-group">
+                    <label for="brigadeName">Brigade Name *</label>
+                    <input type="text" id="brigadeName" name="name" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="brigadeCode">Brigade Code *</label>
+                    <input type="text" id="brigadeCode" name="brigadeCode" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="brigadeStrength">Strength</label>
+                    <input type="number" id="brigadeStrength" name="strength" class="form-control" min="0">
+                </div>
+            </form>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('brigadeFormModal')">Cancel</button>
+            <button class="gameplay-btn primary" onclick="saveTokenBrigade()">Save Brigade</button>
+        </div>
+    </div>
+</div>
+
+<!-- Infantry Battalion Form Modal -->
+<div id="infantryBattalionFormModal" class="gameplay-modal">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-user-soldier"></i> Add Infantry Battalion</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('infantryBattalionFormModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <form id="infantryBattalionForm">
+                <div class="form-group">
+                    <label for="battalionName">Battalion Name *</label>
+                    <input type="text" id="battalionName" name="name" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="battalionStrength">Strength *</label>
+                    <input type="number" id="battalionStrength" name="strength" required class="form-control" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="battalionCompanies">Number of Companies *</label>
+                    <input type="number" id="battalionCompanies" name="companies" required class="form-control" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="battalionTanks">Number of Tanks</label>
+                    <input type="number" id="battalionTanks" name="tanks" class="form-control" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="battalionDrones">Number of Drones</label>
+                    <input type="number" id="battalionDrones" name="drones" class="form-control" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="battalionDroneTypes">Drone Types</label>
+                    <input type="text" id="battalionDroneTypes" name="droneTypes" class="form-control" placeholder="e.g., Surveillance, Attack, Reconnaissance">
+                </div>
+            </form>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('infantryBattalionFormModal')">Cancel</button>
+            <button class="gameplay-btn primary" onclick="saveTokenInfantryBattalion()">Save Battalion</button>
+        </div>
+    </div>
+</div>
+
+<!-- Armoured Regiment Form Modal -->
+<div id="armouredRegimentFormModal" class="gameplay-modal">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-tank"></i> Add Armoured Regiment</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('armouredRegimentFormModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <form id="armouredRegimentForm">
+                <div class="form-group">
+                    <label for="regimentName">Regiment Name *</label>
+                    <input type="text" id="regimentName" name="name" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="regimentStrength">Strength *</label>
+                    <input type="number" id="regimentStrength" name="strength" required class="form-control" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="regimentSquadrons">Number of Squadrons *</label>
+                    <input type="number" id="regimentSquadrons" name="squadrons" required class="form-control" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="regimentTanks">Number of Tanks *</label>
+                    <input type="number" id="regimentTanks" name="tanks" required class="form-control" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="regimentDrones">Number of Drones</label>
+                    <input type="number" id="regimentDrones" name="drones" class="form-control" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="regimentDroneTypes">Drone Types</label>
+                    <input type="text" id="regimentDroneTypes" name="droneTypes" class="form-control" placeholder="e.g., Surveillance, Attack, Reconnaissance">
+                </div>
+            </form>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('armouredRegimentFormModal')">Cancel</button>
+            <button class="gameplay-btn primary" onclick="saveTokenArmouredRegiment()">Save Regiment</button>
+        </div>
+    </div>
+</div>
+
+<!-- Artillery Regiment Form Modal -->
+<div id="artilleryRegimentFormModal" class="gameplay-modal">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-bomb"></i> Add Artillery Regiment</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('artilleryRegimentFormModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <form id="artilleryRegimentForm">
+                <div class="form-group">
+                    <label for="artilleryName">Regiment Name *</label>
+                    <input type="text" id="artilleryName" name="name" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="artilleryStrength">Strength *</label>
+                    <input type="number" id="artilleryStrength" name="strength" required class="form-control" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="artilleryBatteries">Number of Batteries *</label>
+                    <input type="number" id="artilleryBatteries" name="batteries" required class="form-control" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="artilleryGuns">Number of Guns *</label>
+                    <input type="number" id="artilleryGuns" name="guns" required class="form-control" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="artilleryGunRange">Gun Range *</label>
+                    <input type="text" id="artilleryGunRange" name="gunRange" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="artilleryDrones">Number of Drones</label>
+                    <input type="number" id="artilleryDrones" name="drones" class="form-control" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="artilleryDroneTypes">Drone Types</label>
+                    <input type="text" id="artilleryDroneTypes" name="droneTypes" class="form-control" placeholder="e.g., Surveillance, Attack, Reconnaissance">
+                </div>
+            </form>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('artilleryRegimentFormModal')">Cancel</button>
+            <button class="gameplay-btn primary" onclick="saveTokenArtilleryRegiment()">Save Regiment</button>
+        </div>
+    </div>
+</div>
+
+<!-- Intelligence Form Modal -->
+<div id="intelligenceFormModal" class="gameplay-modal">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-eye"></i> Add Intelligence Report</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('intelligenceFormModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <form id="intelligenceForm">
+                <div class="form-group">
+                    <label for="intelTitle">Title *</label>
+                    <input type="text" id="intelTitle" name="title" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="intelSummary">Summary</label>
+                    <textarea id="intelSummary" name="summary" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="intelPriority">Priority</label>
+                    <select id="intelPriority" name="priority" class="form-control">
+                        <option value="Low">Low</option>
+                        <option value="Normal" selected>Normal</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('intelligenceFormModal')">Cancel</button>
+            <button class="gameplay-btn primary" onclick="saveTokenIntelligence()">Save Intelligence</button>
+        </div>
+    </div>
+</div>
+
+<!-- Recon Form Modal -->
+<div id="reconFormModal" class="gameplay-modal">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-binoculars"></i> Add Recon Entry</h3>
+            <button class="gameplay-modal-close" onclick="closeModal('reconFormModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <form id="reconForm">
+                <div class="form-group">
+                    <label for="reconType">Recon Type *</label>
+                    <select id="reconType" name="reconType" required class="form-control">
+                        <option value="Patrol">Patrol</option>
+                        <option value="UAV">UAV</option>
+                        <option value="Sighting">Sighting</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reconDescription">Description</label>
+                    <textarea id="reconDescription" name="description" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="reconConfidence">Confidence</label>
+                    <select id="reconConfidence" name="confidence" class="form-control">
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeModal('reconFormModal')">Cancel</button>
+            <button class="gameplay-btn primary" onclick="saveTokenRecon()">Save Recon</button>
+        </div>
+    </div>
 </div>
 
 <!-- Settings Modal -->
@@ -1395,10 +1745,6 @@
 
     function setupEventListeners() {
         // Map control buttons
-        $('#dataEntryBtn').click(function() {
-            openModal('dataEntryModal');
-        });
-
         $('#tokensBtn').click(function() {
             openModal('tokenManagementModal');
         });
@@ -1471,7 +1817,7 @@
 
             // Attach click => open token info popup
             marker.on('click', function(){
-                openTokenInfoPopup(token);
+                    openTokenInfoPopup(token);
             });
 
             saveTokensLocal();
@@ -1519,8 +1865,6 @@
                 </div>
                 <div style="display:flex;gap:6px;justify-content:flex-end">
                     <button class="btn btn-danger" onclick="window.deleteTokenById('${token.id}')">Delete</button>
-                    ${token.status === 'placed' ? `<button class="btn btn-success" onclick="assignTokenToUnit('${token.id}')">Assign to Unit</button>` : ''}
-                    <button class="btn" onclick="window.deployFromToken('${token.id}')">Deploy</button>
                     <button class="btn btn-primary" onclick="window.saveTokenInfoById('${token.id}')">Save</button>
                 </div>
             </div>`;
@@ -1562,43 +1906,6 @@
         try { token.marker && token.marker.closePopup && token.marker.closePopup(); } catch {}
     }
 
-    // Deploy via token only
-    window.deployFromToken = function(tokenId){
-        const token = tokens.find(t=> t.id===tokenId);
-        if (!token) { showNotification('Token not found', 'error'); return; }
-        if (!currentScenario) { showNotification('Create/Start a scenario first', 'error'); return; }
-        // Choose a unit from local DB
-        const all = [
-            ...lsRead(LS_KEYS.INFANTRY, []).map(u=> ({...u, unitType:'Infantry'})),
-            ...lsRead(LS_KEYS.ARMOURED, []).map(u=> ({...u, unitType:'Armoured'})),
-            ...lsRead(LS_KEYS.ARTILLERY, []).map(u=> ({...u, unitType:'Artillery'}))
-        ];
-        if (!all.length){ showNotification('No units in database', 'error'); return; }
-        const list = all.map((u,i)=> `${i+1}. [${u.unitType}] ${u.name}`).join('\n');
-        const pick = prompt(`Select unit number to deploy at token:\n${list}`, '1');
-        const idx = (parseInt(pick||'1',10)-1);
-        if (isNaN(idx) || idx<0 || idx>=all.length){ showNotification('Invalid selection', 'error'); return; }
-        const u = all[idx];
-        const deployment = {
-            id: localId(),
-            scenarioId: currentScenario.id,
-            unitId: u.id,
-            unitType: u.unitType,
-            unitName: u.name,
-            forceType: u.forceType||'',
-            position: token.position,
-            formation: 'Line',
-            currentStrength: 0,
-            maxStrength: 0,
-            status: 'Deployed',
-            morale: 100
-        };
-        const ds = lsRead(LS_KEYS.DEPLOYMENTS, []); ds.push(deployment); lsWrite(LS_KEYS.DEPLOYMENTS, ds);
-        deployedUnits.push(deployment);
-        addUnitToMap(deployment);
-        showNotification(`Deployed ${u.name} at token`, 'success');
-        try { token.marker && token.marker.closePopup && token.marker.closePopup(); } catch {}
-    }
 
     window.deleteTokenById = function(tokenId){
         // Remove marker from map if present
@@ -1713,6 +2020,12 @@
             return;
         }
         
+        // Validate that token has required data before placement
+        if (!validateTokenData(tokenId)) {
+            showNotification('Token must have at least one Brigade and Intelligence data (Intel, Recon) before placement', 'error');
+            return;
+        }
+        
         // Set up map click mode for this specific token
         currentMapMode = 'place-token';
         window._selectedTokenId = tokenId;
@@ -1725,31 +2038,585 @@
         $('#gameMap').css('cursor', 'crosshair');
     }
 
-    function assignTokenToUnit(tokenId) {
-        const token = tokens.find(t => t.id === tokenId);
-        if (!token) {
-            showNotification('Token not found', 'error');
-            return;
-        }
+    function validateTokenData(tokenId) {
+        // Check if token has brigades (required for military units)
+        const brigades = lsRead(`token_${tokenId}_brigades`, []);
         
-        if (token.status !== 'placed') {
-            showNotification('Token must be placed on the map first', 'error');
-            return;
-        }
+        // Check if token has intelligence data (at least one of: Intel, Recon)
+        const intelligence = lsRead(`token_${tokenId}_intelligence`, []);
+        const recon = lsRead(`token_${tokenId}_recon`, []);
         
-        // Open the token brigade data modal for assignment
-        openTokenBrigadeDataModal(tokenId);
+        const hasIntelligenceData = intelligence.length > 0 || recon.length > 0;
+        
+        // Token can only be placed if it has brigades AND intelligence data
+        return brigades.length > 0 && hasIntelligenceData;
     }
 
-    function editToken(tokenId) {
+    function openTokenDataEntryModal(tokenId) {
         const token = tokens.find(t => t.id === tokenId);
         if (!token) {
             showNotification('Token not found', 'error');
             return;
         }
         
-        // Open token info popup for editing
-        openTokenInfoPopup(token);
+        // Set the token ID for the modal
+        $('#tokenDataEntryModal').data('token-id', tokenId);
+        
+        // Populate token information
+        $('#tokenDataEntryName').val(token.name || '(unnamed)');
+        $('#tokenDataEntryId').val(token.id);
+        
+        // Load existing data for this token
+        loadTokenDataEntryData(tokenId);
+        
+        // Show the modal
+        $('#tokenDataEntryModal').show();
+        
+        showNotification('Data entry for token: ' + token.name, 'success');
+    }
+
+    function loadTokenDataEntryData(tokenId) {
+        // Load token-specific brigades with their units
+        const brigades = lsRead(`token_${tokenId}_brigades`, []);
+        const brigadesTableBody = $('#tokenBrigadesTableBody');
+        brigadesTableBody.empty();
+        
+        brigades.forEach(brigade => {
+            // Get units under this brigade
+            const infantryBattalions = lsRead(`token_${tokenId}_infantry_battalions`, []).filter(unit => unit.brigadeId === brigade.id);
+            const armouredRegiments = lsRead(`token_${tokenId}_armoured_regiments`, []).filter(unit => unit.brigadeId === brigade.id);
+            const artilleryRegiments = lsRead(`token_${tokenId}_artillery_regiments`, []).filter(unit => unit.brigadeId === brigade.id);
+            
+            brigadesTableBody.append(`
+                <tr class="brigade-row" data-brigade-id="${brigade.id}">
+                    <td colspan="6">
+                        <div class="brigade-header" style="background: #2d3748; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <strong>${brigade.name}</strong> (${brigade.brigadeCode}) - ${brigade.forceType}
+                                    <br><small>Strength: ${brigade.strength || 'N/A'}</small>
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-success" onclick="addUnitToBrigade('${tokenId}', '${brigade.id}')">
+                                        <i class="fas fa-plus"></i> Add Unit
+                                    </button>
+                                    <button class="btn btn-sm btn-primary" onclick="editTokenBrigade('${tokenId}', '${brigade.id}')">Edit</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteTokenBrigade('${tokenId}', '${brigade.id}')">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="units-container" style="margin-left: 20px;">
+                            ${infantryBattalions.length > 0 ? `
+                                <div class="unit-type-header"><strong>Infantry Battalions:</strong></div>
+                                ${infantryBattalions.map(unit => `
+                                    <div class="unit-item" style="display: flex; justify-content: space-between; align-items: center; padding: 5px; background: #1a202c; margin: 2px 0; border-radius: 3px;">
+                                        <span>${unit.name} - ${unit.companies} companies, ${unit.strength} strength${unit.drones > 0 ? `, ${unit.drones} drones` : ''}</span>
+                                        <div>
+                                            <button class="btn btn-xs btn-primary" onclick="editTokenInfantryBattalion('${tokenId}', '${unit.id}')">Edit</button>
+                                            <button class="btn btn-xs btn-danger" onclick="deleteTokenInfantryBattalion('${tokenId}', '${unit.id}')">Delete</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            ` : ''}
+                            ${armouredRegiments.length > 0 ? `
+                                <div class="unit-type-header"><strong>Armoured Regiments:</strong></div>
+                                ${armouredRegiments.map(unit => `
+                                    <div class="unit-item" style="display: flex; justify-content: space-between; align-items: center; padding: 5px; background: #1a202c; margin: 2px 0; border-radius: 3px;">
+                                        <span>${unit.name} - ${unit.squadrons} squadrons, ${unit.tanks} tanks${unit.drones > 0 ? `, ${unit.drones} drones` : ''}</span>
+                                        <div>
+                                            <button class="btn btn-xs btn-primary" onclick="editTokenArmouredRegiment('${tokenId}', '${unit.id}')">Edit</button>
+                                            <button class="btn btn-xs btn-danger" onclick="deleteTokenArmouredRegiment('${tokenId}', '${unit.id}')">Delete</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            ` : ''}
+                            ${artilleryRegiments.length > 0 ? `
+                                <div class="unit-type-header"><strong>Artillery Regiments:</strong></div>
+                                ${artilleryRegiments.map(unit => `
+                                    <div class="unit-item" style="display: flex; justify-content: space-between; align-items: center; padding: 5px; background: #1a202c; margin: 2px 0; border-radius: 3px;">
+                                        <span>${unit.name} - ${unit.batteries} batteries, ${unit.guns} guns${unit.drones > 0 ? `, ${unit.drones} drones` : ''}</span>
+                                        <div>
+                                            <button class="btn btn-xs btn-primary" onclick="editTokenArtilleryRegiment('${tokenId}', '${unit.id}')">Edit</button>
+                                            <button class="btn btn-xs btn-danger" onclick="deleteTokenArtilleryRegiment('${tokenId}', '${unit.id}')">Delete</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `);
+        });
+        
+        // Load token-specific intelligence
+        const intelligence = lsRead(`token_${tokenId}_intelligence`, []);
+        const intelTableBody = $('#tokenIntelTableBody');
+        intelTableBody.empty();
+        
+        intelligence.forEach(intel => {
+            intelTableBody.append(`
+                <tr>
+                    <td>${intel.title}</td>
+                    <td>${intel.summary}</td>
+                    <td>${intel.priority || 'Normal'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="editTokenIntel('${tokenId}', '${intel.id}')">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteTokenIntel('${tokenId}', '${intel.id}')">Delete</button>
+                    </td>
+                </tr>
+            `);
+        });
+        
+        // Load token-specific recon
+        const recon = lsRead(`token_${tokenId}_recon`, []);
+        const reconTableBody = $('#tokenReconTableBody');
+        reconTableBody.empty();
+        
+        recon.forEach(reconItem => {
+            reconTableBody.append(`
+                <tr>
+                    <td>${reconItem.reconType}</td>
+                    <td>${reconItem.description}</td>
+                    <td>${reconItem.confidence || 'Medium'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="editTokenRecon('${tokenId}', '${reconItem.id}')">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteTokenRecon('${tokenId}', '${reconItem.id}')">Delete</button>
+                    </td>
+                </tr>
+            `);
+        });
+    }
+
+    function switchTokenDataTab(tabName) {
+        // Hide all tab contents
+        $('.tab-content').removeClass('active');
+        $('.tab-btn').removeClass('active');
+        
+        // Show selected tab content
+        $(`#tokenDataTab-${tabName}`).addClass('active');
+        $(`button[onclick="switchTokenDataTab('${tabName}')"]`).addClass('active');
+    }
+
+    function saveTokenDataEntry() {
+        const tokenId = $('#tokenDataEntryModal').data('token-id');
+        if (!tokenId) {
+            showNotification('No token selected', 'error');
+            return;
+        }
+        
+        // Here you can implement saving logic for the token's associated data
+        showNotification('Token data saved successfully', 'success');
+        closeModal('tokenDataEntryModal');
+    }
+
+    function clearTokenData() {
+        const tokenId = $('#tokenDataEntryModal').data('token-id');
+        if (!tokenId) {
+            showNotification('No token selected', 'error');
+            return;
+        }
+        
+        const token = tokens.find(t => t.id === tokenId);
+        if (!token) {
+            showNotification('Token not found', 'error');
+            return;
+        }
+        
+        // Show confirmation dialog
+        const confirmed = confirm(`Are you sure you want to clear ALL data for token "${token.name}"?\n\nThis will permanently delete:\n- All Brigades\n- All Infantry Battalions\n- All Armoured Regiments\n- All Artillery Regiments\n- All Intelligence reports\n- All Recon data\n\nThis action cannot be undone.`);
+        
+        if (!confirmed) {
+            return;
+        }
+        
+        // Clear all token-specific data
+        lsWrite(`token_${tokenId}_brigades`, []);
+        lsWrite(`token_${tokenId}_infantry_battalions`, []);
+        lsWrite(`token_${tokenId}_armoured_regiments`, []);
+        lsWrite(`token_${tokenId}_artillery_regiments`, []);
+        lsWrite(`token_${tokenId}_intelligence`, []);
+        lsWrite(`token_${tokenId}_recon`, []);
+        
+        // Refresh the data display
+        loadTokenDataEntryData(tokenId);
+        
+        showNotification(`All data cleared for token "${token.name}"`, 'success');
+    }
+
+
+    // Function to add units to a specific brigade
+    function addUnitToBrigade(tokenId, brigadeId) {
+        // Store the brigade ID for the modal
+        $('#addUnitModal').data('token-id', tokenId);
+        $('#addUnitModal').data('brigade-id', brigadeId);
+        
+        // Show the modal
+        $('#addUnitModal').show();
+    }
+
+    // Function to handle unit type selection from modal
+    function addUnitType(unitType) {
+        const tokenId = $('#addUnitModal').data('token-id');
+        const brigadeId = $('#addUnitModal').data('brigade-id');
+        
+        // Close the modal first
+        closeModal('addUnitModal');
+        
+        // Call the appropriate form function
+        switch(unitType) {
+            case 'infantry':
+                openTokenInfantryBattalionForm(tokenId, brigadeId);
+                break;
+            case 'armoured':
+                openTokenArmouredRegimentForm(tokenId, brigadeId);
+                break;
+            case 'artillery':
+                openTokenArtilleryRegimentForm(tokenId, brigadeId);
+                break;
+            default:
+                showNotification('Invalid unit type', 'error');
+        }
+    }
+
+    // Token-specific form functions
+    function openTokenBrigadeForm() {
+        const tokenId = $('#tokenDataEntryModal').data('token-id');
+        if (!tokenId) {
+            showNotification('No token selected', 'error');
+            return;
+        }
+        
+        // Store token ID for the modal
+        $('#brigadeFormModal').data('token-id', tokenId);
+        
+        // Reset form
+        $('#brigadeForm')[0].reset();
+        
+        // Show modal
+        $('#brigadeFormModal').show();
+    }
+
+    function openTokenInfantryBattalionForm(tokenId, brigadeId) {
+        if (!tokenId) {
+            tokenId = $('#tokenDataEntryModal').data('token-id');
+            if (!tokenId) {
+                showNotification('No token selected', 'error');
+                return;
+            }
+        }
+        
+        if (!brigadeId) {
+            showNotification('No brigade selected', 'error');
+            return;
+        }
+        
+        // Store IDs for the modal
+        $('#infantryBattalionFormModal').data('token-id', tokenId);
+        $('#infantryBattalionFormModal').data('brigade-id', brigadeId);
+        
+        // Reset form
+        $('#infantryBattalionForm')[0].reset();
+        
+        // Show modal
+        $('#infantryBattalionFormModal').show();
+    }
+
+    function openTokenArmouredRegimentForm(tokenId, brigadeId) {
+        if (!tokenId) {
+            tokenId = $('#tokenDataEntryModal').data('token-id');
+            if (!tokenId) {
+                showNotification('No token selected', 'error');
+                return;
+            }
+        }
+        
+        if (!brigadeId) {
+            showNotification('No brigade selected', 'error');
+            return;
+        }
+        
+        // Store IDs for the modal
+        $('#armouredRegimentFormModal').data('token-id', tokenId);
+        $('#armouredRegimentFormModal').data('brigade-id', brigadeId);
+        
+        // Reset form
+        $('#armouredRegimentForm')[0].reset();
+        
+        // Show modal
+        $('#armouredRegimentFormModal').show();
+    }
+
+    function openTokenArtilleryRegimentForm(tokenId, brigadeId) {
+        if (!tokenId) {
+            tokenId = $('#tokenDataEntryModal').data('token-id');
+            if (!tokenId) {
+                showNotification('No token selected', 'error');
+                return;
+            }
+        }
+        
+        if (!brigadeId) {
+            showNotification('No brigade selected', 'error');
+            return;
+        }
+        
+        // Store IDs for the modal
+        $('#artilleryRegimentFormModal').data('token-id', tokenId);
+        $('#artilleryRegimentFormModal').data('brigade-id', brigadeId);
+        
+        // Reset form
+        $('#artilleryRegimentForm')[0].reset();
+        
+        // Show modal
+        $('#artilleryRegimentFormModal').show();
+    }
+
+    function openTokenIntelForm() {
+        const tokenId = $('#tokenDataEntryModal').data('token-id');
+        if (!tokenId) {
+            showNotification('No token selected', 'error');
+            return;
+        }
+        
+        // Store token ID for the modal
+        $('#intelligenceFormModal').data('token-id', tokenId);
+        
+        // Reset form
+        $('#intelligenceForm')[0].reset();
+        
+        // Show modal
+        $('#intelligenceFormModal').show();
+    }
+
+    function openTokenReconForm() {
+        const tokenId = $('#tokenDataEntryModal').data('token-id');
+        if (!tokenId) {
+            showNotification('No token selected', 'error');
+            return;
+        }
+        
+        // Store token ID for the modal
+        $('#reconFormModal').data('token-id', tokenId);
+        
+        // Reset form
+        $('#reconForm')[0].reset();
+        
+        // Show modal
+        $('#reconFormModal').show();
+    }
+
+    // Save functions for modals
+    function saveTokenBrigade() {
+        const tokenId = $('#brigadeFormModal').data('token-id');
+        if (!tokenId) {
+            showNotification('No token selected', 'error');
+            return;
+        }
+        
+        const form = $('#brigadeForm')[0];
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
+        const forceType = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
+        
+        const brigade = {
+            id: 'brigade_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+            name: $('#brigadeName').val(),
+            brigadeCode: $('#brigadeCode').val(),
+            forceType: forceType,
+            strength: parseInt($('#brigadeStrength').val()) || 0
+        };
+        
+        const brigades = lsRead(`token_${tokenId}_brigades`, []);
+        brigades.push(brigade);
+        lsWrite(`token_${tokenId}_brigades`, brigades);
+        
+        // Close modal and refresh display
+        closeModal('brigadeFormModal');
+        loadTokenDataEntryData(tokenId);
+        showNotification('Brigade added successfully', 'success');
+    }
+
+    function saveTokenInfantryBattalion() {
+        const tokenId = $('#infantryBattalionFormModal').data('token-id');
+        const brigadeId = $('#infantryBattalionFormModal').data('brigade-id');
+        
+        if (!tokenId || !brigadeId) {
+            showNotification('Missing token or brigade information', 'error');
+            return;
+        }
+        
+        const form = $('#infantryBattalionForm')[0];
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
+        const forceType = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
+        
+        const battalion = {
+            id: 'infantry_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+            name: $('#battalionName').val(),
+            forceType: forceType,
+            strength: parseInt($('#battalionStrength').val()) || 0,
+            companies: parseInt($('#battalionCompanies').val()) || 0,
+            tanks: parseInt($('#battalionTanks').val()) || 0,
+            drones: parseInt($('#battalionDrones').val()) || 0,
+            droneTypes: $('#battalionDroneTypes').val() || '',
+            brigadeId: brigadeId
+        };
+        
+        const battalions = lsRead(`token_${tokenId}_infantry_battalions`, []);
+        battalions.push(battalion);
+        lsWrite(`token_${tokenId}_infantry_battalions`, battalions);
+        
+        // Close modal and refresh display
+        closeModal('infantryBattalionFormModal');
+        loadTokenDataEntryData(tokenId);
+        showNotification('Infantry Battalion added successfully', 'success');
+    }
+
+    function saveTokenArmouredRegiment() {
+        const tokenId = $('#armouredRegimentFormModal').data('token-id');
+        const brigadeId = $('#armouredRegimentFormModal').data('brigade-id');
+        
+        if (!tokenId || !brigadeId) {
+            showNotification('Missing token or brigade information', 'error');
+            return;
+        }
+        
+        const form = $('#armouredRegimentForm')[0];
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
+        const forceType = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
+        
+        const regiment = {
+            id: 'armoured_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+            name: $('#regimentName').val(),
+            forceType: forceType,
+            strength: parseInt($('#regimentStrength').val()) || 0,
+            squadrons: parseInt($('#regimentSquadrons').val()) || 0,
+            tanks: parseInt($('#regimentTanks').val()) || 0,
+            drones: parseInt($('#regimentDrones').val()) || 0,
+            droneTypes: $('#regimentDroneTypes').val() || '',
+            brigadeId: brigadeId
+        };
+        
+        const regiments = lsRead(`token_${tokenId}_armoured_regiments`, []);
+        regiments.push(regiment);
+        lsWrite(`token_${tokenId}_armoured_regiments`, regiments);
+        
+        // Close modal and refresh display
+        closeModal('armouredRegimentFormModal');
+        loadTokenDataEntryData(tokenId);
+        showNotification('Armoured Regiment added successfully', 'success');
+    }
+
+    function saveTokenArtilleryRegiment() {
+        const tokenId = $('#artilleryRegimentFormModal').data('token-id');
+        const brigadeId = $('#artilleryRegimentFormModal').data('brigade-id');
+        
+        if (!tokenId || !brigadeId) {
+            showNotification('Missing token or brigade information', 'error');
+            return;
+        }
+        
+        const form = $('#artilleryRegimentForm')[0];
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
+        const forceType = currentMode === 'fox-land' ? 'Fox' : (currentMode === 'blue-land' ? 'Blue' : 'Fox');
+        
+        const regiment = {
+            id: 'artillery_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+            name: $('#artilleryName').val(),
+            forceType: forceType,
+            strength: parseInt($('#artilleryStrength').val()) || 0,
+            batteries: parseInt($('#artilleryBatteries').val()) || 0,
+            guns: parseInt($('#artilleryGuns').val()) || 0,
+            gunRange: $('#artilleryGunRange').val(),
+            drones: parseInt($('#artilleryDrones').val()) || 0,
+            droneTypes: $('#artilleryDroneTypes').val() || '',
+            brigadeId: brigadeId
+        };
+        
+        const regiments = lsRead(`token_${tokenId}_artillery_regiments`, []);
+        regiments.push(regiment);
+        lsWrite(`token_${tokenId}_artillery_regiments`, regiments);
+        
+        // Close modal and refresh display
+        closeModal('artilleryRegimentFormModal');
+        loadTokenDataEntryData(tokenId);
+        showNotification('Artillery Regiment added successfully', 'success');
+    }
+
+    function saveTokenIntelligence() {
+        const tokenId = $('#intelligenceFormModal').data('token-id');
+        if (!tokenId) {
+            showNotification('No token selected', 'error');
+            return;
+        }
+        
+        const form = $('#intelligenceForm')[0];
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
+        const intel = {
+            id: 'intel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+            title: $('#intelTitle').val(),
+            summary: $('#intelSummary').val(),
+            priority: $('#intelPriority').val(),
+            timestamp: new Date().toISOString()
+        };
+        
+        const intelligence = lsRead(`token_${tokenId}_intelligence`, []);
+        intelligence.push(intel);
+        lsWrite(`token_${tokenId}_intelligence`, intelligence);
+        
+        // Close modal and refresh display
+        closeModal('intelligenceFormModal');
+        loadTokenDataEntryData(tokenId);
+        showNotification('Intelligence report added successfully', 'success');
+    }
+
+    function saveTokenRecon() {
+        const tokenId = $('#reconFormModal').data('token-id');
+        if (!tokenId) {
+            showNotification('No token selected', 'error');
+            return;
+        }
+        
+        const form = $('#reconForm')[0];
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
+        const recon = {
+            id: 'recon_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+            reconType: $('#reconType').val(),
+            description: $('#reconDescription').val(),
+            confidence: $('#reconConfidence').val(),
+            timestamp: new Date().toISOString()
+        };
+        
+        const reconData = lsRead(`token_${tokenId}_recon`, []);
+        reconData.push(recon);
+        lsWrite(`token_${tokenId}_recon`, reconData);
+        
+        // Close modal and refresh display
+        closeModal('reconFormModal');
+        loadTokenDataEntryData(tokenId);
+        showNotification('Recon entry added successfully', 'success');
     }
 
     function beginTemplatePlacement(){
@@ -1759,25 +2626,6 @@
         placeToken();
     }
 
-    function selectToken() {
-        console.log('Select token mode activated');
-        currentMapMode = 'select-token';
-
-        // Change cursor style
-        $('#gameMap').css('cursor', 'pointer');
-
-        // Add click handlers to existing token markers
-        tokens.forEach(token => {
-            if (token.marker) {
-                token.marker.off('click').on('click', function(e) {
-                    selectTokenForDataEntry(token);
-                    e.originalEvent.stopPropagation();
-                });
-            }
-        });
-
-        showNotification('Click on a token to manage its brigade data', 'info');
-    }
 
 
     function openTokenBrigadeDataModal(tokenId) {
@@ -1885,10 +2733,6 @@
         updateTokenCount();
     };
 
-    window.openDataEntry = function() {
-        openModal('dataEntryModal');
-        loadDataManagementData();
-    };
 
     window.manageTokens = function() {
         openModal('tokenManagementModal');
@@ -2574,8 +3418,7 @@
                     </div>
                     <div style="display: flex; gap: 5px;">
                         ${status === 'created' ? `<button class="btn btn-sm btn-primary" onclick="placeTokenOnMap('${t.id}')">Place on Map</button>` : ''}
-                        ${status === 'placed' ? `<button class="btn btn-sm btn-success" onclick="assignTokenToUnit('${t.id}')">Assign to Unit</button>` : ''}
-                        <button class="btn btn-sm btn-info" onclick="editToken('${t.id}')">Edit</button>
+                        ${status === 'created' ? `<button class="btn btn-sm btn-warning" onclick="openTokenDataEntryModal('${t.id}')">Data Entry</button>` : ''}
                         <button class="btn btn-sm btn-danger" onclick="window.deleteTokenById('${t.id}'); refreshTokenList()">Delete</button>
                     </div>
                 </div>`;
