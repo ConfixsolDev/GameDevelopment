@@ -3,12 +3,18 @@
 @{
     var ShortName = "";
     var DisplayName = "";
+    var RoleLabel = "USER";
     var user = await _userManager.GetUserAsync(User);
     if (user != null)
     {
         DisplayName = user.FullName;
         string[] nameParts = user.FullName.Split(' ');
         ShortName = nameParts[0].Substring(0, 1) + nameParts[1].Substring(0, 1);
+        var roles = await _userManager.GetRolesAsync(user);
+        if (roles != null && roles.Count > 0)
+        {
+            RoleLabel = roles[0];
+        }
     }
 }
 <!DOCTYPE html>
@@ -60,10 +66,10 @@
 
     <!-- Main Game Container -->
     <div class="gameplay-container">
-        <!-- Super Admin Button -->
+        <!-- Role Button -->
         <div class="super-admin-button" id="superAdminBtn">
             <i class="fas fa-crown"></i>
-            <span>SUPER ADMIN</span>
+            <span>@RoleLabel.ToUpper()</span>
         </div>
 
         <!-- Main Game Area -->
