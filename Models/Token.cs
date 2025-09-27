@@ -18,12 +18,7 @@ namespace TechWebSol.Models
         // Navigation property
         public virtual TokenSignature? Signature { get; set; }
 
-        // Additional metadata
-        [MaxLength(500)]
-        public string? Description { get; set; }
-
-        [MaxLength(50)]
-        public string? Category { get; set; }
+        // Additional metadata - removed description and category as discussed
 
         public bool IsActive { get; set; } = true;
         public bool IsManualToken { get; set; } = false;
@@ -36,6 +31,22 @@ namespace TechWebSol.Models
         public Guid? TokenGroupId { get; set; }
         public virtual TokenGroup? TokenGroup { get; set; }
         public virtual ICollection<MapMarker> MapMarkers { get; set; } = new List<MapMarker>();
+
+        // Asset properties for military tokens
+        [MaxLength(200)]
+        public string? AssetImagePath { get; set; } // Path to asset image/insignia
+
+        [Column(TypeName = "decimal(8,2)")]
+        public decimal? CoverageRadiusKm { get; set; } // Asset coverage radius
+
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal? CurrentLatitude { get; set; } // Current position
+
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal? CurrentLongitude { get; set; } // Current position
+
+        // Navigation properties
+        public virtual ICollection<TokenAreaCoverage> AreaCoverages { get; set; } = new List<TokenAreaCoverage>();
     }
 
     // DTOs for pattern matching

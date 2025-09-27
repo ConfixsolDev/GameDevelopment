@@ -465,8 +465,6 @@ namespace TechWebSol.Data
 
                         // Update token properties
                         token.Name = request.Name;
-                        token.Description = request.Description;
-                        token.Category = request.Category;
                         token.IsActive = request.IsActive;
 
                         // Update or create signature
@@ -493,8 +491,6 @@ namespace TechWebSol.Data
                         {
                             Id = tokenId,
                             Name = request.Name,
-                            Description = request.Description,
-                            Category = request.Category,
                             IsActive = request.IsActive,
                             UsageCount = 0,
                             TrainingConsistency = 0,
@@ -652,8 +648,6 @@ namespace TechWebSol.Data
                     {
                         Id = t.Id,
                         Name = t.Name,
-                        Description = t.Description,
-                        Category = t.Category,
                         TouchCount = t.Signature?.TouchCount ?? 0,
                         System = "unified", // Now using unified system
                         CreatedAt = t.CreatedDate ?? DateTime.Now,
@@ -835,15 +829,7 @@ namespace TechWebSol.Data
         /// </summary>
         public string Name { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Token description
-        /// </summary>
-        public string? Description { get; set; }
-
-        /// <summary>
-        /// Token category
-        /// </summary>
-        public string? Category { get; set; }
+        // Description and Category removed - using minimal token properties
 
         /// <summary>
         /// Whether token is active

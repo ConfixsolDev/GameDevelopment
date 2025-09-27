@@ -188,8 +188,6 @@ namespace TechWebSol.Controllers
                     {
                         id = t.Id,
                         name = t.Name,
-                        description = t.Description,
-                        category = t.Category,
                         isActive = t.IsActive,
                         createdAt = t.CreatedDate ?? DateTime.Now
                     })

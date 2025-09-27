@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TechWebSol.Models
 {
-    public abstract class MilitaryUnit : BaseEntityDataEntry
+    public abstract class MilitaryUnit : BaseEntity
     {
         [Required]
         [MaxLength(100)]
@@ -28,6 +28,8 @@ namespace TechWebSol.Models
 
         // Link to Brigade
         public Guid? BrigadeId { get; set; }
+
+        public Guid? TokenId { get; set; }
 
         [ForeignKey("BrigadeId")]
         public virtual Brigade Brigade { get; set; }

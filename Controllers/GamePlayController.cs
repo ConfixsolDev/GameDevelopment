@@ -75,10 +75,9 @@ namespace TechWebSol.Controllers
                     {
                         id = t.Id,
                         name = t.Name,
-                        category = t.Category,
-                        description = t.Description,
                         tokenGroupId = t.TokenGroupId,
                         tokenGroupName = t.TokenGroup != null ? t.TokenGroup.Name : null,
+                        assetImagePath = t.AssetImagePath,
                         isActive = t.IsActive,
                         isManualToken = t.IsManualToken,
                         lastUsed = t.LastUsed,

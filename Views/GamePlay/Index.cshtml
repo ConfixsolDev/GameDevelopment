@@ -3,359 +3,7 @@
     var currentUser = _userSessionService.GetCurrentUser();
     Layout = "_GamePlayLayout";
 }
-<style>
-    .team-status-panel {
-        max-width: 340px;
-    }
 
-        .team-status-panel .panel-toggle {
-            margin-left: auto;
-            border: 0;
-            background: transparent;
-            font-size: 18px;
-            cursor: pointer;
-        }
-
-        .team-status-panel .panel-body {
-            margin-top: 12px;
-            transition: grid-template-rows .25s ease, opacity .2s ease;
-            display: grid;
-            grid-template-rows: 1fr;
-            overflow: hidden;
-        }
-
-        .team-status-panel.collapsed .panel-body {
-            grid-template-rows: 0fr;
-            opacity: .0;
-        }
-
-        .team-status-panel .panel-body > div {
-            min-height: 0;
-        }
-
-
-    .team-status-panel2 {
-        max-width: 340px;
-    }
-
-        .team-status-panel2 .panel-toggle {
-            margin-left: auto;
-            border: 0;
-            background: transparent;
-            font-size: 18px;
-            cursor: pointer;
-        }
-
-        .team-status-panel2 .panel-body {
-            margin-top: 12px;
-            transition: grid-template-rows .25s ease, opacity .2s ease;
-            display: grid;
-            grid-template-rows: 1fr;
-            overflow: hidden;
-        }
-
-        .team-status-panel2.collapsed .panel-body {
-            grid-template-rows: 0fr;
-            opacity: .0;
-        }
-
-        .team-status-panel2 .panel-body > div {
-            min-height: 0;
-        }
-
-
-
-    .control-section {
-        border-top: 1px solid rgba(0,0,0,.08);
-        padding-top: 10px;
-        margin-top: 10px;
-    }
-
-        .control-section h6 {
-            margin: 0 0 6px;
-            font-size: 12px;
-            opacity: .8;
-            letter-spacing: .04em;
-            text-transform: uppercase;
-        }
-
-    .control-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        align-items: center;
-    }
-
-    /* Visual feedback for bottom toggles */
-    .control-btn.active {
-        box-shadow: inset 0 0 0 2px rgba(0,0,0,.2);
-        transform: translateY(1px);
-    }
-
-    /* Center the toolbar at the top */
-    .leaflet-top.leaflet-right {
-        left: 50% !important;
-        right: auto !important;
-        transform: translateX(-50%);
-    }
-
-    /* Arrange buttons horizontally */
-    .leaflet-draw-toolbar {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-    }
-
-        /* Optional: spacing between buttons */
-        .leaflet-draw-toolbar a {
-            margin: 0 6px;
-        }
-    /* Improve Data Entry contrast */
-    .gameplay-modal-content {
-        background: #0f172a; /* slate-900 */
-        color: #e5e7eb;      /* gray-200 */
-    }
-    .gameplay-modal-header, .gameplay-modal-footer {
-        background: #111827; /* gray-900 */
-        color: #e5e7eb;
-        border-color: #1f2937;
-    }
-    .data-table thead th { background:#1f2937; color:#e5e7eb; }
-    .data-table tbody tr:nth-child(even){ background:#0b1220; }
-    .data-table tbody tr:nth-child(odd){ background:#0d1628; }
-    .form-control, select.form-control, textarea.form-control {
-        background:#0b1220; color:#e5e7eb; border:1px solid #1f2937;
-    }
-    .btn, .gameplay-btn { background:#334155; color:#e5e7eb; border:1px solid #1f2937; }
-    .btn:hover, .gameplay-btn:hover { background:#475569; }
-    .btn-primary, .gameplay-btn.primary { background:#1d4ed8; border-color:#1e40af; color:white; }
-    .btn-danger, .gameplay-btn.danger { background:#b91c1c; border-color:#7f1d1d; color:white; }
-    label { color:#e5e7eb; }
-    .tab-btn { background:#0b1220; color:#e5e7eb; border:1px solid #1f2937; }
-    .tab-btn.active { background:#1f2937; }
-
-    /* Token Details Panel Styles */
-    .token-details-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.8);
-        z-index: 10000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-    }
-
-    .token-details-panel {
-        background: #1f2937;
-        border: 2px solid #374151;
-        border-radius: 8px;
-        max-width: 800px;
-        max-height: 90vh;
-        width: 100%;
-        overflow-y: auto;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-    }
-
-    .token-details-header {
-        background: #111827;
-        padding: 15px 20px;
-        border-bottom: 2px solid #374151;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .token-details-header h3 {
-        color: #e5e7eb;
-        margin: 0;
-        font-size: 1.2em;
-    }
-
-    .token-details-content {
-        padding: 20px;
-    }
-
-    .token-info-section, .token-data-section {
-        margin-bottom: 25px;
-        padding: 15px;
-        background: #111827;
-        border-radius: 6px;
-        border: 1px solid #374151;
-    }
-
-    .token-info-section h4, .token-data-section h4 {
-        color: #60a5fa;
-        margin: 0 0 15px 0;
-        font-size: 1.1em;
-        border-bottom: 1px solid #374151;
-        padding-bottom: 8px;
-    }
-
-    .info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 10px;
-    }
-
-    .info-item {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
-
-    .info-item label {
-        color: #9ca3af;
-        font-size: 0.9em;
-        font-weight: 600;
-    }
-
-    .info-item span {
-        color: #e5e7eb;
-        font-size: 0.95em;
-    }
-
-    .status-badge {
-        padding: 2px 8px;
-        border-radius: 4px;
-        font-size: 0.8em;
-        font-weight: 600;
-    }
-
-    .status-badge.created { background: #fbbf24; color: #92400e; }
-    .status-badge.placed { background: #10b981; color: #064e3b; }
-
-    .brigade-details {
-        margin-bottom: 15px;
-        padding: 12px;
-        background: #0f172a;
-        border-radius: 4px;
-        border-left: 3px solid #3b82f6;
-    }
-
-    .brigade-details h5 {
-        color: #e5e7eb;
-        margin: 0 0 8px 0;
-        font-size: 1em;
-    }
-
-    .brigade-info {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 10px;
-        flex-wrap: wrap;
-    }
-
-    .brigade-info span {
-        color: #9ca3af;
-        font-size: 0.9em;
-    }
-
-    .units-list {
-        margin-top: 10px;
-    }
-
-    .unit-item {
-        padding: 8px 12px;
-        background: #1e293b;
-        border-radius: 4px;
-        margin-bottom: 6px;
-        border-left: 2px solid #10b981;
-    }
-
-    .unit-name {
-        color: #e5e7eb;
-        font-weight: 600;
-        display: block;
-        margin-bottom: 4px;
-    }
-
-    .unit-details {
-        color: #9ca3af;
-        font-size: 0.85em;
-    }
-
-    .intel-list, .recon-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .intel-item, .recon-item {
-        padding: 12px;
-        background: #1e293b;
-        border-radius: 4px;
-        border-left: 3px solid #f59e0b;
-    }
-
-    .intel-title, .recon-type {
-        color: #e5e7eb;
-        font-weight: 600;
-        display: block;
-        margin-bottom: 4px;
-    }
-
-    .intel-details, .recon-details {
-        color: #9ca3af;
-        font-size: 0.85em;
-        margin-bottom: 6px;
-    }
-
-    .intel-description, .recon-description {
-        color: #d1d5db;
-        font-size: 0.9em;
-        line-height: 1.4;
-    }
-
-    .no-data {
-        color: #6b7280;
-        font-style: italic;
-        text-align: center;
-        padding: 20px;
-    }
-
-    .token-actions {
-        display: flex;
-        gap: 10px;
-        justify-content: flex-end;
-        margin-top: 20px;
-        padding-top: 15px;
-        border-top: 1px solid #374151;
-    }
-
-    .token-actions .btn {
-        padding: 8px 16px;
-        font-size: 0.9em;
-    }
-
-    /* Responsive adjustments */
-    @@media (max-width: 768px) {
-        .token-details-overlay {
-            padding: 10px;
-        }
-        
-        .token-details-panel {
-            max-height: 95vh;
-        }
-        
-        .info-grid {
-            grid-template-columns: 1fr;
-        }
-        
-        .brigade-info {
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .token-actions {
-            flex-direction: column;
-        }
-    }
-</style>
 
 
 <div class="gameplay-container">
@@ -810,8 +458,8 @@
             <button class="gameplay-modal-close" onclick="closeModal('tokenManagementModal')">&times;</button>
         </div>
             <div class="gameplay-modal-body">
-            <div style="display:flex; gap:10px; margin-bottom:8px">
-                <input id="tokenSearch" class="form-control" placeholder="Search by name..." style="flex:1">
+            <div class="search-container">
+                <input id="tokenSearch" class="form-control search-input" placeholder="Search by name...">
             </div>
             
             <div id="tokenList" class="data-table-container"></div>
@@ -823,8 +471,30 @@
     </div>
 </div>
 
+<!-- Token Selection Modal for Placing Tokens -->
+<div id="tokenSelectionModal" class="gameplay-modal">
+    <div class="gameplay-modal-content">
+                <div class="gameplay-modal-header">
+                    <h3><i class="fas fa-crosshairs"></i> Click Token to Place on Map</h3>
+                    <button class="gameplay-modal-close" onclick="closeTokenSelectionModal()">&times;</button>
+                </div>
+        <div class="gameplay-modal-body">
+            <div class="token-selection-search">
+                <input id="tokenSelectionSearch" class="form-control search-input" placeholder="Search tokens...">
+            </div>
+            
+            <div id="tokenSelectionGrid" class="token-selection-grid">
+                <!-- Token cards will be populated here -->
+            </div>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeTokenSelectionModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
 <!-- Token Brigade Data Modal (missing earlier) -->
-<div id="tokenBrigadeDataModal" class="gameplay-modal" style="display:none;">
+<div id="tokenBrigadeDataModal" class="gameplay-modal token-details-overlay">
     <div class="gameplay-modal-content large">
         <div class="gameplay-modal-header">
             <h3><i class="fas fa-crosshairs"></i> Token Brigade Data</h3>
@@ -866,7 +536,7 @@
     <div class="gameplay-modal-content large">
         <div class="gameplay-modal-header">
             <h3><i class="fas fa-edit"></i> Token Data Entry</h3>
-            <div style="display: flex; gap: 10px; align-items: center;">
+            <div class="deployment-options-flex">
                 <button class="btn btn-sm btn-danger" onclick="clearTokenData()">
                     <i class="fas fa-trash"></i> Clear Data
                     </button>
@@ -992,7 +662,7 @@
         <div class="gameplay-modal-body">
             <div class="form-group">
                 <label>Select Unit Type:</label>
-                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                <div class="flex-column-gap">
                     <button class="btn btn-primary" onclick="addUnitType('infantry')">
                         <i class="fas fa-user-soldier"></i> Infantry Battalion
                     </button>
@@ -1086,7 +756,7 @@
                 </div>
                 
                 <!-- Equipment & Weapons Section -->
-                <div class="section-header" style="color: #00ff00; text-decoration: underline; margin: 20px 0 10px 0; border-bottom: 2px solid #ff0000;">
+                <div class="section-header-red">
                     <h4>Equipment & Weapons</h4>
                 </div>
                 <div class="form-row">
@@ -1133,7 +803,7 @@
                 </div>
                 
                 <!-- Mobility Data Section -->
-                <div class="section-header" style="color: #00ff00; text-decoration: underline; margin: 20px 0 10px 0; border-bottom: 2px solid #00ff00;">
+                <div class="section-header-green">
                     <h4>Mobility Data</h4>
                 </div>
                 <div class="form-row">
@@ -1220,7 +890,7 @@
                 </div>
                 
                 <!-- Equipment & Weapons Section -->
-                <div class="section-header" style="color: #00ff00; text-decoration: underline; margin: 20px 0 10px 0; border-bottom: 2px solid #ff0000;">
+                <div class="section-header-red">
                     <h4>Equipment & Weapons</h4>
                 </div>
                 <div class="form-row">
@@ -1239,7 +909,7 @@
                 </div>
                 
                 <!-- Mobility Data Section -->
-                <div class="section-header" style="color: #00ff00; text-decoration: underline; margin: 20px 0 10px 0; border-bottom: 2px solid #00ff00;">
+                <div class="section-header-green">
                     <h4>Mobility Data</h4>
                 </div>
                 <div class="form-row">
@@ -1312,7 +982,7 @@
                 </div>
                 
                 <!-- Artillery Equipment Section -->
-                <div class="section-header" style="color: #00ff00; text-decoration: underline; margin: 20px 0 10px 0; border-bottom: 2px solid #ff0000;">
+                <div class="section-header-red">
                     <h4>Artillery Equipment</h4>
                 </div>
                 <div class="form-row">
@@ -1509,7 +1179,7 @@
 </div>
 
 <!-- Token Details Panel -->
-<div id="tokenDetailsPanel" class="token-details-overlay" style="display: none;">
+<div id="tokenDetailsPanel" class="token-details-overlay">
     <!-- Content will be dynamically inserted here -->
 </div>
 
@@ -1894,7 +1564,7 @@
                     <div class="scenario-info" id="scenarioInfo">
                         <p>No active scenario. Create a new scenario to begin.</p>
                     </div>
-                    <div id="scenarioPoints" style="margin-top:10px; font-size:14px; opacity:.9;">
+                    <div id="scenarioPoints" class="scenario-points">
                         Points: —
                     </div>
                 </div>
@@ -1956,7 +1626,7 @@
                     <!-- Available units will be loaded here -->
                 </div>
             </div>
-            <div class="deployment-step" id="selectPositionStep" style="display: none;">
+            <div class="deployment-step deployment-step-hidden" id="selectPositionStep">
                 <h4>Click on Map to Select Position</h4>
                 <p>Selected Unit: <span id="selectedUnitName"></span></p>
                 <div class="deployment-options">
@@ -1973,7 +1643,7 @@
         </div>
         <div class="gameplay-modal-footer">
             <button class="gameplay-btn" onclick="closeModal('unitDeploymentModal')">Cancel</button>
-            <button class="gameplay-btn primary" id="confirmDeploymentBtn" onclick="confirmDeployment()" style="display: none;">Confirm Deployment</button>
+            <button class="gameplay-btn primary confirm-deployment-hidden" id="confirmDeploymentBtn" onclick="confirmDeployment()">Confirm Deployment</button>
         </div>
     </div>
 </div>
@@ -2014,7 +1684,7 @@
                     </select>
                 </div>
                 <p><strong>Instructions:</strong> Click on the map to set the destination.</p>
-                <div id="movementCalculation" class="calculation-display" style="display: none;">
+                <div id="movementCalculation" class="calculation-display movement-calculation-hidden">
                     <!-- Movement calculation results will show here -->
                 </div>
             </div>
@@ -2154,6 +1824,7 @@
                     description: token.description || '',
                     tokenGroupId: token.tokenGroupId,
                     tokenGroupName: token.tokenGroupName,
+                    assetImagePath: token.assetImagePath, // Add the image path
                     isActive: token.isActive,
                     isManualToken: token.isManualToken,
                     lastUsed: token.lastUsed,
@@ -3034,8 +2705,8 @@
                 brigadesTableBody.append(`
                     <tr class="brigade-row" data-brigade-id="${brigade.id}">
                         <td colspan="6">
-                            <div class="brigade-header" style="background: #2d3748; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div class="brigade-header">
+                                <div class="brigade-header-content">
                                     <div>
                                         <strong>${brigade.name}</strong> (${brigade.brigadeCode}) - ${brigade.forceType}
                                         <br><small>Strength: ${brigade.strength || 'N/A'}</small>
@@ -3049,11 +2720,11 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="units-container" style="margin-left: 20px;">
+                            <div class="units-container">
                                 ${infantryBattalions.length > 0 ? `
                                     <div class="unit-type-header"><strong>Infantry Battalions:</strong></div>
                                     ${infantryBattalions.map(unit => `
-                                        <div class="unit-item" style="display: flex; justify-content: space-between; align-items: center; padding: 5px; background: #1a202c; margin: 2px 0; border-radius: 3px;">
+                                        <div class="unit-item">
                                             <span>${unit.name} - ${unit.companies} companies, ${unit.strength} strength${unit.drones > 0 ? `, ${unit.drones} drones` : ''}</span>
                                             <div>
                                                 <button class="btn btn-xs btn-primary" onclick="editTokenInfantryBattalion('${tokenId}', '${unit.id}')">Edit</button>
@@ -3065,7 +2736,7 @@
                                 ${armouredRegiments.length > 0 ? `
                                     <div class="unit-type-header"><strong>Armoured Regiments:</strong></div>
                                     ${armouredRegiments.map(unit => `
-                                        <div class="unit-item" style="display: flex; justify-content: space-between; align-items: center; padding: 5px; background: #1a202c; margin: 2px 0; border-radius: 3px;">
+                                        <div class="unit-item">
                                             <span>${unit.name} - ${unit.squadrons} squadrons, ${unit.tanks} tanks${unit.drones > 0 ? `, ${unit.drones} drones` : ''}</span>
                                             <div>
                                                 <button class="btn btn-xs btn-primary" onclick="editTokenArmouredRegiment('${tokenId}', '${unit.id}')">Edit</button>
@@ -3077,7 +2748,7 @@
                                 ${artilleryRegiments.length > 0 ? `
                                     <div class="unit-type-header"><strong>Artillery Regiments:</strong></div>
                                     ${artilleryRegiments.map(unit => `
-                                        <div class="unit-item" style="display: flex; justify-content: space-between; align-items: center; padding: 5px; background: #1a202c; margin: 2px 0; border-radius: 3px;">
+                                        <div class="unit-item">
                                             <span>${unit.name} - ${unit.batteries} batteries, ${unit.guns} guns${unit.drones > 0 ? `, ${unit.drones} drones` : ''}</span>
                                             <div>
                                                 <button class="btn btn-xs btn-primary" onclick="editTokenArtilleryRegiment('${tokenId}', '${unit.id}')">Edit</button>
@@ -4027,8 +3698,8 @@
 
     // New separated button functions
     window.openTokenPlacement = function() {
-        openModal('tokenManagementModal');
-        setTimeout(refreshTokenList, 0);
+        openModal('tokenSelectionModal');
+        setTimeout(loadTokenSelectionGrid, 0);
     };
 
     window.openDataEntry = function() {
@@ -4045,6 +3716,342 @@
     window.openSettings = function() {
         openModal('settingsModal');
     };
+
+    // Token Selection Modal Functions
+    let selectedTokenForPlacement = null;
+    let isTokenPlacementMode = false;
+
+    function closeTokenSelectionModal() {
+        closeModal('tokenSelectionModal');
+        selectedTokenForPlacement = null;
+        isTokenPlacementMode = false;
+        $('#gameMap').css('cursor', 'default');
+    }
+
+    async function loadTokenSelectionGrid() {
+        const searchTerm = ($('#tokenSelectionSearch').val() || '').toLowerCase();
+        const grid = $('#tokenSelectionGrid');
+        
+        try {
+            // Load tokens from database
+            const allTokens = await loadTokensFromDatabase();
+            console.log('Loaded tokens:', allTokens); // Debug log
+            
+            const filteredTokens = allTokens.filter(t => 
+                !searchTerm || (t.name || '').toLowerCase().includes(searchTerm)
+            );
+
+            console.log('Filtered tokens:', filteredTokens); // Debug log
+
+            if (filteredTokens.length === 0) {
+                grid.html('<div class="no-tokens-message">No tokens found.</div>');
+                return;
+            }
+
+            const tokenCards = filteredTokens.map(token => {
+                const status = token.status || 'created';
+                const hasImage = token.assetImagePath && token.assetImagePath.trim() !== '';
+                
+                console.log(`Token: ${token.name}, Has Image: ${hasImage}, Image Path: ${token.assetImagePath}`); // Debug log
+                
+                // Determine generic icon based on token name or use default
+                const genericIcon = getGenericTokenIcon(token.name || '');
+                
+                // Image thumbnail with fallback (same approach as AdminToken index)
+                const imageThumbnail = hasImage 
+                    ? `<img src="${token.assetImagePath}" alt="${token.name}" class="token-thumbnail" title="${token.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                       <div class="token-placeholder" style="display:none;">
+                           <i class="${genericIcon}"></i>
+                       </div>`
+                    : `<div class="token-placeholder">
+                           <i class="${genericIcon}"></i>
+                       </div>`;
+                
+                return `
+                    <div class="token-selection-card" onclick="selectTokenForPlacement('${token.id}')" data-token-id="${token.id}">
+                        <div class="token-status-indicator ${status}"></div>
+                        <div class="token-icon">
+                            ${imageThumbnail}
+                        </div>
+                        <div class="token-name" title="${token.name || '(unnamed)'}">${token.name || '(unnamed)'}</div>
+                        <div class="token-category">${getTokenType(token.name || '')}</div>
+                    </div>
+                `;
+            });
+
+            console.log('Generated token cards:', tokenCards.length); // Debug log
+            grid.html(tokenCards.join(''));
+            
+        } catch (error) {
+            console.error('Error loading token selection grid:', error);
+            grid.html('<div class="error-message">Error loading tokens.</div>');
+        }
+    }
+
+    function selectTokenForPlacement(tokenId) {
+        // Remove previous selection
+        $('.token-selection-card').removeClass('selected');
+        
+        // Add selection to clicked token
+        $(`.token-selection-card[data-token-id="${tokenId}"]`).addClass('selected');
+        
+        // Find the token data
+        const token = tokens.find(t => t.id === tokenId);
+        if (!token) {
+            showNotification('Token not found', 'error');
+            return;
+        }
+
+        selectedTokenForPlacement = token;
+        isTokenPlacementMode = true;
+        
+        // Close the modal
+        closeTokenSelectionModal();
+        
+        // Change cursor and show instruction
+        $('#gameMap').css('cursor', 'crosshair');
+        showNotification(`Click on the map to place "${token.name}"`, 'info');
+        
+        // Add visual indicator to cursor
+        addTokenCursorIndicator(token);
+    }
+
+    function addTokenCursorIndicator(token) {
+        // Remove any existing cursor indicator
+        $('.token-cursor-indicator').remove();
+        
+        // Create cursor indicator
+        const genericIcon = getGenericTokenIcon(token.name || '');
+        const indicator = $(`
+            <div class="token-cursor-indicator" style="
+                position: fixed;
+                pointer-events: none;
+                z-index: 9999;
+                width: 32px;
+                height: 32px;
+                background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 14px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                border: 2px solid white;
+            ">
+                ${token.assetImagePath ? 
+                    `<img src="${token.assetImagePath}" class="token-image" onerror="this.className='token-image-hidden'; this.nextElementSibling.className='token-icon-fallback';">
+                     <i class="${genericIcon} token-icon-fallback"></i>` :
+                    `<i class="${genericIcon}"></i>`
+                }
+            </div>
+        `);
+        
+        $('body').append(indicator);
+        
+        // Track mouse movement
+        $(document).on('mousemove.tokenPlacement', function(e) {
+            if (isTokenPlacementMode && selectedTokenForPlacement) {
+                indicator.css({
+                    left: e.pageX + 10,
+                    top: e.pageY - 10
+                });
+            }
+        });
+    }
+
+    // Override the existing placeTokenAtLocation function to handle the new placement mode
+    function placeTokenAtLocation(latlng) {
+        // Handle new token placement mode
+        if (isTokenPlacementMode && selectedTokenForPlacement) {
+            placeSelectedTokenAtLocation(latlng);
+            return;
+        }
+        
+        // Handle existing placement mode
+        if (typeof currentMapMode !== 'undefined' && currentMapMode === 'place-token') {
+            const token = tokens.find(t => t.id === window._selectedTokenId);
+            if (!token) {
+                showNotification('Token not found', 'error');
+                return;
+            }
+            
+            token.position = latlng;
+            token.status = 'placed';
+            
+            // Create marker on map
+            const marker = L.marker(latlng, {
+                icon: L.divIcon({
+                    className: 'token-marker',
+                    html: '<i class="fas fa-crosshairs"></i>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                })
+            }).addTo(gameMap);
+            
+            token.marker = marker;
+            marker.on('click', function() { showTokenDetails(token); });
+            
+            // Reset placement mode
+            currentMapMode = null;
+            window._selectedTokenId = null;
+            $('#gameMap').css('cursor', 'default');
+            
+            showNotification(`Token "${token.name}" placed successfully`, 'success');
+            updateTokenCount();
+            return;
+        }
+    }
+
+    function placeSelectedTokenAtLocation(latlng) {
+        if (!selectedTokenForPlacement) return;
+        
+        const token = selectedTokenForPlacement;
+        
+        // Update token position
+        token.position = latlng;
+        token.status = 'placed';
+        token.currentLatitude = latlng.lat;
+        token.currentLongitude = latlng.lng;
+        
+        // Create marker on map
+        const genericIcon = getGenericTokenIcon(token.name || '');
+        const marker = L.marker(latlng, {
+            icon: L.divIcon({
+                className: 'token-marker',
+                html: token.assetImagePath ? 
+                    `<img src="${token.assetImagePath}" class="token-small-image" onerror="this.className='token-image-hidden'; this.nextElementSibling.className='token-small-icon';"><i class="${genericIcon} token-small-icon"></i>` :
+                    `<i class="${genericIcon}"></i>`,
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            })
+        }).addTo(gameMap);
+        
+        token.marker = marker;
+        marker.on('click', function() { showTokenDetails(token); });
+        
+        // Clean up placement mode
+        cleanupTokenPlacementMode();
+        
+        showNotification(`Token "${token.name}" placed successfully`, 'success');
+        updateTokenCount();
+    }
+
+    function cleanupTokenPlacementMode() {
+        isTokenPlacementMode = false;
+        selectedTokenForPlacement = null;
+        $('#gameMap').css('cursor', 'default');
+        $('.token-cursor-indicator').remove();
+        $(document).off('mousemove.tokenPlacement');
+    }
+
+    // Add search functionality for token selection
+    $(document).on('input', '#tokenSelectionSearch', function() {
+        loadTokenSelectionGrid();
+    });
+
+    // Handle Escape key to cancel token placement
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' && isTokenPlacementMode) {
+            cleanupTokenPlacementMode();
+            showNotification('Token placement cancelled', 'info');
+        }
+    });
+
+    // Helper functions for generic token display
+    function getGenericTokenIcon(tokenName) {
+        const name = tokenName.toLowerCase();
+        
+        // Infantry units
+        if (name.includes('infantry') || name.includes('battalion') || name.includes('soldier')) {
+            return 'fas fa-user-soldier';
+        }
+        // Armored units
+        if (name.includes('armour') || name.includes('armored') || name.includes('tank') || name.includes('regiment')) {
+            return 'fas fa-tank';
+        }
+        // Artillery units
+        if (name.includes('artillery') || name.includes('gun') || name.includes('cannon') || name.includes('mortar')) {
+            return 'fas fa-bomb';
+        }
+        // Aircraft
+        if (name.includes('aircraft') || name.includes('plane') || name.includes('helicopter') || name.includes('drone')) {
+            return 'fas fa-plane';
+        }
+        // Naval units
+        if (name.includes('ship') || name.includes('boat') || name.includes('naval') || name.includes('fleet')) {
+            return 'fas fa-ship';
+        }
+        // Command/Headquarters
+        if (name.includes('command') || name.includes('headquarters') || name.includes('hq') || name.includes('base')) {
+            return 'fas fa-flag';
+        }
+        // Supply/Support
+        if (name.includes('supply') || name.includes('support') || name.includes('logistics') || name.includes('transport')) {
+            return 'fas fa-truck';
+        }
+        // Medical
+        if (name.includes('medical') || name.includes('hospital') || name.includes('ambulance')) {
+            return 'fas fa-ambulance';
+        }
+        // Reconnaissance
+        if (name.includes('recon') || name.includes('scout') || name.includes('surveillance')) {
+            return 'fas fa-eye';
+        }
+        // Engineer
+        if (name.includes('engineer') || name.includes('construction') || name.includes('bridge')) {
+            return 'fas fa-hammer';
+        }
+        // Default military unit icon
+        return 'fas fa-crosshairs';
+    }
+
+    function getTokenType(tokenName) {
+        const name = tokenName.toLowerCase();
+        
+        // Infantry units
+        if (name.includes('infantry') || name.includes('battalion') || name.includes('soldier')) {
+            return 'Infantry';
+        }
+        // Armored units
+        if (name.includes('armour') || name.includes('armored') || name.includes('tank') || name.includes('regiment')) {
+            return 'Armor';
+        }
+        // Artillery units
+        if (name.includes('artillery') || name.includes('gun') || name.includes('cannon') || name.includes('mortar')) {
+            return 'Artillery';
+        }
+        // Aircraft
+        if (name.includes('aircraft') || name.includes('plane') || name.includes('helicopter') || name.includes('drone')) {
+            return 'Aircraft';
+        }
+        // Naval units
+        if (name.includes('ship') || name.includes('boat') || name.includes('naval') || name.includes('fleet')) {
+            return 'Naval';
+        }
+        // Command/Headquarters
+        if (name.includes('command') || name.includes('headquarters') || name.includes('hq') || name.includes('base')) {
+            return 'Command';
+        }
+        // Supply/Support
+        if (name.includes('supply') || name.includes('support') || name.includes('logistics') || name.includes('transport')) {
+            return 'Support';
+        }
+        // Medical
+        if (name.includes('medical') || name.includes('hospital') || name.includes('ambulance')) {
+            return 'Medical';
+        }
+        // Reconnaissance
+        if (name.includes('recon') || name.includes('scout') || name.includes('surveillance')) {
+            return 'Recon';
+        }
+        // Engineer
+        if (name.includes('engineer') || name.includes('construction') || name.includes('bridge')) {
+            return 'Engineer';
+        }
+        // Default
+        return 'Unit';
+    }
 
     // Data Management Functions
     let currentEditingId = null;
@@ -4386,15 +4393,15 @@
                 const statusColor = status === 'created' ? '#f59e0b' : status === 'placed' ? '#10b981' : '#3b82f6';
                 
                 return `
-                <div class="deployed-unit-card" style="display:flex;justify-content:space-between;align-items:center; margin-bottom: 10px; padding: 10px; border: 1px solid #1f2937; border-radius: 5px;">
-                    <div style="flex: 1;">
-                        <div><strong>${t.name||'(unnamed)'}</strong> <span style="opacity:.8">${t.category||'Generic'}</span></div>
-                        <div style="opacity:.8; font-size: 12px;">
+                <div class="deployed-unit-card">
+                    <div class="deployed-unit-info">
+                        <div><strong>${t.name||'(unnamed)'}</strong> <span class="deployed-unit-status">${t.category||'Generic'}</span></div>
+                        <div class="deployed-unit-status">
                             <span style="color: ${statusColor};">●</span> ${status.toUpperCase()} | ${t.type} | ${positionText}
                         </div>
-                                    ${t.tokenGroupName ? `<div style="opacity:.6; font-size: 11px;">Group: ${t.tokenGroupName}</div>` : ''}
+                                    ${t.tokenGroupName ? `<div class="deployed-unit-group">Group: ${t.tokenGroupName}</div>` : ''}
                     </div>
-                    <div style="display: flex; gap: 5px;">
+                    <div class="deployed-unit-actions">
                         ${status === 'created' ? `<button class="btn btn-sm btn-primary" onclick="placeTokenOnMap('${t.id}')">Place on Map</button>` : ''}
                                     ${status === 'created' ? `<button class="btn btn-sm btn-warning" onclick="openTokenDataEntryModal('${t.id}')">Data Entry</button>` : ''}
                         <button class="btn btn-sm btn-danger" onclick="window.deleteTokenById('${t.id}'); refreshTokenList()">Delete</button>

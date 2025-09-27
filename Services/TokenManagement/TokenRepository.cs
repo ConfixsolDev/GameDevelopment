@@ -65,8 +65,6 @@ namespace TechWebSol.Services.TokenManagement
             var request = new UnifiedTokenSaveRequest
             {
                 Name = token.Name,
-                Description = token.Description,
-                Category = token.Category,
                 IsActive = token.IsActive,
                 TokenGroupId = token.TokenGroupId,
                 // Note: TouchPoints would need to be provided separately for pattern creation
@@ -92,8 +90,6 @@ namespace TechWebSol.Services.TokenManagement
             {
                 TokenId = token.Id,
                 Name = token.Name,
-                Description = token.Description,
-                Category = token.Category,
                 IsActive = token.IsActive,
                 TokenGroupId = token.TokenGroupId,
                 // Note: TouchPoints would need to be provided separately for pattern updates
@@ -137,8 +133,7 @@ namespace TechWebSol.Services.TokenManagement
         {
             return await _context.Tokens
                 .Where(t => t.Name.Contains(searchTerm) ||
-                           (t.Description != null && t.Description.Contains(searchTerm)) ||
-                           (t.Category != null && t.Category.Contains(searchTerm)))
+                           (t.Notes != null && t.Notes.Contains(searchTerm)))
                 .Include(t => t.Signature)
                 .OrderByDescending(t => t.CreatedDate)
                 .ToListAsync();

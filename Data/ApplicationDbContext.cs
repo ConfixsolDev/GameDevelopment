@@ -48,6 +48,9 @@ namespace TechWebSol.Data
         public DbSet<TerrainMobilityFactor> TerrainMobilityFactors { get; set; }
         public DbSet<ForceProtection> ForceProtections { get; set; }
         public DbSet<Brigade> Brigades { get; set; }
+        
+        // Token Area Coverage
+        public DbSet<TokenAreaCoverage> TokenAreaCoverages { get; set; }
         public DbSet<Intelligence> Intelligence { get; set; }
         public DbSet<Recon> Recon { get; set; }
 
@@ -213,6 +216,21 @@ namespace TechWebSol.Data
                     .WithMany()
                     .HasForeignKey(e => e.TokenId)
                     .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<TokenAreaCoverage>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Geometry).IsRequired();
+                entity.Property(e => e.CoverageType).HasMaxLength(50);
+                entity.Property(e => e.ShapeType).HasMaxLength(50);
+                entity.Property(e => e.Description).HasMaxLength(500);
+
+                entity.HasOne(e => e.Token)
+                    .WithMany(t => t.AreaCoverages)
+                    .HasForeignKey(e => e.TokenId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<Intelligence>(entity =>

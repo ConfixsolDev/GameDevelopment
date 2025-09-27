@@ -14,15 +14,18 @@ namespace TechWebSol.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IUserSessionService _userSessionService;
         private readonly ILogger<AdminTokenController> _logger;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public AdminTokenController(
             ApplicationDbContext context,
             IUserSessionService userSessionService,
-            ILogger<AdminTokenController> logger)
+            ILogger<AdminTokenController> logger,
+            IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
             _userSessionService = userSessionService;
             _logger = logger;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         /// <summary>
@@ -48,11 +51,13 @@ namespace TechWebSol.Controllers
             {
                 Id = t.Id,
                 Name = t.Name,
-                Category = t.Category,
                 TokenGroupId = t.TokenGroupId,
-                Description = t.Description,
                 IsManualToken = t.IsManualToken,
-                Notes = t.Notes
+                Notes = t.Notes,
+                AssetImagePath = t.AssetImagePath,
+                CoverageRadiusKm = t.CoverageRadiusKm,
+                CurrentLatitude = t.CurrentLatitude,
+                CurrentLongitude = t.CurrentLongitude
             });
         }
 
@@ -67,11 +72,13 @@ namespace TechWebSol.Controllers
 
 
             if (!string.IsNullOrWhiteSpace(req.Name)) token.Name = req.Name.Trim();
-            token.Category = string.IsNullOrWhiteSpace(req.Category) ? null : req.Category.Trim();
             token.TokenGroupId = req.TokenGroupId;
-            token.Description = string.IsNullOrWhiteSpace(req.Description) ? null : req.Description.Trim();
             token.IsManualToken = req.IsManualToken;
             token.Notes = string.IsNullOrWhiteSpace(req.Notes) ? null : req.Notes.Trim();
+            token.AssetImagePath = req.AssetImagePath;
+            token.CoverageRadiusKm = req.CoverageRadiusKm;
+            token.CurrentLatitude = req.CurrentLatitude;
+            token.CurrentLongitude = req.CurrentLongitude;
 
 
             await _context.SaveChangesAsync();
@@ -99,14 +106,17 @@ namespace TechWebSol.Controllers
                 {
                     Id = t.Id,
                     Name = t.Name,
-                    Category = t.Category,
                     TokenGroupId = t.TokenGroupId,
                     TokenGroupName = t.TokenGroup != null ? t.TokenGroup.Name : null,
                     IsActive = t.IsActive,
                     IsManualToken = t.IsManualToken,
                     LastUsed = t.LastUsed,
                     UsageCount = t.UsageCount,
-                    Notes = t.Notes
+                    Notes = t.Notes,
+                    AssetImagePath = t.AssetImagePath,
+                    CoverageRadiusKm = t.CoverageRadiusKm,
+                    CurrentLatitude = t.CurrentLatitude,
+                    CurrentLongitude = t.CurrentLongitude
                 })
                 .ToListAsync();
 
@@ -494,18 +504,37 @@ namespace TechWebSol.Controllers
                 }
 
 
+                // Handle image upload if provided
+                string? imagePath = null;
+                if (model.AssetImage != null && model.AssetImage.Length > 0)
+                {
+                    imagePath = await UploadAssetImage(model.AssetImage, model.Name);
+                }
+
                 var token = new Token
                 {
                     Name = model.Name,
-                    Description = model.Description,
-                    Category = model.Category,
                     TokenGroupId = model.TokenGroupId,
                     IsManualToken = true,
                     IsActive = true,
+                    AssetImagePath = imagePath,
+                    CoverageRadiusKm = model.CoverageRadiusKm,
+                    CurrentLatitude = model.CurrentLatitude,
+                    CurrentLongitude = model.CurrentLongitude
                 };
 
                 _context.Tokens.Add(token);
                 await _context.SaveChangesAsync();
+
+                // Create initial area coverage if position and radius are provided
+                if (model.CurrentLatitude.HasValue && 
+                    model.CurrentLongitude.HasValue && 
+                    model.CoverageRadiusKm.HasValue && 
+                    model.CoverageRadiusKm.Value > 0)
+                {
+                    await CreateInitialAreaCoverage(token.Id, model.CurrentLatitude.Value, 
+                        model.CurrentLongitude.Value, model.CoverageRadiusKm.Value);
+                }
 
                 _logger.LogInformation("Created token: {TokenName} by user {UserId}", 
                     model.Name, currentUser.ApplicationUserId);
@@ -517,6 +546,143 @@ namespace TechWebSol.Controllers
             {
                 _logger.LogError(ex, "Error creating token");
                 ModelState.AddModelError("", "An error occurred while creating the token. Please try again.");
+                return View(model);
+            }
+        }
+
+        /// <summary>
+        /// Edit token GET action
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> Edit(Guid id)
+        {
+            try
+            {
+                var token = await _context.Tokens
+                    .Include(t => t.TokenGroup)
+                    .FirstOrDefaultAsync(t => t.Id == id);
+
+                if (token == null)
+                {
+                    TempData["ErrorMessage"] = "Token not found.";
+                    return RedirectToAction("Index");
+                }
+
+                var availableTokenGroups = await _context.TokenGroups
+                    .Where(g => g.IsActive)
+                    .OrderBy(g => g.Name)
+                    .ToListAsync();
+
+                var model = new CreateTokenViewModel
+                {
+                    Name = token.Name,
+                    TokenGroupId = token.TokenGroupId,
+                    CoverageRadiusKm = token.CoverageRadiusKm,
+                    CurrentLatitude = token.CurrentLatitude,
+                    CurrentLongitude = token.CurrentLongitude,
+                    AvailableTokenGroups = availableTokenGroups,
+                    IsEdit = true
+                };
+
+                ViewData["TokenId"] = id;
+                ViewData["CurrentImagePath"] = token.AssetImagePath;
+                
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading token for edit: {TokenId}", id);
+                TempData["ErrorMessage"] = "Error loading token for editing.";
+                return RedirectToAction("Index");
+            }
+        }
+
+        /// <summary>
+        /// Edit token POST action
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(Guid id, CreateTokenViewModel model)
+        {
+            model.AvailableTokenGroups = await _context.TokenGroups
+                .Where(g => g.IsActive)
+                .OrderBy(g => g.Name)
+                .ToListAsync();
+
+            if (!ModelState.IsValid)
+            {
+                ViewData["TokenId"] = id;
+                return View(model);
+            }
+
+            try
+            {
+                var currentUser = _userSessionService.GetCurrentUser();
+                if (currentUser == null)
+                {
+                    ModelState.AddModelError("", "User not authenticated");
+                    ViewData["TokenId"] = id;
+                    return View(model);
+                }
+
+                var token = await _context.Tokens.FirstOrDefaultAsync(t => t.Id == id);
+                if (token == null)
+                {
+                    TempData["ErrorMessage"] = "Token not found.";
+                    return RedirectToAction("Index");
+                }
+
+                // Handle image upload if new image provided
+                string? imagePath = token.AssetImagePath; // Keep existing image by default
+                if (model.AssetImage != null && model.AssetImage.Length > 0)
+                {
+                    // Delete old image if it exists
+                    if (!string.IsNullOrEmpty(token.AssetImagePath))
+                    {
+                        var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, token.AssetImagePath.TrimStart('/'));
+                        if (System.IO.File.Exists(oldImagePath))
+                        {
+                            System.IO.File.Delete(oldImagePath);
+                        }
+                    }
+                    
+                    imagePath = await UploadAssetImage(model.AssetImage, model.Name);
+                }
+
+                // Update token properties
+                token.Name = model.Name;
+                token.TokenGroupId = model.TokenGroupId;
+                token.AssetImagePath = imagePath;
+                token.CoverageRadiusKm = model.CoverageRadiusKm;
+                
+                // Update position if provided
+                var positionChanged = token.CurrentLatitude != model.CurrentLatitude || 
+                                    token.CurrentLongitude != model.CurrentLongitude;
+                
+                token.CurrentLatitude = model.CurrentLatitude;
+                token.CurrentLongitude = model.CurrentLongitude;
+
+                await _context.SaveChangesAsync();
+
+                // Update coverage area if position or radius changed
+                if (positionChanged && model.CurrentLatitude.HasValue && 
+                    model.CurrentLongitude.HasValue && model.CoverageRadiusKm.HasValue)
+                {
+                    await UpdateTokenCoverageArea(token.Id, model.CurrentLatitude.Value, 
+                        model.CurrentLongitude.Value, model.CoverageRadiusKm.Value);
+                }
+
+                _logger.LogInformation("Updated token: {TokenName} by user {UserId}", 
+                    model.Name, currentUser.ApplicationUserId);
+
+                TempData["SuccessMessage"] = "Token updated successfully!";
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating token: {TokenId}", id);
+                ModelState.AddModelError("", "An error occurred while updating the token. Please try again.");
+                ViewData["TokenId"] = id;
                 return View(model);
             }
         }
@@ -552,6 +718,119 @@ namespace TechWebSol.Controllers
                 return Json(new { success = false, message = "Internal server error" });
             }
         }
+
+        /// <summary>
+        /// Upload asset image
+        /// </summary>
+        private async Task<string> UploadAssetImage(IFormFile imageFile, string assetName)
+        {
+            var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "asset-images");
+            
+            if (!Directory.Exists(uploadPath))
+            {
+                Directory.CreateDirectory(uploadPath);
+            }
+
+            var fileName = $"{Guid.NewGuid()}_{assetName.Replace(" ", "_")}{Path.GetExtension(imageFile.FileName)}";
+            var filePath = Path.Combine(uploadPath, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await imageFile.CopyToAsync(stream);
+            }
+
+            return $"/uploads/asset-images/{fileName}";
+        }
+
+        /// <summary>
+        /// Create initial area coverage for token (simple version without asset type)
+        /// </summary>
+        private async Task CreateInitialAreaCoverage(Guid tokenId, decimal latitude, decimal longitude, decimal radiusKm)
+        {
+            var geometry = CreateCircleGeometry(latitude, longitude, radiusKm);
+
+            var areaCoverage = new TokenAreaCoverage
+            {
+                TokenId = tokenId,
+                Name = "Operational Area",
+                Geometry = System.Text.Json.JsonSerializer.Serialize(geometry),
+                AreaKm2 = (decimal)(Math.PI * Math.Pow((double)radiusKm, 2)),
+                RadiusKm = radiusKm,
+                CoverageType = "Operational",
+                ShapeType = "Circle",
+                IsActive = true,
+                IsDynamic = true,
+                Description = "Initial operational area for token"
+            };
+
+            _context.TokenAreaCoverages.Add(areaCoverage);
+            await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Update token coverage area when position or radius changes
+        /// </summary>
+        private async Task UpdateTokenCoverageArea(Guid tokenId, decimal latitude, decimal longitude, decimal radiusKm)
+        {
+            // Find existing dynamic coverage areas
+            var existingCoverages = await _context.TokenAreaCoverages
+                .Where(tac => tac.TokenId == tokenId && tac.IsDynamic)
+                .ToListAsync();
+
+            // Update or create default operational area
+            var operationalArea = existingCoverages.FirstOrDefault(c => c.CoverageType == "Operational");
+            
+            if (operationalArea != null)
+            {
+                // Update existing area
+                var geometry = CreateCircleGeometry(latitude, longitude, radiusKm);
+                operationalArea.Geometry = System.Text.Json.JsonSerializer.Serialize(geometry);
+                operationalArea.AreaKm2 = (decimal)(Math.PI * Math.Pow((double)radiusKm, 2));
+                operationalArea.RadiusKm = radiusKm;
+                operationalArea.LastUpdated = DateTime.UtcNow;
+            }
+            else
+            {
+                // Create new coverage area
+                await CreateInitialAreaCoverage(tokenId, latitude, longitude, radiusKm);
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Create circle geometry for coverage area
+        /// </summary>
+        private object CreateCircleGeometry(decimal lat, decimal lng, decimal radiusKm)
+        {
+            var radiusInDegrees = radiusKm / 111.32m; // Approximate conversion
+            var coordinates = GenerateCircleCoordinates(lat, lng, radiusInDegrees);
+
+            return new
+            {
+                type = "Polygon",
+                coordinates = new[] { coordinates }
+            };
+        }
+
+        /// <summary>
+        /// Generate coordinates for a circle
+        /// </summary>
+        private double[][] GenerateCircleCoordinates(decimal lat, decimal lng, decimal radiusDegrees)
+        {
+            var coordinates = new List<double[]>();
+            var segments = 32;
+            
+            for (int i = 0; i <= segments; i++)
+            {
+                var angle = (2 * Math.PI * i) / segments;
+                var x = (double)lng + (double)radiusDegrees * Math.Cos(angle);
+                var y = (double)lat + (double)radiusDegrees * Math.Sin(angle);
+                coordinates.Add(new double[] { x, y });
+            }
+            
+            return coordinates.ToArray();
+        }
     }
 
     // ===== REQUEST/RESPONSE MODELS =====
@@ -576,7 +855,6 @@ namespace TechWebSol.Controllers
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public string Category { get; set; }
         public Guid? TokenGroupId { get; set; }
         public string TokenGroupName { get; set; }
         public bool IsActive { get; set; }
@@ -584,6 +862,10 @@ namespace TechWebSol.Controllers
         public DateTime? LastUsed { get; set; }
         public int UsageCount { get; set; }
         public string? Notes { get; set; }
+        public string? AssetImagePath { get; set; }
+        public decimal? CoverageRadiusKm { get; set; }
+        public decimal? CurrentLatitude { get; set; }
+        public decimal? CurrentLongitude { get; set; }
     }
 
 
@@ -591,11 +873,13 @@ namespace TechWebSol.Controllers
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public string? Category { get; set; }
         public Guid? TokenGroupId { get; set; }
-        public string? Description { get; set; }
         public bool IsManualToken { get; set; }
         public string? Notes { get; set; }
+        public string? AssetImagePath { get; set; }
+        public decimal? CoverageRadiusKm { get; set; }
+        public decimal? CurrentLatitude { get; set; }
+        public decimal? CurrentLongitude { get; set; }
     }
 
 
@@ -603,10 +887,12 @@ namespace TechWebSol.Controllers
     {
         public Guid? Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public string? Category { get; set; }
         public Guid? TokenGroupId { get; set; }
-        public string? Description { get; set; }
         public bool IsManualToken { get; set; }
         public string? Notes { get; set; }
+        public string? AssetImagePath { get; set; }
+        public decimal? CoverageRadiusKm { get; set; }
+        public decimal? CurrentLatitude { get; set; }
+        public decimal? CurrentLongitude { get; set; }
     }
 }

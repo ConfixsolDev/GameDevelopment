@@ -25,6 +25,5 @@ namespace TechWebSol.Models
     public class BaseEntityDataEntry:BaseEntity
     {
         public Guid? TokenId { get; set; }
-        public Guid? BrigadeId { get; set; }
     }
 }
