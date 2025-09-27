@@ -1,5 +1,5 @@
 <!-- Token Selection Modal for Placing Tokens -->
-<div id="tokenSelectionModal" class="gameplay-modal">
+<div id="tokenSelectionModal" class="gameplay-modal" style="display: none;">
     <div class="gameplay-modal-content">
         <div class="gameplay-modal-header">
             <h3><i class="fas fa-crosshairs"></i> Click Token to Place on Map</h3>
@@ -8,9 +8,9 @@
         <div class="gameplay-modal-body">
             <div class="token-selection-container">
                 <div class="token-search-container">
-                    <input type="text" id="tokenSearchInput" placeholder="Search tokens..." />
+                    <input type="text" id="tokenSearchInput" placeholder="Search tokens..." class="form-control" />
                 </div>
-                <div class="token-selection-grid" id="tokenSelectionGrid">
+                <div id="tokenSelectionGrid" class="token-selection-grid">
                     <!-- Token options will be populated here -->
                     <div class="loading-tokens">
                         <i class="fas fa-spinner fa-spin"></i>
@@ -24,5 +24,3 @@
         </div>
     </div>
 </div>
-
-

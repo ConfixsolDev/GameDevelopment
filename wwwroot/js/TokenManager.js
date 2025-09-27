@@ -66,6 +66,14 @@ class TokenManager {
         window.deleteTokenById = this.deleteTokenById;
         window.openTokenDataEntryModal = this.openTokenDataEntryModal;
         window.validateTokenData = this.validateTokenData;
+        
+        // Token selection modal functions
+        window.openTokenSelectionModal = this.openTokenSelectionModal.bind(this);
+        window.closeTokenSelectionModal = this.closeTokenSelectionModal.bind(this);
+        window.loadAvailableTokens = this.loadAvailableTokens.bind(this);
+        window.populateTokenSelection = this.populateTokenSelection.bind(this);
+        window.selectTokenForPlacement = this.selectTokenForPlacement.bind(this);
+        window.showTokenError = this.showTokenError.bind(this);
     }
 
     /**
@@ -540,6 +548,285 @@ class TokenManager {
     }
 
     /**
+     * Token Selection Modal Functions
+     */
+
+    /**
+     * Open token selection modal for placement
+     */
+    async openTokenSelectionModal() {
+        console.log('🎯 Opening token selection modal...');
+        
+        try {
+            // Check if modal already exists
+            const existingModal = document.getElementById('tokenSelectionModal');
+            if (existingModal) {
+                console.log('Modal already exists, opening directly...');
+                this.openModal('tokenSelectionModal');
+                if (!this.tokensLoaded) {
+                    this.tokensLoaded = true;
+                    this.loadAvailableTokens();
+                }
+                return;
+            }
+            
+            // Load the modal using lazy loader
+            if (typeof lazyLoader !== 'undefined') {
+                console.log('Loading modal via lazy loader...');
+                await lazyLoader.loadPartial('token-selection-modal', '#modalsContainer', {
+                    onLoaded: () => {
+                        console.log('Modal loaded successfully');
+                        setTimeout(() => {
+                            this.openModal('tokenSelectionModal');
+                            if (!this.tokensLoaded) {
+                                this.tokensLoaded = true;
+                                this.loadAvailableTokens();
+                            }
+                        }, 100);
+                    }
+                });
+            } else {
+                console.error('LazyLoader not available');
+                this.showNotification('LazyLoader not available', 'error');
+            }
+        } catch (error) {
+            console.error('Failed to load token selection modal:', error);
+            this.showNotification('Failed to load token selection modal', 'error');
+        }
+    }
+
+    /**
+     * Close token selection modal
+     */
+    closeTokenSelectionModal() {
+        this.closeModal('tokenSelectionModal');
+        
+        // Reset map cursor if in placement mode
+        if (window.gameMap) {
+            window.gameMap.getContainer().style.cursor = 'default';
+        }
+    }
+
+    /**
+     * Load available tokens for selection
+     */
+    async loadAvailableTokens() {
+        console.log('🎯 Loading available tokens...');
+        
+        // Prevent multiple simultaneous requests
+        if (this.isLoadingTokens) {
+            console.log('⏳ Already loading tokens, skipping...');
+            return;
+        }
+        
+        this.isLoadingTokens = true;
+        
+        try {
+            const response = await fetch('/GamePlay/GetTeamTokens');
+            const data = await response.json();
+            
+            console.log('📋 Token data received:', data);
+            
+            if (data.success) {
+                this.populateTokenSelection(data.tokens || []);
+                console.log('✅ Tokens populated successfully');
+            } else {
+                console.error('❌ Failed to load tokens:', data.message);
+                this.showTokenError('Failed to load tokens: ' + data.message);
+            }
+        } catch (error) {
+            console.error('❌ Error loading tokens:', error);
+            this.showTokenError('Error connecting to server');
+        } finally {
+            this.isLoadingTokens = false;
+            console.log('🏁 Token loading process complete');
+        }
+    }
+
+    /**
+     * Populate token selection grid
+     */
+    populateTokenSelection(tokens) {
+        console.log(`🔢 Populating ${tokens.length} tokens`);
+        const container = document.getElementById('tokenSelectionGrid');
+        
+        if (!container) {
+            console.error('❌ Token selection grid container not found');
+            return;
+        }
+        
+        if (!Array.isArray(tokens) || tokens.length === 0) {
+            container.innerHTML = '<div class="no-tokens">No tokens available for placement</div>';
+            return;
+        }
+        
+        const tokenCards = tokens.map((token, index) => this.createTokenCard(token, index)).join('');
+        container.innerHTML = tokenCards;
+        
+        console.log(`✅ ${tokens.length} tokens displayed in selection grid`);
+    }
+
+    /**
+     * Create token card HTML
+     */
+    createTokenCard(token, index) {
+        const hasImage = token.assetImagePath && token.assetImagePath.trim() !== '';
+        
+        return `
+            <div class="token-option" onclick="tokenManager.selectTokenForPlacement(${JSON.stringify(token).replace(/"/g, '&quot;')})">
+                <div class="token-icon">
+                    ${hasImage ? 
+                        `<img src="${token.assetImagePath}" 
+                             alt="${token.name || 'Token'}" 
+                             style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" />` :
+                        `<i class="${this.getTokenIcon(token)}"></i>`
+                    }
+                </div>
+                <div class="token-info">
+                    <h5>${token.name || 'Unnamed Token'}</h5>
+                    <p>${token.tokenGroupName || 'Token'} ${token.usageCount ? `• Used ${token.usageCount} times` : ''}</p>
+                    <span class="token-status available">Ready to Place</span>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Get fallback background for tokens without images
+     */
+    getFallbackBackground(token, index) {
+        const gradients = [
+            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+            'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+            'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+            'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+            'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)'
+        ];
+        
+        const gradientIndex = index % gradients.length;
+        return `background: ${gradients[gradientIndex]};`;
+    }
+
+    /**
+     * Get token icon based on type/category
+     */
+    getTokenIcon(token) {
+        // Map token types to icons
+        const iconMap = {
+            'infantry': 'fas fa-running',
+            'armor': 'fas fa-shield-alt',
+            'artillery': 'fas fa-crosshairs',
+            'air': 'fas fa-plane',
+            'naval': 'fas fa-ship',
+            'default': 'fas fa-map-marker-alt'
+        };
+        
+        const type = (token.type || token.tokenGroupName || 'default').toLowerCase();
+        return iconMap[type] || iconMap.default;
+    }
+
+    /**
+     * Select token for placement
+     */
+    selectTokenForPlacement(token) {
+        console.log('🎯 Selected token for placement:', token.name);
+        
+        // Store the selected token for placement
+        this.selectedTokenForPlacement = token;
+        
+        // Close the modal
+        this.closeTokenSelectionModal();
+        
+        // Start placement mode using TokenPlacementManager
+        if (this.tokenPlacementManager) {
+            this.tokenPlacementManager.startPlacementMode(token);
+            console.log('💡 Using TokenPlacementManager for token placement');
+        } else {
+            console.warn('⚠️ TokenPlacementManager not available, using fallback');
+            // Fallback to basic placement mode
+            if (window.gameMap) {
+                window.gameMap.getContainer().style.cursor = 'crosshair';
+                this.showNotification(`📢 Click on the map to place ${token.name}`, 'info');
+            }
+        }
+    }
+
+    /**
+     * Show token error message
+     */
+    showTokenError(message) {
+        const container = document.getElementById('tokenSelectionGrid');
+        if (container) {
+            container.innerHTML = `<div class="token-error">${message}</div>`;
+        }
+        console.error('Token Error:', message);
+    }
+
+    /**
+     * Open modal utility
+     */
+    openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'block';
+            document.body.classList.add('modal-open');
+            console.log(`✅ Modal opened: ${modalId}`);
+        } else {
+            // Try camelCase version
+            const camelCaseId = modalId.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+            const camelModal = document.getElementById(camelCaseId);
+            if (camelModal) {
+                camelModal.style.display = 'block';
+                document.body.classList.add('modal-open');
+                console.log(`✅ Modal opened: ${camelCaseId}`);
+            } else {
+                console.error(`❌ Modal not found: ${modalId} or ${camelCaseId}`);
+            }
+        }
+    }
+
+    /**
+     * Close modal utility
+     */
+    closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.classList.remove('modal-open');
+            console.log(`✅ Modal closed: ${modalId}`);
+        } else {
+            // Try camelCase version
+            const camelCaseId = modalId.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+            const camelModal = document.getElementById(camelCaseId);
+            if (camelModal) {
+                camelModal.style.display = 'none';
+                document.body.classList.remove('modal-open');
+                console.log(`✅ Modal closed: ${camelCaseId}`);
+            } else {
+                console.error(`❌ Modal not found: ${modalId} or ${camelCaseId}`);
+            }
+        }
+    }
+
+    /**
+     * Show notification utility
+     */
+    showNotification(message, type = 'info') {
+        console.log(`📢 ${type.toUpperCase()}: ${message}`);
+        
+        // Use external notification system if available
+        if (typeof showNotification === 'function') {
+            showNotification(message, type);
+        }
+        
+        // You can also implement a simple notification display here
+        // For now, we'll just log to console
+    }
+
+    /**
      * Clean up resources
      */
     destroy() {
@@ -549,6 +836,9 @@ class TokenManager {
         this.tokens = [];
         this.placedTokens.clear();
         this.isInitialized = false;
+        this.isLoadingTokens = false;
+        this.tokensLoaded = false;
+        this.selectedTokenForPlacement = null;
     }
 }
 

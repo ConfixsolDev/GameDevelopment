@@ -9,12 +9,6 @@ using TechWebSol.Models;
 
 namespace TechWebSol.Controllers
 {
-    public class UpdateTokenPositionRequest
-    {
-        public Guid TokenId { get; set; }
-        public double Latitude { get; set; }
-        public double Longitude { get; set; }
-    }
 
     public class PlaceTokenRequest
     {
@@ -57,6 +51,7 @@ namespace TechWebSol.Controllers
         /// <summary>
         /// Load partial view for lazy loading
         /// </summary>
+
         [HttpGet]
         public async Task<IActionResult> LoadPartial(string partialName)
         {
@@ -428,4 +423,5 @@ namespace TechWebSol.Controllers
             }
         }
     }
+
 }
