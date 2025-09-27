@@ -75,28 +75,25 @@ class TokenPlacementManager {
         if (!this.selectedTokenForPlacement) return;
 
         // Remove existing temp marker
-        if (this.tempMarker) {
-            this.map.removeLayer(this.tempMarker);
-        }
+		if (this.tempMarker) {
+			// Also remove any previous coverage preview linked to the temp marker
+			if (this.tempMarker.coveragePreview) {
+				this.map.removeLayer(this.tempMarker.coveragePreview);
+			}
+			this.map.removeLayer(this.tempMarker);
+		}
 
         // Create preview marker
         const icon = this.createTokenIcon(this.selectedTokenForPlacement);
         this.tempMarker = L.marker(latlng, { icon: icon })
             .addTo(this.map);
 
-        // Add coverage area preview if token has radius
-        if (this.selectedTokenForPlacement.coverageRadius && this.selectedTokenForPlacement.coverageRadius > 0) {
-            const circle = L.circle(latlng, {
-                radius: this.selectedTokenForPlacement.coverageRadius * 1000, // Convert km to meters
-                color: '#3388ff',
-                fillColor: '#3388ff',
-                fillOpacity: 0.2,
-                weight: 2,
-                dashArray: '5, 5'
-            }).addTo(this.map);
-
-            this.tempMarker.coveragePreview = circle;
-        }
+		// Add coverage area preview as a plus shape if token has radius
+		if (this.selectedTokenForPlacement.coverageRadius && this.selectedTokenForPlacement.coverageRadius > 0) {
+			const radiusMeters = this.selectedTokenForPlacement.coverageRadius * 1000;
+			const plus = this.createPlusCoverage(latlng, radiusMeters, '#3388ff', 3, 0.5, '5, 5');
+			this.tempMarker.coveragePreview = plus.addTo(this.map);
+		}
     }
 
     /**
@@ -265,7 +262,7 @@ class TokenPlacementManager {
     /**
      * Create token marker
      */
-    createTokenMarker(token, latlng) {
+	createTokenMarker(token, latlng) {
         const icon = this.createTokenIcon(token);
         const marker = L.marker(latlng, { icon: icon });
 
@@ -285,7 +282,7 @@ class TokenPlacementManager {
     /**
      * Create token icon
      */
-    createTokenIcon(token) {
+	createTokenIcon(token) {
         const iconHtml = token.assetImagePath ? 
             `<img src="${token.assetImagePath}" class="token-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><i class="fas fa-crosshairs token-fallback-icon" style="display:none;"></i>` :
             `<i class="fas fa-crosshairs"></i>`;
@@ -293,8 +290,8 @@ class TokenPlacementManager {
         return L.divIcon({
             className: 'token-marker',
             html: iconHtml,
-            iconSize: [24, 24],
-            iconAnchor: [12, 12]
+			iconSize: [48, 64],
+			iconAnchor: [24, 32]
         });
     }
 
@@ -303,21 +300,41 @@ class TokenPlacementManager {
      */
     createCoverageAreas(areaCoverages, centerLatLng) {
         areaCoverages.forEach(coverage => {
-            if (coverage.shapeType === 'Circle' && coverage.radiusKm) {
-                const circle = L.circle(centerLatLng, {
-                    radius: coverage.radiusKm * 1000, // Convert km to meters
-                    color: this.getCoverageColor(coverage.coverageType),
-                    fillColor: this.getCoverageColor(coverage.coverageType),
-                    fillOpacity: 0.3,
-                    weight: 2
-                }).addTo(this.map);
-
-                // Store reference for later updates
-                if (!this.coverageAreas) this.coverageAreas = new Map();
-                this.coverageAreas.set(coverage.id, circle);
-            }
+			if (coverage.radiusKm) {
+				const color = this.getCoverageColor(coverage.coverageType);
+				const plus = this.createPlusCoverage(centerLatLng, coverage.radiusKm * 1000, color, 3, 0.35);
+				const layer = plus.addTo(this.map);
+				// Store reference for later updates
+				if (!this.coverageAreas) this.coverageAreas = new Map();
+				this.coverageAreas.set(coverage.id, layer);
+			}
         });
     }
+
+	/**
+	 * Create a plus-shaped coverage overlay centered at a location
+	 * Returns an L.layerGroup with two perpendicular polylines
+	 */
+	createPlusCoverage(centerLatLng, radiusMeters, color = '#3388ff', weight = 3, opacity = 0.5, dashArray) {
+		const lat = centerLatLng.lat;
+		const lng = centerLatLng.lng;
+		const metersPerDegLat = 111320;
+		const metersPerDegLng = 111320 * Math.cos(lat * Math.PI / 180);
+		const dLat = radiusMeters / metersPerDegLat;
+		const dLng = radiusMeters / metersPerDegLng;
+
+		const north = [lat + dLat, lng];
+		const south = [lat - dLat, lng];
+		const east = [lat, lng + dLng];
+		const west = [lat, lng - dLng];
+
+		const style = { color, weight, opacity };
+		if (dashArray) style.dashArray = dashArray;
+
+		const vertical = L.polyline([north, south], style);
+		const horizontal = L.polyline([east, west], style);
+		return L.layerGroup([vertical, horizontal]);
+	}
 
     /**
      * Update coverage areas
