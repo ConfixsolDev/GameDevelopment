@@ -11,6 +11,8 @@ class TokenPlacementManager {
         this.isMovingToken = false;
         this.movingToken = null;
         this.tempMarker = null;
+		this.isDraggingMarker = false;
+		this.suppressNextClick = false;
         
         this.setupEventListeners();
     }
@@ -264,17 +266,59 @@ class TokenPlacementManager {
      */
 	createTokenMarker(token, latlng) {
         const icon = this.createTokenIcon(token);
-        const marker = L.marker(latlng, { icon: icon });
+		const marker = L.marker(latlng, { icon: icon, draggable: true, autoPan: true });
 
         // Add click event for token details
-        marker.on('click', () => {
-            this.showTokenDetails(token);
-        });
+		marker.on('click', () => {
+			if (this.suppressNextClick) {
+				this.suppressNextClick = false;
+				return;
+			}
+			if (!this.isDraggingMarker) {
+				this.showTokenDetails(token);
+			}
+		});
 
         // Add context menu for token actions
         marker.on('contextmenu', (e) => {
             this.showTokenContextMenu(e, token);
         });
+
+		// Enable drag-to-move behavior
+		marker.on('dragstart', () => {
+			this.isDraggingMarker = true;
+		});
+
+		marker.on('dragend', async (e) => {
+			try {
+				const newLatLng = e.target.getLatLng();
+				const response = await fetch('/GamePlay/MoveToken', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						tokenId: token.id,
+						latitude: newLatLng.lat,
+						longitude: newLatLng.lng
+					})
+				});
+				const result = await response.json();
+				if (result && result.success) {
+					if (result.areaCoverages && result.areaCoverages.length > 0) {
+						this.updateCoverageAreas(token.id, result.areaCoverages, newLatLng);
+					}
+					this.notificationCallback(result.message || 'Token moved', 'success');
+				} else {
+					this.notificationCallback((result && result.message) || 'Failed to move token', 'error');
+				}
+			} catch (err) {
+				console.error('Error moving token on drag:', err);
+				this.notificationCallback('Error moving token', 'error');
+			} finally {
+				// Prevent immediate click firing after drag
+				this.suppressNextClick = true;
+				this.isDraggingMarker = false;
+			}
+		});
 
         return marker;
     }

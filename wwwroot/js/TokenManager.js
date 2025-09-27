@@ -292,58 +292,57 @@ class TokenManager {
         console.log('showTokenDetails called for token:', token);
         
         try {
-            // Load token data from database
-            const [brigadesResult, infantryResult, armouredResult, artilleryResult, intelligenceResult, reconResult] = await Promise.all([
-                fetch(`/DataManagement/GetTokenBrigades?tokenId=${token.id}`).then(r => r.json()),
-                fetch(`/DataManagement/GetTokenInfantryBattalions?tokenId=${token.id}`).then(r => r.json()),
-                fetch(`/DataManagement/GetTokenArmouredRegiments?tokenId=${token.id}`).then(r => r.json()),
-                fetch(`/DataManagement/GetTokenArtilleryRegiments?tokenId=${token.id}`).then(r => r.json()),
-                fetch(`/DataManagement/GetTokenIntelligence?tokenId=${token.id}`).then(r => r.json()),
-                fetch(`/DataManagement/GetTokenRecon?tokenId=${token.id}`).then(r => r.json())
-            ]);
+            // Load all token-related data in a single request
+            const summaryResponse = await fetch(`/DataManagement/GetTokenSummary?tokenId=${token.id}`);
+            const summary = await summaryResponse.json();
+            const data = summary && summary.success ? summary.data : {};
+            const brigades = data.brigades || [];
+            const infantryBattalions = data.infantryBattalions || [];
+            const armouredRegiments = data.armouredRegiments || [];
+            const artilleryRegiments = data.artilleryRegiments || [];
+            const intelligence = data.intelligence || [];
+            const recon = data.recon || [];
 
-            const brigades = brigadesResult.success ? brigadesResult.data : [];
-            const infantryBattalions = infantryResult.success ? infantryResult.data : [];
-            const armouredRegiments = armouredResult.success ? armouredResult.data : [];
-            const artilleryRegiments = artilleryResult.success ? artilleryResult.data : [];
-            const intelligence = intelligenceResult.success ? intelligenceResult.data : [];
-            const recon = reconResult.success ? reconResult.data : [];
-
-            // Create comprehensive details HTML
+            // Build table-based details UI
             let detailsHtml = `
                 <div class="token-details-panel">
                     <div class="token-details-header">
                         <h3><i class="fas fa-map-marker-alt"></i> ${token.name || 'Unnamed Token'}</h3>
-                        <button class="btn btn-sm btn-secondary" onclick="closeTokenDetails()">Close</button>
+                        <div>
+                            <button class="btn btn-sm btn-primary" onclick="tokenManager.tokenPlacementManager && tokenManager.tokenPlacementManager.startMoveMode && tokenManager.tokenPlacementManager.startMoveMode('${token.id}')">
+                                <i class="fas fa-arrows-alt"></i> Move Token
+                            </button>
+                            <button class="btn btn-sm btn-secondary" onclick="closeTokenDetails()">Close</button>
+                        </div>
                     </div>
                     <div class="token-details-content">
-                        <div class="token-info-section">
-                            <h4><i class="fas fa-info-circle"></i> Token Information</h4>
-                            <div class="info-grid">
-                                <div class="info-item">
-                                    <label>Token ID:</label>
-                                    <span>${token.id}</span>
-                                </div>
-                                <div class="info-item">
-                                    <label>Status:</label>
-                                    <span class="status-badge ${token.status}">${token.status}</span>
-                                </div>
-                                <div class="info-item">
-                                    <label>Category:</label>
-                                    <span>${token.category || 'Generic'}</span>
-                                </div>
-                                <div class="info-item">
-                                    <label>Position:</label>
-                                    <span>${token.position ? `${token.position.lat.toFixed(4)}, ${token.position.lng.toFixed(4)}` : 'Not placed'}</span>
-                                </div>
-                            </div>
-                        </div>`;
+                        <table class="table table-sm table-dark" style="width:100%; margin-bottom:16px;">
+                            <tbody>
+                                <tr><th style="width:180px;">Token ID</th><td>${token.id}</td></tr>
+                                <tr><th>Name</th><td>${token.name || ''}</td></tr>
+                                <tr><th>Status</th><td><span class="status-badge ${token.status}">${token.status}</span></td></tr>
+                                <tr><th>Category</th><td>${token.category || 'Generic'}</td></tr>
+                                <tr><th>Position</th><td>${token.position ? `${token.position.lat.toFixed(6)}, ${token.position.lng.toFixed(6)}` : 'Not placed'}</td></tr>
+                            </tbody>
+                        </table>`;
 
             // Military Units Section
             if (brigades.length > 0) {
                 detailsHtml += `
                     <div class="token-data-section">
-                        <h4><i class="fas fa-flag"></i> Military Units (${brigades.length} Brigades)</h4>`;
+                        <h4><i class="fas fa-flag"></i> Military Units (${brigades.length} Brigades)</h4>
+                        <table class="table table-sm table-striped table-dark" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>Brigade</th>
+                                    <th>Code</th>
+                                    <th>Strength</th>
+                                    <th>Companies</th>
+                                    <th>Squadrons</th>
+                                    <th>Batteries</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
 
                 brigades.forEach(brigade => {
                     const brigadeUnits = [
@@ -353,37 +352,52 @@ class TokenManager {
                     ];
                     
                     detailsHtml += `
-                        <div class="brigade-details">
-                            <h5><i class="fas fa-flag"></i> ${brigade.name} (${brigade.unitCode})</h5>
-                            <div class="brigade-stats">
-                                <span>Strength: ${brigade.strength}</span>
-                                <span>Companies: ${brigade.companies || 0}</span>
-                                <span>Squadrons: ${brigade.squadrons || 0}</span>
-                                <span>Batteries: ${brigade.batteries || 0}</span>
-                            </div>`;
+                                <tr>
+                                    <td>${brigade.name}</td>
+                                    <td>${brigade.unitCode}</td>
+                                    <td>${brigade.strength}</td>
+                                    <td>${brigade.companies || 0}</td>
+                                    <td>${brigade.squadrons || 0}</td>
+                                    <td>${brigade.batteries || 0}</td>
+                                </tr>`;
                     
                     if (brigadeUnits.length > 0) {
-                        detailsHtml += `<div class="units-list">`;
+                        detailsHtml += `
+                            <tr>
+                                <td colspan="6" style="padding:0;">
+                                    <table class="table table-sm table-bordered table-dark" style="margin:0;">
+                                        <thead>
+                                            <tr>
+                                                <th>Unit</th>
+                                                <th>Type</th>
+                                                <th>Code</th>
+                                                <th>Strength</th>
+                                                <th>Drones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>`;
                         brigadeUnits.forEach(unit => {
-                            const unitType = unit.id && unit.id.startsWith('infantry_') ? 'Infantry Battalion' : 
-                                           unit.id && unit.id.startsWith('armoured_') ? 'Armoured Regiment' : 'Artillery Regiment';
+                            const unitType = unit.unitType || (unit.id && unit.id.indexOf('armoured') >= 0 ? 'Armoured' : (unit.id && unit.id.indexOf('artillery') >= 0 ? 'Artillery' : 'Infantry'));
                             detailsHtml += `
-                                <div class="unit-item">
-                                    <span class="unit-name">${unit.name} (${unit.unitCode})</span>
-                                    <span class="unit-details">
-                                        ${unitType} | Strength: ${unit.strength}
-                                        ${unit.companies ? `| Companies: ${unit.companies}` : ''}
-                                        ${unit.squadrons ? `| Squadrons: ${unit.squadrons}` : ''}
-                                        ${unit.batteries ? `| Batteries: ${unit.batteries}` : ''}
-                                        ${unit.drones > 0 ? `| Drones: ${unit.drones}` : ''}
-                                    </span>
-                                </div>`;
+                                            <tr>
+                                                <td>${unit.name}</td>
+                                                <td>${unitType}</td>
+                                                <td>${unit.unitCode}</td>
+                                                <td>${unit.strength}</td>
+                                                <td>${unit.drones || 0}</td>
+                                            </tr>`;
                         });
-                        detailsHtml += `</div>`;
+                        detailsHtml += `
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>`;
                     }
-                    detailsHtml += `</div>`;
                 });
-                detailsHtml += `</div>`;
+                detailsHtml += `
+                            </tbody>
+                        </table>
+                    </div>`;
             } else {
                 detailsHtml += `
                     <div class="token-data-section">
@@ -397,17 +411,27 @@ class TokenManager {
                 detailsHtml += `
                     <div class="token-data-section">
                         <h4><i class="fas fa-eye"></i> Intelligence Reports (${intelligence.length})</h4>
-                `;
+                        <table class="table table-sm table-striped table-dark" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Source</th>
+                                    <th>Priority</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
                 intelligence.forEach(intel => {
                     detailsHtml += `
-                        <div class="intel-item">
-                            <span class="intel-title">${intel.title}</span>
-                            <span class="intel-source">Source: ${intel.source || 'Unknown'}</span>
-                            <span class="intel-priority">Priority: ${intel.priority || 'Medium'}</span>
-                        </div>
-                    `;
+                                <tr>
+                                    <td>${intel.title}</td>
+                                    <td>${intel.source || 'Unknown'}</td>
+                                    <td>${intel.priority || 'Medium'}</td>
+                                </tr>`;
                 });
-                detailsHtml += `</div></div>`;
+                detailsHtml += `
+                            </tbody>
+                        </table>
+                    </div>`;
             } else {
                 detailsHtml += `
                     <div class="token-data-section">
@@ -421,17 +445,27 @@ class TokenManager {
                 detailsHtml += `
                     <div class="token-data-section">
                         <h4><i class="fas fa-binoculars"></i> Recon Data (${recon.length})</h4>
-                `;
+                        <table class="table table-sm table-striped table-dark" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Location</th>
+                                    <th>Confidence</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
                 recon.forEach(reconItem => {
                     detailsHtml += `
-                        <div class="recon-item">
-                            <span class="recon-type">${reconItem.reconType}</span>
-                            <span class="recon-location">Location: ${reconItem.location || 'Unknown'}</span>
-                            <span class="recon-confidence">Confidence: ${reconItem.confidence || 'Medium'}</span>
-                        </div>
-                    `;
+                                <tr>
+                                    <td>${reconItem.reconType}</td>
+                                    <td>${reconItem.location || 'Unknown'}</td>
+                                    <td>${reconItem.confidence || 'Medium'}</td>
+                                </tr>`;
                 });
-                detailsHtml += `</div></div>`;
+                detailsHtml += `
+                            </tbody>
+                        </table>
+                    </div>`;
             } else {
                 detailsHtml += `
                     <div class="token-data-section">
@@ -444,9 +478,6 @@ class TokenManager {
                         <div class="token-actions">
                             <button class="btn btn-primary" onclick="closeTokenDetails(); openTokenDataEntryModal('${token.id}')">
                                 <i class="fas fa-edit"></i> Edit Data
-                            </button>
-                            <button class="btn btn-danger" onclick="deleteTokenById('${token.id}')">
-                                <i class="fas fa-trash"></i> Delete Token
                             </button>
                         </div>
                     </div>

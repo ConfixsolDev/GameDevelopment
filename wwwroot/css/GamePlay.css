@@ -1318,6 +1318,9 @@ html, body {
     height: 100%;
     object-fit: cover;
     border-radius: 4px;
+    pointer-events: none;
+    -webkit-user-drag: none;
+    user-select: none;
 }
 
 .token-image-hidden {
@@ -1326,6 +1329,7 @@ html, body {
 
 .token-icon-fallback {
     display: none;
+    pointer-events: none;
 }
 
 .token-small-image {

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using TechWebSol.Data;
 using TechWebSol.Models;
@@ -158,7 +159,7 @@ namespace TechWebSol.Services.TokenManagement
                 token.LastUsed = DateTime.UtcNow;
 
                 // Inactivate previous active marker and create a new one to preserve movement history
-                var previousActiveMarker = await _context.MapMarkers
+                var previousActiveMarker = await _context.MapMarkers.OrderByDescending(x=>x.CreatedDate)
                     .FirstOrDefaultAsync(m => m.TokenId == tokenId && m.IsActive);
 
                 if (previousActiveMarker != null)
@@ -191,7 +192,7 @@ namespace TechWebSol.Services.TokenManagement
                         areaCoverages = coverageResult.AreaCoverages;
                     }
                 }
-
+                _context.Update(token);
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Token {TokenId} position updated to {Latitude}, {Longitude}", 
@@ -297,12 +298,13 @@ namespace TechWebSol.Services.TokenManagement
                     };
                 }
 
-                var mapMarker = await _context.MapMarkers
+                var mapMarker = await _context.MapMarkers.OrderByDescending(x=>x.CreatedDate)
                     .FirstOrDefaultAsync(m => m.TokenId == tokenId && m.IsActive);
 
                 var areaCoverages = await _context.TokenAreaCoverages
                     .Where(tac => tac.TokenId == tokenId && tac.IsActive)
                     .ToListAsync();
+
 
                 return new TokenPlacementResult
                 {

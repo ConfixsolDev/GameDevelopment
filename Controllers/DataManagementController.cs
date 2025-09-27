@@ -6,6 +6,7 @@ using TechWebSol.Data;
 using TechWebSol.Filters;
 using TechWebSol.Models;
 using TechWebSol.Services;
+using TechWebSol.ViewModels;
 
 namespace TechWebSol.Controllers
 {
@@ -14,7 +15,7 @@ namespace TechWebSol.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IUserSessionService _userSessionService;
+        private readonly ApplicationUserVM user;
 
         public DataManagementController(
             ApplicationDbContext context,
@@ -23,7 +24,7 @@ namespace TechWebSol.Controllers
         {
             _context = context;
             _userManager = userManager;
-            _userSessionService = userSessionService;
+            user = userSessionService.GetCurrentUser();
         }
 
         public IActionResult Index()
@@ -631,6 +632,69 @@ namespace TechWebSol.Controllers
         #endregion
 
         #region Token-Specific Data Management
+
+        [HttpGet]
+        public  IActionResult GetTokenSummary(Guid tokenId)
+        {
+            try
+            {
+                var brigadesTask = _context.Brigades
+                    .Where(b => b.TokenId == tokenId && b.TeamId == user.TeamId && b.IsActive)
+                    .OrderBy(b => b.Name)
+                    .ToList();
+
+                var infantryTask = _context.InfantryBattalions
+                    .Where(b => b.TeamId == user.TeamId && b.IsActive)
+                    .ToList();
+
+                var armouredTask = _context.ArmouredRegiments
+                    .Where(r => r.TeamId == user.TeamId && r.IsActive)
+                    .ToList();
+
+                var artilleryTask = _context.ArtilleryRegiments
+                    .Where(r => r.TeamId == user.TeamId && r.IsActive)
+                    .ToList();
+
+                var intelTask = _context.Intelligence
+                    .Where(i => i.TokenId == tokenId && i.TeamId == user.TeamId && i.IsActive)
+                    .OrderByDescending(i => i.Timestamp)
+                    .ToList();
+
+                var reconTask = _context.Recon
+                    .Where(r => r.TokenId == tokenId && r.TeamId == user.TeamId && r.IsActive)
+                    .OrderByDescending(r => r.CreatedDate)
+                    .ToList();
+
+                var brigades = brigadesTask;
+                var infantry = infantryTask;
+                var armoured = armouredTask;
+                var artillery = artilleryTask;
+
+                // Filter units by the brigades belonging to this token
+                var brigadeIds = brigades.Select(b => b.Id).ToHashSet();
+                var infantryForToken = infantry.Where(u => u.BrigadeId.HasValue && brigadeIds.Contains(u.BrigadeId.Value)).ToList();
+                var armouredForToken = armoured.Where(u => u.BrigadeId.HasValue && brigadeIds.Contains(u.BrigadeId.Value)).ToList();
+                var artilleryForToken = artillery.Where(u => u.BrigadeId.HasValue && brigadeIds.Contains(u.BrigadeId.Value)).ToList();
+
+                return Json(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        brigades = brigades,
+                        infantryBattalions = infantryForToken,
+                        armouredRegiments = armouredForToken,
+                        artilleryRegiments = artilleryForToken,
+                        intelligence = intelTask,
+                        recon = reconTask
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
 
         [HttpGet]
         public async Task<IActionResult> GetTokenBrigades(Guid tokenId)

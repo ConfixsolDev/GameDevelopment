@@ -3,32 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TechWebSol.Data;
 using TechWebSol.Filters;
+using TechWebSol.Models;
 using TechWebSol.Services;
 using TechWebSol.Services.TokenManagement;
-using TechWebSol.Models;
+using TechWebSol.ViewModels;
 
 namespace TechWebSol.Controllers
 {
-
-    public class PlaceTokenRequest
-    {
-        public Guid TokenId { get; set; }
-        public decimal Latitude { get; set; }
-        public decimal Longitude { get; set; }
-    }
-
-    public class UpdateTokenPositionRequest
-    {
-        public Guid TokenId { get; set; }
-        public double Latitude { get; set; }
-        public double Longitude { get; set; }
-        public DateTime? PlacedAt { get; set; }
-    }
-
-    public class RemoveTokenRequest
-    {
-        public Guid TokenId { get; set; }
-    }
     [AuthorizeDynamic]
     public class GamePlayController : Controller
     {
@@ -36,6 +17,8 @@ namespace TechWebSol.Controllers
         private readonly IUserSessionService _userSessionService;
         private readonly ITokenPlacementService _tokenPlacementService;
         private readonly ILogger<GamePlayController> _logger;
+        private readonly ApplicationUserVM applicatonUser;
+
 
         public GamePlayController(
             ApplicationDbContext context,
@@ -46,6 +29,7 @@ namespace TechWebSol.Controllers
             _context = context;
             _userSessionService = userSessionService;
             _tokenPlacementService = tokenPlacementService;
+            applicatonUser = userSessionService.GetCurrentUser();
             _logger = logger;
         }
 
@@ -182,14 +166,8 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var currentUser = _userSessionService.GetCurrentUser();
-                if (currentUser == null)
-                {
-                    return Json(new { success = false, message = "User not authenticated" });
-                }
-
                 // Get user details from database to get TeamId
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == currentUser.ApplicationUserId);
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == applicatonUser.ApplicationUserId);
                 if (user == null)
                 {
                     return Json(new { success = false, message = "User not found" });
@@ -240,17 +218,11 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var currentUser = _userSessionService.GetCurrentUser();
-                if (currentUser == null)
-                {
-                    return Json(new { success = false, message = "User not authenticated" });
-                }
-
                 var result = await _tokenPlacementService.PlaceTokenOnMapAsync(
                     request.TokenId, 
                     request.Latitude, 
-                    request.Longitude, 
-                    currentUser.ApplicationUserId.ToString());
+                    request.Longitude,
+                    applicatonUser.ApplicationUserId);
 
                 if (result.Success)
                 {
@@ -298,17 +270,11 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var currentUser = _userSessionService.GetCurrentUser();
-                if (currentUser == null)
-                {
-                    return Json(new { success = false, message = "User not authenticated" });
-                }
-
                 var result = await _tokenPlacementService.UpdateTokenPositionAsync(
                     request.TokenId, 
                     (decimal)request.Latitude, 
-                    (decimal)request.Longitude, 
-                    currentUser.ApplicationUserId.ToString());
+                    (decimal)request.Longitude,
+                    applicatonUser.ApplicationUserId);
 
                 if (result.Success)
                 {
@@ -348,17 +314,12 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var currentUser = _userSessionService.GetCurrentUser();
-                if (currentUser == null)
-                {
-                    return Json(new { success = false, message = "User not authenticated" });
-                }
 
                 var result = await _tokenPlacementService.UpdateTokenPositionAsync(
                     request.TokenId, 
                     request.Latitude, 
-                    request.Longitude, 
-                    currentUser.ApplicationUserId.ToString());
+                    request.Longitude,
+                    applicatonUser.ApplicationUserId);
 
                 if (result.Success)
                 {
@@ -406,15 +367,9 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var currentUser = _userSessionService.GetCurrentUser();
-                if (currentUser == null)
-                {
-                    return Json(new { success = false, message = "User not authenticated" });
-                }
-
                 var result = await _tokenPlacementService.RemoveTokenFromMapAsync(
-                    request.TokenId, 
-                    currentUser.ApplicationUserId.ToString());
+                    request.TokenId,
+                    applicatonUser.ApplicationUserId);
 
                 if (result.Success)
                 {
@@ -444,12 +399,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var currentUser = _userSessionService.GetCurrentUser();
-                if (currentUser == null)
-                {
-                    return Json(new { success = false, message = "User not authenticated" });
-                }
-
                 var result = await _tokenPlacementService.GetTokenPlacementInfoAsync(tokenId);
                 
                 if (result.Success && result.MapMarker != null)
@@ -499,4 +448,23 @@ namespace TechWebSol.Controllers
         }
     }
 
+    public class PlaceTokenRequest
+    {
+        public Guid TokenId { get; set; }
+        public decimal Latitude { get; set; }
+        public decimal Longitude { get; set; }
+    }
+
+    public class UpdateTokenPositionRequest
+    {
+        public Guid TokenId { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public DateTime? PlacedAt { get; set; }
+    }
+
+    public class RemoveTokenRequest
+    {
+        public Guid TokenId { get; set; }
+    }
 }
