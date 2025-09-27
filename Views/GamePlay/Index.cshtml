@@ -3757,24 +3757,22 @@
                 // Determine generic icon based on token name or use default
                 const genericIcon = getGenericTokenIcon(token.name || '');
                 
-                // Image thumbnail with fallback (same approach as AdminToken index)
+                // Image thumbnail with fallback and name overlay
                 const imageThumbnail = hasImage 
-                    ? `<img src="${token.assetImagePath}" alt="${token.name}" class="token-thumbnail" title="${token.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    ? `<img src="${token.assetImagePath}" alt="${token.name}" class="token-card-image" title="${token.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                        <div class="token-placeholder" style="display:none;">
                            <i class="${genericIcon}"></i>
-                       </div>`
+                       </div>
+                       <div class="token-name-overlay">${token.name || '(unnamed)'}</div>`
                     : `<div class="token-placeholder">
                            <i class="${genericIcon}"></i>
-                       </div>`;
+                       </div>
+                       <div class="token-name-overlay">${token.name || '(unnamed)'}</div>`;
                 
                 return `
                     <div class="token-selection-card" onclick="selectTokenForPlacement('${token.id}')" data-token-id="${token.id}">
                         <div class="token-status-indicator ${status}"></div>
-                        <div class="token-icon">
-                            ${imageThumbnail}
-                        </div>
-                        <div class="token-name" title="${token.name || '(unnamed)'}">${token.name || '(unnamed)'}</div>
-                        <div class="token-category">${getTokenType(token.name || '')}</div>
+                        ${imageThumbnail}
                     </div>
                 `;
             });
