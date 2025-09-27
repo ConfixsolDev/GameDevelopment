@@ -629,15 +629,861 @@ namespace TechWebSol.Controllers
         }
 
         #endregion
-    }
 
-    // Request DTOs
-    public class CreateBrigadeForTokenRequest
-    {
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public string BrigadeCode { get; set; }
-        public string ForceType { get; set; }
-        public Guid TokenId { get; set; }
+        #region Token-Specific Data Management
+
+        [HttpGet]
+        public async Task<IActionResult> GetTokenBrigades(Guid tokenId)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var brigades = await _context.Brigades
+                    .Where(b => b.TokenId == tokenId && b.TeamId == user.TeamId && b.IsActive)
+                    .OrderBy(b => b.Name)
+                    .ToListAsync();
+
+                return Json(new { success = true, data = brigades });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateTokenBrigade([FromBody] CreateTokenBrigadeRequest request)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var brigade = new Brigade
+                {
+                    Id = Guid.NewGuid(),
+                    Name = request.Name,
+                    Description = request.Description,
+                    BrigadeCode = request.BrigadeCode,
+                    ForceType = request.ForceType,
+                    TokenId = request.TokenId,
+                    TeamId = user.TeamId,
+                    CreatedBy = user.FullName,
+                    IsActive = true
+                };
+
+                _context.Brigades.Add(brigade);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, data = brigade });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> UpdateTokenBrigade([FromBody] Brigade brigade)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var existingBrigade = await _context.Brigades
+                    .FirstOrDefaultAsync(b => b.Id == brigade.Id && b.TeamId == user.TeamId);
+
+                if (existingBrigade == null) return NotFound();
+
+                existingBrigade.Name = brigade.Name;
+                existingBrigade.Description = brigade.Description;
+                existingBrigade.BrigadeCode = brigade.BrigadeCode;
+                existingBrigade.ForceType = brigade.ForceType;
+                existingBrigade.UpdatedBy = user.FullName;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, data = existingBrigade });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteTokenBrigade(Guid id)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var brigade = await _context.Brigades
+                    .FirstOrDefaultAsync(b => b.Id == id && b.TeamId == user.TeamId);
+
+                if (brigade == null) return NotFound();
+
+                brigade.IsActive = false;
+                brigade.UpdatedBy = user.FullName;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetTokenInfantryBattalions(Guid tokenId, Guid? brigadeId = null)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var query = _context.InfantryBattalions
+                    .Where(b => b.TeamId == user.TeamId && b.IsActive);
+
+                if (brigadeId.HasValue)
+                {
+                    query = query.Where(b => b.BrigadeId == brigadeId.Value);
+                }
+
+                var battalions = await query
+                    .OrderBy(b => b.Name)
+                    .ToListAsync();
+
+                return Json(new { success = true, data = battalions });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteTokenInfantryBattalion(Guid id)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var battalion = await _context.InfantryBattalions
+                    .FirstOrDefaultAsync(b => b.Id == id && b.TeamId == user.TeamId);
+
+                if (battalion == null) return NotFound();
+
+                battalion.IsActive = false;
+                battalion.UpdatedBy = user.FullName;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetTokenArmouredRegiments(Guid tokenId, Guid? brigadeId = null)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var query = _context.ArmouredRegiments
+                    .Where(r => r.TeamId == user.TeamId && r.IsActive);
+
+                if (brigadeId.HasValue)
+                {
+                    query = query.Where(r => r.BrigadeId == brigadeId.Value);
+                }
+
+                var regiments = await query
+                    .OrderBy(r => r.Name)
+                    .ToListAsync();
+
+                return Json(new { success = true, data = regiments });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteTokenArmouredRegiment(Guid id)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var regiment = await _context.ArmouredRegiments
+                    .FirstOrDefaultAsync(r => r.Id == id && r.TeamId == user.TeamId);
+
+                if (regiment == null) return NotFound();
+
+                regiment.IsActive = false;
+                regiment.UpdatedBy = user.FullName;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetTokenArtilleryRegiments(Guid tokenId, Guid? brigadeId = null)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var query = _context.ArtilleryRegiments
+                    .Where(r => r.TeamId == user.TeamId && r.IsActive);
+
+                if (brigadeId.HasValue)
+                {
+                    query = query.Where(r => r.BrigadeId == brigadeId.Value);
+                }
+
+                var regiments = await query
+                    .OrderBy(r => r.Name)
+                    .ToListAsync();
+
+                return Json(new { success = true, data = regiments });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteTokenArtilleryRegiment(Guid id)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var regiment = await _context.ArtilleryRegiments
+                    .FirstOrDefaultAsync(r => r.Id == id && r.TeamId == user.TeamId);
+
+                if (regiment == null) return NotFound();
+
+                regiment.IsActive = false;
+                regiment.UpdatedBy = user.FullName;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetTokenIntelligence(Guid tokenId)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var intelligence = await _context.Intelligence
+                    .Where(i => i.TokenId == tokenId && i.TeamId == user.TeamId && i.IsActive)
+                    .OrderByDescending(i => i.Timestamp)
+                    .ToListAsync();
+
+                return Json(new { success = true, data = intelligence });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteTokenIntelligence(Guid id)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var intelligence = await _context.Intelligence
+                    .FirstOrDefaultAsync(i => i.Id == id && i.TeamId == user.TeamId);
+
+                if (intelligence == null) return NotFound();
+
+                intelligence.IsActive = false;
+                intelligence.UpdatedBy = user.FullName;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetTokenRecon(Guid tokenId)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var recon = await _context.Recon
+                    .Where(r => r.TokenId == tokenId && r.TeamId == user.TeamId && r.IsActive)
+                    .OrderByDescending(r => r.Timestamp)
+                    .ToListAsync();
+
+                return Json(new { success = true, data = recon });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteTokenRecon(Guid id)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var recon = await _context.Recon
+                    .FirstOrDefaultAsync(r => r.Id == id && r.TeamId == user.TeamId);
+
+                if (recon == null) return NotFound();
+
+                recon.IsActive = false;
+                recon.UpdatedBy = user.FullName;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateTokenInfantryBattalion([FromBody] CreateTokenInfantryBattalionRequest request)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var battalion = new InfantryBattalion
+                {
+                    Id = Guid.NewGuid(),
+                    Name = request.Name,
+                    Description = request.Description,
+                    UnitCode = request.UnitCode,
+                    Strength = request.Strength,
+                    ForceType = request.ForceType,
+                    BrigadeId = request.BrigadeId,
+                    TeamId = user.TeamId,
+                    CreatedBy = user.FullName,
+                    IsActive = true,
+                    Companies = request.Companies,
+                    ATGMS = request.ATGMS,
+                    RocketLauncher = request.RocketLauncher,
+                    Mortars81mm = request.Mortars81mm,
+                    Mortars120mm = request.Mortars120mm,
+                    GrenadeLaunchers = request.GrenadeLaunchers,
+                    HMG_AGL = request.HMG_AGL,
+                    MG_LMG = request.MG_LMG,
+                    MANPADS = request.MANPADS,
+                    Grenades = request.Grenades,
+                    Drones = request.Drones,
+                    DroneTypes = request.DroneTypes,
+                    MarchingSpeedTrucksRoads = request.MarchingSpeedTrucksRoads,
+                    MarchingSpeedAPCs = request.MarchingSpeedAPCs,
+                    MarchingSpeedCrossCountry = request.MarchingSpeedCrossCountry,
+                    MarchingSpeedAPCsCrossCountry = request.MarchingSpeedAPCsCrossCountry,
+                    CombatAdvanceSpeed = request.CombatAdvanceSpeed
+                };
+
+                _context.InfantryBattalions.Add(battalion);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, data = battalion });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> UpdateTokenInfantryBattalion([FromBody] InfantryBattalion battalion)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var existingBattalion = await _context.InfantryBattalions
+                    .FirstOrDefaultAsync(b => b.Id == battalion.Id && b.TeamId == user.TeamId);
+
+                if (existingBattalion == null) return NotFound();
+
+                existingBattalion.Name = battalion.Name;
+                existingBattalion.Description = battalion.Description;
+                existingBattalion.UnitCode = battalion.UnitCode;
+                existingBattalion.Strength = battalion.Strength;
+                existingBattalion.ForceType = battalion.ForceType;
+                existingBattalion.Companies = battalion.Companies;
+                existingBattalion.ATGMS = battalion.ATGMS;
+                existingBattalion.RocketLauncher = battalion.RocketLauncher;
+                existingBattalion.Mortars81mm = battalion.Mortars81mm;
+                existingBattalion.Mortars120mm = battalion.Mortars120mm;
+                existingBattalion.GrenadeLaunchers = battalion.GrenadeLaunchers;
+                existingBattalion.HMG_AGL = battalion.HMG_AGL;
+                existingBattalion.MG_LMG = battalion.MG_LMG;
+                existingBattalion.MANPADS = battalion.MANPADS;
+                existingBattalion.Grenades = battalion.Grenades;
+                existingBattalion.Drones = battalion.Drones;
+                existingBattalion.DroneTypes = battalion.DroneTypes;
+                existingBattalion.MarchingSpeedTrucksRoads = battalion.MarchingSpeedTrucksRoads;
+                existingBattalion.MarchingSpeedAPCs = battalion.MarchingSpeedAPCs;
+                existingBattalion.MarchingSpeedCrossCountry = battalion.MarchingSpeedCrossCountry;
+                existingBattalion.MarchingSpeedAPCsCrossCountry = battalion.MarchingSpeedAPCsCrossCountry;
+                existingBattalion.CombatAdvanceSpeed = battalion.CombatAdvanceSpeed;
+                existingBattalion.UpdatedBy = user.FullName;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, data = existingBattalion });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateTokenArmouredRegiment([FromBody] CreateTokenArmouredRegimentRequest request)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var regiment = new ArmouredRegiment
+                {
+                    Id = Guid.NewGuid(),
+                    Name = request.Name,
+                    Description = request.Description,
+                    UnitCode = request.UnitCode,
+                    Strength = request.Strength,
+                    ForceType = request.ForceType,
+                    BrigadeId = request.BrigadeId,
+                    TeamId = user.TeamId,
+                    CreatedBy = user.FullName,
+                    IsActive = true,
+                    Squadrons = request.Squadrons,
+                    Tanks = request.Tanks,
+                    ATGMS = request.ATGMS,
+                    Mortars120mm = request.Mortars120mm,
+                    HMG = request.HMG,
+                    Drones = request.Drones,
+                    DroneTypes = request.DroneTypes,
+                    MarchingSpeedRoads = request.MarchingSpeedRoads,
+                    MarchingSpeedCrossCountry = request.MarchingSpeedCrossCountry,
+                    CombatAdvanceSpeed = request.CombatAdvanceSpeed
+                };
+
+                _context.ArmouredRegiments.Add(regiment);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, data = regiment });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> UpdateTokenArmouredRegiment([FromBody] ArmouredRegiment regiment)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var existingRegiment = await _context.ArmouredRegiments
+                    .FirstOrDefaultAsync(r => r.Id == regiment.Id && r.TeamId == user.TeamId);
+
+                if (existingRegiment == null) return NotFound();
+
+                existingRegiment.Name = regiment.Name;
+                existingRegiment.Description = regiment.Description;
+                existingRegiment.UnitCode = regiment.UnitCode;
+                existingRegiment.Strength = regiment.Strength;
+                existingRegiment.ForceType = regiment.ForceType;
+                existingRegiment.Squadrons = regiment.Squadrons;
+                existingRegiment.Tanks = regiment.Tanks;
+                existingRegiment.ATGMS = regiment.ATGMS;
+                existingRegiment.Mortars120mm = regiment.Mortars120mm;
+                existingRegiment.HMG = regiment.HMG;
+                existingRegiment.Drones = regiment.Drones;
+                existingRegiment.DroneTypes = regiment.DroneTypes;
+                existingRegiment.MarchingSpeedRoads = regiment.MarchingSpeedRoads;
+                existingRegiment.MarchingSpeedCrossCountry = regiment.MarchingSpeedCrossCountry;
+                existingRegiment.CombatAdvanceSpeed = regiment.CombatAdvanceSpeed;
+                existingRegiment.UpdatedBy = user.FullName;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, data = existingRegiment });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateTokenArtilleryRegiment([FromBody] CreateTokenArtilleryRegimentRequest request)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var regiment = new ArtilleryRegiment
+                {
+                    Id = Guid.NewGuid(),
+                    Name = request.Name,
+                    Description = request.Description,
+                    UnitCode = request.UnitCode,
+                    Strength = request.Strength,
+                    ForceType = request.ForceType,
+                    BrigadeId = request.BrigadeId,
+                    TeamId = user.TeamId,
+                    CreatedBy = user.FullName,
+                    IsActive = true,
+                    Batteries = request.Batteries,
+                    Guns = request.Guns,
+                    GunRange = request.GunRange,
+                    GunCaliber = request.GunCaliber,
+                    HMG = request.HMG,
+                    Drones = request.Drones,
+                    DroneTypes = request.DroneTypes
+                };
+
+                _context.ArtilleryRegiments.Add(regiment);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, data = regiment });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> UpdateTokenArtilleryRegiment([FromBody] ArtilleryRegiment regiment)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var existingRegiment = await _context.ArtilleryRegiments
+                    .FirstOrDefaultAsync(r => r.Id == regiment.Id && r.TeamId == user.TeamId);
+
+                if (existingRegiment == null) return NotFound();
+
+                existingRegiment.Name = regiment.Name;
+                existingRegiment.Description = regiment.Description;
+                existingRegiment.UnitCode = regiment.UnitCode;
+                existingRegiment.Strength = regiment.Strength;
+                existingRegiment.ForceType = regiment.ForceType;
+                existingRegiment.Batteries = regiment.Batteries;
+                existingRegiment.Guns = regiment.Guns;
+                existingRegiment.GunRange = regiment.GunRange;
+                existingRegiment.GunCaliber = regiment.GunCaliber;
+                existingRegiment.HMG = regiment.HMG;
+                existingRegiment.Drones = regiment.Drones;
+                existingRegiment.DroneTypes = regiment.DroneTypes;
+                existingRegiment.UpdatedBy = user.FullName;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, data = existingRegiment });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateTokenIntelligence([FromBody] CreateTokenIntelligenceRequest request)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var intelligence = new Intelligence
+                {
+                    Id = Guid.NewGuid(),
+                    Title = request.Title,
+                    Description = request.Description,
+                    Source = request.Source,
+                    Priority = request.Priority,
+                    TokenId = request.TokenId,
+                    TeamId = user.TeamId,
+                    CreatedBy = user.FullName,
+                    IsActive = true
+                };
+
+                _context.Intelligence.Add(intelligence);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, data = intelligence });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> UpdateTokenIntelligence([FromBody] Intelligence intelligence)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var existingIntelligence = await _context.Intelligence
+                    .FirstOrDefaultAsync(i => i.Id == intelligence.Id && i.TeamId == user.TeamId);
+
+                if (existingIntelligence == null) return NotFound();
+
+                existingIntelligence.Title = intelligence.Title;
+                existingIntelligence.Description = intelligence.Description;
+                existingIntelligence.Source = intelligence.Source;
+                existingIntelligence.Priority = intelligence.Priority;
+                existingIntelligence.UpdatedBy = user.FullName;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, data = existingIntelligence });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateTokenRecon([FromBody] CreateTokenReconRequest request)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var recon = new Recon
+                {
+                    Id = Guid.NewGuid(),
+                    ReconType = request.ReconType,
+                    Location = request.Location,
+                    Confidence = request.Confidence,
+                    Description = request.Description,
+                    TokenId = request.TokenId,
+                    TeamId = user.TeamId,
+                    CreatedBy = user.FullName,
+                    IsActive = true
+                };
+
+                _context.Recon.Add(recon);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, data = recon });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> UpdateTokenRecon([FromBody] Recon recon)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var existingRecon = await _context.Recon
+                    .FirstOrDefaultAsync(r => r.Id == recon.Id && r.TeamId == user.TeamId);
+
+                if (existingRecon == null) return NotFound();
+
+                existingRecon.ReconType = recon.ReconType;
+                existingRecon.Location = recon.Location;
+                existingRecon.Confidence = recon.Confidence;
+                existingRecon.Description = recon.Description;
+                existingRecon.UpdatedBy = user.FullName;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, data = existingRecon });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        #endregion
+
+        // Request DTOs
+        public class CreateBrigadeForTokenRequest
+        {
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public string BrigadeCode { get; set; }
+            public string ForceType { get; set; }
+            public Guid TokenId { get; set; }
+        }
+
+        public class CreateTokenBrigadeRequest
+        {
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public string BrigadeCode { get; set; }
+            public string ForceType { get; set; }
+            public Guid TokenId { get; set; }
+        }
+
+        public class CreateTokenInfantryBattalionRequest
+        {
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public string UnitCode { get; set; }
+            public int Strength { get; set; }
+            public string ForceType { get; set; }
+            public Guid BrigadeId { get; set; }
+            // Equipment & Weapons
+            public int Companies { get; set; }
+            public int ATGMS { get; set; }
+            public int RocketLauncher { get; set; }
+            public int Mortars81mm { get; set; }
+            public int Mortars120mm { get; set; }
+            public int GrenadeLaunchers { get; set; }
+            public int HMG_AGL { get; set; }
+            public int MG_LMG { get; set; }
+            public int MANPADS { get; set; }
+            public int Grenades { get; set; }
+            // Drone Data
+            public int Drones { get; set; }
+            public string DroneTypes { get; set; }
+            // Mobility Data
+            public decimal MarchingSpeedTrucksRoads { get; set; }
+            public decimal MarchingSpeedAPCs { get; set; }
+            public decimal MarchingSpeedCrossCountry { get; set; }
+            public decimal MarchingSpeedAPCsCrossCountry { get; set; }
+            public decimal CombatAdvanceSpeed { get; set; }
+        }
+
+        public class CreateTokenArmouredRegimentRequest
+        {
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public string UnitCode { get; set; }
+            public int Strength { get; set; }
+            public string ForceType { get; set; }
+            public Guid BrigadeId { get; set; }
+            // Equipment & Weapons
+            public int Squadrons { get; set; }
+            public int Tanks { get; set; }
+            public int ATGMS { get; set; }
+            public int Mortars120mm { get; set; }
+            public int HMG { get; set; }
+            // Drone Data
+            public int Drones { get; set; }
+            public string DroneTypes { get; set; }
+            // Mobility Data
+            public decimal MarchingSpeedRoads { get; set; }
+            public decimal MarchingSpeedCrossCountry { get; set; }
+            public decimal CombatAdvanceSpeed { get; set; }
+        }
+
+        public class CreateTokenArtilleryRegimentRequest
+        {
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public string UnitCode { get; set; }
+            public int Strength { get; set; }
+            public string ForceType { get; set; }
+            public Guid BrigadeId { get; set; }
+            // Artillery Equipment
+            public int Batteries { get; set; }
+            public int Guns { get; set; }
+            public decimal GunRange { get; set; }
+            public string GunCaliber { get; set; }
+            public int HMG { get; set; }
+            // Drone Data
+            public int Drones { get; set; }
+            public string DroneTypes { get; set; }
+        }
+
+        public class CreateTokenIntelligenceRequest
+        {
+            public string Title { get; set; }
+            public string Description { get; set; }
+            public string Source { get; set; }
+            public string Priority { get; set; }
+            public Guid TokenId { get; set; }
+        }
+
+        public class CreateTokenReconRequest
+        {
+            public string ReconType { get; set; }
+            public string Location { get; set; }
+            public string Confidence { get; set; }
+            public string Description { get; set; }
+            public Guid TokenId { get; set; }
+        }
     }
 }

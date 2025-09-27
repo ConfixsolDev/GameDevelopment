@@ -48,6 +48,14 @@ namespace TechWebSol.Data
         public DbSet<TerrainMobilityFactor> TerrainMobilityFactors { get; set; }
         public DbSet<ForceProtection> ForceProtections { get; set; }
         public DbSet<Brigade> Brigades { get; set; }
+        public DbSet<Intelligence> Intelligence { get; set; }
+        public DbSet<Recon> Recon { get; set; }
+
+        // Map Data DbSets
+        public DbSet<MapRegion> MapRegions { get; set; }
+        public DbSet<MapSector> MapSectors { get; set; }
+        public DbSet<MapLabel> MapLabels { get; set; }
+        public DbSet<MapConfiguration> MapConfigurations { get; set; }
 
         // War Game Simulation DbSets
         public DbSet<WarGameScenario> WarGameScenarios { get; set; }
@@ -123,6 +131,11 @@ namespace TechWebSol.Data
                     .WithMany()
                     .HasForeignKey(e => e.TeamId)
                     .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(e => e.Brigade)
+                    .WithMany()
+                    .HasForeignKey(e => e.BrigadeId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<ArmouredRegiment>(entity =>
@@ -136,6 +149,11 @@ namespace TechWebSol.Data
                     .WithMany()
                     .HasForeignKey(e => e.TeamId)
                     .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(e => e.Brigade)
+                    .WithMany()
+                    .HasForeignKey(e => e.BrigadeId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<ArtilleryRegiment>(entity =>
@@ -148,6 +166,11 @@ namespace TechWebSol.Data
                 entity.HasOne(e => e.Team)
                     .WithMany()
                     .HasForeignKey(e => e.TeamId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(e => e.Brigade)
+                    .WithMany()
+                    .HasForeignKey(e => e.BrigadeId)
                     .OnDelete(DeleteBehavior.SetNull);
             });
 
@@ -190,6 +213,86 @@ namespace TechWebSol.Data
                     .WithMany()
                     .HasForeignKey(e => e.TokenId)
                     .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<Intelligence>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Source).HasMaxLength(100);
+                entity.Property(e => e.Priority).HasMaxLength(20);
+
+                entity.HasOne(e => e.Team)
+                    .WithMany()
+                    .HasForeignKey(e => e.TeamId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(e => e.Token)
+                    .WithMany()
+                    .HasForeignKey(e => e.TokenId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<Recon>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ReconType).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Location).HasMaxLength(200);
+                entity.Property(e => e.Confidence).HasMaxLength(20);
+
+                entity.HasOne(e => e.Team)
+                    .WithMany()
+                    .HasForeignKey(e => e.TeamId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(e => e.Token)
+                    .WithMany()
+                    .HasForeignKey(e => e.TokenId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // Configure Map Data entities
+            modelBuilder.Entity<MapRegion>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Geometry).IsRequired().HasColumnType("nvarchar(max)");
+                entity.Property(e => e.Properties).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.RegionType).HasMaxLength(50);
+                entity.Property(e => e.Description).HasMaxLength(1000);
+            });
+
+            modelBuilder.Entity<MapSector>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Geometry).IsRequired().HasColumnType("nvarchar(max)");
+                entity.Property(e => e.LandType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Properties).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.SectorType).HasMaxLength(50);
+                entity.Property(e => e.Description).HasMaxLength(1000);
+            });
+
+            modelBuilder.Entity<MapLabel>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Text).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.LabelType).HasMaxLength(50);
+                entity.Property(e => e.Color).HasMaxLength(50);
+                entity.Property(e => e.Icon).HasMaxLength(50);
+                entity.Property(e => e.FontWeight).HasMaxLength(50);
+                entity.Property(e => e.Properties).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.Description).HasMaxLength(1000);
+            });
+
+            modelBuilder.Entity<MapConfiguration>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ConfigurationType).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Key).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Value).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.Properties).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.Description).HasMaxLength(1000);
             });
 
             // Configure War Game Simulation entities

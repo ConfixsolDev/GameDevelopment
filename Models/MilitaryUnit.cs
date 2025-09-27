@@ -26,6 +26,11 @@ namespace TechWebSol.Models
         [MaxLength(50)]
         public string UnitType { get; set; } // Infantry, Armoured, Artillery
 
+        // Link to Brigade
+        public Guid? BrigadeId { get; set; }
+
+        [ForeignKey("BrigadeId")]
+        public virtual Brigade Brigade { get; set; }
 
         [ForeignKey("TeamId")]
         public virtual Team Team { get; set; }
@@ -43,6 +48,11 @@ namespace TechWebSol.Models
         public int MG_LMG { get; set; }
         public int MANPADS { get; set; }
         public int Grenades { get; set; }
+
+        // Drone Data
+        public int Drones { get; set; }
+        [MaxLength(200)]
+        public string DroneTypes { get; set; }
 
         // Mobility Data
         public decimal MarchingSpeedTrucksRoads { get; set; } = 30; // kmph
@@ -65,6 +75,11 @@ namespace TechWebSol.Models
         public int Mortars120mm { get; set; }
         public int HMG { get; set; }
 
+        // Drone Data
+        public int Drones { get; set; }
+        [MaxLength(200)]
+        public string DroneTypes { get; set; }
+
         // Armour Speed Data
         public decimal MarchingSpeedRoads { get; set; } = 15; // kmph
         public decimal MarchingSpeedCrossCountry { get; set; } = 10; // kmph
@@ -84,6 +99,11 @@ namespace TechWebSol.Models
         public decimal GunRange { get; set; } // km
         public int HMG { get; set; }
         public string GunCaliber { get; set; } = "155mm SP";
+
+        // Drone Data
+        public int Drones { get; set; }
+        [MaxLength(200)]
+        public string DroneTypes { get; set; }
 
         public ArtilleryRegiment()
         {
