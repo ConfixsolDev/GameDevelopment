@@ -451,20 +451,26 @@
             <div class="overlay-control-group">
                 <h6>War Game Tools</h6>
                 <div class="control-row">
-                    <button class="overlay-btn" onclick="manageTokens()">
+                    <button class="overlay-btn" onclick="openTokenPlacement()">
                         <i class="fas fa-plus"></i>
-                        <span>Place Tokens</span>
+                        <span>Place Token</span>
                     </button>
+                    <button class="overlay-btn" onclick="openDataEntry()">
+                        <i class="fas fa-database"></i>
+                        <span>Data Entry</span>
+                    </button>
+                </div>
+                <div class="control-row">
                     <button class="overlay-btn" onclick="planMovement()">
                         <i class="fas fa-route"></i>
                         <span>Plan Move</span>
                     </button>
-                </div>
-                <div class="control-row">
                     <button class="overlay-btn" onclick="createObjective()">
                         <i class="fas fa-flag"></i>
                         <span>Objective</span>
                     </button>
+                </div>
+                <div class="control-row">
                     <button class="overlay-btn" onclick="initiateBattle()">
                         <i class="fas fa-crosshairs"></i>
                         <span>Battle</span>
@@ -3648,6 +3654,18 @@
     };
 
 
+    // New separated button functions
+    window.openTokenPlacement = function() {
+        openModal('tokenManagementModal');
+        setTimeout(refreshTokenList, 0);
+    };
+
+    window.openDataEntry = function() {
+        openModal('dataEntryModal');
+        loadDataManagementData();
+    };
+
+    // Keep the old function for backward compatibility
     window.manageTokens = function() {
         openModal('tokenManagementModal');
         setTimeout(refreshTokenList, 0);
