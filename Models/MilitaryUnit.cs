@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TechWebSol.Models
 {
-    public abstract class MilitaryUnit : BaseEntity
+    public abstract class MilitaryUnit : BaseEntityDataEntry
     {
         [Required]
         [MaxLength(100)]
