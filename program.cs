@@ -117,6 +117,10 @@ builder.Services.AddScoped<IUserSessionService, UserSessionService>();
 builder.Services.AddScoped<DbInitializer>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 
+// Token Management Services
+builder.Services.AddScoped<ITokenPlacementService, TokenPlacementService>();
+builder.Services.AddScoped<ITokenAreaCoverageService, TokenAreaCoverageService>();
+
 // Pattern Matching Services
 builder.Services.AddScoped<IPatternMatchingService, PatternMatchingService>();
 builder.Services.AddScoped<PatternAnalysisEngine>();

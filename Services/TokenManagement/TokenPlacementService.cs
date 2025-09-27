@@ -1,0 +1,331 @@
+using Microsoft.EntityFrameworkCore;
+using TechWebSol.Data;
+using TechWebSol.Models;
+
+namespace TechWebSol.Services.TokenManagement
+{
+    public interface ITokenPlacementService
+    {
+        Task<TokenPlacementResult> PlaceTokenOnMapAsync(Guid tokenId, decimal latitude, decimal longitude, string userId);
+        Task<TokenPlacementResult> UpdateTokenPositionAsync(Guid tokenId, decimal latitude, decimal longitude, string userId);
+        Task<TokenPlacementResult> RemoveTokenFromMapAsync(Guid tokenId, string userId);
+        Task<TokenPlacementResult> GetTokenPlacementInfoAsync(Guid tokenId);
+    }
+
+    public class TokenPlacementResult
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public Token? Token { get; set; }
+        public MapMarker? MapMarker { get; set; }
+        public List<TokenAreaCoverage>? AreaCoverages { get; set; }
+    }
+
+    public class TokenPlacementService : ITokenPlacementService
+    {
+        private readonly ApplicationDbContext _context;
+        private readonly ITokenAreaCoverageService _coverageService;
+        private readonly ILogger<TokenPlacementService> _logger;
+
+        public TokenPlacementService(
+            ApplicationDbContext context,
+            ITokenAreaCoverageService coverageService,
+            ILogger<TokenPlacementService> logger)
+        {
+            _context = context;
+            _coverageService = coverageService;
+            _logger = logger;
+        }
+
+        public async Task<TokenPlacementResult> PlaceTokenOnMapAsync(Guid tokenId, decimal latitude, decimal longitude, string userId)
+        {
+            try
+            {
+                // Get the token
+                var token = await _context.Tokens
+                    .Include(t => t.TokenGroup)
+                    .FirstOrDefaultAsync(t => t.Id == tokenId);
+
+                if (token == null)
+                {
+                    return new TokenPlacementResult
+                    {
+                        Success = false,
+                        Message = "Token not found"
+                    };
+                }
+
+                if (!token.IsActive)
+                {
+                    return new TokenPlacementResult
+                    {
+                        Success = false,
+                        Message = "Token is not active"
+                    };
+                }
+
+                // Check if token is already placed
+                var existingMarker = await _context.MapMarkers
+                    .FirstOrDefaultAsync(m => m.TokenId == tokenId && m.IsActive);
+
+                if (existingMarker != null)
+                {
+                    return new TokenPlacementResult
+                    {
+                        Success = false,
+                        Message = "Token is already placed on the map"
+                    };
+                }
+
+                // Update token position
+                token.CurrentLatitude = latitude;
+                token.CurrentLongitude = longitude;
+                token.LastUsed = DateTime.UtcNow;
+                token.UsageCount++;
+
+                // Create map marker
+                var mapMarker = new MapMarker
+                {
+                    Id = $"token_{tokenId}_{DateTime.Now.Ticks}",
+                    TokenId = tokenId,
+                    Location = $"{{\"lat\":{latitude},\"lng\":{longitude}}}",
+                    CreatedAt = DateTime.UtcNow,
+                    TokenName = token.Name,
+                    CreatedBy = userId,
+                    IsActive = true,
+                    LastUpdated = DateTime.UtcNow
+                };
+
+                _context.MapMarkers.Add(mapMarker);
+
+                // Create area coverage if token has coverage radius
+                List<TokenAreaCoverage>? areaCoverages = null;
+                if (token.CoverageRadiusKm.HasValue && token.CoverageRadiusKm.Value > 0)
+                {
+                    var coverageResult = await _coverageService.CreateInitialCoverageAsync(
+                        tokenId, latitude, longitude, token.CoverageRadiusKm.Value);
+                    
+                    if (coverageResult.Success)
+                    {
+                        areaCoverages = coverageResult.AreaCoverages;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Token {TokenId} placed successfully at {Latitude}, {Longitude}", 
+                    tokenId, latitude, longitude);
+
+                return new TokenPlacementResult
+                {
+                    Success = true,
+                    Message = $"Token '{token.Name}' placed successfully",
+                    Token = token,
+                    MapMarker = mapMarker,
+                    AreaCoverages = areaCoverages
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error placing token {TokenId} on map", tokenId);
+                return new TokenPlacementResult
+                {
+                    Success = false,
+                    Message = "Error placing token on map"
+                };
+            }
+        }
+
+        public async Task<TokenPlacementResult> UpdateTokenPositionAsync(Guid tokenId, decimal latitude, decimal longitude, string userId)
+        {
+            try
+            {
+                var token = await _context.Tokens
+                    .Include(t => t.TokenGroup)
+                    .FirstOrDefaultAsync(t => t.Id == tokenId);
+
+                if (token == null)
+                {
+                    return new TokenPlacementResult
+                    {
+                        Success = false,
+                        Message = "Token not found"
+                    };
+                }
+
+                // Update token position
+                token.CurrentLatitude = latitude;
+                token.CurrentLongitude = longitude;
+                token.LastUsed = DateTime.UtcNow;
+
+                // Update or create map marker
+                var mapMarker = await _context.MapMarkers
+                    .FirstOrDefaultAsync(m => m.TokenId == tokenId && m.IsActive);
+
+                if (mapMarker == null)
+                {
+                    mapMarker = new MapMarker
+                    {
+                        Id = $"token_{tokenId}_{DateTime.Now.Ticks}",
+                        TokenId = tokenId,
+                        Location = $"{{\"lat\":{latitude},\"lng\":{longitude}}}",
+                        CreatedAt = DateTime.UtcNow,
+                        TokenName = token.Name,
+                        CreatedBy = userId,
+                        IsActive = true,
+                        LastUpdated = DateTime.UtcNow
+                    };
+                    _context.MapMarkers.Add(mapMarker);
+                }
+                else
+                {
+                    mapMarker.Location = $"{{\"lat\":{latitude},\"lng\":{longitude}}}";
+                    mapMarker.LastUpdated = DateTime.UtcNow;
+                }
+
+                // Update area coverage if token has coverage radius
+                List<TokenAreaCoverage>? areaCoverages = null;
+                if (token.CoverageRadiusKm.HasValue && token.CoverageRadiusKm.Value > 0)
+                {
+                    var coverageResult = await _coverageService.UpdateCoverageAreaAsync(
+                        tokenId, latitude, longitude, token.CoverageRadiusKm.Value);
+                    
+                    if (coverageResult.Success)
+                    {
+                        areaCoverages = coverageResult.AreaCoverages;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Token {TokenId} position updated to {Latitude}, {Longitude}", 
+                    tokenId, latitude, longitude);
+
+                return new TokenPlacementResult
+                {
+                    Success = true,
+                    Message = $"Token '{token.Name}' position updated successfully",
+                    Token = token,
+                    MapMarker = mapMarker,
+                    AreaCoverages = areaCoverages
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating token {TokenId} position", tokenId);
+                return new TokenPlacementResult
+                {
+                    Success = false,
+                    Message = "Error updating token position"
+                };
+            }
+        }
+
+        public async Task<TokenPlacementResult> RemoveTokenFromMapAsync(Guid tokenId, string userId)
+        {
+            try
+            {
+                var token = await _context.Tokens.FindAsync(tokenId);
+                if (token == null)
+                {
+                    return new TokenPlacementResult
+                    {
+                        Success = false,
+                        Message = "Token not found"
+                    };
+                }
+
+                // Remove map marker
+                var mapMarker = await _context.MapMarkers
+                    .FirstOrDefaultAsync(m => m.TokenId == tokenId && m.IsActive);
+
+                if (mapMarker != null)
+                {
+                    mapMarker.IsActive = false;
+                    mapMarker.LastUpdated = DateTime.UtcNow;
+                }
+
+                // Clear token position
+                token.CurrentLatitude = null;
+                token.CurrentLongitude = null;
+
+                // Remove area coverages
+                var areaCoverages = await _context.TokenAreaCoverages
+                    .Where(tac => tac.TokenId == tokenId && tac.IsDynamic)
+                    .ToListAsync();
+
+                foreach (var coverage in areaCoverages)
+                {
+                    coverage.IsActive = false;
+                    coverage.LastUpdated = DateTime.UtcNow;
+                }
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Token {TokenId} removed from map", tokenId);
+
+                return new TokenPlacementResult
+                {
+                    Success = true,
+                    Message = $"Token '{token.Name}' removed from map",
+                    Token = token,
+                    MapMarker = mapMarker,
+                    AreaCoverages = areaCoverages
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error removing token {TokenId} from map", tokenId);
+                return new TokenPlacementResult
+                {
+                    Success = false,
+                    Message = "Error removing token from map"
+                };
+            }
+        }
+
+        public async Task<TokenPlacementResult> GetTokenPlacementInfoAsync(Guid tokenId)
+        {
+            try
+            {
+                var token = await _context.Tokens
+                    .Include(t => t.TokenGroup)
+                    .FirstOrDefaultAsync(t => t.Id == tokenId);
+
+                if (token == null)
+                {
+                    return new TokenPlacementResult
+                    {
+                        Success = false,
+                        Message = "Token not found"
+                    };
+                }
+
+                var mapMarker = await _context.MapMarkers
+                    .FirstOrDefaultAsync(m => m.TokenId == tokenId && m.IsActive);
+
+                var areaCoverages = await _context.TokenAreaCoverages
+                    .Where(tac => tac.TokenId == tokenId && tac.IsActive)
+                    .ToListAsync();
+
+                return new TokenPlacementResult
+                {
+                    Success = true,
+                    Message = "Token placement info retrieved successfully",
+                    Token = token,
+                    MapMarker = mapMarker,
+                    AreaCoverages = areaCoverages
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting token {TokenId} placement info", tokenId);
+                return new TokenPlacementResult
+                {
+                    Success = false,
+                    Message = "Error retrieving token placement info"
+                };
+            }
+        }
+    }
+}

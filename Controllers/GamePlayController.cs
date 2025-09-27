@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using TechWebSol.Data;
 using TechWebSol.Filters;
 using TechWebSol.Services;
+using TechWebSol.Services.TokenManagement;
 using TechWebSol.Models;
 
 namespace TechWebSol.Controllers
@@ -14,20 +15,35 @@ namespace TechWebSol.Controllers
         public double Latitude { get; set; }
         public double Longitude { get; set; }
     }
+
+    public class PlaceTokenRequest
+    {
+        public Guid TokenId { get; set; }
+        public decimal Latitude { get; set; }
+        public decimal Longitude { get; set; }
+    }
+
+    public class RemoveTokenRequest
+    {
+        public Guid TokenId { get; set; }
+    }
     [AuthorizeDynamic]
     public class GamePlayController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly IUserSessionService _userSessionService;
+        private readonly ITokenPlacementService _tokenPlacementService;
         private readonly ILogger<GamePlayController> _logger;
 
         public GamePlayController(
             ApplicationDbContext context,
             IUserSessionService userSessionService,
+            ITokenPlacementService tokenPlacementService,
             ILogger<GamePlayController> logger)
         {
             _context = context;
             _userSessionService = userSessionService;
+            _tokenPlacementService = tokenPlacementService;
             _logger = logger;
         }
 
@@ -36,6 +52,56 @@ namespace TechWebSol.Controllers
             ViewData["Title"] = "Game Play Arena";
             ViewData["Subtitle"] = "Strategic Command Center - Fox Land vs Blue Land";
             return View();
+        }
+
+        /// <summary>
+        /// Load partial view for lazy loading
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> LoadPartial(string partialName)
+        {
+            try
+            {
+                // Validate and sanitize partial name
+                if (string.IsNullOrWhiteSpace(partialName))
+                {
+                    return BadRequest("Partial name is required");
+                }
+
+                // Define allowed partials for security
+                var allowedPartials = new Dictionary<string, string>
+                {
+                    { "region-panel", "Partials/Controls/_RegionPanel" },
+                    { "overlay-controls", "Partials/Controls/_OverlayControls" },
+                    { "data-entry-modal", "Partials/Modals/_DataEntryModal" },
+                    { "token-management-modal", "Partials/Modals/_TokenManagementModal" },
+                    { "token-selection-modal", "Partials/Modals/_TokenSelectionModal" },
+                    { "simulation-panel", "Partials/Modals/_SimulationPanel" },
+                    { "unit-deployment-modal", "Partials/Modals/_UnitDeploymentModal" },
+                    { "movement-plan-modal", "Partials/Modals/_MovementPlanModal" },
+                    { "battle-modal", "Partials/Modals/_BattleModal" },
+                    { "objective-modal", "Partials/Modals/_ObjectiveModal" },
+                    { "settings-modal", "Partials/Modals/_SettingsModal" },
+                    { "scripts-core", "Partials/Scripts/_CoreScripts" },
+                    { "scripts-token", "Partials/Scripts/_TokenScripts" },
+                    { "scripts-map", "Partials/Scripts/_MapScripts" }
+                };
+
+                if (!allowedPartials.ContainsKey(partialName))
+                {
+                    return NotFound($"Partial '{partialName}' not found");
+                }
+
+                var partialPath = allowedPartials[partialName];
+
+                // Return the partial view
+                return PartialView(partialPath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading partial view: {PartialName}", partialName);
+                return StatusCode(500, "Error loading partial view");
+            }
         }
 
         /// <summary>
@@ -97,6 +163,64 @@ namespace TechWebSol.Controllers
         }
 
         /// <summary>
+        /// Place token on the map with coverage area creation
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> PlaceTokenOnMap([FromBody] PlaceTokenRequest request)
+        {
+            try
+            {
+                var currentUser = _userSessionService.GetCurrentUser();
+                if (currentUser == null)
+                {
+                    return Json(new { success = false, message = "User not authenticated" });
+                }
+
+                var result = await _tokenPlacementService.PlaceTokenOnMapAsync(
+                    request.TokenId, 
+                    request.Latitude, 
+                    request.Longitude, 
+                    currentUser.ApplicationUserId.ToString());
+
+                if (result.Success)
+                {
+                    return Json(new 
+                    { 
+                        success = true, 
+                        message = result.Message,
+                        token = new
+                        {
+                            id = result.Token?.Id,
+                            name = result.Token?.Name,
+                            latitude = result.Token?.CurrentLatitude,
+                            longitude = result.Token?.CurrentLongitude,
+                            coverageRadius = result.Token?.CoverageRadiusKm
+                        },
+                        areaCoverages = result.AreaCoverages?.Select(ac => new
+                        {
+                            id = ac.Id,
+                            name = ac.Name,
+                            geometry = ac.Geometry,
+                            coverageType = ac.CoverageType,
+                            shapeType = ac.ShapeType,
+                            radiusKm = ac.RadiusKm,
+                            areaKm2 = ac.AreaKm2
+                        })
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, message = result.Message });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error placing token on map");
+                return Json(new { success = false, message = "Error placing token on map" });
+            }
+        }
+
+        /// <summary>
         /// Update token position on the map
         /// </summary>
         [HttpPost]
@@ -110,56 +234,135 @@ namespace TechWebSol.Controllers
                     return Json(new { success = false, message = "User not authenticated" });
                 }
 
-                // Find or create a MapMarker for this token
-                var mapMarker = await _context.MapMarkers
-                    .FirstOrDefaultAsync(m => m.TokenId == request.TokenId);
+                var result = await _tokenPlacementService.UpdateTokenPositionAsync(
+                    request.TokenId, 
+                    (decimal)request.Latitude, 
+                    (decimal)request.Longitude, 
+                    currentUser.ApplicationUserId.ToString());
 
-                if (mapMarker == null)
+                if (result.Success)
                 {
-                    // Create new MapMarker
-                    var tokenEntity = await _context.Tokens.FindAsync(request.TokenId);
-                    if (tokenEntity == null)
-                    {
-                        return Json(new { success = false, message = "Token not found" });
-                    }
-
-                    mapMarker = new MapMarker
-                    {
-                        Id = $"token_{request.TokenId}_{DateTime.Now.Ticks}",
-                        TokenId = request.TokenId,
-                        Location = $"{{\"lat\":{request.Latitude},\"lng\":{request.Longitude}}}",
-                        CreatedAt = DateTime.Now,
-                        TokenName = tokenEntity.Name,
-                        CreatedBy = currentUser.ApplicationUserId.ToString(),
-                        IsActive = true,
-                        LastUpdated = DateTime.Now
-                    };
-
-                    _context.MapMarkers.Add(mapMarker);
+                    return Json(new 
+                    { 
+                        success = true, 
+                        message = result.Message,
+                        areaCoverages = result.AreaCoverages?.Select(ac => new
+                        {
+                            id = ac.Id,
+                            name = ac.Name,
+                            geometry = ac.Geometry,
+                            coverageType = ac.CoverageType,
+                            shapeType = ac.ShapeType,
+                            radiusKm = ac.RadiusKm,
+                            areaKm2 = ac.AreaKm2
+                        })
+                    });
                 }
                 else
                 {
-                    // Update existing MapMarker
-                    mapMarker.Location = $"{{\"lat\":{request.Latitude},\"lng\":{request.Longitude}}}";
-                    mapMarker.LastUpdated = DateTime.Now;
+                    return Json(new { success = false, message = result.Message });
                 }
-
-                // Update token usage statistics
-                var tokenForStats = await _context.Tokens.FindAsync(request.TokenId);
-                if (tokenForStats != null)
-                {
-                    tokenForStats.LastUsed = DateTime.Now;
-                    tokenForStats.UsageCount = tokenForStats.UsageCount + 1;
-                }
-
-                await _context.SaveChangesAsync();
-
-                return Json(new { success = true, message = "Token position updated successfully" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating token position");
                 return Json(new { success = false, message = "Error updating token position" });
+            }
+        }
+
+        /// <summary>
+        /// Move token to new position
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> MoveToken([FromBody] PlaceTokenRequest request)
+        {
+            try
+            {
+                var currentUser = _userSessionService.GetCurrentUser();
+                if (currentUser == null)
+                {
+                    return Json(new { success = false, message = "User not authenticated" });
+                }
+
+                var result = await _tokenPlacementService.UpdateTokenPositionAsync(
+                    request.TokenId, 
+                    request.Latitude, 
+                    request.Longitude, 
+                    currentUser.ApplicationUserId.ToString());
+
+                if (result.Success)
+                {
+                    return Json(new 
+                    { 
+                        success = true, 
+                        message = result.Message,
+                        token = new
+                        {
+                            id = result.Token?.Id,
+                            name = result.Token?.Name,
+                            latitude = result.Token?.CurrentLatitude,
+                            longitude = result.Token?.CurrentLongitude,
+                            coverageRadius = result.Token?.CoverageRadiusKm
+                        },
+                        areaCoverages = result.AreaCoverages?.Select(ac => new
+                        {
+                            id = ac.Id,
+                            name = ac.Name,
+                            geometry = ac.Geometry,
+                            coverageType = ac.CoverageType,
+                            shapeType = ac.ShapeType,
+                            radiusKm = ac.RadiusKm,
+                            areaKm2 = ac.AreaKm2
+                        })
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, message = result.Message });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error moving token");
+                return Json(new { success = false, message = "Error moving token" });
+            }
+        }
+
+        /// <summary>
+        /// Remove token from map permanently
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> RemoveTokenFromMap([FromBody] RemoveTokenRequest request)
+        {
+            try
+            {
+                var currentUser = _userSessionService.GetCurrentUser();
+                if (currentUser == null)
+                {
+                    return Json(new { success = false, message = "User not authenticated" });
+                }
+
+                var result = await _tokenPlacementService.RemoveTokenFromMapAsync(
+                    request.TokenId, 
+                    currentUser.ApplicationUserId.ToString());
+
+                if (result.Success)
+                {
+                    return Json(new 
+                    { 
+                        success = true, 
+                        message = result.Message
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, message = result.Message });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error removing token from map");
+                return Json(new { success = false, message = "Error removing token from map" });
             }
         }
 
@@ -177,30 +380,46 @@ namespace TechWebSol.Controllers
                     return Json(new { success = false, message = "User not authenticated" });
                 }
 
-                var mapMarker = await _context.MapMarkers
-                    .FirstOrDefaultAsync(m => m.TokenId == tokenId && m.IsActive);
-
-                if (mapMarker == null)
+                var result = await _tokenPlacementService.GetTokenPlacementInfoAsync(tokenId);
+                
+                if (result.Success && result.MapMarker != null)
                 {
-                    return Json(new { success = false, message = "Token position not found" });
-                }
-
-                // Parse the JSON location string
-                try
-                {
-                    var locationData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, double>>(mapMarker.Location);
-                    if (locationData != null && locationData.ContainsKey("lat") && locationData.ContainsKey("lng"))
+                    // Parse the JSON location string
+                    try
                     {
-                        var position = new { lat = locationData["lat"], lng = locationData["lng"] };
-                        return Json(new { success = true, position = position });
+                        var locationData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, double>>(result.MapMarker.Location);
+                        if (locationData != null && locationData.ContainsKey("lat") && locationData.ContainsKey("lng"))
+                        {
+                            var position = new { lat = locationData["lat"], lng = locationData["lng"] };
+                            return Json(new { 
+                                success = true, 
+                                position = position,
+                                token = new
+                                {
+                                    id = result.Token?.Id,
+                                    name = result.Token?.Name,
+                                    coverageRadius = result.Token?.CoverageRadiusKm
+                                },
+                                areaCoverages = result.AreaCoverages?.Select(ac => new
+                                {
+                                    id = ac.Id,
+                                    name = ac.Name,
+                                    geometry = ac.Geometry,
+                                    coverageType = ac.CoverageType,
+                                    shapeType = ac.ShapeType,
+                                    radiusKm = ac.RadiusKm,
+                                    areaKm2 = ac.AreaKm2
+                                })
+                            });
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error parsing location JSON for token {TokenId}", tokenId);
                     }
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error parsing location JSON for token {TokenId}", tokenId);
-                }
 
-                return Json(new { success = false, message = "Invalid position data" });
+                return Json(new { success = false, message = "Token position not found" });
             }
             catch (Exception ex)
             {

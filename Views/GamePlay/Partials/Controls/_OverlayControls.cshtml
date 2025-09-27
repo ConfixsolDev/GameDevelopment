@@ -1,0 +1,83 @@
+<div class="map-overlay-controls">
+    <div class="overlay-control-group">
+        <h6>War Game Tools</h6>
+        <div class="control-row">
+            <button class="overlay-btn" id="btnPlaceToken">
+                <i class="fas fa-plus"></i>
+                <span>Place Token</span>
+            </button>
+            <button class="overlay-btn" id="btnCancelTokenPlacement">
+                <i class="fas fa-times"></i>
+                <span>Cancel</span>
+            </button>
+            <button class="overlay-btn" onclick="openDataEntry()">
+                <i class="fas fa-database"></i>
+                <span>Data Entry</span>
+            </button>
+        </div>
+        <div class="control-row">
+            <button class="overlay-btn" onclick="planMovement()">
+                <i class="fas fa-route"></i>
+                <span>Plan Move</span>
+            </button>
+            <button class="overlay-btn" onclick="createObjective()">
+                <i class="fas fa-flag"></i>
+                <span>Objective</span>
+            </button>
+        </div>
+        <div class="control-row">
+            <button class="overlay-btn" onclick="initiateBattle()">
+                <i class="fas fa-crosshairs"></i>
+                <span>Battle</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="overlay-control-group">
+        <h6>Game Controls</h6>
+        <div class="control-row">
+            <button class="overlay-btn" onclick="advanceTime()">
+                <i class="fas fa-forward"></i>
+                <span>Advance</span>
+            </button>
+            <button class="overlay-btn" onclick="runScenarioPointCheck()">
+                <i class="fas fa-calculator"></i>
+                <span>Points</span>
+            </button>
+        </div>
+        <div class="control-row">
+            <button class="overlay-btn" onclick="openModal('simulationPanel')">
+                <i class="fas fa-cog"></i>
+                <span>Simulation</span>
+            </button>
+            <button class="overlay-btn" onclick="openModal('settingsModal')">
+                <i class="fas fa-sliders-h"></i>
+                <span>Settings</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="overlay-control-group">
+        <h6>View Controls</h6>
+        <div class="control-row">
+            <button class="overlay-btn" onclick="toggleFullscreen()">
+                <i class="fas fa-expand"></i>
+                <span>Fullscreen</span>
+            </button>
+            <button class="overlay-btn" onclick="resetMapView()">
+                <i class="fas fa-home"></i>
+                <span>Reset View</span>
+            </button>
+        </div>
+        <div class="control-row">
+            <button class="overlay-btn" onclick="exportMap()">
+                <i class="fas fa-download"></i>
+                <span>Export</span>
+            </button>
+            <button class="overlay-btn" onclick="toggleTokens()">
+                <i class="fas fa-eye"></i>
+                <span>Toggle Tokens</span>
+            </button>
+        </div>
+    </div>
+</div>
