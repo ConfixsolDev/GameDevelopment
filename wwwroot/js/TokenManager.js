@@ -8,6 +8,7 @@ class TokenManager {
         this.placedTokens = new Map(); // tokenId -> { marker, coverageAreas, token }
         this.tokenPlacementManager = null;
         this.isInitialized = false;
+        this.placedTokensCache = []; // Cache for placed tokens
         
         // Bind methods to preserve context
         this.initialize = this.initialize.bind(this);
@@ -74,6 +75,9 @@ class TokenManager {
         window.populateTokenSelection = this.populateTokenSelection.bind(this);
         window.selectTokenForPlacement = this.selectTokenForPlacement.bind(this);
         window.showTokenError = this.showTokenError.bind(this);
+
+        // Tab handlers
+        window.switchTokenTab = this.switchTokenTab?.bind(this) || (() => {});
     }
 
     /**
@@ -563,6 +567,7 @@ class TokenManager {
             if (existingModal) {
                 console.log('Modal already exists, opening directly...');
                 this.openModal('tokenSelectionModal');
+                this.attachTabHandlers();
                 if (!this.tokensLoaded) {
                     this.tokensLoaded = true;
                     this.loadAvailableTokens();
@@ -576,6 +581,7 @@ class TokenManager {
                 await lazyLoader.loadPartial('token-selection-modal', '#modalsContainer', {
                     onLoaded: () => {
                         console.log('Modal loaded successfully');
+                        this.attachTabHandlers();
                         setTimeout(() => {
                             this.openModal('tokenSelectionModal');
                             if (!this.tokensLoaded) {
@@ -628,7 +634,26 @@ class TokenManager {
             console.log('📋 Token data received:', data);
             
             if (data.success) {
-                this.populateTokenSelection(data.tokens || []);
+                let tokens = Array.isArray(data.tokens) ? data.tokens : [];
+                // Build exclusion set from multiple sources (server + client state)
+                let placedIds = new Set();
+                try {
+                    const placed = await this.getAllPlacedTokens();
+                    (placed || []).forEach(p => placedIds.add(p.id || p.Id));
+                } catch {}
+                if (this.tokenPlacementManager && this.tokenPlacementManager.placedTokens) {
+                    for (const [pid] of this.tokenPlacementManager.placedTokens) placedIds.add(pid);
+                }
+                (this.placedTokensCache || []).forEach(p => placedIds.add(p.id));
+
+                // Exclude any token that is placed by id or by coordinates/status
+                tokens = tokens.filter(t => {
+                    const tid = t.id || t.Id;
+                    if (placedIds.has(tid)) return false;
+                    return !this.isTokenAlreadyPlaced(t);
+                });
+
+                this.populateTokenSelection(tokens);
                 console.log('✅ Tokens populated successfully');
             } else {
                 console.error('❌ Failed to load tokens:', data.message);
@@ -641,6 +666,24 @@ class TokenManager {
             this.isLoadingTokens = false;
             console.log('🏁 Token loading process complete');
         }
+    }
+
+    /**
+     * Determine whether a token is already placed on the map
+     */
+    isTokenAlreadyPlaced(token) {
+        const statusIsPlaced = typeof token.status === 'string' && token.status.toLowerCase() === 'placed';
+        const hasPosition =
+            (token.position && (token.position.lat != null && token.position.lng != null)) ||
+            (token.currentPosition && (token.currentPosition.lat != null && token.currentPosition.lng != null)) ||
+            (token.latitude != null && token.longitude != null) ||
+            (token.currentLatitude != null && token.currentLongitude != null) ||
+            (token.CurrentLatitude != null && token.CurrentLongitude != null);
+
+        const placedByManager = this.tokenPlacementManager && this.tokenPlacementManager.isTokenPlaced && token.id && this.tokenPlacementManager.isTokenPlaced(token.id);
+        const placedInCache = (this.placedTokensCache || []).some(p => p.id === token.id);
+
+        return statusIsPlaced || hasPosition || placedByManager || placedInCache;
     }
 
     /**
@@ -671,21 +714,37 @@ class TokenManager {
      */
     createTokenCard(token, index) {
         const hasImage = token.assetImagePath && token.assetImagePath.trim() !== '';
+        const status = token.status || 'created';
+        const isPlaced = this.isTokenAlreadyPlaced(token);
         
+        // Image thumbnail with fallback and name overlay
+        const imageThumbnail = hasImage 
+            ? `<img src="${token.assetImagePath}" alt="${token.name}" class="token-card-image" title="${token.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+               <div class="token-placeholder" style="display:none;">
+                   <i class="${this.getTokenIcon(token)}"></i>
+               </div>
+               <div class="token-name-overlay">${token.name || 'Unnamed Token'}</div>`
+            : `<div class="token-placeholder">
+                   <i class="${this.getTokenIcon(token)}"></i>
+               </div>
+               <div class="token-name-overlay">${token.name || 'Unnamed Token'}</div>`;
+        
+        const cardHtml = `
+            <div class="token-selection-card" ${!isPlaced ? `onclick=\"tokenManager.selectTokenForPlacement(${JSON.stringify(token).replace(/"/g, '&quot;')})\"` : ''} data-token-id="${token.id}">
+                <div class="token-status-indicator ${status}"></div>
+                ${imageThumbnail}
+            </div>`;
+
+        if (!isPlaced) {
+            return cardHtml;
+        }
+
+        // For placed tokens, append a quick action button below the card
         return `
-            <div class="token-option" onclick="tokenManager.selectTokenForPlacement(${JSON.stringify(token).replace(/"/g, '&quot;')})">
-                <div class="token-icon">
-                    ${hasImage ? 
-                        `<img src="${token.assetImagePath}" 
-                             alt="${token.name || 'Token'}" 
-                             style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" />` :
-                        `<i class="${this.getTokenIcon(token)}"></i>`
-                    }
-                </div>
-                <div class="token-info">
-                    <h5>${token.name || 'Unnamed Token'}</h5>
-                    <p>${token.tokenGroupName || 'Token'} ${token.usageCount ? `• Used ${token.usageCount} times` : ''}</p>
-                    <span class="token-status available">Ready to Place</span>
+            <div>
+                ${cardHtml}
+                <div style="margin-top:8px; text-align:center;">
+                    <button type="button" class="gameplay-btn" onclick="tokenManager.quickRemoveFromMap('${token.id}')">Remove from map</button>
                 </div>
             </div>
         `;
@@ -766,6 +825,43 @@ class TokenManager {
     }
 
     /**
+     * Quick remove a placed token from the map and refresh lists
+     */
+    async quickRemoveFromMap(tokenId) {
+        try {
+            if (this.tokenPlacementManager) {
+                await this.tokenPlacementManager.removeTokenFromMap(tokenId);
+            }
+            // Update cache
+            if (this.removeTokenFromCache) {
+                this.removeTokenFromCache(tokenId);
+            }
+
+            // Refresh current tab
+            const placedBtn = document.getElementById('tokenTabPlaced');
+            const availableBtn = document.getElementById('tokenTabAvailable');
+            if (placedBtn && placedBtn.classList.contains('active')) {
+                const tokens = await this.getAllPlacedTokens();
+                this.populateTokenSelection(tokens || []);
+            } else if (availableBtn && availableBtn.classList.contains('active')) {
+                await this.loadAvailableTokens();
+            } else {
+                // Default to refreshing available list
+                await this.loadAvailableTokens();
+            }
+
+            if (typeof showNotification === 'function') {
+                showNotification('Token removed from map', 'success');
+            }
+        } catch (error) {
+            console.error('Error removing token from map:', error);
+            if (typeof showNotification === 'function') {
+                showNotification('Error removing token from map', 'error');
+            }
+        }
+    }
+
+    /**
      * Open modal utility
      */
     openModal(modalId) {
@@ -827,6 +923,106 @@ class TokenManager {
     }
 
     /**
+     * Save placed tokens to localStorage
+     */
+    savePlacedTokensToCache(tokenData, position) {
+        try {
+            const placedToken = {
+                ...tokenData,
+                latitude: position.lat,
+                longitude: position.lng,
+                placedAt: new Date().toISOString()
+            };
+            
+            // Add to cache
+            const existingIndex = this.placedTokensCache.findIndex(t => t.id === tokenData.id);
+            if (existingIndex >= 0) {
+                this.placedTokensCache[existingIndex] = placedToken;
+            } else {
+                this.placedTokensCache.push(placedToken);
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('gamePlay_placedTokens', JSON.stringify(this.placedTokensCache));
+            console.log(`💾 Saved token ${tokenData.name} to cache`);
+        } catch (error) {
+            console.error('Error saving placed token to cache:', error);
+        }
+    }
+
+    /**
+     * Load placed tokens from localStorage
+     */
+    loadPlacedTokensFromCache() {
+        try {
+            const cached = localStorage.getItem('gamePlay_placedTokens');
+            if (cached) {
+                this.placedTokensCache = JSON.parse(cached);
+                console.log(`📂 Loaded ${this.placedTokensCache.length} placed tokens from cache`);
+                return this.placedTokensCache;
+            }
+        } catch (error) {
+            console.error('Error loading placed tokens from cache:', error);
+        }
+        return [];
+    }
+
+    /**
+     * Attach tab click handlers
+     */
+    attachTabHandlers() {
+        const availableBtn = document.getElementById('tokenTabAvailable');
+        const placedBtn = document.getElementById('tokenTabPlaced');
+        if (!availableBtn || !placedBtn) return;
+
+        availableBtn.onclick = async () => {
+            availableBtn.classList.add('active');
+            placedBtn.classList.remove('active');
+            await this.loadAvailableTokens();
+        };
+
+        placedBtn.onclick = async () => {
+            placedBtn.classList.add('active');
+            availableBtn.classList.remove('active');
+            const tokens = await this.getAllPlacedTokens();
+            this.populateTokenSelection(tokens || []);
+        };
+    }
+
+    /**
+     * Remove token from cache
+     */
+    removeTokenFromCache(tokenId) {
+        try {
+            this.placedTokensCache = this.placedTokensCache.filter(t => t.id !== tokenId);
+            localStorage.setItem('gamePlay_placedTokens', JSON.stringify(this.placedTokensCache));
+            console.log(`🗑️ Removed token ${tokenId} from cache`);
+        } catch (error) {
+            console.error('Error removing token from cache:', error);
+        }
+    }
+
+    /**
+     * Get all placed tokens (from cache and server)
+     */
+    async getAllPlacedTokens() {
+        try {
+            // First try to get from server
+            const response = await fetch('/GamePlay/GetPlacedTokens');
+            const result = await response.json();
+            
+            if (result.success && result.tokens) {
+                return result.tokens;
+            }
+        } catch (error) {
+            console.warn('Could not load placed tokens from server, using cache:', error);
+        }
+        
+        // Fallback to cache
+        return this.loadPlacedTokensFromCache();
+    }
+
+    /**
      * Clean up resources
      */
     destroy() {
@@ -839,6 +1035,7 @@ class TokenManager {
         this.isLoadingTokens = false;
         this.tokensLoaded = false;
         this.selectedTokenForPlacement = null;
+        this.placedTokensCache = [];
     }
 }
 

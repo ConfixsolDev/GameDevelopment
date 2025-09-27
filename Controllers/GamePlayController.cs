@@ -17,6 +17,14 @@ namespace TechWebSol.Controllers
         public decimal Longitude { get; set; }
     }
 
+    public class UpdateTokenPositionRequest
+    {
+        public Guid TokenId { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public DateTime? PlacedAt { get; set; }
+    }
+
     public class RemoveTokenRequest
     {
         public Guid TokenId { get; set; }
@@ -49,9 +57,76 @@ namespace TechWebSol.Controllers
         }
 
         /// <summary>
+        /// Get all placed tokens with their positions based on user's TeamId
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetPlacedTokens()
+        {
+            try
+            {
+                // Get current user
+                var currentUser = _userSessionService.GetCurrentUser();
+                if (currentUser == null)
+                {
+                    return Json(new { success = false, message = "User not authenticated" });
+                }
+
+                if (currentUser.TeamId == null)
+                {
+                    return Json(new { success = false, message = "User not assigned to a team" });
+                }
+
+                // Query tokens that belong to the user's team and have been placed (have lat/lng)
+                var placedTokens = await _context.Tokens
+                    .Where(t => t.TeamId == currentUser.TeamId && 
+                               t.IsActive && 
+                               t.CurrentLatitude.HasValue && 
+                               t.CurrentLongitude.HasValue)
+                    .Include(t => t.TokenGroup)
+                    .Include(t => t.AreaCoverages)
+                    .Select(t => new
+                    {
+                        id = t.Id,
+                        name = t.Name,
+                        tokenGroupId = t.TokenGroupId,
+                        tokenGroupName = t.TokenGroup != null ? t.TokenGroup.Name : null,
+                        assetImagePath = t.AssetImagePath,
+                        latitude = t.CurrentLatitude.Value,
+                        longitude = t.CurrentLongitude.Value,
+                        isActive = t.IsActive,
+                        isManualToken = t.IsManualToken,
+                        lastUsed = t.LastUsed,
+                        usageCount = t.UsageCount,
+                        notes = t.Notes,
+                        status = "placed",
+                        areaCoverages = t.AreaCoverages.Select(ac => new
+                        {
+                            id = ac.Id,
+                            shapeType = ac.ShapeType,
+                            radiusKm = ac.RadiusKm,
+                            coverageType = ac.CoverageType,
+                            geometry = ac.Geometry
+                        }).ToList()
+                    })
+                    .ToListAsync();
+
+                _logger.LogInformation($"Found {placedTokens.Count} placed tokens for team {currentUser.TeamId}");
+
+                return Json(new { 
+                    success = true, 
+                    tokens = placedTokens 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting placed tokens for team {TeamId}", _userSessionService.GetCurrentUser()?.TeamId);
+                return Json(new { success = false, message = "Error retrieving placed tokens" });
+            }
+        }
+
+        /// <summary>
         /// Load partial view for lazy loading
         /// </summary>
-
         [HttpGet]
         public async Task<IActionResult> LoadPartial(string partialName)
         {

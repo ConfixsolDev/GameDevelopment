@@ -5,20 +5,15 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TechWebSol.Models
 {
     [Table("MapMarkers")]
-    public class MapMarker
+    public class MapMarker:BaseEntity
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.None)]  // we supply this key (e.g. "token_1757013297849")
-        [MaxLength(100)]
-        public string Id { get; set; } = string.Empty;
-
         [Required]
         [ForeignKey("Token")]
-        public Guid? TokenId { get; set; }  // matches Token.Id type (Guid from BaseEntity)
+        public Guid? TokenId { get; set; }  
 
         [Required]
         [Column(TypeName = "nvarchar(max)")]
-        public string Location { get; set; } = string.Empty;  // JSON {lat, lng}
+        public string Location { get; set; } = string.Empty; 
 
         [Required]
         public DateTime CreatedAt { get; set; }
@@ -27,13 +22,8 @@ namespace TechWebSol.Models
         [MaxLength(100)]
         public string TokenName { get; set; } = string.Empty;
 
-        [MaxLength(100)]
-        public string? CreatedBy { get; set; }
-
         [MaxLength(1000)]
         public string? Notes { get; set; }
-
-        public bool IsActive { get; set; } = true;
 
         public DateTime? LastUpdated { get; set; }
 

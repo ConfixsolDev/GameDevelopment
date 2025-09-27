@@ -20,7 +20,6 @@ namespace TechWebSol.Models
 
         // Additional metadata - removed description and category as discussed
 
-        public bool IsActive { get; set; } = true;
         public bool IsManualToken { get; set; } = false;
 
         public DateTime? LastUsed { get; set; }

@@ -68,7 +68,7 @@ namespace TechWebSol.Controllers.TokenManagement
         /// Get map marker by ID
         /// </summary>
         [HttpGet("{id}")]
-        public async Task<ActionResult<MapMarker>> GetMapMarker(string id)
+        public async Task<ActionResult<MapMarker>> GetMapMarker(Guid? id)
         {
             try
             {
@@ -96,7 +96,7 @@ namespace TechWebSol.Controllers.TokenManagement
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(marker.Id))
+                if (marker.Id != Guid.Empty)
                     return BadRequest("Marker ID is required");
 
                 if (string.IsNullOrWhiteSpace(marker.Location))
@@ -138,8 +138,8 @@ namespace TechWebSol.Controllers.TokenManagement
         {
             try
             {
-                if (id != marker.Id)
-                    return BadRequest("Marker ID mismatch");
+                    if (marker.Id != Guid.Empty)
+                        return BadRequest("Marker ID mismatch");
 
                 var existingMarker = await _context.MapMarkers.FindAsync(id);
                 if (existingMarker == null)
@@ -229,7 +229,7 @@ namespace TechWebSol.Controllers.TokenManagement
                     await using var transaction = await _context.Database.BeginTransactionAsync();
 
                     // Batch fetch to reduce per-item queries
-                    var markerIds = markers.Select(m => m.Id).Where(id => !string.IsNullOrWhiteSpace(id)).ToList();
+                    var markerIds = markers.Select(m => m.Id).Where(id => id > Guid.NewGuid()).ToList();
                     var tokenIds = markers.Select(m => m.TokenId).Where(id => id > Guid.NewGuid()).Distinct().ToList();
 
                     // Replace this line:
@@ -253,7 +253,7 @@ namespace TechWebSol.Controllers.TokenManagement
                     {
                         try
                         {
-                            if (string.IsNullOrWhiteSpace(marker.Id))
+                            if (marker.Id != Guid.Empty)
                             {
                                 results.Add(new { marker.Id, Success = false, Error = "Marker ID is required" });
                                 continue;

@@ -46,6 +46,9 @@ class GamePlayManager {
             // Initialize token manager
             await this.initializeTokenManager();
             
+            // Load and restore placed tokens
+            await this.restorePlacedTokens();
+            
             // Setup control handlers
             this.setupControlHandlers();
             
@@ -129,6 +132,169 @@ class GamePlayManager {
         } else {
             console.warn('⚠️ Token manager not available');
         }
+    }
+
+    /**
+     * Restore placed tokens on map after page refresh
+     */
+    async restorePlacedTokens() {
+        console.log('🔄 Restoring placed tokens...');
+        
+        try {
+            if (!this.map) {
+                console.warn('⚠️ Map not available for token restoration');
+                return;
+            }
+
+            // Get all placed tokens (from server or cache)
+            let placedTokens = [];
+            
+            if (typeof tokenManager !== 'undefined') {
+                placedTokens = await tokenManager.getAllPlacedTokens();
+            } else {
+                // Fallback to direct API call
+                try {
+                    const response = await fetch('/GamePlay/GetPlacedTokens');
+                    const result = await response.json();
+                    if (result.success && result.tokens) {
+                        placedTokens = result.tokens;
+                    }
+                } catch (error) {
+                    console.warn('Could not load placed tokens from server:', error);
+                }
+            }
+            
+            if (placedTokens && placedTokens.length > 0) {
+                console.log(`📍 Found ${placedTokens.length} placed tokens to restore`);
+                
+                for (const tokenData of placedTokens) {
+                    if (tokenData.latitude && tokenData.longitude) {
+                        await this.restoreTokenOnMap(tokenData);
+                    }
+                }
+                
+                console.log('✅ All placed tokens restored successfully');
+            } else {
+                console.log('ℹ️ No placed tokens found to restore');
+            }
+        } catch (error) {
+            console.error('❌ Error restoring placed tokens:', error);
+            // Don't show error to user as this is background functionality
+        }
+    }
+
+    /**
+     * Restore a single token on the map
+     */
+    async restoreTokenOnMap(tokenData) {
+        try {
+            console.log(`🎯 Restoring token: ${tokenData.name} at ${tokenData.latitude}, ${tokenData.longitude}`);
+            
+            const latlng = { lat: tokenData.latitude, lng: tokenData.longitude };
+            
+            // Create marker using TokenPlacementManager if available
+            if (typeof tokenManager !== 'undefined' && tokenManager.tokenPlacementManager) {
+                // Use the existing TokenPlacementManager to create marker
+                const marker = tokenManager.tokenPlacementManager.createTokenMarker(tokenData, latlng);
+                this.map.addLayer(marker);
+                
+                // Create coverage areas if they exist
+                if (tokenData.areaCoverages && tokenData.areaCoverages.length > 0) {
+                    tokenManager.tokenPlacementManager.createCoverageAreas(tokenData.areaCoverages, latlng);
+                }
+                
+                // Store token info for tracking
+                tokenManager.tokenPlacementManager.placedTokens.set(tokenData.id, {
+                    marker: marker,
+                    token: tokenData,
+                    coverageAreas: tokenData.areaCoverages || []
+                });
+            } else {
+                // Fallback: Create basic marker
+                await this.createBasicTokenMarker(tokenData, latlng);
+            }
+            
+        } catch (error) {
+            console.error(`❌ Error restoring token ${tokenData.name}:`, error);
+        }
+    }
+
+    /**
+     * Create basic token marker (fallback when TokenPlacementManager not available)
+     */
+    async createBasicTokenMarker(tokenData, latlng) {
+        const hasImage = tokenData.assetImagePath && tokenData.assetImagePath.trim() !== '';
+        const size = 40;
+        
+        let iconHtml;
+        if (hasImage) {
+            iconHtml = `
+                <div class="token-marker" style="
+                    width: ${size}px; 
+                    height: ${size}px; 
+                    border-radius: 50%; 
+                    overflow: hidden;
+                    border: 3px solid #00ff88;
+                    box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
+                    background: white;
+                ">
+                    <img src="${tokenData.assetImagePath}" 
+                         alt="${tokenData.name}" 
+                         style="width: 100%; height: 100%; object-fit: cover;" />
+                </div>
+            `;
+        } else {
+            iconHtml = `
+                <div class="token-marker" style="
+                    width: ${size}px; 
+                    height: ${size}px; 
+                    border-radius: 50%; 
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    border: 3px solid #00ff88;
+                    box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: bold;
+                    font-size: 18px;
+                ">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+            `;
+        }
+        
+        const icon = L.divIcon({
+            html: iconHtml,
+            className: 'custom-token-marker',
+            iconSize: [size, size],
+            iconAnchor: [size/2, size/2],
+            popupAnchor: [0, -size/2]
+        });
+        
+        const marker = L.marker([latlng.lat, latlng.lng], { 
+            icon: icon,
+            title: tokenData.name 
+        });
+        
+        // Add popup with token info
+        marker.bindPopup(`
+            <div class="token-popup">
+                <h4>${tokenData.name}</h4>
+                <p><strong>Group:</strong> ${tokenData.tokenGroupName || 'Unknown'}</p>
+                <p><strong>Position:</strong> ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}</p>
+                <p><strong>Status:</strong> Placed</p>
+            </div>
+        `);
+        
+        // Add to token layer
+        if (window.tokenLayer) {
+            window.tokenLayer.addLayer(marker);
+        } else {
+            this.map.addLayer(marker);
+        }
+        
+        console.log(`✅ Basic marker created for token: ${tokenData.name}`);
     }
 
     /**

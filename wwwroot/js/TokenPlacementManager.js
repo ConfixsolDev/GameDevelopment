@@ -137,6 +137,11 @@ class TokenPlacementManager {
                     coverageAreas: result.areaCoverages || []
                 });
 
+                // Save to cache via TokenManager if available
+                if (typeof tokenManager !== 'undefined' && tokenManager.savePlacedTokensToCache) {
+                    tokenManager.savePlacedTokensToCache(this.selectedTokenForPlacement, latlng);
+                }
+
                 // Clean up
                 this.cancelPlacementMode();
                 this.notificationCallback(result.message, 'success');

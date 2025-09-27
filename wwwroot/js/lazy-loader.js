@@ -110,12 +110,7 @@ class LazyLoader {
         const container = document.querySelector(targetSelector);
         if (container) {
             container.innerHTML = `
-                <div class="lazy-loading-indicator">
-                    <div class="loading-spinner">
-                        <i class="fas fa-spinner fa-spin"></i>
-                    </div>
-                    <p>Loading...</p>
-                </div>
+                
             `;
         }
     }

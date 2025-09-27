@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using TechWebSol.Data;
 using TechWebSol.Models;
+using TechWebSol.ViewModels;
 
 namespace TechWebSol.Services.TokenManagement
 {
@@ -26,15 +28,19 @@ namespace TechWebSol.Services.TokenManagement
         private readonly ApplicationDbContext _context;
         private readonly ITokenAreaCoverageService _coverageService;
         private readonly ILogger<TokenPlacementService> _logger;
+        private readonly ApplicationUserVM applicatonUser;
+
 
         public TokenPlacementService(
             ApplicationDbContext context,
-            ITokenAreaCoverageService coverageService,
+            ITokenAreaCoverageService coverageService
+             , IUserSessionService IUserSessionService,
             ILogger<TokenPlacementService> logger)
         {
             _context = context;
             _coverageService = coverageService;
             _logger = logger;
+            applicatonUser = IUserSessionService.GetCurrentUser();
         }
 
         public async Task<TokenPlacementResult> PlaceTokenOnMapAsync(Guid tokenId, decimal latitude, decimal longitude, string userId)
@@ -64,17 +70,11 @@ namespace TechWebSol.Services.TokenManagement
                     };
                 }
 
-                // Check if token is already placed
-                var existingMarker = await _context.MapMarkers
-                    .FirstOrDefaultAsync(m => m.TokenId == tokenId && m.IsActive);
-
-                if (existingMarker != null)
+                if (token.CurrentLatitude == null)
                 {
-                    return new TokenPlacementResult
-                    {
-                        Success = false,
-                        Message = "Token is already placed on the map"
-                    };
+                    var existingMarker = await _context.MapMarkers.Where(x=>x.TokenId == tokenId && x.TeamId == applicatonUser.TeamId).ToListAsync();
+                    _context.RemoveRange(existingMarker);
+                    await _context.SaveChangesAsync();
                 }
 
                 // Update token position
@@ -86,7 +86,6 @@ namespace TechWebSol.Services.TokenManagement
                 // Create map marker
                 var mapMarker = new MapMarker
                 {
-                    Id = $"token_{tokenId}_{DateTime.Now.Ticks}",
                     TokenId = tokenId,
                     Location = $"{{\"lat\":{latitude},\"lng\":{longitude}}}",
                     CreatedAt = DateTime.UtcNow,
@@ -166,7 +165,6 @@ namespace TechWebSol.Services.TokenManagement
                 {
                     mapMarker = new MapMarker
                     {
-                        Id = $"token_{tokenId}_{DateTime.Now.Ticks}",
                         TokenId = tokenId,
                         Location = $"{{\"lat\":{latitude},\"lng\":{longitude}}}",
                         CreatedAt = DateTime.UtcNow,
