@@ -157,29 +157,27 @@ namespace TechWebSol.Services.TokenManagement
                 token.CurrentLongitude = longitude;
                 token.LastUsed = DateTime.UtcNow;
 
-                // Update or create map marker
-                var mapMarker = await _context.MapMarkers
+                // Inactivate previous active marker and create a new one to preserve movement history
+                var previousActiveMarker = await _context.MapMarkers
                     .FirstOrDefaultAsync(m => m.TokenId == tokenId && m.IsActive);
 
-                if (mapMarker == null)
+                if (previousActiveMarker != null)
                 {
-                    mapMarker = new MapMarker
-                    {
-                        TokenId = tokenId,
-                        Location = $"{{\"lat\":{latitude},\"lng\":{longitude}}}",
-                        CreatedAt = DateTime.UtcNow,
-                        TokenName = token.Name,
-                        CreatedBy = userId,
-                        IsActive = true,
-                        LastUpdated = DateTime.UtcNow
-                    };
-                    _context.MapMarkers.Add(mapMarker);
+                    previousActiveMarker.IsActive = false;
+                    previousActiveMarker.LastUpdated = DateTime.UtcNow;
                 }
-                else
+
+                var mapMarker = new MapMarker
                 {
-                    mapMarker.Location = $"{{\"lat\":{latitude},\"lng\":{longitude}}}";
-                    mapMarker.LastUpdated = DateTime.UtcNow;
-                }
+                    TokenId = tokenId,
+                    Location = $"{{\"lat\":{latitude},\"lng\":{longitude}}}",
+                    CreatedAt = DateTime.UtcNow,
+                    TokenName = token.Name,
+                    CreatedBy = userId,
+                    IsActive = true,
+                    LastUpdated = DateTime.UtcNow
+                };
+                _context.MapMarkers.Add(mapMarker);
 
                 // Update area coverage if token has coverage radius
                 List<TokenAreaCoverage>? areaCoverages = null;

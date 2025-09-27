@@ -380,9 +380,16 @@ class TokenPlacementManager {
      * Show token details
      */
     showTokenDetails(token) {
-        // This should be implemented to show token details in a panel or modal
-        console.log('Show token details for:', token);
-        // You can integrate this with your existing token details functionality
+		// Delegate to existing TokenManager details UI to avoid duplication
+		try {
+			if (typeof tokenManager !== 'undefined' && tokenManager && typeof tokenManager.showTokenDetails === 'function') {
+				tokenManager.showTokenDetails(token);
+				return;
+			}
+			console.warn('tokenManager.showTokenDetails not available');
+		} catch (err) {
+			console.error('Error showing token details:', err);
+		}
     }
 
     /**
