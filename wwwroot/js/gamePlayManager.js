@@ -52,6 +52,9 @@ class GamePlayManager {
             // Setup control handlers
             this.setupControlHandlers();
             
+            // Initialize basemap dropdown with saved state
+            this.initializeBasemapControls();
+            
             // Preload critical modals in background
             this.preloadCriticalModals();
             
@@ -396,6 +399,20 @@ class GamePlayManager {
                 console.log('🔍 Place Token button found: NO');
             }
         }, 500);
+    }
+
+    /**
+     * Initialize basemap controls
+     */
+    initializeBasemapControls() {
+        console.log('🗺️ Initializing basemap controls...');
+        
+        // Initialize basemap dropdown with saved state
+        if (typeof initializeBasemapDropdown === 'function') {
+            initializeBasemapDropdown();
+        }
+        
+        console.log('✅ Basemap controls initialized');
     }
 
     /**

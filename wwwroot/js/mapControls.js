@@ -9,6 +9,25 @@ let isEditMode = false;
 let currentBasemap = 'Satellite';
 
 /**
+ * Initialize basemap dropdown with saved state
+ */
+function initializeBasemapDropdown() {
+    // Load saved basemap from localStorage
+    const savedBasemap = localStorage.getItem('currentBasemap');
+    if (savedBasemap) {
+        currentBasemap = savedBasemap;
+    }
+    
+    // Update dropdown to show current basemap
+    const basemapDropdown = document.getElementById('basemapDropdown');
+    if (basemapDropdown) {
+        basemapDropdown.value = currentBasemap;
+    }
+    
+    console.log(`🗺️ Basemap dropdown initialized with: ${currentBasemap}`);
+}
+
+/**
  * Toggle fullscreen mode for the map
  */
 function toggleFullscreen() {
@@ -212,10 +231,13 @@ function changeBasemap(basemapType) {
         newLayer.addTo(window.gameMap);
         currentBasemap = basemapType;
         
+        // Save basemap to localStorage
+        localStorage.setItem('currentBasemap', basemapType);
+        
         // Update basemap dropdown
         const basemapDropdown = document.getElementById('basemapDropdown');
         if (basemapDropdown) {
-            basemapDropdown.textContent = basemapType;
+            basemapDropdown.value = basemapType;
         }
         
         console.log(`Basemap changed to: ${basemapType}`);
@@ -334,3 +356,4 @@ window.changeBasemap = changeBasemap;
 window.showLayerPanel = showLayerPanel;
 window.toggleLayer = toggleLayer;
 window.toggleOverflowMenu = toggleOverflowMenu;
+window.initializeBasemapDropdown = initializeBasemapDropdown;
