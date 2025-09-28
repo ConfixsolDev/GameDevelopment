@@ -114,6 +114,7 @@ namespace TechWebSol.Controllers
                     { "data-entry-modal", "Partials/Modals/_DataEntryModal" },
                     { "token-management-modal", "Partials/Modals/_TokenManagementModal" },
                     { "token-selection-modal", "Partials/Modals/_TokenSelectionModal" },
+                    { "token-brigade-data-modal", "_TokenBrigadeData" },
                     { "simulation-panel", "Partials/Modals/_SimulationPanel" },
                     { "unit-deployment-modal", "Partials/Modals/_UnitDeploymentModal" },
                     { "movement-plan-modal", "Partials/Modals/_MovementPlanModal" },
@@ -122,7 +123,7 @@ namespace TechWebSol.Controllers
                     { "settings-modal", "Partials/Modals/_SettingsModal" },
                     { "scripts-core", "Partials/Scripts/_CoreScripts" },
                     { "scripts-token", "Partials/Scripts/_TokenScripts" },
-                    { "scripts-map", "Partials/Scripts/_MapScripts" }
+                    { "scripts-map", "Partials/Scripts/_MapScripts" },
                 };
 
                 if (!allowedPartials.ContainsKey(partialName))
@@ -423,6 +424,44 @@ namespace TechWebSol.Controllers
             {
                 _logger.LogError(ex, "Error getting token position");
                 return Json(new { success = false, message = "Error retrieving token position" });
+            }
+        }
+
+        /// <summary>
+        /// Returns the data entry token selection modal as a partial view
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> DataEntryTokenSelection()
+        {
+            try
+            {
+                // Get user details from database to get TeamId
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == applicatonUser.ApplicationUserId);
+                if (user == null)
+                {
+                    return PartialView("Partials/_ErrorPartial", new { Message = "User not found" });
+                }
+
+                // Find the team by TeamCode and SubTeamCode
+                var team = await _context.Teams.FirstOrDefaultAsync(t => t.TeamId == user.TeamId);
+                if (team == null)
+                {
+                    return PartialView("Partials/_ErrorPartial", new { Message = "Team not found" });
+                }
+
+                // Get tokens for this team
+                var tokens = await _context.Tokens
+                    .Include(t => t.TokenGroup)
+                    .Where(t => t.IsActive)
+                    .OrderBy(t => t.Name)
+                    .ToListAsync();
+
+                return PartialView("Partials/_DataEntryTokenSelection", tokens);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading data entry token selection");
+                return PartialView("Partials/_ErrorPartial", new { Message = "Error loading tokens for data entry" });
             }
         }
     }

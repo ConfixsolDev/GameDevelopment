@@ -550,14 +550,16 @@ class TokenManager {
 
     /**
      * Open token data entry modal
+     * Uses the single master data entry system
      */
     openTokenDataEntryModal(tokenId) {
-        if (typeof openModal === 'function') {
-            openModal('dataEntryModal');
-            // Set the token ID for data entry
-            window.currentEditingTokenId = tokenId;
+        console.log('🎯 TokenManager - Using master data entry system');
+        
+        // Single function call - no legacy, no fallbacks
+        if (typeof window.openDataEntry === 'function') {
+            window.openDataEntry();
         } else {
-            console.error('openModal function not available');
+            console.error('❌ Master data entry system not available');
         }
     }
 

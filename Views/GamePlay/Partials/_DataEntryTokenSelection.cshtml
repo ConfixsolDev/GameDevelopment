@@ -1,0 +1,93 @@
+@model List<Token>
+
+<!-- Data Entry Token Selection Modal - Exact copy of place token modal styling -->
+<div id="dataEntryTokenModal" class="gameplay-modal" style="display: none;">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-database"></i> Click Token to Enter Data</h3>
+            <button class="gameplay-modal-close" onclick="closeDataEntryTokenModal()">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <div class="token-selection-container">
+                <div class="token-search-container">
+                    <input type="text" id="tokenSearchInput" placeholder="Search tokens..." class="form-control" />
+                </div>
+                <div id="tokenSelectionGrid" class="token-selection-grid">
+                    @if (Model != null && Model.Any())
+                    {
+                        @foreach (var token in Model)
+                        {
+                            <div class="token-selection-card" onclick="selectTokenForDataEntry('@token.Id', '@token.Name')" data-token-id="@token.Id">
+                                <div class="token-status-indicator created"></div>
+                                @if (!string.IsNullOrEmpty(token.AssetImagePath))
+                                {
+                                    <img src="@token.AssetImagePath" alt="@token.Name" class="token-card-image" title="@token.Name" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="token-placeholder" style="display:none;">
+                                        <i class="fas fa-crosshairs"></i>
+                                    </div>
+                                    <div class="token-name-overlay">@token.Name</div>
+                                }
+                                else
+                                {
+                                    <div class="token-placeholder">
+                                        <i class="fas fa-crosshairs"></i>
+                                    </div>
+                                    <div class="token-name-overlay">@token.Name</div>
+                                }
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="loading-tokens">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>No tokens found for your team.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeDataEntryTokenModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Close data entry token modal function
+function closeDataEntryTokenModal() {
+    console.log('🔒 Closing data entry token modal');
+    document.getElementById('dataEntryTokenModal').style.display = 'none';
+}
+
+// Token search functionality - using same approach as place token modal
+$(document).ready(function() {
+    $('#tokenSearchInput').on('keyup', function() {
+        var searchTerm = $(this).val().toLowerCase();
+        $('.token-selection-card').each(function() {
+            var tokenName = $(this).find('.token-name-overlay').text().toLowerCase();
+            if (tokenName.includes(searchTerm)) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    });
+});
+
+// Token selection function - same as place token but for data entry
+function selectTokenForDataEntry(tokenId, tokenName) {
+    console.log('🎯 Token selected for data entry:', tokenName, tokenId);
+    
+    // Close the selection modal using same method as place token modal
+    closeDataEntryTokenModal();
+    
+    // Load the token brigade data modal (this function should already exist)
+    if (typeof loadTokenBrigadeData === 'function') {
+        loadTokenBrigadeData(tokenId);
+    } else {
+        console.error('❌ loadTokenBrigadeData function not found');
+        alert('Data entry system not fully loaded. Please try again.');
+    }
+}
+</script>

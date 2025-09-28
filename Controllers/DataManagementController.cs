@@ -1439,6 +1439,37 @@ namespace TechWebSol.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> LinkBrigadeToToken([FromBody] LinkBrigadeToTokenRequest request)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                // Find the brigade
+                var brigade = await _context.Brigades
+                    .FirstOrDefaultAsync(b => b.Id == request.BrigadeId && b.TeamId == user.TeamId && b.IsActive);
+
+                if (brigade == null) 
+                {
+                    return Json(new { success = false, message = "Brigade not found or not accessible." });
+                }
+
+                // Link the brigade to the token
+                brigade.TokenId = request.TokenId;
+                brigade.UpdatedBy = user.FullName;
+                
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, data = brigade, message = "Brigade successfully linked to token." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
         #endregion
 
         // Request DTOs
@@ -1548,6 +1579,12 @@ namespace TechWebSol.Controllers
             public string Confidence { get; set; }
             public string Description { get; set; }
             public Guid TokenId { get; set; }
+        }
+
+        public class LinkBrigadeToTokenRequest
+        {
+            public Guid TokenId { get; set; }
+            public Guid BrigadeId { get; set; }
         }
     }
 }

@@ -433,15 +433,26 @@
     }
 
     function loadTokenBrigadeData(tokenId) {
-        // Load existing brigade data for this token
-        $.get(`/DataManagement/GetTokenBrigadeData?tokenId=${tokenId}`)
-            .done(function(data) {
-                if (data.brigade) {
-                    populateBrigadeForm(data.brigade);
-                    currentBrigadeData = data;
-                    loadInfantryBattalions(data.infantryBattalions || []);
-                    loadArmouredRegiments(data.armouredRegiments || []);
-                    loadArtilleryRegiments(data.artilleryRegiments || []);
+        // Load existing brigade + units for this token using GetTokenSummary
+        $.get(`/DataManagement/GetTokenSummary?tokenId=${tokenId}`)
+            .done(function(response) {
+                if (response && response.success && response.data) {
+                    const brigades = response.data.brigades || [];
+                    if (brigades.length > 0) {
+                        const brigade = brigades[0]; // Use first brigade linked to this token
+                        populateBrigadeForm(brigade);
+                        currentBrigadeData = response.data;
+
+                        // Load units that are already filtered by token in GetTokenSummary
+                        loadInfantryBattalions(response.data.infantryBattalions || []);
+                        loadArmouredRegiments(response.data.armouredRegiments || []);
+                        loadArtilleryRegiments(response.data.artilleryRegiments || []);
+                    } else {
+                        // No brigade linked to this token yet
+                        resetBrigadeForm();
+                    }
+                } else {
+                    resetBrigadeForm();
                 }
             })
             .fail(function() {
@@ -573,15 +584,21 @@
             Description: $('#tokenBrigadeDescription').val()
         };
 
+        const isUpdate = !!formData.Id;
+        const url = isUpdate ? '/DataManagement/UpdateTokenBrigade' : '/DataManagement/CreateTokenBrigade';
+        const method = isUpdate ? 'PUT' : 'POST';
+
         $.ajax({
-            url: '/DataManagement/SaveTokenBrigade',
-            method: 'POST',
+            url: url,
+            method: method,
             contentType: 'application/json',
             data: JSON.stringify(formData)
         })
         .done(function(response) {
             if (response.success) {
-                $('#tokenBrigadeId').val(response.data.id);
+                if (!formData.Id && response.data && response.data.id) {
+                    $('#tokenBrigadeId').val(response.data.id);
+                }
                 showNotification('Brigade information saved', 'success');
             } else {
                 showNotification('Error: ' + response.message, 'error');
@@ -592,11 +609,11 @@
         });
     }
 
-    function saveAllBrigadeData() {
-        // Save all data including units
-        const brigadeData = {
-            Brigade: {
-                Id: $('#tokenBrigadeId').val() || null,
+    async function saveAllBrigadeData() {
+        // First ensure brigade exists
+        if (!$('#tokenBrigadeId').val()) {
+            // Create brigade first
+            const brigadePayload = {
                 TokenId: currentTokenId,
                 Name: $('#tokenBrigadeName').val(),
                 BrigadeCode: $('#tokenBrigadeCode').val(),
@@ -604,13 +621,54 @@
                 TotalStrength: $('#tokenBrigadeStrength').val(),
                 Status: $('#tokenBrigadeStatus').val(),
                 Description: $('#tokenBrigadeDescription').val()
-            },
-            InfantryBattalions: [],
-            ArmouredRegiments: [],
-            ArtilleryRegiments: []
-        };
+            };
 
-        // Collect infantry battalions
+            try {
+                const brigadeResponse = await $.ajax({
+                    url: '/DataManagement/CreateTokenBrigade',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(brigadePayload)
+                });
+
+                if (brigadeResponse.success && brigadeResponse.data && brigadeResponse.data.id) {
+                    $('#tokenBrigadeId').val(brigadeResponse.data.id);
+                } else {
+                    showNotification('Failed to create brigade. Cannot save units.', 'error');
+                    return;
+                }
+            } catch (error) {
+                showNotification('Failed to create brigade. Cannot save units.', 'error');
+                return;
+            }
+        }
+
+        const brigadeId = $('#tokenBrigadeId').val();
+        if (!brigadeId) {
+            showNotification('Please save brigade information first.', 'warning');
+            return;
+        }
+
+        const forceType = $('#tokenBrigadeForceType').val();
+        let allSuccess = true;
+
+        // Helper function to post data
+        async function postData(url, data) {
+            try {
+                const response = await $.ajax({
+                    url: url,
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data)
+                });
+                return response.success;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        // Save infantry battalions
+        const infantryBattalions = [];
         $('#infantryBattalionsList .unit-form-card').each(function() {
             const battalion = {};
             $(this).find('input').each(function() {
@@ -620,12 +678,18 @@
                     battalion[name] = isNaN(value) ? value : (name.includes('Speed') || name.includes('Range') ? parseFloat(value) : parseInt(value));
                 }
             });
-            battalion.ForceType = $('#tokenBrigadeForceType').val();
-            battalion.TokenId = currentTokenId;
-            brigadeData.InfantryBattalions.push(battalion);
+            battalion.ForceType = forceType;
+            battalion.BrigadeId = brigadeId;
+            infantryBattalions.push(battalion);
         });
 
-        // Collect armoured regiments
+        for (const battalion of infantryBattalions) {
+            const success = await postData('/DataManagement/CreateTokenInfantryBattalion', battalion);
+            if (!success) allSuccess = false;
+        }
+
+        // Save armoured regiments
+        const armouredRegiments = [];
         $('#armouredRegimentsList .unit-form-card').each(function() {
             const regiment = {};
             $(this).find('input').each(function() {
@@ -635,12 +699,18 @@
                     regiment[name] = isNaN(value) ? value : (name.includes('Speed') || name.includes('Range') ? parseFloat(value) : parseInt(value));
                 }
             });
-            regiment.ForceType = $('#tokenBrigadeForceType').val();
-            regiment.TokenId = currentTokenId;
-            brigadeData.ArmouredRegiments.push(regiment);
+            regiment.ForceType = forceType;
+            regiment.BrigadeId = brigadeId;
+            armouredRegiments.push(regiment);
         });
 
-        // Collect artillery regiments
+        for (const regiment of armouredRegiments) {
+            const success = await postData('/DataManagement/CreateTokenArmouredRegiment', regiment);
+            if (!success) allSuccess = false;
+        }
+
+        // Save artillery regiments
+        const artilleryRegiments = [];
         $('#artilleryRegimentsList .unit-form-card').each(function() {
             const regiment = {};
             $(this).find('input').each(function() {
@@ -650,28 +720,22 @@
                     regiment[name] = isNaN(value) ? value : (name.includes('Speed') || name.includes('Range') ? parseFloat(value) : parseInt(value));
                 }
             });
-            regiment.ForceType = $('#tokenBrigadeForceType').val();
-            regiment.TokenId = currentTokenId;
-            brigadeData.ArtilleryRegiments.push(regiment);
+            regiment.ForceType = forceType;
+            regiment.BrigadeId = brigadeId;
+            artilleryRegiments.push(regiment);
         });
 
-        $.ajax({
-            url: '/DataManagement/SaveTokenBrigadeComplete',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(brigadeData)
-        })
-        .done(function(response) {
-            if (response.success) {
-                showNotification('All brigade data saved successfully', 'success');
-                closeTokenBrigadeModal();
-            } else {
-                showNotification('Error: ' + response.message, 'error');
-            }
-        })
-        .fail(function() {
-            showNotification('Failed to save brigade data', 'error');
-        });
+        for (const regiment of artilleryRegiments) {
+            const success = await postData('/DataManagement/CreateTokenArtilleryRegiment', regiment);
+            if (!success) allSuccess = false;
+        }
+
+        if (allSuccess) {
+            showNotification('All brigade data saved successfully', 'success');
+            closeTokenBrigadeModal();
+        } else {
+            showNotification('Some data failed to save. Please review and try again.', 'warning');
+        }
     }
 
     function exportBrigadeData() {

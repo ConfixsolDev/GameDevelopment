@@ -69,16 +69,22 @@ class GamePlayManager {
     async loadCoreComponents() {
         console.log('📦 Loading core components...');
         
+        // Load core components in parallel - much simpler now!
         const coreLoads = [
             this.lazyLoader.loadPartial('region-panel', '#regionPanelContainer', {
                 onLoaded: () => console.log('📍 Region panel loaded')
             }),
             this.lazyLoader.loadPartial('overlay-controls', '#overlayControlsContainer', {
                 onLoaded: () => console.log('🎮 Overlay controls loaded')
+            }),
+            // Only load the brigade data modal for when tokens are selected
+            this.lazyLoader.loadPartial('token-brigade-data-modal', '#modalsContainer', {
+                onLoaded: () => console.log('⚔️ Token brigade data modal loaded')
             })
         ];
         
         await Promise.all(coreLoads);
+        console.log('✅ All core components loaded successfully');
     }
 
     /**
@@ -365,7 +371,12 @@ class GamePlayManager {
     preloadCriticalModals() {
         console.log('🚀 Preloading critical modals...');
         
-        const criticalModals = ['data-entry-modal', 'token-selection-modal'];
+        const criticalModals = [
+            'data-entry-modal', 
+            'token-selection-modal'
+            // Note: Data entry now uses AJAX to load server-rendered modals
+            // No need to preload token-brigade-data-modal as it's loaded via loadCoreComponents
+        ];
         if (this.lazyLoader && this.lazyLoader.preloadPartials) {
             this.lazyLoader.preloadPartials(criticalModals);
         }
@@ -407,6 +418,70 @@ class GamePlayManager {
         this.map = null;
     }
 }
+
+/**
+ * GLOBAL DATA ENTRY FUNCTION - Simple and Reliable
+ * Available immediately when gamePlayManager loads
+ */
+function openDataEntry() {
+    console.log('🎯 Opening Data Entry - Simple AJAX approach');
+    
+    // Show loading
+    $("#loading").show();
+    
+    // Load the token selection modal via AJAX
+    $.ajax({
+        url: '/GamePlay/DataEntryTokenSelection',
+        type: 'GET',
+        success: function(data) {
+            console.log('✅ AJAX Success - Response received:', typeof data, data.length || 0, 'characters');
+            
+            // Remove any existing modal
+            $('#dataEntryTokenModal').remove();
+            
+            // Add the new modal to the body
+            $('body').append(data);
+            
+            // Show the modal using same method as place token modal
+            const modal = document.getElementById('dataEntryTokenModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                console.log('✅ Data entry modal loaded and displayed successfully');
+            } else {
+                console.error('❌ Modal element not found after append');
+                alert('Error: Modal element not found');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('❌ Error loading data entry modal:');
+            console.error('   Status:', status);
+            console.error('   Error:', error);
+            console.error('   Status Code:', xhr.status);
+            console.error('   Response Text:', xhr.responseText);
+            
+            let errorMessage = 'Failed to load data entry interface';
+            if (xhr.status === 404) {
+                errorMessage = 'Data entry endpoint not found (404)';
+            } else if (xhr.status === 500) {
+                errorMessage = 'Server error loading data entry (500)';
+            } else if (xhr.status === 403) {
+                errorMessage = 'Access denied to data entry (403)';
+            }
+            
+            if (typeof toastr !== 'undefined') {
+                toastr.error(errorMessage, 'Error');
+            } else {
+                alert(errorMessage);
+            }
+        },
+        complete: function() {
+            $("#loading").hide();
+        }
+    });
+}
+
+// Make it globally available
+window.openDataEntry = openDataEntry;
 
 // Create global instance
 const gamePlayManager = new GamePlayManager();
