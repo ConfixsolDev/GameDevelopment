@@ -1,0 +1,5 @@
+---
+description: Always check for already code and use the relevent controller to write code use Viewmodel instead of viewbag. This code is for writing the code always use jqquery to call form the form in created and edit mode should be present in the .cshtml use partial view to view the for use ajax to view and post the form no complex jquery forms
+globs: Use this code for doing the Crud operations
+alwaysApply: true
+---

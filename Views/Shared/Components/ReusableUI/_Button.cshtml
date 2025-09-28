@@ -1,0 +1,71 @@
+@*
+    Reusable Button Component
+    Usage: @await Component.InvokeAsync("ReusableUI", new { component = "Button", data = new { text = "Click Me", variant = "primary", size = "md" } })
+*@
+
+@model dynamic
+
+@{
+    string text = Model?.text ?? "Button";
+    string variant = Model?.variant ?? "primary";
+    string size = Model?.size ?? "md";
+    string icon = Model?.icon ?? "";
+    string onclick = Model?.onclick ?? "";
+    bool disabled = Model?.disabled ?? false;
+    bool loading = Model?.loading ?? false;
+    string type = Model?.type ?? "button";
+    string cssClass = Model?.cssClass ?? "";
+    string id = Model?.id ?? "";
+    var attributes = Model?.attributes as Dictionary<string, object> ?? new Dictionary<string, object>();
+}
+
+<button type="@type" 
+        class="btn btn-@variant btn-@size @cssClass"
+        @if (!string.IsNullOrEmpty(id)) { <text>id="@id"</text> }
+        @if (!string.IsNullOrEmpty(onclick)) { <text>onclick="@onclick"</text> }
+        @if (disabled) { <text>disabled</text> }
+        @foreach (var attr in attributes)
+        {
+            <text>@attr.Key="@attr.Value"</text>
+        }>
+    
+    @if (loading)
+    {
+        <i class="fas fa-spinner fa-spin"></i>
+    }
+    else if (!string.IsNullOrEmpty(icon))
+    {
+        <i class="@icon"></i>
+    }
+    
+    @text
+</button>
+
+<script>
+    // Auto-initialize button system if not already done
+    if (typeof window.buttonSystemInitialized === 'undefined') {
+        window.buttonSystemInitialized = true;
+        
+        // Add loading state functionality
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('btn') && !e.target.disabled) {
+                const button = e.target;
+                const originalText = button.innerHTML;
+                
+                // Check if button has data-loading attribute
+                const loadingText = button.getAttribute('data-loading-text');
+                if (loadingText) {
+                    button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${loadingText}`;
+                    button.disabled = true;
+                    
+                    // Restore button after 2 seconds (or custom timeout)
+                    const timeout = parseInt(button.getAttribute('data-loading-timeout')) || 2000;
+                    setTimeout(function() {
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    }, timeout);
+                }
+            }
+        });
+    }
+</script>

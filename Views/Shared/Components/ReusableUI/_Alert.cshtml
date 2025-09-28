@@ -1,0 +1,111 @@
+@*
+    Reusable Alert Component
+    Usage: @await Component.InvokeAsync("ReusableUI", new { component = "Alert", data = new { type = "success", title = "Success", message = "Operation completed" } })
+*@
+
+@model dynamic
+
+@{
+    string type = Model?.type ?? "info";
+    string title = Model?.title ?? "";
+    string message = Model?.message ?? "";
+    bool closable = Model?.closable ?? true;
+    bool icon = Model?.icon ?? true;
+    string cssClass = Model?.cssClass ?? "";
+    int? autoClose = Model?.autoClose;
+    string id = Model?.id ?? Guid.NewGuid().ToString();
+}
+
+@{
+    var icons = new Dictionary<string, string>
+    {
+        {"success", "fas fa-check-circle"},
+        {"warning", "fas fa-exclamation-triangle"},
+        {"error", "fas fa-times-circle"},
+        {"danger", "fas fa-times-circle"},
+        {"info", "fas fa-info-circle"}
+    };
+}
+
+<div id="@id" class="alert alert-@type @cssClass" role="alert" @if (autoClose.HasValue) { <text>data-auto-close="@autoClose"</text> }>
+    @if (icon && icons.ContainsKey(type))
+    {
+        <i class="@icons[type]"></i>
+    }
+    
+    <div class="alert-content">
+        @if (!string.IsNullOrEmpty(title))
+        {
+            <strong>@title</strong>
+        }
+        @if (!string.IsNullOrEmpty(message))
+        {
+            <span>@message</span>
+        }
+        @if (string.IsNullOrEmpty(title) && string.IsNullOrEmpty(message))
+        {
+            @RenderBody()
+        }
+    </div>
+    
+    @if (closable)
+    {
+        <button type="button" class="alert-close" onclick="closeAlert('@id')" aria-label="Close">
+            <i class="fas fa-times"></i>
+        </button>
+    }
+</div>
+
+@if (autoClose.HasValue && autoClose > 0)
+{
+    <script>
+        setTimeout(function() {
+            closeAlert('@id');
+        }, @autoClose);
+    </script>
+}
+
+<script>
+    function closeAlert(alertId) {
+        const alert = document.getElementById(alertId);
+        if (alert) {
+            // Add fade out animation
+            alert.style.transition = 'opacity 0.3s ease';
+            alert.style.opacity = '0';
+            
+            setTimeout(function() {
+                if (alert.parentNode) {
+                    alert.parentNode.removeChild(alert);
+                }
+            }, 300);
+            
+            // Dispatch custom event
+            window.dispatchEvent(new CustomEvent('alertClosed', {
+                detail: { alertId: alertId }
+            }));
+        }
+    }
+    
+    // Auto-initialize alert system
+    if (typeof window.alertSystemInitialized === 'undefined') {
+        window.alertSystemInitialized = true;
+        
+        // Global alert close handler
+        window.addEventListener('alertClosed', function(e) {
+            console.log(`Alert ${e.detail.alertId} closed`);
+        });
+        
+        // Auto-close alerts with data-auto-close attribute
+        document.addEventListener('DOMContentLoaded', function() {
+            const autoCloseAlerts = document.querySelectorAll('[data-auto-close]');
+            autoCloseAlerts.forEach(function(alert) {
+                const delay = parseInt(alert.getAttribute('data-auto-close'));
+                if (delay > 0) {
+                    setTimeout(function() {
+                        closeAlert(alert.id);
+                    }, delay);
+                }
+            });
+        });
+    }
+</script>

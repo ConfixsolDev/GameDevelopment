@@ -1,0 +1,74 @@
+@*
+    Reusable Modal Component
+    Usage: @await Component.InvokeAsync("ReusableUI", new { component = "Modal", data = new { id = "myModal", title = "Modal Title", content = "Modal content here" } })
+*@
+
+@model dynamic
+
+@{
+    string modalId = Model?.id ?? "defaultModal";
+    string title = Model?.title ?? "Modal";
+    string size = Model?.size ?? "md";
+    bool closable = Model?.closable ?? true;
+    bool backdrop = Model?.backdrop ?? true;
+    string content = Model?.content ?? "";
+    string footer = Model?.footer ?? "";
+    string cssClass = Model?.cssClass ?? "";
+}
+
+<div id="@modalId" class="modal @cssClass" data-original-parent="@modalId">
+    <div class="modal-overlay @(backdrop ? "" : "no-backdrop")"></div>
+    <div class="modal-container">
+        <div class="modal modal-@size">
+            @if (!string.IsNullOrEmpty(title))
+            {
+                <div class="modal-header">
+                    <h3 class="modal-title">
+                        @if (Model?.icon != null)
+                        {
+                            <i class="@Model.icon"></i>
+                        }
+                        @title
+                    </h3>
+                    @if (closable)
+                    {
+                        <button type="button" class="modal-close" onclick="modalSystem.hide('@modalId')" aria-label="Close">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    }
+                </div>
+            }
+            
+            @if (!string.IsNullOrEmpty(content))
+            {
+                <div class="modal-body">
+                    @Html.Raw(content)
+                </div>
+            }
+            else
+            {
+                <div class="modal-body">
+                    @RenderBody()
+                </div>
+            }
+            
+            @if (!string.IsNullOrEmpty(footer))
+            {
+                <div class="modal-footer">
+                    @Html.Raw(footer)
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-initialize modal if not already initialized
+    if (typeof modalSystem === 'undefined') {
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof modalSystem !== 'undefined') {
+                console.log('Modal @modalId initialized');
+            }
+        });
+    }
+</script>

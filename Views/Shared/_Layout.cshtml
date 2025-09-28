@@ -24,14 +24,14 @@
     <title>@ViewData["Title"] - IDS</title>
     <link rel="shortcut icon" href="~/assets/images/favicon.ico">
 
-    <!-- Keep your theme CSS; ensure it matches your Bootstrap JS version -->
+    <!-- Unified Theme System -->
     <link href="~/assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="~/cdn_local/daterangepicker.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
     <link href="~/assets/css/icons.min.css" rel="stylesheet">
     <link href="~/assets/css/app.min.css" id="app-style" rel="stylesheet">
-    <link href="~/assets/css/custom.css" rel="stylesheet" asp-append-version="true">
+    <link href="~/css/dark-theme-system.css" rel="stylesheet" asp-append-version="true">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/metismenu/dist/metisMenu.min.css">
 
     <!-- Sweetalert / Fonts / Icons -->
@@ -211,6 +211,9 @@
             $('.select2-multiple').select2();
         });
     </script>
+
+    <!-- Theme System JavaScript -->
+    <script src="~/js/theme-system.js"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

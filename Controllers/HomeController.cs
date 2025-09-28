@@ -1,53 +1,36 @@
-using TechWebSol.Filters;
-using TechWebSol.ViewModels;
-using TechWebSol.Services;
-using TechWebSol.Data;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.ComponentModel;
+using System.Diagnostics;
 
 namespace TechWebSol.Controllers
 {
-    [Authorize]
     public class HomeController : Controller
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment webHostEnvironment;
-        private readonly ApplicationUserVM applicatonUser;
-        
-        public HomeController(ApplicationDbContext context
-            , IWebHostEnvironment hostEnvironment
-            , IUserSessionService IUserSessionService
-            )
+        private readonly ILogger<HomeController> _logger;
+
+        public HomeController(ILogger<HomeController> logger)
         {
-            _context = context;
-            webHostEnvironment = hostEnvironment;
-            applicatonUser = IUserSessionService.GetCurrentUser();
+            _logger = logger;
         }
 
         public IActionResult Index()
         {
-            // Double-check that user session is valid
-            if (applicatonUser == null)
-            {
-                return RedirectToAction("Login", "Account");
-            }
-            
             return View();
         }
 
-        [DisplayName("Configuration: Dropdown Permissions")]
-        public IActionResult ListOfValues()
+        public IActionResult ComponentDemo()
         {
             return View();
         }
 
+        public IActionResult Privacy()
+        {
+            return View();
+        }
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
-            return View();
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
     }
 }
-
-

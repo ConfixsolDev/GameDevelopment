@@ -1,0 +1,105 @@
+@*
+    Reusable Badge Component
+    Usage: @await Component.InvokeAsync("ReusableUI", new { component = "Badge", data = new { text = "Badge", variant = "primary" } })
+*@
+
+@model dynamic
+
+@{
+    string text = Model?.text ?? "Badge";
+    string variant = Model?.variant ?? "primary";
+    string size = Model?.size ?? "md";
+    string icon = Model?.icon ?? "";
+    bool closable = Model?.closable ?? false;
+    string cssClass = Model?.cssClass ?? "";
+    string id = Model?.id ?? "";
+    var attributes = Model?.attributes as Dictionary<string, object> ?? new Dictionary<string, object>();
+}
+
+<span class="badge badge-@variant @cssClass" 
+      @if (!string.IsNullOrEmpty(id)) { <text>id="@id"</text> }
+      @foreach (var attr in attributes)
+      {
+          <text>@attr.Key="@attr.Value"</text>
+      }>
+    
+    @if (!string.IsNullOrEmpty(icon))
+    {
+        <i class="@icon"></i>
+    }
+    
+    @text
+    
+    @if (closable)
+    {
+        <button type="button" 
+                class="badge-close" 
+                onclick="closeBadge('@id')" 
+                aria-label="Close badge">
+            <i class="fas fa-times"></i>
+        </button>
+    }
+</span>
+
+<style>
+    .badge-close {
+        background: none;
+        border: none;
+        color: inherit;
+        cursor: pointer;
+        padding: 0;
+        margin-left: var(--space-1);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        transition: background-color var(--transition-fast);
+    }
+    
+    .badge-close:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+    }
+    
+    [data-theme="dark"] .badge-close:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .badge-close i {
+        font-size: 10px;
+    }
+</style>
+
+<script>
+    function closeBadge(badgeId) {
+        const badge = document.getElementById(badgeId);
+        if (badge) {
+            // Add fade out animation
+            badge.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            badge.style.opacity = '0';
+            badge.style.transform = 'scale(0.8)';
+            
+            setTimeout(function() {
+                if (badge.parentNode) {
+                    badge.parentNode.removeChild(badge);
+                }
+            }, 300);
+            
+            // Dispatch custom event
+            window.dispatchEvent(new CustomEvent('badgeClosed', {
+                detail: { badgeId: badgeId }
+            }));
+        }
+    }
+    
+    // Auto-initialize badge system if not already done
+    if (typeof window.badgeSystemInitialized === 'undefined') {
+        window.badgeSystemInitialized = true;
+        
+        // Global badge close handler
+        window.addEventListener('badgeClosed', function(e) {
+            console.log(`Badge ${e.detail.badgeId} closed`);
+        });
+    }
+</script>

@@ -1,0 +1,492 @@
+@*
+    Component Demo Page - Showcase all reusable UI components
+    This page demonstrates all available components in the library
+*@
+
+@{
+    ViewData["Title"] = "Component Library Demo";
+    Layout = "_ThemeLayout";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box animate-slide-down">
+                <h4 class="page-title animate-glow">Component Library Demo</h4>
+                <p class="text-muted animate-fade-in">Demonstration of all reusable UI components with enhanced dark theme support and professional animations</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theme Switcher Demo -->
+    <div class="row mb-4">
+        <div class="col-12">
+            @await Component.InvokeAsync("ReusableUI", new { 
+                component = "Card", 
+                data = new { 
+                    title = "Theme System",
+                    subtitle = "Toggle between light and dark themes",
+                    content = @"
+                        <div class='d-flex gap-3 align-items-center'>
+                            <button class='btn btn-primary animate-pulse' onclick='themeSystem.setTheme(\"light\")'>
+                                <i class='fas fa-sun animate-float'></i> Light Theme
+                            </button>
+                            <button class='btn btn-secondary animate-pulse' onclick='themeSystem.setTheme(\"dark\")'>
+                                <i class='fas fa-moon animate-float'></i> Dark Theme
+                            </button>
+                            <button class='btn btn-outline animate-bounce' onclick='themeSystem.toggleTheme()'>
+                                <i class='fas fa-adjust'></i> Toggle Theme
+                            </button>
+                            <span class='badge badge-info animate-glow' id='currentTheme'>
+                                Current: <span id='themeIndicator'>Light</span>
+                            </span>
+                            <button class='btn btn-success animate-shimmer' onclick='showDemoEffects()'>
+                                <i class='fas fa-magic'></i> Demo Effects
+                            </button>
+                        </div>"
+                } 
+            })
+        </div>
+    </div>
+
+    <!-- Alert Components Demo -->
+    <div class="row mb-4">
+        <div class="col-12">
+            @await Component.InvokeAsync("ReusableUI", new { 
+                component = "Card", 
+                data = new { 
+                    title = "Alert Components",
+                    content = @"
+                        <div class='d-flex flex-wrap gap-3 mb-3'>
+                            <button class='btn btn-success' onclick='showAlert(\"success\")'>Success Alert</button>
+                            <button class='btn btn-warning' onclick='showAlert(\"warning\")'>Warning Alert</button>
+                            <button class='btn btn-error' onclick='showAlert(\"error\")'>Error Alert</button>
+                            <button class='btn btn-primary' onclick='showAlert(\"info\")'>Info Alert</button>
+                        </div>
+                        <div id='alertContainer'></div>"
+                } 
+            })
+        </div>
+    </div>
+
+    <!-- Button Components Demo -->
+    <div class="row mb-4">
+        <div class="col-12">
+            @await Component.InvokeAsync("ReusableUI", new { 
+                component = "Card", 
+                data = new { 
+                    title = "Button Components",
+                    content = @"
+                        <div class='mb-3'>
+                            <h6>Variants</h6>
+                            <div class='d-flex flex-wrap gap-2'>
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Button\", data = new { text = \"Primary\", variant = \"primary\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Button\", data = new { text = \"Secondary\", variant = \"secondary\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Button\", data = new { text = \"Success\", variant = \"success\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Button\", data = new { text = \"Warning\", variant = \"warning\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Button\", data = new { text = \"Error\", variant = \"error\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Button\", data = new { text = \"Outline\", variant = \"outline\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Button\", data = new { text = \"Ghost\", variant = \"ghost\" } })
+                            </div>
+                        </div>
+                        <div class='mb-3'>
+                            <h6>Sizes</h6>
+                            <div class='d-flex flex-wrap gap-2 align-items-center'>
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Button\", data = new { text = \"Small\", size = \"sm\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Button\", data = new { text = \"Medium\", size = \"md\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Button\", data = new { text = \"Large\", size = \"lg\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Button\", data = new { text = \"Extra Large\", size = \"xl\" } })
+                            </div>
+                        </div>
+                        <div class='mb-3'>
+                            <h6>With Icons</h6>
+                            <div class='d-flex flex-wrap gap-2'>
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Button\", data = new { text = \"Save\", icon = \"fas fa-save\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Button\", data = new { text = \"Delete\", icon = \"fas fa-trash\", variant = \"error\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Button\", data = new { text = \"Edit\", icon = \"fas fa-edit\", variant = \"warning\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Button\", data = new { text = \"Loading\", icon = \"fas fa-spinner fa-spin\", loading = true } })
+                            </div>
+                        </div>"
+                } 
+            })
+        </div>
+    </div>
+
+    <!-- Badge Components Demo -->
+    <div class="row mb-4">
+        <div class="col-12">
+            @await Component.InvokeAsync("ReusableUI", new { 
+                component = "Card", 
+                data = new { 
+                    title = "Badge Components",
+                    content = @"
+                        <div class='mb-3'>
+                            <h6>Variants</h6>
+                            <div class='d-flex flex-wrap gap-2'>
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Badge\", data = new { text = \"Primary\", variant = \"primary\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Badge\", data = new { text = \"Secondary\", variant = \"secondary\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Badge\", data = new { text = \"Success\", variant = \"success\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Badge\", data = new { text = \"Warning\", variant = \"warning\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Badge\", data = new { text = \"Error\", variant = \"error\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Badge\", data = new { text = \"Info\", variant = \"info\" } })
+                            </div>
+                        </div>
+                        <div class='mb-3'>
+                            <h6>With Icons</h6>
+                            <div class='d-flex flex-wrap gap-2'>
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Badge\", data = new { text = \"Active\", icon = \"fas fa-check\", variant = \"success\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Badge\", data = new { text = \"Warning\", icon = \"fas fa-exclamation\", variant = \"warning\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Badge\", data = new { text = \"Closable\", icon = \"fas fa-times\", variant = \"info\", closable = true } })
+                            </div>
+                        </div>"
+                } 
+            })
+        </div>
+    </div>
+
+    <!-- Token Cards Demo -->
+    <div class="row mb-4">
+        <div class="col-12">
+            @await Component.InvokeAsync("ReusableUI", new { 
+                component = "Card", 
+                data = new { 
+                    title = "Token Card Components",
+                    content = @"
+                        <div class='row'>
+                            <div class='col-md-4 mb-3'>
+                                @await Component.InvokeAsync(\"ReusableUI\", new { 
+                                    component = \"TokenCard\", 
+                                    data = new { 
+                                        id = \"token-1\",
+                                        name = \"Elite Infantry Unit\",
+                                        description = \"Advanced infantry unit with enhanced combat capabilities and tactical awareness.\",
+                                        status = \"active\",
+                                        meta = new Dictionary<string, object> {
+                                            {\"type\", \"Infantry\"},
+                                            {\"strength\", \"150\"},
+                                            {\"range\", \"600m\"},
+                                            {\"team\", \"Alpha Squad\"}
+                                        },
+                                        actions = new List<dynamic> {
+                                            new { text = \"Deploy\", variant = \"success\", icon = \"fas fa-rocket\", onclick = \"deployToken('token-1')\" },
+                                            new { text = \"Edit\", variant = \"primary\", icon = \"fas fa-edit\", onclick = \"editToken('token-1')\" },
+                                            new { text = \"Delete\", variant = \"error\", icon = \"fas fa-trash\", onclick = \"deleteToken('token-1')\" }
+                                        }
+                                    } 
+                                })
+                            </div>
+                            <div class='col-md-4 mb-3'>
+                                @await Component.InvokeAsync(\"ReusableUI\", new { 
+                                    component = \"TokenCard\", 
+                                    data = new { 
+                                        id = \"token-2\",
+                                        name = \"Heavy Armored Tank\",
+                                        description = \"Advanced heavy armored vehicle with cutting-edge weaponry and superior protection.\",
+                                        status = \"training\",
+                                        meta = new Dictionary<string, object> {
+                                            {\"type\", \"Armored\"},
+                                            {\"strength\", \"350\"},
+                                            {\"range\", \"1500m\"},
+                                            {\"armor\", \"Heavy\"}
+                                        },
+                                        actions = new List<dynamic> {
+                                            new { text = \"Deploy\", variant = \"success\", icon = \"fas fa-play\", onclick = \"deployToken('token-2')\" },
+                                            new { text = \"Upgrade\", variant = \"info\", icon = \"fas fa-cog\", onclick = \"upgradeToken('token-2')\" }
+                                        }
+                                    } 
+                                })
+                            </div>
+                            <div class='col-md-4 mb-3'>
+                                @await Component.InvokeAsync(\"ReusableUI\", new { 
+                                    component = \"TokenCard\", 
+                                    data = new { 
+                                        id = \"token-3\",
+                                        name = \"Long-Range Artillery\",
+                                        description = \"Precision long-range artillery support unit with advanced targeting systems.\",
+                                        status = \"inactive\",
+                                        meta = new Dictionary<string, object> {
+                                            {\"type\", \"Artillery\"},
+                                            {\"strength\", \"200\"},
+                                            {\"range\", \"3000m\"},
+                                            {\"precision\", \"High\"}
+                                        },
+                                        actions = new List<dynamic> {
+                                            new { text = \"Activate\", variant = \"warning\", icon = \"fas fa-power-off\", onclick = \"activateToken('token-3')\" },
+                                            new { text = \"Calibrate\", variant = \"info\", icon = \"fas fa-crosshairs\", onclick = \"calibrateToken('token-3')\" }
+                                        }
+                                    } 
+                                })
+                            </div>
+                        </div>"
+                } 
+            })
+        </div>
+    </div>
+
+    <!-- Modal Demo -->
+    <div class="row mb-4">
+        <div class="col-12">
+            @await Component.InvokeAsync("ReusableUI", new { 
+                component = "Card", 
+                data = new { 
+                    title = "Modal Components",
+                    content = @"
+                        <div class='d-flex flex-wrap gap-3 mb-3'>
+                            <button class='btn btn-primary' onclick='showDemoModal(\"sm\")'>Small Modal</button>
+                            <button class='btn btn-primary' onclick='showDemoModal(\"md\")'>Medium Modal</button>
+                            <button class='btn btn-primary' onclick='showDemoModal(\"lg\")'>Large Modal</button>
+                            <button class='btn btn-primary' onclick='showDemoModal(\"xl\")'>Extra Large Modal</button>
+                            <button class='btn btn-primary' onclick='showDemoModal(\"full\")'>Full Screen Modal</button>
+                        </div>
+                        <p class='text-muted'>Click any button above to open a modal with the corresponding size.</p>"
+                } 
+            })
+        </div>
+    </div>
+
+    <!-- Form Demo -->
+    <div class="row mb-4">
+        <div class="col-12">
+            @await Component.InvokeAsync("ReusableUI", new { 
+                component = "Card", 
+                data = new { 
+                    title = "Form Components",
+                    content = @"
+                        <form>
+                            <div class='row'>
+                                <div class='col-md-6 mb-3'>
+                                    <label class='form-label'>Token Name</label>
+                                    <input type='text' class='form-control' placeholder='Enter token name'>
+                                </div>
+                                <div class='col-md-6 mb-3'>
+                                    <label class='form-label'>Token Type</label>
+                                    <select class='form-control'>
+                                        <option>Infantry</option>
+                                        <option>Armored</option>
+                                        <option>Artillery</option>
+                                        <option>Support</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class='row'>
+                                <div class='col-md-6 mb-3'>
+                                    <label class='form-label'>Strength</label>
+                                    <input type='number' class='form-control' placeholder='Enter strength value'>
+                                </div>
+                                <div class='col-md-6 mb-3'>
+                                    <label class='form-label'>Range</label>
+                                    <input type='number' class='form-control' placeholder='Enter range in meters'>
+                                </div>
+                            </div>
+                            <div class='mb-3'>
+                                <label class='form-label'>Description</label>
+                                <textarea class='form-control' rows='3' placeholder='Enter token description'></textarea>
+                            </div>
+                            <div class='d-flex gap-3'>
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Button\", data = new { text = \"Save Token\", variant = \"primary\", icon = \"fas fa-save\", type = \"submit\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Button\", data = new { text = \"Reset\", variant = \"secondary\", type = \"reset\" } })
+                                @await Component.InvokeAsync(\"ReusableUI\", new { component = \"Button\", data = new { text = \"Cancel\", variant = \"ghost\", type = \"button\", onclick = \"history.back()\" } })
+                            </div>
+                        </form>"
+                } 
+            })
+        </div>
+    </div>
+</div>
+
+<!-- Demo Modals -->
+@await Component.InvokeAsync("ReusableUI", new { 
+    component = "Modal", 
+    data = new { 
+        id = "demoModal",
+        title = "Demo Modal",
+        size = "md",
+        content = @"
+            <p>This is a demonstration modal with the new theme system.</p>
+            <div class='alert alert-info'>
+                <i class='fas fa-info-circle'></i>
+                <strong>Theme Support:</strong> This modal automatically adapts to the current theme (light/dark).
+            </div>
+            <div class='row'>
+                <div class='col-md-6'>
+                    <h6>Features:</h6>
+                    <ul>
+                        <li>Responsive design</li>
+                        <li>Keyboard navigation</li>
+                        <li>Backdrop blur effect</li>
+                        <li>Theme integration</li>
+                        <li>Smooth animations</li>
+                    </ul>
+                </div>
+                <div class='col-md-6'>
+                    <h6>Available Sizes:</h6>
+                    <ul>
+                        <li>Small (sm)</li>
+                        <li>Medium (md)</li>
+                        <li>Large (lg)</li>
+                        <li>Extra Large (xl)</li>
+                        <li>Full Screen (full)</li>
+                    </ul>
+                </div>
+            </div>",
+        footer = @"
+            <button class='btn btn-secondary' onclick='modalSystem.hide(\"demoModal\")'>Close</button>
+            <button class='btn btn-primary' onclick='modalSystem.hide(\"demoModal\")'>Got it!</button>"
+    } 
+})
+
+@section Scripts {
+    <script>
+        // Update theme indicator
+        function updateThemeIndicator() {
+            const indicator = document.getElementById('themeIndicator');
+            const badge = document.getElementById('currentTheme');
+            
+            if (indicator && badge) {
+                const theme = themeSystem.getCurrentTheme();
+                indicator.textContent = theme.charAt(0).toUpperCase() + theme.slice(1);
+                badge.className = `badge badge-${theme === 'dark' ? 'info' : 'secondary'}`;
+            }
+        }
+        
+        // Show alert demo
+        function showAlert(type) {
+            const messages = {
+                success: { title: 'Success!', message: 'Operation completed successfully.' },
+                warning: { title: 'Warning!', message: 'Please review your input before proceeding.' },
+                error: { title: 'Error!', message: 'An error occurred while processing your request.' },
+                info: { title: 'Information', message: 'Here is some useful information for you.' }
+            };
+            
+            const msg = messages[type];
+            if (msg) {
+                const alertHtml = `
+                    <div class="alert alert-${type}" role="alert">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : type === 'error' ? 'times-circle' : 'info-circle'}"></i>
+                        <div class="alert-content">
+                            <strong>${msg.title}</strong>
+                            <span>${msg.message}</span>
+                        </div>
+                        <button type="button" class="alert-close" onclick="this.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
+                document.getElementById('alertContainer').innerHTML = alertHtml;
+            }
+        }
+        
+        // Show demo modal
+        function showDemoModal(size) {
+            const modal = document.getElementById('demoModal');
+            if (modal) {
+                modal.className = modal.className.replace(/modal-\w+/g, '');
+                modal.classList.add(`modal-${size}`);
+                
+                const title = modal.querySelector('.modal-title');
+                if (title) {
+                    title.innerHTML = `<i class="fas fa-window-maximize"></i> ${size.toUpperCase()} Modal Demo`;
+                }
+                
+                modalSystem.show('demoModal');
+            }
+        }
+        
+        // Token action handlers
+        function editToken(tokenId) {
+            ThemeUtils.toast(`Editing token: ${tokenId}`, 'info');
+        }
+        
+        function deleteToken(tokenId) {
+            ThemeUtils.toast(`Deleting token: ${tokenId}`, 'error');
+        }
+        
+        function deployToken(tokenId) {
+            ThemeUtils.toast(`Deploying token: ${tokenId}`, 'success');
+        }
+        
+        function activateToken(tokenId) {
+            ThemeUtils.toast(`Activating token: ${tokenId}`, 'warning');
+        }
+
+        function upgradeToken(tokenId) {
+            ThemeUtils.toast(`Upgrading token: ${tokenId}`, 'primary');
+        }
+
+        function calibrateToken(tokenId) {
+            ThemeUtils.toast(`Calibrating token: ${tokenId}`, 'info');
+        }
+
+        // Enhanced demo effects function
+        function showDemoEffects() {
+            // Add shimmer effect to all cards
+            const cards = document.querySelectorAll('.token-card, .card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('animate-shimmer');
+                    setTimeout(() => {
+                        card.classList.remove('animate-shimmer');
+                    }, 2000);
+                }, index * 200);
+            });
+
+            // Add pulse effect to buttons
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach((btn, index) => {
+                setTimeout(() => {
+                    btn.classList.add('animate-pulse');
+                    setTimeout(() => {
+                        btn.classList.remove('animate-pulse');
+                    }, 1500);
+                }, index * 100);
+            });
+
+            // Add glow effect to status badges
+            const badges = document.querySelectorAll('.token-card-status');
+            badges.forEach((badge, index) => {
+                setTimeout(() => {
+                    badge.classList.add('animate-glow');
+                    setTimeout(() => {
+                        badge.classList.remove('animate-glow');
+                    }, 3000);
+                }, index * 300);
+            });
+
+            ThemeUtils.toast('Enhanced animations and hover effects activated!', 'success', 4000);
+        }
+        
+        // Initialize theme indicator
+        document.addEventListener('DOMContentLoaded', function() {
+            updateThemeIndicator();
+            
+            // Listen for theme changes
+            window.addEventListener('themeChanged', function(e) {
+                updateThemeIndicator();
+                console.log(`Theme changed to: ${e.detail.theme}`);
+            });
+            
+            // Show welcome toast
+            setTimeout(function() {
+                ThemeUtils.toast('Welcome to the Enhanced Component Library Demo!', 'success', 3000);
+            }, 1000);
+
+            // Add staggered animations on page load
+            setTimeout(() => {
+                const cards = document.querySelectorAll('.token-card');
+                cards.forEach((card, index) => {
+                    setTimeout(() => {
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateY(50px)';
+                        card.style.transition = 'all 0.6s ease';
+                        
+                        setTimeout(() => {
+                            card.style.opacity = '1';
+                            card.style.transform = 'translateY(0)';
+                        }, 50);
+                    }, index * 150);
+                });
+            }, 500);
+        });
+    </script>
+}
