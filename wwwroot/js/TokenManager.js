@@ -703,13 +703,13 @@ class TokenManager {
      * Determine whether a token is already placed on the map
      */
     isTokenAlreadyPlaced(token) {
-        const statusIsPlaced = typeof token.status === 'string' && token.status.toLowerCase() === 'placed';
-        const hasPosition =
-            (token.position && (token.position.lat != null && token.position.lng != null));
+        // Consider placed ONLY if server provided a non-null position
+        const statusIsPlaced = false;
+        const hasPosition = (token.position && (token.position.lat != null && token.position.lng != null));
 
         const placedByManager = this.tokenPlacementManager && this.tokenPlacementManager.isTokenPlaced && token.id && this.tokenPlacementManager.isTokenPlaced(token.id);
 
-        return statusIsPlaced || hasPosition || placedByManager;
+        return hasPosition || placedByManager;
     }
 
     /**
@@ -865,7 +865,7 @@ class TokenManager {
             const availableBtn = document.getElementById('tokenTabAvailable');
             if (placedBtn && placedBtn.classList.contains('active')) {
                 const tokens = await this.getAllPlacedTokens();
-                this.populateTokenSelection(tokens || []);
+                this.populateTokenSelection((tokens || []).filter(t => t.position && t.position.lat != null && t.position.lng != null));
             } else if (availableBtn && availableBtn.classList.contains('active')) {
                 await this.loadAvailableTokens();
             } else {
@@ -1008,7 +1008,7 @@ class TokenManager {
             placedBtn.classList.add('active');
             availableBtn.classList.remove('active');
             const tokens = await this.getAllPlacedTokens();
-            this.populateTokenSelection(tokens || []);
+            this.populateTokenSelection((tokens || []).filter(t => t.position && t.position.lat != null && t.position.lng != null));
         };
     }
 

@@ -50,6 +50,7 @@ namespace TechWebSol.Controllers
             {
                 var placedTokens = await _context.Tokens
                     .Where(t => t.TeamId == applicatonUser.TeamId && t.IsActive)
+                    .Where(t => t.MapMarkers.Any(m => m.IsActive))
                     .Include(t => t.MapMarkers.OrderByDescending(x=>x.CreatedDate))
                     .Include(t => t.TokenGroup)
                     .Include(t => t.AreaCoverages)
