@@ -1,14 +1,20 @@
-@using Microsoft.AspNetCore.Identity
+﻿@using Microsoft.AspNetCore.Identity
 @inject UserManager<ApplicationUser> _userManager
 @{
     var ShortName = "";
     var DisplayName = "";
+    var RoleLabel = "USER";
     var user = await _userManager.GetUserAsync(User);
     if (user != null)
     {
         DisplayName = user.FullName;
         string[] nameParts = user.FullName.Split(' ');
         ShortName = nameParts[0].Substring(0, 1) + nameParts[1].Substring(0, 1);
+        var roles = await _userManager.GetRolesAsync(user);
+        if (roles != null && roles.Count > 0)
+        {
+            RoleLabel = roles[0];
+        }
     }
 }
 <!DOCTYPE html>
@@ -18,24 +24,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Game Play Arena</title>
     <link rel="shortcut icon" href="~/assets/images/favicon.ico">
-    
+
     <!-- Core CSS -->
     <link href="~/assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="~/assets/css/icons.min.css" rel="stylesheet">
     <link href="~/assets/css/WarGameStyle.css" rel="stylesheet" asp-append-version="true">
-    
+
     <!-- External Libraries -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-    
+
     <!-- Map Libraries -->
     <link href="~/map/css/styles.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Leaflet Draw -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+
+    <!-- Turf -->
+    <script src="https://unpkg.com/@@turf/turf@6.5.0/turf.min.js"></script>
+
+    <!-- Basemap providers -->
+    <script src="https://unpkg.com/leaflet-providers@1.13.0/leaflet-providers.js"></script>
+
+    <!-- Your theme -->
     <!-- Game Play Styles -->
     <link href="~/css/GamePlay.css" rel="stylesheet" asp-append-version="true" />
-    
-    
+    <link href="~/css/DataManagement.css" rel="stylesheet" asp-append-version="true" />
+
+
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="gameplay-layout">
@@ -47,67 +66,24 @@
 
     <!-- Main Game Container -->
     <div class="gameplay-container">
-        <!-- Super Admin Button -->
+        <!-- Role Button -->
         <div class="super-admin-button" id="superAdminBtn">
             <i class="fas fa-crown"></i>
-            <span>SUPER ADMIN</span>
+            <span>@RoleLabel.ToUpper()</span>
         </div>
 
         <!-- Main Game Area -->
         <div class="game-main-area">
             @RenderBody()
         </div>
-
-        <!-- Bottom Control Panel -->
-        <div class="gameplay-control-panel" id="bottomControlPanel">
-            <div class="control-panel-content">
-                <!-- Team Logo Section -->
-                <div class="team-logo-section">
-                    <div class="team-logo" id="teamLogo">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <div class="team-info">
-                        <div class="team-name" id="teamName">SELECT TEAM</div>
-                        <div class="team-status" id="teamStatus">Ready for Battle</div>
-                    </div>
-                </div>
-
-                <!-- Control Menu -->
-                <div class="control-menu">
-                    <a href="#" class="control-btn fox-land active" id="foxLandBtn" onclick="switchToFoxLand()">
-                        <i class="fas fa-fire"></i>
-                        <span>Fox Land</span>
-                    </a>
-                    <a href="#" class="control-btn blue-land" id="blueLandBtn" onclick="switchToBlueLand()">
-                        <i class="fas fa-water"></i>
-                        <span>Blue Land</span>
-                    </a>
-                    <a href="#" class="control-btn spectator" id="spectatorBtn" onclick="switchToSpectator()">
-                        <i class="fas fa-eye"></i>
-                        <span>Spectator</span>
-                    </a>
-                    <a href="#" class="control-btn" id="dataEntryBtn" onclick="openDataEntry()">
-                        <i class="fas fa-database"></i>
-                        <span>Data Entry</span>
-                    </a>
-                    <a href="#" class="control-btn" id="tokensBtn" onclick="manageTokens()">
-                        <i class="fas fa-crosshairs"></i>
-                        <span>Tokens</span>
-                    </a>
-                    <a href="#" class="control-btn" id="settingsBtn" onclick="openSettings()">
-                        <i class="fas fa-cog"></i>
-                        <span>Settings</span>
-                    </a>
-                </div>
-            </div>
-        </div>
     </div>
-    
+
+
+
     <!-- Scripts -->
     <script src="~/assets/js/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
+
     <!-- jQuery Fallback -->
     <script>
         if (typeof jQuery === 'undefined') {
@@ -123,7 +99,7 @@
             console.log('jQuery loaded successfully');
             initializeGamePlayScripts();
         }
-        
+
         function initializeGamePlayScripts() {
         $(document).ready(function() {
             // Hide loading overlay after page load
@@ -133,7 +109,7 @@
 
             // Initialize game state
             initializeGamePlay();
-            
+
             // Super Admin button functionality
             $('#superAdminBtn').click(function() {
                 toggleBottomMenu();
@@ -143,7 +119,7 @@
         function initializeGamePlay() {
             // Initialize map and game components
             console.log('Initializing Game Play Arena...');
-            
+
             // Set default team
             updateTeamDisplay('ALPHA', 'Alpha Team', 'active');
         }
@@ -169,7 +145,7 @@
         function updateActiveMode(mode) {
             // Remove active class from all buttons
             $('.control-btn').removeClass('active');
-            
+
             // Add active class to current mode
             $('#' + mode + 'Btn').addClass('active');
         }
@@ -182,12 +158,17 @@
 
         function openDataEntry() {
             console.log('Opening Data Entry modal...');
-            // TODO: Implement data entry modal
+            // Opens the data entry modal for military unit management
+        }
+
+        function openTokenPlacement() {
+            console.log('Opening Token Placement...');
+            // Opens the token placement modal for placing tokens on map
         }
 
         function manageTokens() {
             console.log('Opening Token Management...');
-            // TODO: Implement token management
+            // Legacy function - kept for backward compatibility
         }
 
         function openSettings() {
@@ -198,7 +179,7 @@
         function toggleBottomMenu() {
             const panel = $('#bottomControlPanel');
             const button = $('#superAdminBtn');
-            
+
             if (panel.hasClass('hidden')) {
                 // Show menu
                 panel.removeClass('hidden').addClass('slide-up');
@@ -213,7 +194,7 @@
         }
         }
     </script>
-    
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

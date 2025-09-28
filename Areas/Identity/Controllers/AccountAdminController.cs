@@ -260,8 +260,9 @@ namespace TechWebSol.Areas.Identity.Controllers
                         Text = $"{t.Name} ({t.TeamCode})"
                     }).ToListAsync()
             };
-            ViewData["DesignationId"] = "";
             ViewData["SystemUser"] =  "";
+            var teamTypes = await _context.TeamTypes.AsNoTracking().Select(tt => new { tt.Id, tt.Name }).ToListAsync();
+            ViewData["TeamTypeId"] = new SelectList(teamTypes, "Id", "Name");
             return PartialView(registerView);
         }
 
@@ -283,7 +284,8 @@ namespace TechWebSol.Areas.Identity.Controllers
                             Email = Input.UserName.Trim(),
                             FirstName = Input.FirstName,
                             LastName = Input.LastName,
-                            Designation = Input.Designation,
+                            TeamId = Input.TeamId,
+                            ForceType = Input.ForceType,
                             CreatedDate = DateTime.Now,
                             UpdatedDate = DateTime.Now,
                             IsActive = true,
@@ -335,6 +337,8 @@ namespace TechWebSol.Areas.Identity.Controllers
                 }
                 else
                 {
+                    var teamTypes = await _context.TeamTypes.AsNoTracking().Select(tt => new { tt.Id, tt.Name }).ToListAsync();
+                    ViewData["TeamTypeId"] = new SelectList(teamTypes, "Id", "Name");
                     return BadRequest();
                 }
             }
@@ -346,7 +350,7 @@ namespace TechWebSol.Areas.Identity.Controllers
         }
 
         [DisplayName("Admin:  Edit Account Details")]
-        public IActionResult EditRegister(string id)
+        public async Task<IActionResult> EditRegister(string id)
         {
             // Fetch the user details
             var UserDetails = _context.Users.AsNoTracking().FirstOrDefault(c => c.Id == id);
@@ -362,7 +366,6 @@ namespace TechWebSol.Areas.Identity.Controllers
             {
                 selectedRoleNames.Add(roles.FirstOrDefault(x => x.Id == item.RoleId).Name);
             }
-            ViewData["DesignationId"] = "";
 
             var allRoles = roles.Select(r => new SelectListItem
                                             {
@@ -374,20 +377,29 @@ namespace TechWebSol.Areas.Identity.Controllers
             RegisterViewModel register = new RegisterViewModel
             {
                 RoleList = allRoles,
-                ApplicationUserID = id,
-                Email = UserDetails.Email,
+                ApplicationUserID = UserDetails.Id,
+                TeamId = UserDetails.TeamId,
+                ForceType = UserDetails.ForceType,
                 FirstName = UserDetails.FirstName,
                 LastName = UserDetails.LastName,
                 UserName = UserDetails.UserName,
-                Designation = UserDetails.Designation,
+                TeamList = await _context.Teams
+                    .Where(t => t.IsActive)
+                    .Select(t => new SelectListItem
+                    {
+                        Value = t.Id.ToString(),
+                        Text = $"{t.Name} ({t.TeamCode})"
+                    }).ToListAsync()
             };
+            var teamTypes = await _context.TeamTypes.AsNoTracking().Select(tt => new { tt.Id, tt.Name }).ToListAsync();
+            ViewData["TeamTypeId"] = new SelectList(teamTypes, "Id", "Name");
             return PartialView(register);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [DisplayName("Admin:  Edit Account Details")]
-        public async Task<IActionResult> EditRegister(RegisterViewModel registerViewModel, string returnUrl = null)
+        public async Task<IActionResult> EditRegister(RegisterViewModel registerViewModel)
         {
             try
             {
@@ -412,8 +424,9 @@ namespace TechWebSol.Areas.Identity.Controllers
                     }
                 }
                 user.UserName = registerViewModel.UserName;
-                user.Email = registerViewModel.Email;  // Assuming you have a separate field for email in your view model
-                user.Designation = registerViewModel.Designation;
+                user.Email = registerViewModel.UserName;  // Assuming you have a separate field for email in your view model
+                user.TeamId = registerViewModel.TeamId;
+                user.ForceType = registerViewModel.ForceType;
                 user.FirstName = registerViewModel.FirstName;
                 user.LastName = registerViewModel.LastName;
                 user.UpdatedDate = DateTime.Now;
@@ -432,8 +445,8 @@ namespace TechWebSol.Areas.Identity.Controllers
                 {
                     applicationUserApp.UserName = user.UserName;
                     applicationUserApp.Email = user.Email;
-                    applicationUserApp.Designation = user.Designation;
-                    applicationUserApp.Department = user.Department;
+                    applicationUserApp.TeamId = user.TeamId;
+                    applicationUserApp.ForceType = user.ForceType;
                     _context.Update(applicationUserApp);
                     _context.SaveChanges();
                 }

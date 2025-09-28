@@ -8,16 +8,10 @@ namespace TechWebSol.ViewModels
     public class RegisterViewModel
     {
         public string ApplicationUserID { get; set; } = string.Empty;
-        public string ReturnUrl { get; set; } = string.Empty;
 
         [Required]
         [DisplayName("Username")]
         public string UserName { get; set; } = string.Empty;
-
-        [DisplayName("User Email")]
-        [EmailAddress]
-        public string Email { get; set; } = string.Empty;
-
         public string AvatarURL { get; set; } = string.Empty;
 
         [DisplayName("Mobile Number")]
@@ -26,14 +20,20 @@ namespace TechWebSol.ViewModels
         [DisplayName("Profile Image")]
         public string ProfileImage { get; set; } = string.Empty;
 
-        [DisplayName("Designation")]
-        public string Designation { get; set; } = string.Empty;
+        [DisplayName("Team")]
+        public Guid? TeamId { get; set; }
+
+        [DisplayName("Force Type")]
+        [Required(ErrorMessage = "Force Type is required")]
+        public string ForceType { get; set; } = string.Empty;
 
         [MaxLength(128)]
         [NotMapped]
         public string RoleName { get; set; } = string.Empty;
 
         public List<string> Role { get; set; } = new List<string>();
+
+        public List<SelectListItem> TeamList { get; set; } = new List<SelectListItem>();
 
         public bool IsOnline { get; set; }
         public DateTime? LastLoginDate { get; set; }
@@ -66,10 +66,5 @@ namespace TechWebSol.ViewModels
 
         public IEnumerable<SelectListItem> RoleList { get; set; } = new List<SelectListItem>();
 
-        // Team assignment fields
-        [DisplayName("Team")]
-        public int? TeamId { get; set; }
-
-        public IEnumerable<SelectListItem> TeamList { get; set; } = new List<SelectListItem>();
     }
 }

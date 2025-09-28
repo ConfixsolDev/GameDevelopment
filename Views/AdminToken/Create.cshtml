@@ -29,39 +29,50 @@
 
                     <div class="row">
                         <div class="col-md-8">
-                            <form asp-action="Create" asp-controller="AdminToken" method="post">
+                            <form asp-action="Create" asp-controller="AdminToken" method="post" enctype="multipart/form-data">
                                 @Html.AntiForgeryToken()
                                 
                                 <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
                                 
                                 <div class="mb-3">
-                                    <label asp-for="Name" class="form-label"></label>
-                                    <input asp-for="Name" class="form-control" placeholder="Enter a descriptive name for the token" />
+                                    <label asp-for="Name" class="form-label">Token Name</label>
+                                    <input asp-for="Name" class="form-control" placeholder="Enter token name (e.g., Unit Alpha-1, Asset Beta-2)" />
                                     <span asp-validation-for="Name" class="text-danger"></span>
                                     <div class="form-text">Enter a descriptive name for the token</div>
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label asp-for="Description" class="form-label"></label>
-                                    <textarea asp-for="Description" class="form-control" rows="3" placeholder="Optional description of the token's purpose"></textarea>
-                                    <span asp-validation-for="Description" class="text-danger"></span>
-                                    <div class="form-text">Optional description of the token's purpose</div>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label asp-for="Category" class="form-label"></label>
-                                    <input asp-for="Category" class="form-control" placeholder="e.g., Vehicle, Equipment, Personnel" />
-                                    <span asp-validation-for="Category" class="text-danger"></span>
-                                    <div class="form-text">Optional category to help organize tokens</div>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label asp-for="TokenGroupId" class="form-label"></label>
+                                    <label asp-for="TokenGroupId" class="form-label">Token Group</label>
                                     <select asp-for="TokenGroupId" class="form-control" asp-items="@(new SelectList(Model.AvailableTokenGroups ?? new List<TechWebSol.Models.TokenGroup>(), "Id", "Name", Model.TokenGroupId))">
                                         <option value="">-- Select Group (Optional) --</option>
                                     </select>
                                     <span asp-validation-for="TokenGroupId" class="text-danger"></span>
-                                    <div class="form-text">Assign this token to a specific group for better organization</div>
+                                    <div class="form-text">Assign to a specific group for organization</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label asp-for="AssetImage" class="form-label">Token Image/Symbol</label>
+                                    <input asp-for="AssetImage" class="form-control" type="file" accept="image/*" />
+                                    <span asp-validation-for="AssetImage" class="text-danger"></span>
+                                    <div class="form-text">Upload image or symbol for the token (PNG, JPG, GIF)</div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label asp-for="CoverageRadiusKm" class="form-label">Coverage Radius (km)</label>
+                                            <input asp-for="CoverageRadiusKm" class="form-control" type="number" step="0.1" min="0.1" max="1000" placeholder="e.g., 5.0" />
+                                            <span asp-validation-for="CoverageRadiusKm" class="text-danger"></span>
+                                            <div class="form-text">Operational radius in kilometers (optional)</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Position (Optional)</label>
+                                            <!-- Position is driven by MapMarkers; manual lat/long removed -->
+                                            <div class="form-text">Current position coordinates (optional)</div>
+                                        </div>
+                                    </div>
                                 </div>
                                 
                                 <div class="mb-3">
@@ -87,24 +98,23 @@
                                 </div>
                                 <div class="card-body">
                                     <p><strong>What is a Token?</strong></p>
-                                    <p>A token is a digital entity that exists in the system and can be:</p>
+                                    <p>A token is a digital representation on the map that can be:</p>
                                     <ul>
-                                        <li>Created by administrators</li>
-                                        <li>Assigned to token groups</li>
-                                        <li>Converted to physical tokens later by adding touch data</li>
-                                        <li>Used for planning and organization</li>
+                                        <li>Positioned and moved on the tactical map</li>
+                                        <li>Assigned coverage/operational areas</li>
+                                        <li>Linked to detailed data entries later</li>
+                                        <li>Organized into groups for better management</li>
                                     </ul>
                                     
                                     <hr>
                                     
-                                    <p><strong>Token Groups:</strong></p>
-                                    <p>Token groups help organize tokens by:</p>
-                                    <ul>
-                                        <li>Company (e.g., "Company A")</li>
-                                        <li>Brigade (e.g., "Brigade 1")</li>
-                                        <li>Department (e.g., "Department Alpha")</li>
-                                        <li>Unit (e.g., "Unit Bravo")</li>
-                                    </ul>
+                                    <p><strong>Two-Phase Approach:</strong></p>
+                                    <ol>
+                                        <li><strong>Create Token</strong> - Basic map representation (this form)</li>
+                                        <li><strong>Add Data Entry</strong> - Detailed specifications (DroneUnit, VehicleUnit, etc.)</li>
+                                    </ol>
+                                    
+                                    <p class="text-muted">This keeps the map simple while allowing detailed military data when needed.</p>
                                 </div>
                             </div>
                         </div>
@@ -132,4 +142,3 @@
         });
     </script>
 }
-

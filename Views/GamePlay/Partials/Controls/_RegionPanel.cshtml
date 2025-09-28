@@ -1,0 +1,77 @@
+<!-- LEFT: Unified Region controls (Sectors, Labels, Basemap) -->
+<aside class="team-status-panel slide-up" id="regionPanel">
+    <div class="team-status-header">
+        <div class="team-status-icon">⚑</div>
+        <div class="team-status-info">
+            <h5>Region Controls</h5>
+            <p>One main AO • Mask outside</p>
+        </div>
+        <button id="toggleRegionPanel" class="panel-toggle" title="Collapse / Expand">▾</button>
+    </div>
+
+    <div class="panel-body">
+        <div>
+            <!-- Metrics -->
+            <div class="status-metrics mb-10">
+                <div class="metric-item">
+                    <span class="metric-value" id="metric-area">—</span>
+                    <span class="metric-label">Area (km²)</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-value" id="metric-sectors">0</span>
+                    <span class="metric-label">Sectors</span>
+                </div>
+            </div>
+
+            <!-- Region actions -->
+            <div class="d-grid gap-10 control-section">
+                <div class="control-row">
+                    <button id="btnSaveRegion" class="overlay-btn">Save Region</button>
+                    <button id="btnEditRegion" class="overlay-btn">Enable Edit</button>
+                </div>
+                <div class="control-row">
+                    <button id="btnFit" class="overlay-btn">Fit to Screen</button>
+                    <button id="btnClearSectors" class="overlay-btn">Clear Sectors</button>
+                </div>
+            </div>
+
+            <!-- Sectors -->
+            <div class="control-section">
+                <h6>Sectors</h6>
+                <div class="control-row">
+                    <a id="btnAddBlue" class="overlay-btn"><i>●</i><span>Add Blue</span></a>
+                    <a id="btnAddFox" class="overlay-btn"><i>●</i><span>Add Fox</span></a>
+                </div>
+                <div class="control-row">
+                    <label class="overlay-btn"><input id="chkShowBlue" type="checkbox" checked /> Show Blue</label>
+                    <label class="overlay-btn"><input id="chkShowFox" type="checkbox" checked /> Show Fox</label>
+                </div>
+            </div>
+
+            <!-- Labels -->
+            <div class="control-section">
+                <h6>Labels</h6>
+                <div class="control-row">
+                    <a id="btnAddLabel" class="overlay-btn"><i>⌘</i><span>Add Label</span></a>
+                    <a id="btnClearLabels" class="overlay-btn danger"><i>×</i><span>Clear</span></a>
+                </div>
+                <label class="overlay-btn"><input id="chkShowLabels" type="checkbox" checked /> Show Labels</label>
+            </div>
+
+            <!-- Basemaps -->
+            <div class="control-section">
+                <h6>Basemap</h6>
+                <div class="control-row">
+                    <a data-layer="Satellite" class="overlay-btn" id="bmSat">Satellite</a>
+                    <a data-layer="Streets" class="overlay-btn" id="bmSt">Streets</a>
+                </div>
+                <div class="control-row">
+                    <a data-layer="OSM" class="overlay-btn" id="bmOSM">OSM</a>
+                    <a data-layer="Topo" class="overlay-btn" id="bmTopo">Topo</a>
+                </div>
+            </div>
+
+            <div class="mt-12 gameplay-note" id="saveStatus">Ready</div>
+        </div>
+    </div>
+</aside>

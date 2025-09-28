@@ -44,7 +44,7 @@ namespace TechWebSol.DAL
                                        .Select(u => new SelectListItem
                                        {
                                            Value = u.Id.ToString(),
-                                           Text = $"{u.UserCode} | {u.Designation}"
+                                           Text = $"{u.UserCode} | {u.TeamId}"
                                        })
                                        .ToListAsync();
             return userList;

@@ -74,7 +74,6 @@ namespace TechWebSol.Controllers
                     SessionCode = request.SessionCode,
                     Description = request.Description,
                     Status = "Active",
-                    CreatedAt = DateTime.UtcNow,
                 };
 
                 _context.GameSessions.Add(gameSession);
@@ -94,7 +93,7 @@ namespace TechWebSol.Controllers
                         sessionCode = gameSession.SessionCode,
                         description = gameSession.Description,
                         status = gameSession.Status,
-                        createdAt = gameSession.CreatedAt,
+                        createdAt = gameSession.CreatedDate ?? DateTime.Now,
                     }
                 });
             }
@@ -153,7 +152,7 @@ namespace TechWebSol.Controllers
             {
                 var sessions = await _context.GameSessions
                     .Where(s => s.Status =="Active")
-                    .OrderByDescending(s => s.CreatedAt)
+                    .OrderByDescending(s => s.CreatedDate)
                     .Select(s => new
                     {
                         id = s.Id,
@@ -161,7 +160,7 @@ namespace TechWebSol.Controllers
                         sessionCode = s.SessionCode,
                         description = s.Description,
                         Status = "Active",
-                        createdAt = s.CreatedAt,
+                        createdAt = s.CreatedDate ?? DateTime.Now,
                     })
                     .ToListAsync();
 
@@ -189,10 +188,8 @@ namespace TechWebSol.Controllers
                     {
                         id = t.Id,
                         name = t.Name,
-                        description = t.Description,
-                        category = t.Category,
                         isActive = t.IsActive,
-                        createdAt = t.CreatedAt
+                        createdAt = t.CreatedDate ?? DateTime.Now
                     })
                     .ToListAsync();
 

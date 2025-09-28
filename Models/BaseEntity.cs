@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace TechWebSol.Models
 {
-    public abstract class BaseEntity
+    public class BaseEntity
     {
         [Key]
         public Guid Id { get; set; }
@@ -12,12 +12,18 @@ namespace TechWebSol.Models
 
         public DateTime? CreatedDate { get; set; } = DateTime.Now;
         
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-
         [StringLength(255)]
         public string UpdatedBy { get; set; } = string.Empty;
 
+        public Guid? TeamId { get; set; } 
+
         public DateTime? UpdatedDate { get; set; } = DateTime.Now;
-        public bool IsDeleted { get; set; } = false;
+        
+        public bool IsActive { get; set; } = true;
+    }
+  
+    public class BaseEntityDataEntry:BaseEntity
+    {
+        public Guid? TokenId { get; set; }
     }
 }

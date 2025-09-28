@@ -7,15 +7,10 @@ namespace TechWebSol.Models
     [Table("Tokens")]
     public class Token:BaseEntity
     {
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public virtual new long Id { get; set; }
-
 
         [Required]
         [MaxLength(100)]
         public string Name { get; set; } = string.Empty;
-
-     
 
         [Column(TypeName = "decimal(5,2)")]
         public decimal TrainingConsistency { get; set; }
@@ -23,14 +18,8 @@ namespace TechWebSol.Models
         // Navigation property
         public virtual TokenSignature? Signature { get; set; }
 
-        // Additional metadata
-        [MaxLength(500)]
-        public string? Description { get; set; }
+        // Additional metadata - removed description and category as discussed
 
-        [MaxLength(50)]
-        public string? Category { get; set; }
-
-        public bool IsActive { get; set; } = true;
         public bool IsManualToken { get; set; } = false;
 
         public DateTime? LastUsed { get; set; }
@@ -41,6 +30,18 @@ namespace TechWebSol.Models
         public Guid? TokenGroupId { get; set; }
         public virtual TokenGroup? TokenGroup { get; set; }
         public virtual ICollection<MapMarker> MapMarkers { get; set; } = new List<MapMarker>();
+
+        // Asset properties for military tokens
+        [MaxLength(200)]
+        public string? AssetImagePath { get; set; } // Path to asset image/insignia
+
+        [Column(TypeName = "decimal(8,2)")]
+        public decimal? CoverageRadiusKm { get; set; } // Asset coverage radius
+
+        // Position is tracked via MapMarkers (single active marker indicates current position)
+
+        // Navigation properties
+        public virtual ICollection<TokenAreaCoverage> AreaCoverages { get; set; } = new List<TokenAreaCoverage>();
     }
 
     // DTOs for pattern matching
@@ -95,7 +96,7 @@ namespace TechWebSol.Models
         public int TotalPatterns { get; set; }
         public double AverageConfidence { get; set; }
         public double SuccessRate { get; set; }
-        public long TokenId { get; set; }
+        public Guid? TokenId { get; set; }
         public string TokenName { get; set; } = string.Empty;
         public int TotalIdentifications { get; set; }
         public int SuccessfulIdentifications { get; set; }
@@ -114,7 +115,7 @@ namespace TechWebSol.Models
 
     public class TokenMatchDetail
     {
-        public long TokenId { get; set; }
+        public Guid? TokenId { get; set; }
         public string TokenName { get; set; } = string.Empty;
         public double Confidence { get; set; }
         public double DistanceSimilarity { get; set; }
@@ -152,7 +153,7 @@ namespace TechWebSol.Models
 
     public class TokenMatch
     {
-        public long TokenId { get; set; }
+        public Guid? TokenId { get; set; }
         public string TokenName { get; set; } = string.Empty;
         public double Confidence { get; set; }
         public double DistanceSimilarity { get; set; }
@@ -164,7 +165,7 @@ namespace TechWebSol.Models
 
     public class ComplexTokenMatchDetail
     {
-        public long TokenId { get; set; }
+        public Guid? TokenId { get; set; }
         public string TokenName { get; set; } = string.Empty;
         public double Confidence { get; set; }
         public double DistanceSimilarity { get; set; }
@@ -175,13 +176,10 @@ namespace TechWebSol.Models
     }
 
     [Table("TokenSignatures")]
-    public class TokenSignature
+    public class TokenSignature : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }  
-
         [ForeignKey("Token")]
-        public long TokenId { get; set; }
+        public Guid TokenId { get; set; }
 
         public int TouchCount { get; set; }
 
@@ -216,7 +214,7 @@ namespace TechWebSol.Models
     {
         [Key]
         [ForeignKey("TokenSignature")]
-        public int TokenSignatureId { get; set; }  // reuse signature ID as primary key
+        public Guid TokenSignatureId { get; set; }  // reuse signature ID as primary key
 
         public bool IsStabilized { get; set; }
 
@@ -232,7 +230,7 @@ namespace TechWebSol.Models
     {
         [Key]
         [ForeignKey("TokenSignature")]
-        public int TokenSignatureId { get; set; }
+        public Guid TokenSignatureId { get; set; }
 
         public bool HasRadius { get; set; }
 
@@ -261,7 +259,7 @@ namespace TechWebSol.Models
     {
         [Key]
         [ForeignKey("TokenSignature")]
-        public int TokenSignatureId { get; set; }
+        public Guid TokenSignatureId { get; set; }
 
         [MaxLength(20)]
         public string Type { get; set; } = string.Empty;
@@ -307,7 +305,7 @@ namespace TechWebSol.Models
     {
         [Key]
         [ForeignKey("TokenSignature")]
-        public int TokenSignatureId { get; set; }
+        public Guid TokenSignatureId { get; set; }
 
         [Column(TypeName = "decimal(10,4)")]
         public decimal AspectRatio { get; set; }

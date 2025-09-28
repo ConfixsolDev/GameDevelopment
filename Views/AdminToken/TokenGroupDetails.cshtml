@@ -102,10 +102,10 @@
                                         <thead>
                                             <tr>
                                                 <th>Token Name</th>
-                                                <th>Category</th>
-                                                <th>Description</th>
+                                                <th>Asset Type</th>
                                                 <th>Status</th>
                                                 <th>Created At</th>
+                                                <th>Coverage</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -113,8 +113,7 @@
                                             {
                                                 <tr>
                                                     <td><strong>@token.Name</strong></td>
-                                                    <td>@(token.Category ?? "N/A")</td>
-                                                    <td>@(token.Description ?? "N/A")</td>
+                                                    <td>@(token.Notes ?? "N/A")</td>
                                                     <td>
                                                         @if (token.IsActive)
                                                         {
@@ -125,7 +124,17 @@
                                                             <span class="badge bg-danger">Inactive</span>
                                                         }
                                                     </td>
-                                                    <td>@token.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                                    <td>@(token.CreatedDate?.ToString("MM/dd/yyyy") ?? "N/A")</td>
+                                                    <td>
+                                                        @if (token.IsManualToken)
+                                                        {
+                                                            <span class="badge bg-info">Map Token</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-secondary">Touch Token</span>
+                                                        }
+                                                    </td>
                                                 </tr>
                                             }
                                         </tbody>

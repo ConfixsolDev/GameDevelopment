@@ -26,7 +26,9 @@ namespace TechWebSol.Models
         [MaxLength(50)]
         public string? Category { get; set; } // e.g., "Company", "Brigade", "Department"
 
-        public bool IsActive { get; set; } = true;
+        [MaxLength(50)]
+        public string? ForceType { get; set; } // e.g., "Blueland", "Foxland", "Control"
+
 
         [MaxLength(50)]
         public string? CreatedByUserId { get; set; }
@@ -37,5 +39,22 @@ namespace TechWebSol.Models
         public virtual ICollection<ApplicationUser> Users { get; set; } = new List<ApplicationUser>();
         public virtual ICollection<Token> Tokens { get; set; } = new List<Token>();
         public virtual ICollection<TeamTokenGroupAssignment> TokenGroupAssignments { get; set; } = new List<TeamTokenGroupAssignment>();
+
+        public TeamType TeamType { get; set; }
+        public Guid? TeamTypeId { get; set; }
+    }
+
+    public class TeamType : BaseEntity
+    {
+        [Required]
+        [MaxLength(100)]
+        public string Name { get; set; } = string.Empty; // e.g., "Alpha Team", "Bravo Team"
+
+        [MaxLength(500)]
+        public string? Description { get; set; }
+        [Required]
+        [MaxLength(50)]
+        public string TeamTypeCode { get; set; } = string.Empty; // e.g., "ALPHA", "BRAVO"
+
     }
 }

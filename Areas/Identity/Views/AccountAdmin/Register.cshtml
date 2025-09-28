@@ -7,8 +7,8 @@
 <div class="modal-body">
     <div class="card ">
         <form asp-area="Identity" asp-controller="AccountAdmin" asp-action="Register" method="post" class="frmSubmit" style="margin-bottom:10px">
-            <div class="form-group col-md-12">
-                <label class="control-label">Employee Details</label>
+          @*   <div class="form-group col-md-12">
+                <label class="control-label">Person Details</label>
                 <select class="form-control"  asp-for="ApplicationUserID">
                     <option disabled selected value="">Select Employee</option>
                     @foreach (var item in ViewBag.SystemUser as List<ShortUserViewModel>)
@@ -16,7 +16,7 @@
                         <option date-Designation="@item.Designation" date-firstName="@item.FirstName" date-LastName="@item.LastName" date-Email="@item.Email" value="@item.Id">@item.Email</option>
                     }
                 </select>
-            </div>
+            </div> *@
             <div class="form-group col-md-12">
                 <label asp-for="UserName" class="control-label"></label>
                 <input required asp-for="UserName" id="UserName" class="form-control" placeholder="User Name" onblur="checkValue()" />
@@ -40,9 +40,21 @@
                 <span asp-validation-for="Designation" class="text-danger"></span>
             </div> *@
             <div class="form-group col-md-12">
-                <label class="control-label">Designation</label>
-                <select asp-for="Designation" class="form-control" asp-items="@(new SelectList(ViewBag.DesignationId, "Text", "Text"))"></select>
-                <span asp-validation-for="Designation" class="text-danger"></span>
+                <label class="control-label">Team</label>
+                <select asp-for="TeamId" class="form-control" asp-items="Model.TeamList">
+                    <option value="">-- Select Team --</option>
+                </select>
+                <span asp-validation-for="TeamId" class="text-danger"></span>
+            </div>
+            <div class="form-group col-md-12">
+                <label asp-for="ForceType" class="control-label">Force Type</label>
+                <select asp-for="ForceType" class="form-control" required>
+                    <option value="">-- Select Force Type --</option>
+                    <option value="Blueland">Blueland</option>
+                    <option value="Foxland">Foxland</option>
+                    <option value="Control">Control</option>
+                </select>
+                <span asp-validation-for="ForceType" class="text-danger"></span>
             </div>
             <div class="form-group col-md-12">
                 <label asp-for="Role" class="control-label"></label>

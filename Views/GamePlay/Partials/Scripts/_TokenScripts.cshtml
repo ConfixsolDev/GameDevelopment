@@ -1,0 +1,316 @@
+<script>
+// Token Management Functions for GamePlay Arena
+
+// Global variables for token management
+let tokenPlacementManager = null;
+let selectedTokenForPlacement = null;
+let isTokenPlacementMode = false;
+let availableTokens = [];
+
+// Initialize token placement manager
+function initializeTokenManager() {
+    if (window.gameMap && typeof TokenPlacementManager !== 'undefined') {
+        tokenPlacementManager = new TokenPlacementManager(window.gameMap, showNotification);
+        console.log('TokenPlacementManager initialized');
+    } else {
+        console.warn('Cannot initialize TokenPlacementManager - map or class not available');
+    }
+}
+
+// Token placement functions
+function openTokenPlacement() {
+    console.log('Opening token placement...');
+    
+    if (!tokenPlacementManager) {
+        initializeTokenManager();
+    }
+    
+    // Load available tokens and show selection modal
+    loadAvailableTokens().then(() => {
+        openModal('tokenSelectionModal');
+    });
+}
+
+function cancelTokenPlacement() {
+    console.log('Cancelling token placement...');
+    
+    if (tokenPlacementManager) {
+        tokenPlacementManager.cancelPlacement();
+    }
+    
+    cleanupTokenPlacementMode();
+}
+
+// Load available tokens from server
+async function loadAvailableTokens() {
+    try {
+        const response = await fetch('/GamePlay/GetTeamTokens');
+        const data = await response.json();
+        
+        if (data.success) {
+            availableTokens = data.tokens;
+            populateTokenSelection();
+        } else {
+            showNotification('Failed to load tokens: ' + data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error loading tokens:', error);
+        showNotification('Error loading tokens', 'error');
+    }
+}
+
+// Populate token selection modal
+function populateTokenSelection() {
+    const container = document.getElementById('tokenSelectionGrid');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    availableTokens.forEach(token => {
+        const tokenElement = document.createElement('div');
+        tokenElement.className = 'token-option';
+        tokenElement.innerHTML = `
+            <div class="token-icon">
+                <i class="fas fa-chess-knight"></i>
+            </div>
+            <div class="token-info">
+                <h5>${token.name}</h5>
+                <p>${token.type || 'Unit'}</p>
+            </div>
+        `;
+        tokenElement.onclick = () => selectTokenForPlacement(token);
+        container.appendChild(tokenElement);
+    });
+}
+
+// Select token for placement
+function selectTokenForPlacement(token) {
+    selectedTokenForPlacement = token;
+    isTokenPlacementMode = true;
+    
+    if (tokenPlacementManager) {
+        tokenPlacementManager.startPlacementMode(token);
+    }
+    
+    closeModal('tokenSelectionModal');
+    showNotification(`Click on the map to place ${token.name}`, 'info');
+    
+    // Change cursor
+    $('#gameMap').css('cursor', 'crosshair');
+    
+    // Create cursor indicator
+    createTokenCursorIndicator(token);
+}
+
+// Create cursor indicator for token placement
+function createTokenCursorIndicator(token) {
+    // Remove existing indicator
+    $('.token-cursor-indicator').remove();
+    
+    // Create new indicator
+    const indicator = $(`
+        <div class="token-cursor-indicator">
+            <i class="fas fa-chess-knight"></i>
+            <span>${token.name}</span>
+        </div>
+    `);
+    
+    $('body').append(indicator);
+    
+    // Track mouse movement
+    $(document).on('mousemove.tokenPlacement', function(e) {
+        if (isTokenPlacementMode && selectedTokenForPlacement) {
+            indicator.css({
+                left: e.pageX + 10,
+                top: e.pageY - 10
+            });
+        }
+    });
+}
+
+// Clean up token placement mode
+function cleanupTokenPlacementMode() {
+    isTokenPlacementMode = false;
+    selectedTokenForPlacement = null;
+    $('#gameMap').css('cursor', 'default');
+    $('.token-cursor-indicator').remove();
+    $(document).off('mousemove.tokenPlacement');
+}
+
+// Place token at location
+async function placeTokenAtLocation(latlng) {
+    if (!selectedTokenForPlacement) {
+        console.warn('No token selected for placement');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/GamePlay/PlaceToken', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                TokenId: selectedTokenForPlacement.id,
+                Latitude: latlng.lat,
+                Longitude: latlng.lng
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification(`${selectedTokenForPlacement.name} placed successfully`, 'success');
+            
+            // Add token to map if tokenPlacementManager is available
+            if (tokenPlacementManager) {
+                tokenPlacementManager.addTokenToMap(selectedTokenForPlacement, latlng);
+            }
+            
+            // Update token count
+            updateTokenCount();
+        } else {
+            showNotification('Failed to place token: ' + data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error placing token:', error);
+        showNotification('Error placing token', 'error');
+    }
+    
+    // Clean up placement mode
+    cleanupTokenPlacementMode();
+}
+
+// Update token count display
+function updateTokenCount() {
+    // Update any token count displays
+    const countElement = document.getElementById('tokenCount');
+    if (countElement && availableTokens) {
+        countElement.textContent = availableTokens.length;
+    }
+}
+
+// Close token selection modal
+function closeTokenSelectionModal() {
+    closeModal('tokenSelectionModal');
+    selectedTokenForPlacement = null;
+    isTokenPlacementMode = false;
+    $('#gameMap').css('cursor', 'default');
+}
+
+// Handle map clicks for token placement
+function handleMapClick(e) {
+    console.log('Map clicked at:', e.latlng);
+    
+    if (isTokenPlacementMode && selectedTokenForPlacement) {
+        placeTokenAtLocation(e.latlng);
+    }
+}
+
+// Initialize token scripts when document is ready
+$(document).ready(function() {
+    // Initialize token manager when map is available
+    if (window.gameMap) {
+        initializeTokenManager();
+    } else {
+        // Wait for map to be initialized
+        const mapCheck = setInterval(() => {
+            if (window.gameMap) {
+                initializeTokenManager();
+                clearInterval(mapCheck);
+            }
+        }, 100);
+    }
+    
+    // Handle Escape key to cancel token placement
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' && isTokenPlacementMode) {
+            cleanupTokenPlacementMode();
+            showNotification('Token placement cancelled', 'info');
+        }
+    });
+});
+
+// Notification function (fallback if not defined elsewhere)
+if (typeof showNotification === 'undefined') {
+    window.showNotification = function(message, type = 'info') {
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        // Create a simple notification
+        const notification = $(`
+            <div class="notification notification-${type}">
+                <i class="fas fa-info-circle"></i>
+                <span>${message}</span>
+            </div>
+        `);
+        
+        $('body').append(notification);
+        
+        setTimeout(() => {
+            notification.fadeOut(() => notification.remove());
+        }, 3000);
+    };
+}
+</script>
+
+<style>
+    .token-option {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        margin: 5px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .token-option:hover {
+        background-color: #f5f5f5;
+    }
+    
+    .token-icon {
+        margin-right: 10px;
+        font-size: 24px;
+        color: #007bff;
+    }
+    
+    .token-info h5 {
+        margin: 0;
+        font-size: 14px;
+    }
+    
+    .token-info p {
+        margin: 0;
+        font-size: 12px;
+        color: #666;
+    }
+    
+    .token-cursor-indicator {
+        position: fixed;
+        pointer-events: none;
+        z-index: 9999;
+        background: rgba(0, 123, 255, 0.9);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+    
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        padding: 10px 15px;
+        border-radius: 5px;
+        color: white;
+        font-size: 14px;
+    }
+    
+    .notification-info { background-color: #17a2b8; }
+    .notification-success { background-color: #28a745; }
+    .notification-error { background-color: #dc3545; }
+    .notification-warning { background-color: #ffc107; color: #212529; }
+</style>

@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 using TechWebSol.Models;
 
 namespace TechWebSol.ViewModels
 {
     /// <summary>
-    /// ViewModel for creating a new token
+    /// ViewModel for creating a simple token (map representation only)
+    /// Asset type and detailed specs will come from data entry layer
     /// </summary>
     public class CreateTokenViewModel
     {
@@ -13,16 +15,21 @@ namespace TechWebSol.ViewModels
         [Display(Name = "Token Name")]
         public string Name { get; set; } = string.Empty;
 
-        [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters")]
-        [Display(Name = "Description")]
-        public string? Description { get; set; }
-
-        [StringLength(50, ErrorMessage = "Category cannot exceed 50 characters")]
-        [Display(Name = "Category")]
-        public string? Category { get; set; }
-
         [Display(Name = "Token Group")]
         public Guid? TokenGroupId { get; set; }
+
+        [Display(Name = "Asset Image/Symbol")]
+        public IFormFile? AssetImage { get; set; }
+
+        [Display(Name = "Coverage Radius (km)")]
+        [Range(0.1, 1000, ErrorMessage = "Coverage radius must be between 0.1 and 1000 km")]
+        public decimal? CoverageRadiusKm { get; set; }
+
+        [Display(Name = "Current Latitude")]
+        public decimal? CurrentLatitude { get; set; }
+
+        [Display(Name = "Current Longitude")]
+        public decimal? CurrentLongitude { get; set; }
 
         // For dropdown display
         public List<TokenGroup>? AvailableTokenGroups { get; set; }

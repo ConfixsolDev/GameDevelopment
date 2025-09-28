@@ -1,0 +1,792 @@
+<!-- Token Brigade Data Entry Partial View -->
+<div id="tokenBrigadeDataModal" class="gameplay-modal">
+    <div class="gameplay-modal-content extra-large">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-flag"></i> Brigade Data Entry</h3>
+            <div class="token-info">
+                <span id="selectedTokenName">Token Name</span> - <span id="selectedTokenId">Token ID</span>
+            </div>
+            <button class="gameplay-modal-close" onclick="closeTokenBrigadeModal()">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <!-- Brigade Data Tabs -->
+            <div class="brigade-data-tabs">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="switchBrigadeTab('brigade-info')">
+                        <i class="fas fa-flag"></i> Brigade Info
+                    </button>
+                    <button class="tab-btn" onclick="switchBrigadeTab('infantry-units')">
+                        <i class="fas fa-user-soldier"></i> Infantry Battalions
+                    </button>
+                    <button class="tab-btn" onclick="switchBrigadeTab('armoured-units')">
+                        <i class="fas fa-tank"></i> Armoured Regiments
+                    </button>
+                    <button class="tab-btn" onclick="switchBrigadeTab('artillery-units')">
+                        <i class="fas fa-bomb"></i> Artillery Regiments
+                    </button>
+                    <button class="tab-btn" onclick="switchBrigadeTab('summary')">
+                        <i class="fas fa-chart-bar"></i> Summary
+                    </button>
+                </div>
+
+                <!-- Brigade Information Tab -->
+                <div id="brigade-info-tab" class="tab-content active">
+                    <div class="data-section-header">
+                        <h4>Brigade Information</h4>
+                        <button class="btn btn-success" onclick="saveBrigadeInfo()">
+                            <i class="fas fa-save"></i> Save Brigade
+                        </button>
+                    </div>
+                    <form id="tokenBrigadeForm">
+                        <input type="hidden" id="tokenBrigadeId" name="Id">
+                        <input type="hidden" id="brigadeTokenId" name="TokenId">
+                        
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="tokenBrigadeName">Brigade Name *</label>
+                                <input type="text" id="tokenBrigadeName" name="Name" required class="form-control">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="tokenBrigadeCode">Brigade Code *</label>
+                                <input type="text" id="tokenBrigadeCode" name="BrigadeCode" required class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="tokenBrigadeForceType">Force Type *</label>
+                                <select id="tokenBrigadeForceType" name="ForceType" required class="form-control">
+                                    <option value="">Select Force Type</option>
+                                    <option value="Blue">Blue Force</option>
+                                    <option value="Red">Red Force</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="tokenBrigadeStrength">Total Strength</label>
+                                <input type="number" id="tokenBrigadeStrength" name="TotalStrength" class="form-control" readonly>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="tokenBrigadeStatus">Status</label>
+                                <select id="tokenBrigadeStatus" name="Status" class="form-control">
+                                    <option value="Active">Active</option>
+                                    <option value="Reserve">Reserve</option>
+                                    <option value="Training">Training</option>
+                                    <option value="Maintenance">Maintenance</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="tokenBrigadeDescription">Description</label>
+                            <textarea id="tokenBrigadeDescription" name="Description" class="form-control" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Infantry Battalions Tab -->
+                <div id="infantry-units-tab" class="tab-content">
+                    <div class="data-section-header">
+                        <h4>Infantry Battalions</h4>
+                        <button class="btn btn-primary" onclick="addInfantryBattalion()">
+                            <i class="fas fa-plus"></i> Add Battalion
+                        </button>
+                    </div>
+                    <div class="units-container">
+                        <div id="infantryBattalionsList">
+                            <!-- Infantry battalions will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Armoured Regiments Tab -->
+                <div id="armoured-units-tab" class="tab-content">
+                    <div class="data-section-header">
+                        <h4>Armoured Regiments</h4>
+                        <button class="btn btn-primary" onclick="addArmouredRegiment()">
+                            <i class="fas fa-plus"></i> Add Regiment
+                        </button>
+                    </div>
+                    <div class="units-container">
+                        <div id="armouredRegimentsList">
+                            <!-- Armoured regiments will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Artillery Regiments Tab -->
+                <div id="artillery-units-tab" class="tab-content">
+                    <div class="data-section-header">
+                        <h4>Artillery Regiments</h4>
+                        <button class="btn btn-primary" onclick="addArtilleryRegiment()">
+                            <i class="fas fa-plus"></i> Add Regiment
+                        </button>
+                    </div>
+                    <div class="units-container">
+                        <div id="artilleryRegimentsList">
+                            <!-- Artillery regiments will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Tab -->
+                <div id="summary-tab" class="tab-content">
+                    <div class="data-section-header">
+                        <h4>Brigade Summary</h4>
+                        <button class="btn btn-success" onclick="exportBrigadeData()">
+                            <i class="fas fa-download"></i> Export Data
+                        </button>
+                    </div>
+                    <div class="summary-container">
+                        <div class="summary-cards">
+                            <div class="summary-card">
+                                <div class="summary-icon">
+                                    <i class="fas fa-flag"></i>
+                                </div>
+                                <div class="summary-info">
+                                    <h5 id="summaryBrigadeName">Brigade Name</h5>
+                                    <p id="summaryBrigadeCode">Brigade Code</p>
+                                    <p id="summaryForceType">Force Type</p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="summary-info">
+                                    <h5 id="summaryTotalStrength">0</h5>
+                                    <p>Total Strength</p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-icon">
+                                    <i class="fas fa-user-soldier"></i>
+                                </div>
+                                <div class="summary-info">
+                                    <h5 id="summaryInfantryCount">0</h5>
+                                    <p>Infantry Battalions</p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-icon">
+                                    <i class="fas fa-tank"></i>
+                                </div>
+                                <div class="summary-info">
+                                    <h5 id="summaryArmouredCount">0</h5>
+                                    <p>Armoured Regiments</p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-icon">
+                                    <i class="fas fa-bomb"></i>
+                                </div>
+                                <div class="summary-info">
+                                    <h5 id="summaryArtilleryCount">0</h5>
+                                    <p>Artillery Regiments</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="equipment-summary">
+                            <h5>Equipment Summary</h5>
+                            <div class="equipment-grid">
+                                <div class="equipment-item">
+                                    <span class="equipment-label">Tanks:</span>
+                                    <span class="equipment-value" id="summaryTanks">0</span>
+                                </div>
+                                <div class="equipment-item">
+                                    <span class="equipment-label">ATGMS:</span>
+                                    <span class="equipment-value" id="summaryATGMS">0</span>
+                                </div>
+                                <div class="equipment-item">
+                                    <span class="equipment-label">Artillery Guns:</span>
+                                    <span class="equipment-value" id="summaryArtilleryGuns">0</span>
+                                </div>
+                                <div class="equipment-item">
+                                    <span class="equipment-label">Mortars:</span>
+                                    <span class="equipment-value" id="summaryMortars">0</span>
+                                </div>
+                                <div class="equipment-item">
+                                    <span class="equipment-label">HMG/AGL:</span>
+                                    <span class="equipment-value" id="summaryHMG">0</span>
+                                </div>
+                                <div class="equipment-item">
+                                    <span class="equipment-label">MANPADS:</span>
+                                    <span class="equipment-value" id="summaryMANPADS">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeTokenBrigadeModal()">Close</button>
+            <button class="gameplay-btn primary" onclick="saveAllBrigadeData()">
+                <i class="fas fa-save"></i> Save All Data
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Infantry Battalion Form Template -->
+<div id="infantryBattalionTemplate" style="display: none;">
+    <div class="unit-form-card">
+        <div class="unit-form-header">
+            <h6><i class="fas fa-user-soldier"></i> Infantry Battalion</h6>
+            <button class="btn btn-sm btn-danger" onclick="removeInfantryBattalion(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        <div class="unit-form-body">
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label>Battalion Name *</label>
+                    <input type="text" name="Name" required class="form-control">
+                </div>
+                <div class="form-group col-md-6">
+                    <label>Unit Code *</label>
+                    <input type="text" name="UnitCode" required class="form-control">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label>Strength *</label>
+                    <input type="number" name="Strength" required class="form-control" onchange="updateBrigadeTotalStrength()">
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Companies *</label>
+                    <input type="number" name="Companies" required class="form-control">
+                </div>
+                <div class="form-group col-md-4">
+                    <label>ATGMS</label>
+                    <input type="number" name="ATGMS" class="form-control" value="0">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <label>Rocket Launcher</label>
+                    <input type="number" name="RocketLauncher" class="form-control" value="0">
+                </div>
+                <div class="form-group col-md-3">
+                    <label>Mortars 81mm</label>
+                    <input type="number" name="Mortars81mm" class="form-control" value="0">
+                </div>
+                <div class="form-group col-md-3">
+                    <label>Mortars 120mm</label>
+                    <input type="number" name="Mortars120mm" class="form-control" value="0">
+                </div>
+                <div class="form-group col-md-3">
+                    <label>HMG/AGL</label>
+                    <input type="number" name="HMG_AGL" class="form-control" value="0">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label>MG/LMG</label>
+                    <input type="number" name="MG_LMG" class="form-control" value="0">
+                </div>
+                <div class="form-group col-md-4">
+                    <label>MANPADS</label>
+                    <input type="number" name="MANPADS" class="form-control" value="0">
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Grenades</label>
+                    <input type="number" name="Grenades" class="form-control" value="0">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Armoured Regiment Form Template -->
+<div id="armouredRegimentTemplate" style="display: none;">
+    <div class="unit-form-card">
+        <div class="unit-form-header">
+            <h6><i class="fas fa-tank"></i> Armoured Regiment</h6>
+            <button class="btn btn-sm btn-danger" onclick="removeArmouredRegiment(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        <div class="unit-form-body">
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label>Regiment Name *</label>
+                    <input type="text" name="Name" required class="form-control">
+                </div>
+                <div class="form-group col-md-6">
+                    <label>Unit Code *</label>
+                    <input type="text" name="UnitCode" required class="form-control">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label>Strength *</label>
+                    <input type="number" name="Strength" required class="form-control" onchange="updateBrigadeTotalStrength()">
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Squadrons *</label>
+                    <input type="number" name="Squadrons" required class="form-control">
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Tanks</label>
+                    <input type="number" name="Tanks" class="form-control" value="0">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label>ATGMS</label>
+                    <input type="number" name="ATGMS" class="form-control" value="0">
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Mortars 120mm</label>
+                    <input type="number" name="Mortars120mm" class="form-control" value="0">
+                </div>
+                <div class="form-group col-md-4">
+                    <label>HMG</label>
+                    <input type="number" name="HMG" class="form-control" value="0">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Artillery Regiment Form Template -->
+<div id="artilleryRegimentTemplate" style="display: none;">
+    <div class="unit-form-card">
+        <div class="unit-form-header">
+            <h6><i class="fas fa-bomb"></i> Artillery Regiment</h6>
+            <button class="btn btn-sm btn-danger" onclick="removeArtilleryRegiment(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        <div class="unit-form-body">
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label>Regiment Name *</label>
+                    <input type="text" name="Name" required class="form-control">
+                </div>
+                <div class="form-group col-md-6">
+                    <label>Unit Code *</label>
+                    <input type="text" name="UnitCode" required class="form-control">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label>Strength *</label>
+                    <input type="number" name="Strength" required class="form-control" onchange="updateBrigadeTotalStrength()">
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Batteries *</label>
+                    <input type="number" name="Batteries" required class="form-control">
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Guns</label>
+                    <input type="number" name="Guns" class="form-control" value="0">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label>Gun Range (km)</label>
+                    <input type="number" name="GunRange" class="form-control" value="0" step="0.1">
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Gun Caliber</label>
+                    <input type="text" name="GunCaliber" class="form-control" value="155mm SP">
+                </div>
+                <div class="form-group col-md-4">
+                    <label>HMG</label>
+                    <input type="number" name="HMG" class="form-control" value="0">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentTokenId = null;
+    let currentBrigadeData = null;
+
+    function openTokenBrigadeData(tokenId, tokenName) {
+        currentTokenId = tokenId;
+        $('#selectedTokenName').text(tokenName);
+        $('#selectedTokenId').text(tokenId);
+        $('#brigadeTokenId').val(tokenId);
+        
+        loadTokenBrigadeData(tokenId);
+        openModal('tokenBrigadeDataModal');
+    }
+
+    function closeTokenBrigadeModal() {
+        closeModal('tokenBrigadeDataModal');
+        currentTokenId = null;
+        currentBrigadeData = null;
+    }
+
+    function switchBrigadeTab(tabName) {
+        $('.tab-content').removeClass('active');
+        $('.tab-btn').removeClass('active');
+        
+        $('#' + tabName + '-tab').addClass('active');
+        $('button[onclick="switchBrigadeTab(\'' + tabName + '\')"]').addClass('active');
+        
+        if (tabName === 'summary') {
+            updateSummaryTab();
+        }
+    }
+
+    function loadTokenBrigadeData(tokenId) {
+        // Load existing brigade + units for this token using GetTokenSummary
+        $.get(`/DataManagement/GetTokenSummary?tokenId=${tokenId}`)
+            .done(function(response) {
+                if (response && response.success && response.data) {
+                    const brigades = response.data.brigades || [];
+                    if (brigades.length > 0) {
+                        const brigade = brigades[0]; // Use first brigade linked to this token
+                        populateBrigadeForm(brigade);
+                        currentBrigadeData = response.data;
+
+                        // Load units that are already filtered by token in GetTokenSummary
+                        loadInfantryBattalions(response.data.infantryBattalions || []);
+                        loadArmouredRegiments(response.data.armouredRegiments || []);
+                        loadArtilleryRegiments(response.data.artilleryRegiments || []);
+                    } else {
+                        // No brigade linked to this token yet
+                        resetBrigadeForm();
+                    }
+                } else {
+                    resetBrigadeForm();
+                }
+            })
+            .fail(function() {
+                // No existing data, start fresh
+                resetBrigadeForm();
+            });
+    }
+
+    function populateBrigadeForm(brigade) {
+        $('#tokenBrigadeId').val(brigade.id);
+        $('#tokenBrigadeName').val(brigade.name);
+        $('#tokenBrigadeCode').val(brigade.brigadeCode);
+        $('#tokenBrigadeForceType').val(brigade.forceType);
+        $('#tokenBrigadeStrength').val(brigade.totalStrength);
+        $('#tokenBrigadeStatus').val(brigade.status);
+        $('#tokenBrigadeDescription').val(brigade.description);
+    }
+
+    function resetBrigadeForm() {
+        $('#tokenBrigadeForm')[0].reset();
+        $('#brigadeTokenId').val(currentTokenId);
+        $('#infantryBattalionsList').empty();
+        $('#armouredRegimentsList').empty();
+        $('#artilleryRegimentsList').empty();
+    }
+
+    function addInfantryBattalion() {
+        const template = $('#infantryBattalionTemplate').html();
+        $('#infantryBattalionsList').append(template);
+    }
+
+    function addArmouredRegiment() {
+        const template = $('#armouredRegimentTemplate').html();
+        $('#armouredRegimentsList').append(template);
+    }
+
+    function addArtilleryRegiment() {
+        const template = $('#artilleryRegimentTemplate').html();
+        $('#artilleryRegimentsList').append(template);
+    }
+
+    function removeInfantryBattalion(btn) {
+        $(btn).closest('.unit-form-card').remove();
+        updateBrigadeTotalStrength();
+    }
+
+    function removeArmouredRegiment(btn) {
+        $(btn).closest('.unit-form-card').remove();
+        updateBrigadeTotalStrength();
+    }
+
+    function removeArtilleryRegiment(btn) {
+        $(btn).closest('.unit-form-card').remove();
+        updateBrigadeTotalStrength();
+    }
+
+    function updateBrigadeTotalStrength() {
+        let totalStrength = 0;
+        
+        // Sum all unit strengths
+        $('#infantryBattalionsList input[name="Strength"]').each(function() {
+            totalStrength += parseInt($(this).val()) || 0;
+        });
+        $('#armouredRegimentsList input[name="Strength"]').each(function() {
+            totalStrength += parseInt($(this).val()) || 0;
+        });
+        $('#artilleryRegimentsList input[name="Strength"]').each(function() {
+            totalStrength += parseInt($(this).val()) || 0;
+        });
+        
+        $('#tokenBrigadeStrength').val(totalStrength);
+    }
+
+    function updateSummaryTab() {
+        // Update summary information
+        $('#summaryBrigadeName').text($('#tokenBrigadeName').val() || 'Not Set');
+        $('#summaryBrigadeCode').text($('#tokenBrigadeCode').val() || 'Not Set');
+        $('#summaryForceType').text($('#tokenBrigadeForceType').val() || 'Not Set');
+        $('#summaryTotalStrength').text($('#tokenBrigadeStrength').val() || '0');
+        
+        // Count units
+        const infantryCount = $('#infantryBattalionsList .unit-form-card').length;
+        const armouredCount = $('#armouredRegimentsList .unit-form-card').length;
+        const artilleryCount = $('#artilleryRegimentsList .unit-form-card').length;
+        
+        $('#summaryInfantryCount').text(infantryCount);
+        $('#summaryArmouredCount').text(armouredCount);
+        $('#summaryArtilleryCount').text(artilleryCount);
+        
+        // Calculate equipment totals
+        let totalTanks = 0, totalATGMS = 0, totalArtilleryGuns = 0, totalMortars = 0, totalHMG = 0, totalMANPADS = 0;
+        
+        $('#armouredRegimentsList input[name="Tanks"]').each(function() {
+            totalTanks += parseInt($(this).val()) || 0;
+        });
+        $('#infantryBattalionsList input[name="ATGMS"], #armouredRegimentsList input[name="ATGMS"]').each(function() {
+            totalATGMS += parseInt($(this).val()) || 0;
+        });
+        $('#artilleryRegimentsList input[name="Guns"]').each(function() {
+            totalArtilleryGuns += parseInt($(this).val()) || 0;
+        });
+        $('#infantryBattalionsList input[name="Mortars81mm"], #infantryBattalionsList input[name="Mortars120mm"], #armouredRegimentsList input[name="Mortars120mm"]').each(function() {
+            totalMortars += parseInt($(this).val()) || 0;
+        });
+        $('#infantryBattalionsList input[name="HMG_AGL"], #armouredRegimentsList input[name="HMG"], #artilleryRegimentsList input[name="HMG"]').each(function() {
+            totalHMG += parseInt($(this).val()) || 0;
+        });
+        $('#infantryBattalionsList input[name="MANPADS"]').each(function() {
+            totalMANPADS += parseInt($(this).val()) || 0;
+        });
+        
+        $('#summaryTanks').text(totalTanks);
+        $('#summaryATGMS').text(totalATGMS);
+        $('#summaryArtilleryGuns').text(totalArtilleryGuns);
+        $('#summaryMortars').text(totalMortars);
+        $('#summaryHMG').text(totalHMG);
+        $('#summaryMANPADS').text(totalMANPADS);
+    }
+
+    function saveBrigadeInfo() {
+        const formData = {
+            Id: $('#tokenBrigadeId').val() || null,
+            TokenId: currentTokenId,
+            Name: $('#tokenBrigadeName').val(),
+            BrigadeCode: $('#tokenBrigadeCode').val(),
+            ForceType: $('#tokenBrigadeForceType').val(),
+            TotalStrength: $('#tokenBrigadeStrength').val(),
+            Status: $('#tokenBrigadeStatus').val(),
+            Description: $('#tokenBrigadeDescription').val()
+        };
+
+        const isUpdate = !!formData.Id;
+        const url = isUpdate ? '/DataManagement/UpdateTokenBrigade' : '/DataManagement/CreateTokenBrigade';
+        const method = isUpdate ? 'PUT' : 'POST';
+
+        $.ajax({
+            url: url,
+            method: method,
+            contentType: 'application/json',
+            data: JSON.stringify(formData)
+        })
+        .done(function(response) {
+            if (response.success) {
+                if (!formData.Id && response.data && response.data.id) {
+                    $('#tokenBrigadeId').val(response.data.id);
+                }
+                showNotification('Brigade information saved', 'success');
+            } else {
+                showNotification('Error: ' + response.message, 'error');
+            }
+        })
+        .fail(function() {
+            showNotification('Failed to save brigade information', 'error');
+        });
+    }
+
+    async function saveAllBrigadeData() {
+        // First ensure brigade exists
+        if (!$('#tokenBrigadeId').val()) {
+            // Create brigade first
+            const brigadePayload = {
+                TokenId: currentTokenId,
+                Name: $('#tokenBrigadeName').val(),
+                BrigadeCode: $('#tokenBrigadeCode').val(),
+                ForceType: $('#tokenBrigadeForceType').val(),
+                TotalStrength: $('#tokenBrigadeStrength').val(),
+                Status: $('#tokenBrigadeStatus').val(),
+                Description: $('#tokenBrigadeDescription').val()
+            };
+
+            try {
+                const brigadeResponse = await $.ajax({
+                    url: '/DataManagement/CreateTokenBrigade',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(brigadePayload)
+                });
+
+                if (brigadeResponse.success && brigadeResponse.data && brigadeResponse.data.id) {
+                    $('#tokenBrigadeId').val(brigadeResponse.data.id);
+                } else {
+                    showNotification('Failed to create brigade. Cannot save units.', 'error');
+                    return;
+                }
+            } catch (error) {
+                showNotification('Failed to create brigade. Cannot save units.', 'error');
+                return;
+            }
+        }
+
+        const brigadeId = $('#tokenBrigadeId').val();
+        if (!brigadeId) {
+            showNotification('Please save brigade information first.', 'warning');
+            return;
+        }
+
+        const forceType = $('#tokenBrigadeForceType').val();
+        let allSuccess = true;
+
+        // Helper function to post data
+        async function postData(url, data) {
+            try {
+                const response = await $.ajax({
+                    url: url,
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data)
+                });
+                return response.success;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        // Save infantry battalions
+        const infantryBattalions = [];
+        $('#infantryBattalionsList .unit-form-card').each(function() {
+            const battalion = {};
+            $(this).find('input').each(function() {
+                const name = $(this).attr('name');
+                const value = $(this).val();
+                if (name && value) {
+                    battalion[name] = isNaN(value) ? value : (name.includes('Speed') || name.includes('Range') ? parseFloat(value) : parseInt(value));
+                }
+            });
+            battalion.ForceType = forceType;
+            battalion.BrigadeId = brigadeId;
+            infantryBattalions.push(battalion);
+        });
+
+        for (const battalion of infantryBattalions) {
+            const success = await postData('/DataManagement/CreateTokenInfantryBattalion', battalion);
+            if (!success) allSuccess = false;
+        }
+
+        // Save armoured regiments
+        const armouredRegiments = [];
+        $('#armouredRegimentsList .unit-form-card').each(function() {
+            const regiment = {};
+            $(this).find('input').each(function() {
+                const name = $(this).attr('name');
+                const value = $(this).val();
+                if (name && value) {
+                    regiment[name] = isNaN(value) ? value : (name.includes('Speed') || name.includes('Range') ? parseFloat(value) : parseInt(value));
+                }
+            });
+            regiment.ForceType = forceType;
+            regiment.BrigadeId = brigadeId;
+            armouredRegiments.push(regiment);
+        });
+
+        for (const regiment of armouredRegiments) {
+            const success = await postData('/DataManagement/CreateTokenArmouredRegiment', regiment);
+            if (!success) allSuccess = false;
+        }
+
+        // Save artillery regiments
+        const artilleryRegiments = [];
+        $('#artilleryRegimentsList .unit-form-card').each(function() {
+            const regiment = {};
+            $(this).find('input').each(function() {
+                const name = $(this).attr('name');
+                const value = $(this).val();
+                if (name && value) {
+                    regiment[name] = isNaN(value) ? value : (name.includes('Speed') || name.includes('Range') ? parseFloat(value) : parseInt(value));
+                }
+            });
+            regiment.ForceType = forceType;
+            regiment.BrigadeId = brigadeId;
+            artilleryRegiments.push(regiment);
+        });
+
+        for (const regiment of artilleryRegiments) {
+            const success = await postData('/DataManagement/CreateTokenArtilleryRegiment', regiment);
+            if (!success) allSuccess = false;
+        }
+
+        if (allSuccess) {
+            showNotification('All brigade data saved successfully', 'success');
+            closeTokenBrigadeModal();
+        } else {
+            showNotification('Some data failed to save. Please review and try again.', 'warning');
+        }
+    }
+
+    function exportBrigadeData() {
+        if (!currentTokenId) return;
+        
+        $.get(`/DataManagement/ExportTokenBrigadeData?tokenId=${currentTokenId}`)
+            .done(function(response) {
+                if (response.success) {
+                    const dataStr = JSON.stringify(response.data, null, 2);
+                    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                    const url = URL.createObjectURL(dataBlob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `brigade-${currentTokenId}-data.json`;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                    showNotification('Brigade data exported', 'success');
+                }
+            });
+    }
+
+    function loadInfantryBattalions(battalions) {
+        $('#infantryBattalionsList').empty();
+        battalions.forEach(battalion => {
+            addInfantryBattalion();
+            const lastCard = $('#infantryBattalionsList .unit-form-card').last();
+            Object.keys(battalion).forEach(key => {
+                lastCard.find(`input[name="${key}"]`).val(battalion[key]);
+            });
+        });
+    }
+
+    function loadArmouredRegiments(regiments) {
+        $('#armouredRegimentsList').empty();
+        regiments.forEach(regiment => {
+            addArmouredRegiment();
+            const lastCard = $('#armouredRegimentsList .unit-form-card').last();
+            Object.keys(regiment).forEach(key => {
+                lastCard.find(`input[name="${key}"]`).val(regiment[key]);
+            });
+        });
+    }
+
+    function loadArtilleryRegiments(regiments) {
+        $('#artilleryRegimentsList').empty();
+        regiments.forEach(regiment => {
+            addArtilleryRegiment();
+            const lastCard = $('#artilleryRegimentsList .unit-form-card').last();
+            Object.keys(regiment).forEach(key => {
+                lastCard.find(`input[name="${key}"]`).val(regiment[key]);
+            });
+        });
+    }
+</script>

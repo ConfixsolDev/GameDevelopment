@@ -136,7 +136,7 @@ namespace TechWebSol.Areas.Identity.Controllers
             {
                 AppRoles appRoles = new AppRoles()
                 {
-                    Id = Guid.NewGuid().ToString(),
+                    Id = Guid.NewGuid(),
                     RoleAccess = accessJson,
                     AppId = AppConstants.Id
                 };

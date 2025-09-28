@@ -24,15 +24,6 @@ namespace TechWebSol.Models
         [MaxLength(50)]
         public string? Category { get; set; } // e.g., "Company", "Brigade", "Department"
 
-        public bool IsActive { get; set; } = true;
-
-        // Additional token group-specific fields
-        [MaxLength(50)]
-        public string? CreatedByUserId { get; set; }
-
-        [MaxLength(50)]
-        public string? CreatedByUserName { get; set; }
-
         // Navigation properties
         public virtual ICollection<Token> Tokens { get; set; } = new List<Token>();
         public virtual ICollection<TeamTokenGroupAssignment> TeamAssignments { get; set; } = new List<TeamTokenGroupAssignment>();
@@ -46,13 +37,7 @@ namespace TechWebSol.Models
     public class TeamTokenGroupAssignment : BaseEntity
     {
         [Required]
-        public Guid TeamId { get; set; } // Foreign key to Team.Id
-
-        [Required]
         public Guid TokenGroupId { get; set; } // Foreign key to TokenGroup.Id
-
-        public bool IsActive { get; set; } = true;
-
         public DateTime AssignedAt { get; set; } = DateTime.UtcNow;
 
         // Additional assignment-specific fields

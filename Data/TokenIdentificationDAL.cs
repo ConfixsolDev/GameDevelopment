@@ -51,7 +51,7 @@ namespace TechWebSol.Data
             }
 
             // Find the team by TeamCode and SubTeamCode
-            var team = _context.Teams.FirstOrDefault(t => t.TeamCode == user.TeamCode && t.SubTeamCode == user.SubTeamCode);
+            var team = _context.Teams.FirstOrDefault(t => t.TeamId == user.TeamId);
             if (team == null)
             {
                 throw new UnauthorizedAccessException("Team not found");
@@ -415,7 +415,7 @@ namespace TechWebSol.Data
 
                 // Add team context to request
                 request.TeamId = teamId;
-                request.CreatedByUserId = userId;
+                // CreatedBy handled automatically by BaseEntity
 
                 // Use unified system for all tokens
                 return await SaveToUnifiedSystem(request);
@@ -465,8 +465,6 @@ namespace TechWebSol.Data
 
                         // Update token properties
                         token.Name = request.Name;
-                        token.Description = request.Description;
-                        token.Category = request.Category;
                         token.IsActive = request.IsActive;
 
                         // Update or create signature
@@ -493,10 +491,7 @@ namespace TechWebSol.Data
                         {
                             Id = tokenId,
                             Name = request.Name,
-                            Description = request.Description,
-                            Category = request.Category,
                             IsActive = request.IsActive,
-                            CreatedAt = DateTime.UtcNow,
                             UsageCount = 0,
                             TrainingConsistency = 0,
                             TokenGroupId = request.TokenGroupId
@@ -601,9 +596,9 @@ namespace TechWebSol.Data
         /// <summary>
         /// Generate a unique token ID
         /// </summary>
-        private long GenerateTokenId()
+        private Guid GenerateTokenId()
         {
-            return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            return Guid.NewGuid();
         }
 
         /// <summary>
@@ -653,11 +648,9 @@ namespace TechWebSol.Data
                     {
                         Id = t.Id,
                         Name = t.Name,
-                        Description = t.Description,
-                        Category = t.Category,
                         TouchCount = t.Signature?.TouchCount ?? 0,
                         System = "unified", // Now using unified system
-                        CreatedAt = t.CreatedAt,
+                        CreatedAt = t.CreatedDate ?? DateTime.Now,
                         UsageCount = t.UsageCount
                     }));
 
@@ -688,7 +681,7 @@ namespace TechWebSol.Data
         /// Handles token deletion and cleanup across both systems
         /// Automatically handles team context and related data cleanup
         /// </summary>
-        public async Task<UnifiedDeleteResult> DeleteTokenAsync(long tokenId)
+        public async Task<UnifiedDeleteResult> DeleteTokenAsync(Guid tokenId)
         {
             try
             {
@@ -799,7 +792,7 @@ namespace TechWebSol.Data
         public GeometricData? GeometricData { get; set; }
         
         // Additional properties for compatibility
-        public long? TokenId { get; set; }
+        public Guid? TokenId { get; set; }
         public string? TokenName { get; set; }
         public List<UnifiedTokenMatchDetail>? MatchDetails { get; set; }
     }
@@ -809,7 +802,7 @@ namespace TechWebSol.Data
     /// </summary>
     public class UnifiedTokenMatch
     {
-        public long TokenId { get; set; }
+        public Guid TokenId { get; set; }
         public string TokenName { get; set; } = string.Empty;
         public double Confidence { get; set; }
         public double DistanceSimilarity { get; set; }
@@ -829,22 +822,14 @@ namespace TechWebSol.Data
         /// <summary>
         /// Token ID for updates, null for new tokens
         /// </summary>
-        public long? TokenId { get; set; }
+        public Guid? TokenId { get; set; }
 
         /// <summary>
         /// Token name (required)
         /// </summary>
         public string Name { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Token description
-        /// </summary>
-        public string? Description { get; set; }
-
-        /// <summary>
-        /// Token category
-        /// </summary>
-        public string? Category { get; set; }
+        // Description and Category removed - using minimal token properties
 
         /// <summary>
         /// Whether token is active
@@ -869,7 +854,7 @@ namespace TechWebSol.Data
 
         // Team context - automatically set by DAL
         internal Guid TeamId { get; set; }
-        internal string CreatedByUserId { get; set; } = string.Empty;
+        // CreatedBy handled automatically by BaseEntity
         
         /// <summary>
         /// Token group ID - must be provided for new tokens
@@ -884,7 +869,7 @@ namespace TechWebSol.Data
     {
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
-        public long? TokenId { get; set; }
+        public Guid? TokenId { get; set; }
         public string? SystemUsed { get; set; }
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     }
@@ -896,7 +881,7 @@ namespace TechWebSol.Data
     {
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
-        public long TokenId { get; set; }
+        public Guid TokenId { get; set; }
         public int DeletedMarkersCount { get; set; }
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     }
@@ -906,7 +891,7 @@ namespace TechWebSol.Data
     /// </summary>
     public class TeamTokenInfo
     {
-        public long Id { get; set; }
+        public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public string? Category { get; set; }
@@ -932,7 +917,7 @@ namespace TechWebSol.Data
 
     public class UnifiedTokenMatchDetail
     {
-        public long TokenId { get; set; }
+        public Guid? TokenId { get; set; }
         public string TokenName { get; set; } = string.Empty;
         public double Confidence { get; set; }
         public double DistanceSimilarity { get; set; }

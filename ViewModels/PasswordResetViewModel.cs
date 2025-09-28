@@ -13,7 +13,6 @@ namespace TechWebSol.ViewModels
         [DisplayName("Application User ID")]
         public string ApplilicationUserId { get; set; } = string.Empty;
 
-        [Required]
         [DataType(DataType.Password)]
         [DisplayName("Old Password")]
         public string OldPassword { get; set; } = string.Empty;

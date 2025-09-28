@@ -8,7 +8,7 @@ namespace TechWebSol.Services.TokenManagement
         Task<PatternSimilarityResult> CalculatePatternSimilarityAsync(TokenSignature signature1, TokenSignature signature2);
         Task<PatternAnalysisResult> AnalyzePatternAsync(TokenSignature signature);
         Task<bool> ValidatePatternConsistencyAsync(List<TokenSignature> trainingSignatures);
-        Task<PatternStatistics> GetPatternStatisticsAsync(long tokenId);
+        Task<PatternStatistics> GetPatternStatisticsAsync(Guid tokenId);
     }
 
 }

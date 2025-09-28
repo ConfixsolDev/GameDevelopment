@@ -10,11 +10,10 @@ namespace TechWebSol.ViewModels
         public string FullName { get; set; } = string.Empty;
         public string RoleName { get; set; } = string.Empty;
         public string DashBoard { get; set; } = string.Empty;
-        public string DesignationId { get; set; } = string.Empty;
-        public string DepartmentId { get; set; } = string.Empty;
         public string Theme { get; set; } = string.Empty;
         public string HomeURL { get; set; } = string.Empty;
-        public string Country { get; set; } = string.Empty;
+        public Guid? TeamId { get; set; }
+        public string? ForceType { get; set; }
     }
 
     public class ApplicationUserShort
