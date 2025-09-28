@@ -21,8 +21,7 @@ This guide shows how to integrate the consolidated master data entry system - th
 - **Features**: Search functionality, responsive design
 
 ### 3. Consolidated Backend Integration
-- **New Endpoint**: `POST /DataManagement/LinkBrigadeToToken`
-- **Enhanced Modal**: Updated `_TokenBrigadeData.cshtml` to use existing endpoints
+- **Enhanced Modals**: Updated data entry modals to use existing endpoints
 - **Updated TokenManager**: Redirects to master system
 
 ## Integration Steps
@@ -63,18 +62,9 @@ Make sure these are available:
 ### Case 1: Token with Existing Data
 1. User clicks "Enter Token Data"
 2. Token selection modal opens showing all tokens
-3. User clicks on a token that already has brigade data
-4. System opens `tokenBrigadeDataModal` pre-filled with existing data
+3. User clicks on a token to enter data
+4. System opens the appropriate data entry modal
 5. User can edit and save changes
-
-### Case 2: Token without Data
-1. User clicks "Enter Token Data"
-2. Token selection modal opens showing all tokens
-3. User clicks on a token with no brigade data
-4. System shows brigade selection dropdown
-5. User selects a brigade and clicks "Link & Continue"
-6. System links the brigade to the token via AJAX
-7. System opens `tokenBrigadeDataModal` for data entry
 
 ## API Endpoints Used
 

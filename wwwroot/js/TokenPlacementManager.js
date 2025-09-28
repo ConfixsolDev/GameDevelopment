@@ -281,37 +281,27 @@ class TokenPlacementManager {
             this.showTokenContextMenu(e, token);
         });
 
-		// Enable drag-to-move behavior
-		marker.on('dragstart', () => {
+		// Enable drag-to-move behavior with enhanced planning
+		marker.on('dragstart', (e) => {
 			this.isDraggingMarker = true;
+			this.originalPosition = e.target.getLatLng();
+			this.startDragToMove(token, e.target);
+		});
+
+		marker.on('drag', (e) => {
+			if (this.isDraggingMarker) {
+				this.updateDragPreview(token, e.target.getLatLng());
+			}
 		});
 
 		marker.on('dragend', async (e) => {
 			try {
 				const newLatLng = e.target.getLatLng();
-				const response = await fetch('/GamePlay/MoveToken', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						tokenId: token.id,
-						latitude: newLatLng.lat,
-						longitude: newLatLng.lng
-					})
-				});
-				const result = await response.json();
-				if (result && result.success) {
-					if (result.areaCoverages && result.areaCoverages.length > 0) {
-						this.updateCoverageAreas(token.id, result.areaCoverages, newLatLng);
-					}
-					this.notificationCallback(result.message || 'Token moved', 'success');
-				} else {
-					this.notificationCallback((result && result.message) || 'Failed to move token', 'error');
-				}
+				this.endDragToMove(token, e.target, newLatLng);
 			} catch (err) {
-				console.error('Error moving token on drag:', err);
-				this.notificationCallback('Error moving token', 'error');
+				console.error('Error in drag end:', err);
+				this.notificationCallback('Error processing move', 'error');
 			} finally {
-				// Prevent immediate click firing after drag
 				this.suppressNextClick = true;
 				this.isDraggingMarker = false;
 			}
@@ -323,6 +313,535 @@ class TokenPlacementManager {
     /**
      * Create token icon
      */
+    /**
+     * Start drag-to-move planning
+     */
+    startDragToMove(token, marker) {
+        this.dragPreview = {
+            token: token,
+            marker: marker,
+            routeLine: null,
+            previewCard: null,
+            originalPosition: this.originalPosition
+        };
+        
+        // Create ghost route line
+        this.dragPreview.routeLine = L.polyline([this.originalPosition], {
+            color: '#ff6b6b',
+            weight: 2,
+            opacity: 0.6,
+            dashArray: '5, 5'
+        }).addTo(this.map);
+        
+        // Show live info tooltip
+        this.showDragTooltip(token, this.originalPosition);
+    }
+
+    /**
+     * Update drag preview during drag
+     */
+    updateDragPreview(token, currentPosition) {
+        if (!this.dragPreview) return;
+        
+        // Update route line
+        this.dragPreview.routeLine.setLatLngs([this.originalPosition, currentPosition]);
+        
+        // Calculate distance and ETA
+        const distance = this.originalPosition.distanceTo(currentPosition) / 1000; // km
+        const etaHours = distance / 20; // Assume 20 km/h base speed
+        
+        // Update tooltip
+        this.updateDragTooltip(distance, etaHours);
+    }
+
+    /**
+     * End drag-to-move and open planning form directly
+     */
+    endDragToMove(token, marker, newPosition) {
+        if (!this.dragPreview) return;
+        
+        // Remove route line
+        if (this.dragPreview.routeLine) {
+            this.map.removeLayer(this.dragPreview.routeLine);
+        }
+        
+        // Remove tooltip
+        this.hideDragTooltip();
+        
+        // Calculate final distance (only distance is calculated automatically)
+        const distance = this.originalPosition.distanceTo(newPosition) / 1000;
+        
+        // Open planning form directly (no preview card)
+        this.showConfirmMoveModal(token, distance);
+    }
+
+    /**
+     * Show drag tooltip
+     */
+    showDragTooltip(token, position) {
+        this.dragTooltip = L.tooltip({
+            permanent: true,
+            direction: 'top',
+            offset: [0, -10]
+        }).setContent(`
+            <div class="drag-tooltip">
+                <div class="unit-name">${token.name}</div>
+                <div class="distance">Distance: <span id="dragDistance">0</span> km</div>
+                <div class="eta">ETA: <span id="dragETA">0</span>h</div>
+            </div>
+        `).setLatLng(position).addTo(this.map);
+    }
+
+    /**
+     * Update drag tooltip
+     */
+    updateDragTooltip(distance, etaHours) {
+        if (this.dragTooltip) {
+            const distanceSpan = document.getElementById('dragDistance');
+            const etaSpan = document.getElementById('dragETA');
+            
+            if (distanceSpan) distanceSpan.textContent = distance.toFixed(1);
+            if (etaSpan) etaSpan.textContent = etaHours.toFixed(1);
+        }
+    }
+
+    /**
+     * Hide drag tooltip
+     */
+    hideDragTooltip() {
+        if (this.dragTooltip) {
+            this.map.removeLayer(this.dragTooltip);
+            this.dragTooltip = null;
+        }
+    }
+
+    /**
+     * Show preview card after drag
+     */
+    showPreviewCard(token, marker, position, distance, etaHours) {
+        const previewCard = document.createElement('div');
+        previewCard.className = 'preview-card';
+        previewCard.innerHTML = `
+            <div class="preview-header">
+                <h4>${token.name}</h4>
+                <button class="close-preview" onclick="tokenPlacementManager.closePreviewCard()">&times;</button>
+            </div>
+            <div class="preview-content">
+                <div class="preview-info">
+                    <div class="info-item">
+                        <span class="label">Distance:</span>
+                        <span class="value">${distance.toFixed(1)} km</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Estimated ETA:</span>
+                        <span class="value">${etaHours.toFixed(1)}h</span>
+                    </div>
+                </div>
+                <div class="preview-actions">
+                    <button class="btn-confirm" onclick="tokenPlacementManager.confirmMove('${token.id}')">
+                        Plan Move
+                    </button>
+                    <button class="btn-edit" onclick="tokenPlacementManager.editRoute('${token.id}')">
+                        Edit Route
+                    </button>
+                    <button class="btn-cancel" onclick="tokenPlacementManager.cancelMove('${token.id}')">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Position the card above the marker
+        const markerPoint = this.map.latLngToContainerPoint(position);
+        previewCard.style.position = 'absolute';
+        previewCard.style.left = (markerPoint.x - 100) + 'px';
+        previewCard.style.top = (markerPoint.y - 120) + 'px';
+        previewCard.style.zIndex = '1000';
+        
+        document.body.appendChild(previewCard);
+        
+        // Store reference for cleanup
+        this.dragPreview.previewCard = previewCard;
+    }
+
+    /**
+     * Close preview card
+     */
+    closePreviewCard() {
+        if (this.dragPreview?.previewCard) {
+            this.dragPreview.previewCard.remove();
+            this.dragPreview.previewCard = null;
+        }
+    }
+
+    /**
+     * Confirm move and open detailed modal
+     */
+    async confirmMove(tokenId) {
+        const token = this.placedTokens.get(tokenId)?.token;
+        if (!token) return;
+        
+        // Remove preview card
+        this.closePreviewCard();
+        
+        // Open confirm move modal
+        this.showConfirmMoveModal(token);
+    }
+
+    /**
+     * Edit route
+     */
+    editRoute(tokenId) {
+        const token = this.placedTokens.get(tokenId)?.token;
+        if (!token) return;
+        
+        // Remove preview card
+        this.closePreviewCard();
+        
+        // Open route editor
+        if (window.scenarioPlanning) {
+            window.scenarioPlanning.startRouteDrawing();
+        }
+    }
+
+    /**
+     * Cancel move and revert position
+     */
+    cancelMove(tokenId) {
+        const tokenData = this.placedTokens.get(tokenId);
+        if (!tokenData) return;
+        
+        // Revert marker to original position
+        tokenData.marker.setLatLng(this.originalPosition);
+        
+        // Remove preview card
+        this.closePreviewCard();
+        
+        // Clean up
+        this.dragPreview = null;
+        
+        this.notificationCallback('Move cancelled', 'info');
+    }
+
+    /**
+     * Show confirm move modal
+     */
+    showConfirmMoveModal(token, calculatedDistance = null) {
+        const modal = document.createElement('div');
+        modal.className = 'gameplay-modal';
+        modal.id = 'confirmMoveModal';
+        modal.innerHTML = `
+            <div class="gameplay-modal-content">
+                <div class="gameplay-modal-header">
+                    <h3><i class="fas fa-route"></i> Confirm Move — ${token.name}</h3>
+                    <button class="gameplay-modal-close" onclick="this.closest('.gameplay-modal').remove()">&times;</button>
+                </div>
+                <div class="gameplay-modal-body">
+                    <div class="move-summary">
+                        <div class="unit-card">
+                            <div class="unit-icon">🎯</div>
+                            <div class="unit-info">
+                                <div class="unit-name">${token.name}</div>
+                                <div class="unit-type">${token.tokenGroupName || 'Unit'}</div>
+                            </div>
+                        </div>
+                        <div class="route-info">
+                            <div class="route-distance">Distance: ${calculatedDistance ? calculatedDistance.toFixed(1) : this.calculateDistance().toFixed(1)} km</div>
+                            <div class="route-note">* Distance calculated automatically</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Movement Mode</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="movementMode" value="march" checked> Road March</label>
+                                <label><input type="radio" name="movementMode" value="normal"> Normal</label>
+                                <label><input type="radio" name="movementMode" value="stealth"> Stealth</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Start Turn</label>
+                            <select id="startTurn">
+                                <option value="1">Turn 1</option>
+                                <option value="2">Turn 2</option>
+                                <option value="3">Turn 3</option>
+                                <option value="4">Turn 4</option>
+                                <option value="5">Turn 5</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Start Offset (hours)</label>
+                            <select id="startOffset">
+                                <option value="0">0 hours</option>
+                                <option value="1">1 hour</option>
+                                <option value="2">2 hours</option>
+                                <option value="3">3 hours</option>
+                                <option value="4">4 hours</option>
+                                <option value="5">5 hours</option>
+                                <option value="6">6 hours</option>
+                                <option value="7">7 hours</option>
+                                <option value="8">8 hours</option>
+                                <option value="9">9 hours</option>
+                                <option value="10">10 hours</option>
+                                <option value="11">11 hours</option>
+                                <option value="12">12 hours</option>
+                                <option value="13">13 hours</option>
+                                <option value="14">14 hours</option>
+                                <option value="15">15 hours</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Planned ETA (hours) *</label>
+                            <select id="plannedETA" required>
+                                <option value="">Select ETA</option>
+                                <option value="1">1 hour</option>
+                                <option value="2">2 hours</option>
+                                <option value="3">3 hours</option>
+                                <option value="4">4 hours</option>
+                                <option value="5">5 hours</option>
+                                <option value="6">6 hours</option>
+                                <option value="7">7 hours</option>
+                                <option value="8">8 hours</option>
+                                <option value="9">9 hours</option>
+                                <option value="10">10 hours</option>
+                                <option value="11">11 hours</option>
+                                <option value="12">12 hours</option>
+                                <option value="13">13 hours</option>
+                                <option value="14">14 hours</option>
+                                <option value="15">15 hours</option>
+                            </select>
+                            <small class="form-help">Planner's estimated arrival time (required)</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Movement Speed (km/h) *</label>
+                            <select id="movementSpeed" required>
+                                <option value="">Select speed</option>
+                                <option value="1">1 km/h</option>
+                                <option value="2">2 km/h</option>
+                                <option value="3">3 km/h</option>
+                                <option value="4">4 km/h</option>
+                                <option value="5">5 km/h</option>
+                                <option value="8">8 km/h</option>
+                                <option value="10">10 km/h</option>
+                                <option value="12">12 km/h</option>
+                                <option value="14">14 km/h</option>
+                                <option value="18">18 km/h</option>
+                                <option value="30">30 km/h</option>
+                                <option value="40">40 km/h</option>
+                            </select>
+                            <small class="form-help">Unit's movement speed (required)</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Engagement Rule *</label>
+                            <select id="engagementRule" required>
+                                <option value="">Select engagement rule</option>
+                                <option value="avoid">Avoid Strongpoints</option>
+                                <option value="engage">Engage If Encountered</option>
+                                <option value="hold">Hold If Supply < 50%</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="sharedOrder"> Shared with Allies
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="moveNotes" rows="3" placeholder="Planning notes..."></textarea>
+                    </div>
+                </div>
+                <div class="gameplay-modal-footer">
+                    <button class="gameplay-btn" onclick="this.closest('.gameplay-modal').remove()">Cancel</button>
+                    <button class="gameplay-btn primary" onclick="window.tokenPlacementManager.saveMoveOrder('${token.id}')">Confirm Move</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Make sure the function is globally accessible
+        window.tokenPlacementManager = this;
+    }
+
+    /**
+     * Save move order
+     */
+    async saveMoveOrder(tokenId) {
+        console.log('saveMoveOrder called with tokenId:', tokenId);
+        const token = this.placedTokens.get(tokenId)?.token;
+        if (!token) {
+            console.error('Token not found for ID:', tokenId);
+            this.notificationCallback('Token not found', 'error');
+            return;
+        }
+        
+        // Validate required fields
+        const plannedETA = document.getElementById('plannedETA').value;
+        const movementSpeed = document.getElementById('movementSpeed').value;
+        const engagementRule = document.getElementById('engagementRule').value;
+        
+        console.log('Form values:', { plannedETA, movementSpeed, engagementRule });
+        
+        if (!plannedETA || !movementSpeed || !engagementRule) {
+            this.notificationCallback('Please select all required fields (marked with *)', 'error');
+            return;
+        }
+        
+        const movementMode = document.querySelector('input[name="movementMode"]:checked').value;
+        const startTurn = document.getElementById('startTurn').value;
+        const startOffset = document.getElementById('startOffset').value;
+        const sharedOrder = document.getElementById('sharedOrder').checked;
+        const notes = document.getElementById('moveNotes').value;
+        
+        console.log('All form values:', { 
+            movementMode, startTurn, startOffset, sharedOrder, notes,
+            plannedETA, movementSpeed, engagementRule 
+        });
+        
+        try {
+            console.log('Saving move order with data:', {
+                tokenId: tokenId,
+                latitude: this.dragPreview.marker.getLatLng().lat,
+                longitude: this.dragPreview.marker.getLatLng().lng,
+                movementMode: movementMode,
+                startTurn: startTurn,
+                startOffset: startOffset,
+                plannedETA: plannedETA,
+                movementSpeed: movementSpeed,
+                engagementRule: engagementRule,
+                sharedOrder: sharedOrder,
+                notes: notes
+            });
+
+            const response = await fetch('/GamePlay/MoveToken', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    TokenId: tokenId,
+                    Latitude: this.dragPreview.marker.getLatLng().lat,
+                    Longitude: this.dragPreview.marker.getLatLng().lng,
+                    MovementMode: movementMode,
+                    StartTurn: parseInt(startTurn),
+                    StartOffset: parseFloat(startOffset),
+                    PlannedETA: parseFloat(plannedETA),
+                    MovementSpeed: parseFloat(movementSpeed),
+                    EngagementRule: engagementRule,
+                    SharedOrder: sharedOrder,
+                    Notes: notes
+                })
+            });
+            
+            const result = await response.json();
+            console.log('MoveToken response:', result);
+            
+            if (result.success) {
+                this.notificationCallback('Move order confirmed and saved successfully', 'success');
+                
+                // Add to scenario planning orders
+                if (window.scenarioPlanning) {
+                    const moveOrder = {
+                        id: this.generateId(),
+                        unitId: tokenId,
+                        type: 'movement',
+                        movementMode: movementMode,
+                        startTurn: startTurn,
+                        startOffset: startOffset,
+                        plannedETA: plannedETA,
+                        movementSpeed: movementSpeed,
+                        engagementRule: engagementRule,
+                        notes: notes,
+                        route: [this.originalPosition, this.dragPreview.marker.getLatLng()],
+                        timestamp: new Date()
+                    };
+                    
+                    window.scenarioPlanning.orders.push(moveOrder);
+                    window.scenarioPlanning.updateOrdersDisplay();
+                }
+                
+                // Show route on map
+                this.showConfirmedRoute(tokenId);
+                
+                // Close modal
+                document.getElementById('confirmMoveModal').remove();
+                this.dragPreview = null;
+            } else {
+                this.notificationCallback('Failed to confirm move: ' + result.message, 'error');
+                console.error('MoveToken failed:', result);
+            }
+        } catch (error) {
+            console.error('Error saving move order:', error);
+            this.notificationCallback('Error saving move order: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Show confirmed route on map
+     */
+    showConfirmedRoute(tokenId) {
+        const tokenData = this.placedTokens.get(tokenId);
+        if (!tokenData || !this.originalPosition) return;
+        
+        const routeLine = L.polyline([this.originalPosition, tokenData.marker.getLatLng()], {
+            color: '#4299e1',
+            weight: 3,
+            opacity: 0.8,
+            dashArray: '10, 5'
+        }).addTo(this.map);
+        
+        // Add ETA label at endpoint (use planned ETA if available)
+        const eta = this.dragPreview?.plannedETA || this.calculateETA();
+        const etaLabel = L.marker(tokenData.marker.getLatLng(), {
+            icon: L.divIcon({
+                className: 'eta-label',
+                html: `<div class="eta-tag">T+${eta}</div>`,
+                iconSize: [40, 20],
+                iconAnchor: [20, 10]
+            })
+        }).addTo(this.map);
+        
+        // Store route for cleanup
+        if (!tokenData.routeLines) tokenData.routeLines = [];
+        if (!tokenData.etaLabels) tokenData.etaLabels = [];
+        tokenData.routeLines.push(routeLine);
+        tokenData.etaLabels.push(etaLabel);
+    }
+
+    /**
+     * Calculate distance between original and current position
+     */
+    calculateDistance() {
+        if (!this.originalPosition || !this.dragPreview?.marker) return 0;
+        return this.originalPosition.distanceTo(this.dragPreview.marker.getLatLng()) / 1000;
+    }
+
+    /**
+     * Calculate ETA based on distance
+     */
+    calculateETA() {
+        const distance = this.calculateDistance();
+        return distance / 20; // Assume 20 km/h base speed
+    }
+
+    /**
+     * Generate unique ID
+     */
+    generateId() {
+        return 'move_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
 	createTokenIcon(token) {
         const iconHtml = token.assetImagePath ? 
             `<img src="${token.assetImagePath}" class="token-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><i class="fas fa-crosshairs token-fallback-icon" style="display:none;"></i>` :
@@ -449,6 +968,12 @@ class TokenPlacementManager {
                     <button class="btn btn-sm btn-info" onclick="tokenPlacementManager.showTokenDetails(${JSON.stringify(token).replace(/"/g, '&quot;')})">
                         <i class="fas fa-info-circle"></i> Details
                     </button>
+                    <button class="btn btn-sm btn-success" onclick="tokenPlacementManager.showTokenMovementHistory('${token.id}')">
+                        <i class="fas fa-route"></i> Show History
+                    </button>
+                    <button class="btn btn-sm btn-warning" onclick="tokenPlacementManager.clearTokenRoutes('${token.id}')">
+                        <i class="fas fa-eye-slash"></i> Hide Routes
+                    </button>
                     <button class="btn btn-sm btn-danger" onclick="tokenPlacementManager.removeTokenFromMap('${token.id}')">
                         <i class="fas fa-trash"></i> Remove
                     </button>
@@ -475,6 +1000,90 @@ class TokenPlacementManager {
      */
     getPlacedTokens() {
         return Array.from(this.placedTokens.values()).map(info => info.token);
+    }
+
+    /**
+     * Clear all route lines and ETA labels for a token
+     */
+    clearTokenRoutes(tokenId) {
+        const tokenData = this.placedTokens.get(tokenId);
+        if (tokenData) {
+            // Remove route lines
+            if (tokenData.routeLines) {
+                tokenData.routeLines.forEach(line => {
+                    if (this.map.hasLayer(line)) {
+                        this.map.removeLayer(line);
+                    }
+                });
+                tokenData.routeLines = [];
+            }
+            
+            // Remove ETA labels
+            if (tokenData.etaLabels) {
+                tokenData.etaLabels.forEach(label => {
+                    if (this.map.hasLayer(label)) {
+                        this.map.removeLayer(label);
+                    }
+                });
+                tokenData.etaLabels = [];
+            }
+        }
+    }
+
+    /**
+     * Show movement history for a token
+     */
+    async showTokenMovementHistory(tokenId) {
+        try {
+            const response = await fetch(`/GamePlay/GetTokenMovementHistory?tokenId=${tokenId}`);
+            const result = await response.json();
+            
+            if (result.success && result.movementHistory && result.movementHistory.length > 1) {
+                // Clear existing routes
+                this.clearTokenRoutes(tokenId);
+                
+                // Create route lines for each movement
+                const positions = result.movementHistory.map(m => [parseFloat(m.latitude), parseFloat(m.longitude)]);
+                
+                // Create the main route line
+                const routeLine = L.polyline(positions, {
+                    color: '#4299e1',
+                    weight: 3,
+                    opacity: 0.8,
+                    dashArray: '10, 5'
+                }).addTo(this.map);
+                
+                // Add ETA labels for each movement point
+                result.movementHistory.forEach((movement, index) => {
+                    if (index > 0) { // Skip first position (starting point)
+                        const etaLabel = L.marker([parseFloat(movement.latitude), parseFloat(movement.longitude)], {
+                            icon: L.divIcon({
+                                className: 'eta-label',
+                                html: `<div class="eta-tag">T+${index}</div>`,
+                                iconSize: [40, 20],
+                                iconAnchor: [20, 10]
+                            })
+                        }).addTo(this.map);
+                        
+                        // Store reference for cleanup
+                        const tokenData = this.placedTokens.get(tokenId);
+                        if (tokenData) {
+                            if (!tokenData.routeLines) tokenData.routeLines = [];
+                            if (!tokenData.etaLabels) tokenData.etaLabels = [];
+                            tokenData.routeLines.push(routeLine);
+                            tokenData.etaLabels.push(etaLabel);
+                        }
+                    }
+                });
+                
+                this.notificationCallback(`Movement history displayed for ${result.token.name}`, 'success');
+            } else {
+                this.notificationCallback('No movement history found for this token', 'info');
+            }
+        } catch (error) {
+            console.error('Error showing movement history:', error);
+            this.notificationCallback('Error loading movement history', 'error');
+        }
     }
 
     /**

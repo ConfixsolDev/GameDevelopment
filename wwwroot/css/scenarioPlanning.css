@@ -1,0 +1,331 @@
+/**
+ * Scenario Planning CSS - Styles for scenario planning interface
+ */
+
+/* Unit Selection Modal */
+.unit-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    margin: 10px 0;
+    background: #2d3748;
+    border: 1px solid #4a5568;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.unit-option:hover {
+    background: #4a5568;
+    border-color: #4299e1;
+}
+
+.unit-info h5 {
+    margin: 0 0 5px 0;
+    color: #e2e8f0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.unit-info p {
+    margin: 2px 0;
+    color: #a0aec0;
+    font-size: 13px;
+}
+
+.btn-select {
+    background: #4299e1;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background-color 0.2s ease;
+}
+
+.btn-select:hover {
+    background: #3182ce;
+}
+
+.no-units {
+    text-align: center;
+    color: #a0aec0;
+    padding: 40px 20px;
+    font-style: italic;
+}
+
+/* Movement Details Modal */
+.route-summary {
+    background: #1a202c;
+    border: 1px solid #4a5568;
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.route-summary h6 {
+    margin: 0 0 10px 0;
+    color: #e2e8f0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.route-summary p {
+    margin: 5px 0;
+    color: #a0aec0;
+    font-size: 13px;
+}
+
+.route-summary span {
+    color: #4299e1;
+    font-weight: 600;
+}
+
+/* Objective Types */
+.objective-types {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.objective-type {
+    background: #2d3748;
+    border: 2px solid #4a5568;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.objective-type:hover {
+    border-color: #4299e1;
+    background: #4a5568;
+    transform: translateY(-2px);
+}
+
+.objective-type i {
+    font-size: 32px;
+    color: #4299e1;
+    margin-bottom: 10px;
+}
+
+.objective-type h5 {
+    margin: 10px 0 5px 0;
+    color: #e2e8f0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.objective-type p {
+    margin: 0;
+    color: #a0aec0;
+    font-size: 13px;
+}
+
+/* Form Controls */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #e2e8f0;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #4a5568;
+    border-radius: 4px;
+    background: #2d3748;
+    color: #e2e8f0;
+    font-size: 14px;
+    transition: border-color 0.2s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #4299e1;
+    box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
+}
+
+.form-control::placeholder {
+    color: #718096;
+}
+
+/* Modal Styles */
+.gameplay-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gameplay-modal-content {
+    background: #1a202c;
+    border: 1px solid #4a5568;
+    border-radius: 8px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.gameplay-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #4a5568;
+}
+
+.gameplay-modal-header h3 {
+    margin: 0;
+    color: #e2e8f0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.gameplay-modal-header h3 i {
+    margin-right: 8px;
+    color: #4299e1;
+}
+
+.gameplay-modal-close {
+    background: none;
+    border: none;
+    color: #a0aec0;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.gameplay-modal-close:hover {
+    background: #4a5568;
+    color: #e2e8f0;
+}
+
+.gameplay-modal-body {
+    padding: 20px;
+}
+
+.gameplay-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 20px;
+    border-top: 1px solid #4a5568;
+}
+
+.gameplay-btn {
+    padding: 8px 16px;
+    border: 1px solid #4a5568;
+    border-radius: 4px;
+    background: #2d3748;
+    color: #e2e8f0;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.gameplay-btn:hover {
+    background: #4a5568;
+    border-color: #4299e1;
+}
+
+.gameplay-btn.primary {
+    background: #4299e1;
+    border-color: #4299e1;
+    color: white;
+}
+
+.gameplay-btn.primary:hover {
+    background: #3182ce;
+    border-color: #3182ce;
+}
+
+/* Loading States */
+.loading-units {
+    text-align: center;
+    padding: 40px 20px;
+    color: #a0aec0;
+}
+
+.loading-units i {
+    font-size: 24px;
+    margin-bottom: 10px;
+    color: #4299e1;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .gameplay-modal-content {
+        width: 95%;
+        margin: 10px;
+    }
+    
+    .objective-types {
+        grid-template-columns: 1fr;
+    }
+    
+    .unit-option {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .unit-actions {
+        width: 100%;
+    }
+    
+    .btn-select {
+        width: 100%;
+    }
+}
+
+/* Dark theme compatibility */
+@media (prefers-color-scheme: dark) {
+    .gameplay-modal-content {
+        background: #0f1419;
+        border-color: #2d3748;
+    }
+    
+    .unit-option {
+        background: #1a202c;
+        border-color: #2d3748;
+    }
+    
+    .objective-type {
+        background: #1a202c;
+        border-color: #2d3748;
+    }
+    
+    .form-control {
+        background: #1a202c;
+        border-color: #2d3748;
+    }
+    
+    .route-summary {
+        background: #0f1419;
+        border-color: #2d3748;
+    }
+}

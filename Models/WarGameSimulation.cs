@@ -45,6 +45,8 @@ namespace TechWebSol.Models
 
         [Required]
         public Guid? UnitId { get; set; }
+        [Required]
+        public Guid? TokenId { get; set; }
 
         [Required]
         [MaxLength(50)]
@@ -93,6 +95,7 @@ namespace TechWebSol.Models
         public string EndPosition { get; set; } // JSON: {lat: 0, lng: 0}
 
         public string Waypoints { get; set; } // JSON array of positions
+        public string Notes { get; set; } 
 
         [Required]
         [MaxLength(20)]
@@ -101,6 +104,8 @@ namespace TechWebSol.Models
         [Required]
         [MaxLength(20)]
         public string Status { get; set; } // Planned, InProgress, Completed, Cancelled
+
+        public string EngagementRule { get; set; } 
 
         public DateTime? StartTime { get; set; }
         public DateTime? EstimatedArrival { get; set; }

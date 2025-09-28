@@ -77,10 +77,6 @@ class GamePlayManager {
             this.lazyLoader.loadPartial('overlay-controls', '#overlayControlsContainer', {
                 onLoaded: () => console.log('🎮 Overlay controls loaded')
             }),
-            // Only load the brigade data modal for when tokens are selected
-            this.lazyLoader.loadPartial('token-brigade-data-modal', '#modalsContainer', {
-                onLoaded: () => console.log('⚔️ Token brigade data modal loaded')
-            })
         ];
         
         await Promise.all(coreLoads);
@@ -230,6 +226,9 @@ class GamePlayManager {
                     token: tokenData,
                     coverageAreas: tokenData.areaCoverages || []
                 });
+                
+                // Restore movement history and route lines
+                await this.restoreTokenMovementHistory(tokenData.id);
             } else {
                 // Fallback: Create basic marker
                 await this.createBasicTokenMarker(tokenData, latlng);
@@ -237,6 +236,63 @@ class GamePlayManager {
             
         } catch (error) {
             console.error(`❌ Error restoring token ${tokenData.name}:`, error);
+        }
+    }
+
+    /**
+     * Restore movement history and route lines for a token
+     */
+    async restoreTokenMovementHistory(tokenId) {
+        try {
+            console.log(`🔄 Restoring movement history for token: ${tokenId}`);
+            
+            // Get movement history from backend
+            const response = await fetch(`/GamePlay/GetTokenMovementHistory?tokenId=${tokenId}`);
+            const result = await response.json();
+            
+            if (result.success && result.movementHistory && result.movementHistory.length > 1) {
+                console.log(`📍 Found ${result.movementHistory.length} movement points for token ${tokenId}`);
+                
+                // Create route lines for each movement
+                const positions = result.movementHistory.map(m => [parseFloat(m.latitude), parseFloat(m.longitude)]);
+                
+                // Create the main route line
+                const routeLine = L.polyline(positions, {
+                    color: '#4299e1',
+                    weight: 3,
+                    opacity: 0.8,
+                    dashArray: '10, 5'
+                }).addTo(this.map);
+                
+                // Add ETA labels for each movement point
+                result.movementHistory.forEach((movement, index) => {
+                    if (index > 0) { // Skip first position (starting point)
+                        const etaLabel = L.marker([parseFloat(movement.latitude), parseFloat(movement.longitude)], {
+                            icon: L.divIcon({
+                                className: 'eta-label',
+                                html: `<div class="eta-tag">T+${index}</div>`,
+                                iconSize: [40, 20],
+                                iconAnchor: [20, 10]
+                            })
+                        }).addTo(this.map);
+                        
+                        // Store reference for cleanup
+                        if (tokenManager && tokenManager.tokenPlacementManager) {
+                            const tokenData = tokenManager.tokenPlacementManager.placedTokens.get(tokenId);
+                            if (tokenData) {
+                                if (!tokenData.routeLines) tokenData.routeLines = [];
+                                if (!tokenData.etaLabels) tokenData.etaLabels = [];
+                                tokenData.routeLines.push(routeLine);
+                                tokenData.etaLabels.push(etaLabel);
+                            }
+                        }
+                    }
+                });
+                
+                console.log(`✅ Movement history restored for token ${tokenId}`);
+            }
+        } catch (error) {
+            console.error(`❌ Error restoring movement history for token ${tokenId}:`, error);
         }
     }
 

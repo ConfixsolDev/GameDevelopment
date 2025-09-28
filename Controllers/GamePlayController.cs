@@ -114,7 +114,6 @@ namespace TechWebSol.Controllers
                     { "data-entry-modal", "Partials/Modals/_DataEntryModal" },
                     { "token-management-modal", "Partials/Modals/_TokenManagementModal" },
                     { "token-selection-modal", "Partials/Modals/_TokenSelectionModal" },
-                    { "token-brigade-data-modal", "_TokenBrigadeData" },
                     { "simulation-panel", "Partials/Modals/_SimulationPanel" },
                     { "unit-deployment-modal", "Partials/Modals/_UnitDeploymentModal" },
                     { "movement-plan-modal", "Partials/Modals/_MovementPlanModal" },
@@ -289,7 +288,7 @@ namespace TechWebSol.Controllers
         {
             try
             {
-
+                // Update token position
                 var result = await _tokenPlacementService.UpdateTokenPositionAsync(
                     request.TokenId, 
                     request.Latitude, 
@@ -298,6 +297,12 @@ namespace TechWebSol.Controllers
 
                 if (result.Success)
                 {
+                    // Save movement planning data if provided
+                    if (!string.IsNullOrEmpty(request.MovementMode) || request.PlannedETA.HasValue)
+                    {
+                        await SaveMovementOrder(request, result.Token);
+                    }
+
                     return Json(new 
                     { 
                         success = true, 
@@ -333,6 +338,128 @@ namespace TechWebSol.Controllers
         }
 
         /// <summary>
+        /// Save movement order with planning details
+        /// </summary>
+        private async Task SaveMovementOrder(PlaceTokenRequest request, Token? token)
+        {
+            if (token == null) return;
+
+            try
+            {
+                // Get or create a scenario for this team
+                var scenario = await _context.WarGameScenarios
+                    .FirstOrDefaultAsync(s => s.TeamId == user.TeamId && s.Status == "Planning");
+
+                if (scenario == null)
+                {
+                    scenario = new WarGameScenario
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = $"Scenario {user.TeamId}",
+                        Description = "Auto-generated scenario for movement planning",
+                        ScenarioCode = $"SCN_{user.TeamId}_{DateTime.UtcNow:yyyyMMdd}",
+                        Status = "Planning",
+                        TeamId = user.TeamId,
+                        CreatedBy = user.FullName,
+                        IsActive = true
+                    };
+                    _context.WarGameScenarios.Add(scenario);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Get or create unit deployment
+                var deployment = await _context.UnitDeployments
+                    .FirstOrDefaultAsync(d => d.TokenId == request.TokenId && d.ScenarioId == scenario.Id);
+
+                if (deployment == null)
+                {
+                    deployment = new UnitDeployment
+                    {
+                        Id = Guid.NewGuid(),
+                        ScenarioId = scenario.Id,
+                        TokenId = request.TokenId,
+                        UnitType = token.TokenGroup?.Name ?? "Unit",
+                        UnitName = token.Name,
+                        ForceType = "Blue", // Default, should be determined by team
+                        Position = $"{{\"lat\": {request.Latitude}, \"lng\": {request.Longitude}}}",
+                        TeamId = user.TeamId,
+                        CreatedBy = user.FullName,
+                        IsActive = true
+                    };
+                    _context.UnitDeployments.Add(deployment);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Create movement order
+                var movementOrder = new MovementOrder
+                {
+                    Id = Guid.NewGuid(),
+                    UnitDeploymentId = deployment.Id,
+                    StartPosition = deployment.Position, // Current position
+                    EndPosition = $"{{\"lat\": {request.Latitude}, \"lng\": {request.Longitude}}}",
+                    MovementType = request.MovementMode ?? "Normal",
+                    Status = "Planned",
+                    Speed = request.MovementSpeed ?? 20,
+                    Distance = CalculateDistance(deployment.Position, request.Latitude, request.Longitude),
+                    EstimatedArrival = request.PlannedETA.HasValue ? 
+                        DateTime.UtcNow.AddHours((double)request.PlannedETA.Value) : null,
+                    StartTime = request.StartTurn.HasValue ? 
+                        DateTime.UtcNow.AddHours(request.StartTurn.Value * 24 + (double)(request.StartOffset ?? 0)) : null,
+                    EngagementRule = request.EngagementRule ?? "Avoid Strongpoints",
+                    Notes = request.Notes,
+                    TeamId = user.TeamId,
+                    CreatedBy = user.FullName,
+                    IsActive = true
+                };
+
+                _context.MovementOrders.Add(movementOrder);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Movement order saved for token {TokenId} with ETA {ETA}", 
+                    request.TokenId, request.PlannedETA);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving movement order for token {TokenId}", request.TokenId);
+            }
+        }
+
+        /// <summary>
+        /// Calculate distance between two points
+        /// </summary>
+        private decimal CalculateDistance(string startPosition, decimal endLat, decimal endLng)
+        {
+            try
+            {
+                // Parse start position JSON
+                var startPos = System.Text.Json.JsonSerializer.Deserialize<dynamic>(startPosition);
+                var startLat = (decimal)startPos.GetProperty("lat").GetDecimal();
+                var startLng = (decimal)startPos.GetProperty("lng").GetDecimal();
+
+                // Calculate distance using Haversine formula
+                const double R = 6371; // Earth's radius in kilometers
+                var dLat = ToRadians((double)(endLat - startLat));
+                var dLng = ToRadians((double)(endLng - startLng));
+                var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                        Math.Cos(ToRadians((double)startLat)) * Math.Cos(ToRadians((double)endLat)) *
+                        Math.Sin(dLng / 2) * Math.Sin(dLng / 2);
+                var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+                var distance = R * c;
+
+                return (decimal)distance;
+            }
+            catch
+            {
+                return 0; // Return 0 if calculation fails
+            }
+        }
+
+        private double ToRadians(double degrees)
+        {
+            return degrees * (Math.PI / 180);
+        }
+
+        /// <summary>
         /// Remove token from map permanently
         /// </summary>
         [HttpPost]
@@ -361,6 +488,186 @@ namespace TechWebSol.Controllers
             {
                 _logger.LogError(ex, "Error removing token from map");
                 return Json(new { success = false, message = "Error removing token from map" });
+            }
+        }
+
+        /// <summary>
+        /// Get deployed units for movement planning
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetDeployedUnits()
+        {
+            try
+            {
+                // Get placed tokens as deployed units
+                var deployedUnits = await _context.Tokens
+                    .Where(t => t.TeamId == user.TeamId && t.IsActive)
+                    .Where(t => t.MapMarkers.Any(m => m.IsActive))
+                    .Include(t => t.MapMarkers.OrderByDescending(x => x.CreatedDate))
+                    .Include(t => t.TokenGroup)
+                    .Select(t => new
+                    {
+                        id = t.Id,
+                        name = t.Name,
+                        type = t.TokenGroup != null ? t.TokenGroup.Name : "Unit",
+                        strength = 100, // Default strength
+                        position = t.MapMarkers.Where(m => m.IsActive).Select(m => new { lat = m.latitude, lng = m.longitude }).FirstOrDefault(),
+                        status = "Deployed",
+                        teamId = t.TeamId,
+                        isActive = t.IsActive
+                    })
+                    .ToListAsync();
+
+                return Json(new { 
+                    success = true, 
+                    units = deployedUnits 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting deployed units for team {TeamId}", user.TeamId);
+                return Json(new { success = false, message = "Error retrieving deployed units" });
+            }
+        }
+
+        /// <summary>
+        /// Get historical movement data for a token
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetTokenMovementHistory(Guid tokenId)
+        {
+            try
+            {
+                var token = await _context.Tokens
+                    .Include(t => t.TokenGroup)
+                    .FirstOrDefaultAsync(t => t.Id == tokenId && t.TeamId == user.TeamId);
+
+                if (token == null)
+                {
+                    return Json(new { success = false, message = "Token not found" });
+                }
+
+                // Get all historical positions (including inactive ones)
+                var movementHistory = await _context.MapMarkers
+                    .Where(m => m.TokenId == tokenId)
+                    .OrderBy(m => m.CreatedDate)
+                    .Select(m => new
+                    {
+                        id = m.Id,
+                        latitude = decimal.Parse(m.latitude),
+                        longitude = decimal.Parse(m.longitude),
+                        createdDate = m.CreatedDate,
+                        isActive = m.IsActive,
+                        createdBy = m.CreatedBy
+                    })
+                    .ToListAsync();
+
+                // Get movement orders for additional context
+                var movementOrders = await _context.MovementOrders
+                    .Where(mo => mo.TeamId == user.TeamId && mo.IsActive)
+                    .Where(mo => mo.UnitDeployment != null && mo.UnitDeployment.TokenId == tokenId)
+                    .OrderBy(mo => mo.CreatedDate)
+                    .Select(mo => new
+                    {
+                        id = mo.Id,
+                        movementType = mo.MovementType,
+                        status = mo.Status,
+                        speed = mo.Speed,
+                        distance = mo.Distance,
+                        estimatedArrival = mo.EstimatedArrival,
+                        startTime = mo.StartTime,
+                        notes = mo.Notes,
+                        engagementRule = mo.EngagementRule,
+                        createdDate = mo.CreatedDate
+                    })
+                    .ToListAsync();
+
+                return Json(new { 
+                    success = true, 
+                    token = new
+                    {
+                        id = token.Id,
+                        name = token.Name,
+                        type = token.TokenGroup?.Name ?? "Unit"
+                    },
+                    movementHistory = movementHistory,
+                    movementOrders = movementOrders
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting movement history for token {TokenId}", tokenId);
+                return Json(new { success = false, message = "Error retrieving movement history" });
+            }
+        }
+
+        /// <summary>
+        /// Get all movement history for the team (for replay functionality)
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetTeamMovementHistory()
+        {
+            try
+            {
+                // Get all tokens with their movement history
+                var tokensWithHistory = await _context.Tokens
+                    .Where(t => t.TeamId == user.TeamId && t.IsActive)
+                    .Include(t => t.TokenGroup)
+                    .Include(t => t.MapMarkers.OrderBy(m => m.CreatedDate))
+                    .Select(t => new
+                    {
+                        token = new
+                        {
+                            id = t.Id,
+                            name = t.Name,
+                            type = t.TokenGroup != null ? t.TokenGroup.Name : "Unit",
+                            currentPosition = t.MapMarkers.Where(m => m.IsActive).Select(m => new { lat = decimal.Parse(m.latitude), lng = decimal.Parse(m.longitude) }).FirstOrDefault()
+                        },
+                        movementHistory = t.MapMarkers.Select(m => new
+                        {
+                            id = m.Id,
+                            latitude = decimal.Parse(m.latitude),
+                            longitude = decimal.Parse(m.longitude),
+                            createdDate = m.CreatedDate,
+                            isActive = m.IsActive,
+                            createdBy = m.CreatedBy
+                        }).OrderBy(m => m.createdDate).ToList()
+                    })
+                    .Where(t => t.movementHistory.Any())
+                    .ToListAsync();
+
+                // Get all movement orders for context
+                var allMovementOrders = await _context.MovementOrders
+                    .Where(mo => mo.TeamId == user.TeamId && mo.IsActive)
+                    .Include(mo => mo.UnitDeployment)
+                    .OrderBy(mo => mo.CreatedDate)
+                    .Select(mo => new
+                    {
+                        id = mo.Id,
+                        tokenId = mo.UnitDeployment.TokenId,
+                        movementType = mo.MovementType,
+                        status = mo.Status,
+                        speed = mo.Speed,
+                        distance = mo.Distance,
+                        estimatedArrival = mo.EstimatedArrival,
+                        startTime = mo.StartTime,
+                        notes = mo.Notes,
+                        engagementRule = mo.EngagementRule,
+                        createdDate = mo.CreatedDate
+                    })
+                    .ToListAsync();
+
+                return Json(new { 
+                    success = true, 
+                    tokens = tokensWithHistory,
+                    movementOrders = allMovementOrders,
+                    totalMovements = tokensWithHistory.Sum(t => t.movementHistory.Count)
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting team movement history for team {TeamId}", user.TeamId);
+                return Json(new { success = false, message = "Error retrieving team movement history" });
             }
         }
 
@@ -455,6 +762,16 @@ namespace TechWebSol.Controllers
         public Guid TokenId { get; set; }
         public decimal Latitude { get; set; }
         public decimal Longitude { get; set; }
+        
+        // Enhanced movement planning fields
+        public string? MovementMode { get; set; }
+        public int? StartTurn { get; set; }
+        public decimal? StartOffset { get; set; }
+        public decimal? PlannedETA { get; set; }
+        public decimal? MovementSpeed { get; set; }
+        public string? EngagementRule { get; set; }
+        public bool? SharedOrder { get; set; }
+        public string? Notes { get; set; }
     }
 
     public class UpdateTokenPositionRequest
