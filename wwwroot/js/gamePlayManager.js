@@ -146,7 +146,7 @@ class GamePlayManager {
                 return;
             }
 
-            // Get all placed tokens (from server or cache)
+            // Get all placed tokens from server
             let placedTokens = [];
             
             if (typeof tokenManager !== 'undefined') {
@@ -167,10 +167,22 @@ class GamePlayManager {
             if (placedTokens && placedTokens.length > 0) {
                 console.log(`📍 Found ${placedTokens.length} placed tokens to restore`);
                 
+                const restoredLatLngs = [];
                 for (const tokenData of placedTokens) {
-                    if (tokenData.latitude && tokenData.longitude) {
+                    const pos = tokenData.position;
+                    if (pos && pos.lat != null && pos.lng != null) {
                         await this.restoreTokenOnMap(tokenData);
+                        const latNum = typeof pos.lat === 'string' ? parseFloat(pos.lat) : pos.lat;
+                        const lngNum = typeof pos.lng === 'string' ? parseFloat(pos.lng) : pos.lng;
+                        if (!isNaN(latNum) && !isNaN(lngNum)) restoredLatLngs.push([latNum, lngNum]);
                     }
+                }
+                // After restoring, fit map to show all tokens if any were added
+                if (restoredLatLngs.length > 0) {
+                    try {
+                        const bounds = L.latLngBounds(restoredLatLngs);
+                        this.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 10 });
+                    } catch (_) {}
                 }
                 
                 console.log('✅ All placed tokens restored successfully');
@@ -188,9 +200,12 @@ class GamePlayManager {
      */
     async restoreTokenOnMap(tokenData) {
         try {
-            console.log(`🎯 Restoring token: ${tokenData.name} at ${tokenData.latitude}, ${tokenData.longitude}`);
+            const pos = tokenData.position || {};
+            const latNum = typeof pos.lat === 'string' ? parseFloat(pos.lat) : pos.lat;
+            const lngNum = typeof pos.lng === 'string' ? parseFloat(pos.lng) : pos.lng;
+            console.log(`🎯 Restoring token: ${tokenData.name} at ${latNum}, ${lngNum}`);
             
-            const latlng = { lat: tokenData.latitude, lng: tokenData.longitude };
+            const latlng = { lat: latNum, lng: lngNum };
             
             // Create marker using TokenPlacementManager if available
             if (typeof tokenManager !== 'undefined' && tokenManager.tokenPlacementManager) {
