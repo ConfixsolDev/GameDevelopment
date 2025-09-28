@@ -7,6 +7,7 @@ using TechWebSol.Data;
 using TechWebSol.Filters;
 using TechWebSol.Models;
 using TechWebSol.Services;
+using CombatResult = TechWebSol.Models.CombatResult;
 
 namespace TechWebSol.Controllers
 {
@@ -16,15 +17,24 @@ namespace TechWebSol.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUserSessionService _userSessionService;
+        private readonly MovementService _movementService;
+        private readonly CombatService _combatService;
+        private readonly SupplyService _supplyService;
 
         public SimulationController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            IUserSessionService userSessionService)
+            IUserSessionService userSessionService,
+            MovementService movementService,
+            CombatService combatService,
+            SupplyService supplyService)
         {
             _context = context;
             _userManager = userManager;
             _userSessionService = userSessionService;
+            _movementService = movementService;
+            _combatService = combatService;
+            _supplyService = supplyService;
         }
 
         #region Scenario Management
@@ -649,6 +659,120 @@ namespace TechWebSol.Controllers
         }
 
         #endregion
+
+        #region Enhanced Simulation Methods
+
+        [HttpPost]
+        public async Task<IActionResult> AdvanceTurn([FromBody] AdvanceTurnRequest request)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var scenario = await _context.WarGameScenarios
+                    .Include(s => s.UnitDeployments)
+                    .ThenInclude(ud => ud.MovementOrders)
+                    .FirstOrDefaultAsync(s => s.Id == Guid.Parse(request.ScenarioId));
+
+                if (scenario == null) return NotFound();
+
+                // Process movement orders
+                var activeDeployments = scenario.UnitDeployments.Where(ud => ud.IsActive).ToList();
+                
+                foreach (var deployment in activeDeployments)
+                {
+                    var activeMovementOrder = deployment.MovementOrders.FirstOrDefault(m => m.Status == "InProgress");
+                    if (activeMovementOrder != null)
+                    {
+                        var terrainType = _movementService.GetTerrainAtPosition(activeMovementOrder.EndPosition);
+                        var movementCost = _movementService.CalculateMovementCost(terrainType, (double)activeMovementOrder.Distance, deployment.SupplyState);
+
+                        deployment.RemainingMovement -= movementCost;
+                        if (deployment.RemainingMovement <= 0)
+                        {
+                            activeMovementOrder.Status = "Completed";
+                            activeMovementOrder.ActualArrival = DateTime.UtcNow;
+                            deployment.RemainingMovement = deployment.MovementPoints;
+                        }
+                    }
+                    else
+                    {
+                        // Reset movement points for units not moving
+                        deployment.RemainingMovement = deployment.MovementPoints;
+                    }
+                }
+
+                // Process supply degradation
+                foreach (var deployment in activeDeployments)
+                {
+                    _supplyService.DegradeSupply(deployment, request.SupplyDegradationRate);
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Turn advanced successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateSupplyState([FromBody] UpdateSupplyRequest request)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var deployment = await _context.UnitDeployments
+                    .FirstOrDefaultAsync(d => d.Id == Guid.Parse(request.UnitDeploymentId) && d.TeamId == user.TeamId);
+
+                if (deployment == null) return NotFound();
+
+                _supplyService.UpdateSupplyState(deployment, request.SupplyState);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Supply state updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CalculateMovement([FromBody] CalculateMovementRequest request)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var deployment = await _context.UnitDeployments
+                    .FirstOrDefaultAsync(d => d.Id == Guid.Parse(request.UnitDeploymentId) && d.TeamId == user.TeamId);
+
+                if (deployment == null) return NotFound();
+
+                var effectiveMovement = _movementService.GetEffectiveMovement(deployment, request.TerrainType);
+                var canMove = _movementService.CanMove(deployment, request.Distance, request.TerrainType);
+
+                return Json(new { 
+                    success = true, 
+                    effectiveMovement = effectiveMovement,
+                    canMove = canMove,
+                    requiredMovement = _movementService.CalculateMovementCost(request.TerrainType, request.Distance, deployment.SupplyState)
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        #endregion
     }
 
     // Request/Response DTOs
@@ -700,5 +824,24 @@ namespace TechWebSol.Controllers
     {
         public double Lat { get; set; }
         public double Lng { get; set; }
+    }
+
+    public class AdvanceTurnRequest
+    {
+        public string ScenarioId { get; set; }
+        public double SupplyDegradationRate { get; set; } = 5.0;
+    }
+
+    public class UpdateSupplyRequest
+    {
+        public string UnitDeploymentId { get; set; }
+        public int SupplyState { get; set; }
+    }
+
+    public class CalculateMovementRequest
+    {
+        public string UnitDeploymentId { get; set; }
+        public string TerrainType { get; set; }
+        public double Distance { get; set; }
     }
 }

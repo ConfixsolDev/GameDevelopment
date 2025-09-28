@@ -283,8 +283,10 @@ class TokenPlacementManager {
 
 		// Enable drag-to-move behavior with enhanced planning
 		marker.on('dragstart', (e) => {
+			console.log('🎯 Drag start event triggered for token:', token.name);
 			this.isDraggingMarker = true;
 			this.originalPosition = e.target.getLatLng();
+			console.log('🎯 Original position set to:', this.originalPosition);
 			this.startDragToMove(token, e.target);
 		});
 
@@ -296,7 +298,9 @@ class TokenPlacementManager {
 
 		marker.on('dragend', async (e) => {
 			try {
+				console.log('🎯 Drag end event triggered for token:', token.name);
 				const newLatLng = e.target.getLatLng();
+				console.log('🎯 New position:', newLatLng);
 				this.endDragToMove(token, e.target, newLatLng);
 			} catch (err) {
 				console.error('Error in drag end:', err);
@@ -358,7 +362,17 @@ class TokenPlacementManager {
      * End drag-to-move and open planning form directly
      */
     endDragToMove(token, marker, newPosition) {
-        if (!this.dragPreview) return;
+        console.log('🎯 endDragToMove called for token:', token.name);
+        console.log('🎯 Original position:', this.originalPosition);
+        console.log('🎯 New position:', newPosition);
+        
+        if (!this.dragPreview) {
+            console.log('🎯 No drag preview found, creating basic movement modal');
+            // Calculate distance even without drag preview
+            const distance = this.originalPosition ? this.originalPosition.distanceTo(newPosition) / 1000 : 0;
+            this.showConfirmMoveModal(token, distance);
+            return;
+        }
         
         // Remove route line
         if (this.dragPreview.routeLine) {
@@ -370,6 +384,7 @@ class TokenPlacementManager {
         
         // Calculate final distance (only distance is calculated automatically)
         const distance = this.originalPosition.distanceTo(newPosition) / 1000;
+        console.log('🎯 Calculated distance:', distance, 'km');
         
         // Open planning form directly (no preview card)
         this.showConfirmMoveModal(token, distance);
@@ -527,6 +542,14 @@ class TokenPlacementManager {
      * Show confirm move modal
      */
     showConfirmMoveModal(token, calculatedDistance = null) {
+        console.log('🎯 showConfirmMoveModal called for token:', token.name, 'distance:', calculatedDistance);
+        
+        // Remove any existing modal first
+        const existingModal = document.getElementById('confirmMoveModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
         const modal = document.createElement('div');
         modal.className = 'gameplay-modal';
         modal.id = 'confirmMoveModal';
@@ -537,143 +560,195 @@ class TokenPlacementManager {
                     <button class="gameplay-modal-close" onclick="this.closest('.gameplay-modal').remove()">&times;</button>
                 </div>
                 <div class="gameplay-modal-body">
-                    <div class="move-summary">
-                        <div class="unit-card">
-                            <div class="unit-icon">🎯</div>
-                            <div class="unit-info">
-                                <div class="unit-name">${token.name}</div>
-                                <div class="unit-type">${token.tokenGroupName || 'Unit'}</div>
+                    <!-- Unit Information Section -->
+                    <div class="unit-section">
+                        <h6>Unit Information</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Unit Name</label>
+                                    <div class="form-control-plaintext">${token.name}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Unit Type</label>
+                                    <div class="form-control-plaintext">${token.tokenGroupName || 'Unit'}</div>
+                                </div>
                             </div>
                         </div>
-                        <div class="route-info">
-                            <div class="route-distance">Distance: ${calculatedDistance ? calculatedDistance.toFixed(1) : this.calculateDistance().toFixed(1)} km</div>
-                            <div class="route-note">* Distance calculated automatically</div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Movement Mode</label>
-                            <div class="radio-group">
-                                <label><input type="radio" name="movementMode" value="march" checked> Road March</label>
-                                <label><input type="radio" name="movementMode" value="normal"> Normal</label>
-                                <label><input type="radio" name="movementMode" value="stealth"> Stealth</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Distance</label>
+                                    <div class="form-control-plaintext">${calculatedDistance ? calculatedDistance.toFixed(1) : this.calculateDistance().toFixed(1)} km</div>
+                                    <small class="form-text text-muted">* Distance calculated automatically</small>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Start Turn</label>
-                            <select id="startTurn">
-                                <option value="1">Turn 1</option>
-                                <option value="2">Turn 2</option>
-                                <option value="3">Turn 3</option>
-                                <option value="4">Turn 4</option>
-                                <option value="5">Turn 5</option>
-                            </select>
+                    <!-- Movement Planning Section -->
+                    <div class="unit-section">
+                        <h6>Movement Planning</h6>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Movement Mode</label>
+                                    <div class="form-check-group">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="movementMode" id="marchMode" value="march" checked>
+                                            <label class="form-check-label" for="marchMode">Road March</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="movementMode" id="normalMode" value="normal">
+                                            <label class="form-check-label" for="normalMode">Normal</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="movementMode" id="stealthMode" value="stealth">
+                                            <label class="form-check-label" for="stealthMode">Stealth</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label>Start Offset (hours)</label>
-                            <select id="startOffset">
-                                <option value="0">0 hours</option>
-                                <option value="1">1 hour</option>
-                                <option value="2">2 hours</option>
-                                <option value="3">3 hours</option>
-                                <option value="4">4 hours</option>
-                                <option value="5">5 hours</option>
-                                <option value="6">6 hours</option>
-                                <option value="7">7 hours</option>
-                                <option value="8">8 hours</option>
-                                <option value="9">9 hours</option>
-                                <option value="10">10 hours</option>
-                                <option value="11">11 hours</option>
-                                <option value="12">12 hours</option>
-                                <option value="13">13 hours</option>
-                                <option value="14">14 hours</option>
-                                <option value="15">15 hours</option>
-                            </select>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="startTurn">Start Turn</label>
+                                    <select class="form-control" id="startTurn">
+                                        <option value="1">Turn 1</option>
+                                        <option value="2">Turn 2</option>
+                                        <option value="3">Turn 3</option>
+                                        <option value="4">Turn 4</option>
+                                        <option value="5">Turn 5</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="startOffset">Start Offset (hours)</label>
+                                    <select class="form-control" id="startOffset">
+                                        <option value="0">0 hours</option>
+                                        <option value="1">1 hour</option>
+                                        <option value="2">2 hours</option>
+                                        <option value="3">3 hours</option>
+                                        <option value="4">4 hours</option>
+                                        <option value="5">5 hours</option>
+                                        <option value="6">6 hours</option>
+                                        <option value="7">7 hours</option>
+                                        <option value="8">8 hours</option>
+                                        <option value="9">9 hours</option>
+                                        <option value="10">10 hours</option>
+                                        <option value="11">11 hours</option>
+                                        <option value="12">12 hours</option>
+                                        <option value="13">13 hours</option>
+                                        <option value="14">14 hours</option>
+                                        <option value="15">15 hours</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Planned ETA (hours) *</label>
-                            <select id="plannedETA" required>
-                                <option value="">Select ETA</option>
-                                <option value="1">1 hour</option>
-                                <option value="2">2 hours</option>
-                                <option value="3">3 hours</option>
-                                <option value="4">4 hours</option>
-                                <option value="5">5 hours</option>
-                                <option value="6">6 hours</option>
-                                <option value="7">7 hours</option>
-                                <option value="8">8 hours</option>
-                                <option value="9">9 hours</option>
-                                <option value="10">10 hours</option>
-                                <option value="11">11 hours</option>
-                                <option value="12">12 hours</option>
-                                <option value="13">13 hours</option>
-                                <option value="14">14 hours</option>
-                                <option value="15">15 hours</option>
-                            </select>
-                            <small class="form-help">Planner's estimated arrival time (required)</small>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="plannedETA">Planned ETA (hours) *</label>
+                                    <select class="form-control" id="plannedETA" required>
+                                        <option value="">Select ETA</option>
+                                        <option value="1">1 hour</option>
+                                        <option value="2">2 hours</option>
+                                        <option value="3">3 hours</option>
+                                        <option value="4">4 hours</option>
+                                        <option value="5">5 hours</option>
+                                        <option value="6">6 hours</option>
+                                        <option value="7">7 hours</option>
+                                        <option value="8">8 hours</option>
+                                        <option value="9">9 hours</option>
+                                        <option value="10">10 hours</option>
+                                        <option value="11">11 hours</option>
+                                        <option value="12">12 hours</option>
+                                        <option value="13">13 hours</option>
+                                        <option value="14">14 hours</option>
+                                        <option value="15">15 hours</option>
+                                    </select>
+                                    <small class="form-text text-muted">Planner's estimated arrival time (required)</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="movementSpeed">Movement Speed (km/h) *</label>
+                                    <select class="form-control" id="movementSpeed" required>
+                                        <option value="">Select speed</option>
+                                        <option value="1">1 km/h</option>
+                                        <option value="2">2 km/h</option>
+                                        <option value="3">3 km/h</option>
+                                        <option value="4">4 km/h</option>
+                                        <option value="5">5 km/h</option>
+                                        <option value="8">8 km/h</option>
+                                        <option value="10">10 km/h</option>
+                                        <option value="12">12 km/h</option>
+                                        <option value="14">14 km/h</option>
+                                        <option value="18">18 km/h</option>
+                                        <option value="30">30 km/h</option>
+                                        <option value="40">40 km/h</option>
+                                    </select>
+                                    <small class="form-text text-muted">Unit's movement speed (required)</small>
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label>Movement Speed (km/h) *</label>
-                            <select id="movementSpeed" required>
-                                <option value="">Select speed</option>
-                                <option value="1">1 km/h</option>
-                                <option value="2">2 km/h</option>
-                                <option value="3">3 km/h</option>
-                                <option value="4">4 km/h</option>
-                                <option value="5">5 km/h</option>
-                                <option value="8">8 km/h</option>
-                                <option value="10">10 km/h</option>
-                                <option value="12">12 km/h</option>
-                                <option value="14">14 km/h</option>
-                                <option value="18">18 km/h</option>
-                                <option value="30">30 km/h</option>
-                                <option value="40">40 km/h</option>
-                            </select>
-                            <small class="form-help">Unit's movement speed (required)</small>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="engagementRule">Engagement Rule *</label>
+                                    <select class="form-control" id="engagementRule" required>
+                                        <option value="">Select engagement rule</option>
+                                        <option value="avoid">Avoid Strongpoints</option>
+                                        <option value="engage">Engage If Encountered</option>
+                                        <option value="hold">Hold If Supply < 50%</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="sharedOrder">
+                                        <label class="form-check-label" for="sharedOrder">Shared with Allies</label>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Engagement Rule *</label>
-                            <select id="engagementRule" required>
-                                <option value="">Select engagement rule</option>
-                                <option value="avoid">Avoid Strongpoints</option>
-                                <option value="engage">Engage If Encountered</option>
-                                <option value="hold">Hold If Supply < 50%</option>
-                            </select>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="moveNotes">Notes</label>
+                                    <textarea class="form-control" id="moveNotes" rows="3" placeholder="Planning notes..."></textarea>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="sharedOrder"> Shared with Allies
-                        </label>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Notes</label>
-                        <textarea id="moveNotes" rows="3" placeholder="Planning notes..."></textarea>
                     </div>
                 </div>
                 <div class="gameplay-modal-footer">
                     <button class="gameplay-btn" onclick="this.closest('.gameplay-modal').remove()">Cancel</button>
-                    <button class="gameplay-btn primary" onclick="window.tokenPlacementManager.saveMoveOrder('${token.id}')">Confirm Move</button>
+                    <button class="gameplay-btn gameplay-btn-success" onclick="window.tokenPlacementManager.saveMoveOrder('${token.id}')">
+                        <i class="fas fa-check"></i> Confirm Move
+                    </button>
                 </div>
             </div>
         `;
         
         document.body.appendChild(modal);
+        console.log('🎯 Movement modal added to DOM');
         
         // Make sure the function is globally accessible
         window.tokenPlacementManager = this;
+        
+        // Show the modal
+        modal.style.display = 'block';
+        console.log('🎯 Movement modal should now be visible');
     }
 
     /**

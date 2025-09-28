@@ -14,28 +14,28 @@
 @switch (component.ToLower())
 {
     case "modal":
-        @await Html.PartialAsync("_Modal", data)
+        @await Html.PartialAsync("_Modal", (object)data)
         break;
         
     case "tokencard":
     case "token-card":
-        @await Html.PartialAsync("_TokenCard", data)
+        @await Html.PartialAsync("_TokenCard", (object)data)
         break;
         
     case "alert":
-        @await Html.PartialAsync("_Alert", data)
+        @await Html.PartialAsync("_Alert", (object)data)
         break;
         
     case "button":
-        @await Html.PartialAsync("_Button", data)
+        @await Html.PartialAsync("_Button", (object)data)
         break;
         
     case "card":
-        @await Html.PartialAsync("_Card", data)
+        @await Html.PartialAsync("_Card", (object)data)
         break;
         
     case "badge":
-        @await Html.PartialAsync("_Badge", data)
+        @await Html.PartialAsync("_Badge", (object)data)
         break;
         
     default:

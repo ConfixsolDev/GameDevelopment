@@ -286,6 +286,101 @@
                         </div>
                     </div>
 
+                    <!-- Enhanced Combat & Movement Properties -->
+                    <div class="unit-section">
+                        <h6>Enhanced Combat & Movement Properties</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantryCombatPower">Combat Power</label>
+                                    <input type="number" step="0.1" class="form-control" id="infantryCombatPower" 
+                                           value="@(Model.ExistingInfantry?.CombatPower ?? 1.0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantryMovementPoints">Movement Points (km/turn)</label>
+                                    <input type="number" step="0.1" class="form-control" id="infantryMovementPoints" 
+                                           value="@(Model.ExistingInfantry?.MovementPoints ?? 30.0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantryCurrentTerrain">Current Terrain</label>
+                                    <select class="form-control" id="infantryCurrentTerrain">
+                                        @{
+                                            var infantryTerrain = Model.ExistingInfantry?.CurrentTerrain ?? "Road";
+                                        }
+                                        <option value="Road" selected="@(infantryTerrain == "Road")">Road</option>
+                                        <option value="CrossCountry" selected="@(infantryTerrain == "CrossCountry")">Cross Country</option>
+                                        <option value="Forest" selected="@(infantryTerrain == "Forest")">Forest</option>
+                                        <option value="Mountain" selected="@(infantryTerrain == "Mountain")">Mountain</option>
+                                        <option value="River" selected="@(infantryTerrain == "River")">River</option>
+                                        <option value="Urban" selected="@(infantryTerrain == "Urban")">Urban</option>
+                                        <option value="Desert" selected="@(infantryTerrain == "Desert")">Desert</option>
+                                        <option value="Swamp" selected="@(infantryTerrain == "Swamp")">Swamp</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantryRemainingMovement">Remaining Movement (km)</label>
+                                    <input type="number" step="0.1" class="form-control" id="infantryRemainingMovement" 
+                                           value="@(Model.ExistingInfantry?.RemainingMovement ?? 30.0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantryStrengthPercentage">Strength Percentage (%)</label>
+                                    <input type="number" step="0.1" class="form-control" id="infantryStrengthPercentage" 
+                                           value="@(Model.ExistingInfantry?.StrengthPercentage ?? 100.0)" min="0" max="100" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantrySupplyState">Supply State</label>
+                                    <select class="form-control" id="infantrySupplyState">
+                                        @{
+                                            var infantrySupply = Model.ExistingInfantry?.SupplyState ?? 100;
+                                        }
+                                        <option value="100" selected="@(infantrySupply == 100)">Green (100%)</option>
+                                        <option value="75" selected="@(infantrySupply == 75)">Amber (75%)</option>
+                                        <option value="50" selected="@(infantrySupply == 50)">Red (50%)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantryTerrainModifier">Terrain Modifier</label>
+                                    <input type="number" step="0.1" class="form-control" id="infantryTerrainModifier" 
+                                           value="@(Model.ExistingInfantry?.TerrainModifier ?? 1.0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantrySupplyModifier">Supply Modifier</label>
+                                    <input type="number" step="0.1" class="form-control" id="infantrySupplyModifier" 
+                                           value="@(Model.ExistingInfantry?.SupplyModifier ?? 1.0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantryEffectiveCombatPower">Effective Combat Power</label>
+                                    <input type="number" step="0.1" class="form-control" id="infantryEffectiveCombatPower" 
+                                           value="@(Model.ExistingInfantry?.EffectiveCombatPower ?? 1.0)" min="0" readonly />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="unit-footer">
                         <button type="button" class="btn btn-success" onclick="saveInfantryBattalion()">
                             <i class="fas fa-save"></i> Save Infantry Battalion
@@ -454,6 +549,101 @@
                         </div>
                     </div>
 
+                    <!-- Enhanced Combat & Movement Properties -->
+                    <div class="unit-section">
+                        <h6>Enhanced Combat & Movement Properties</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredCombatPower">Combat Power</label>
+                                    <input type="number" step="0.1" class="form-control" id="armouredCombatPower" 
+                                           value="@(Model.ExistingArmoured?.CombatPower ?? 1.0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredMovementPoints">Movement Points (km/turn)</label>
+                                    <input type="number" step="0.1" class="form-control" id="armouredMovementPoints" 
+                                           value="@(Model.ExistingArmoured?.MovementPoints ?? 30.0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredCurrentTerrain">Current Terrain</label>
+                                    <select class="form-control" id="armouredCurrentTerrain">
+                                        @{
+                                            var armouredTerrain = Model.ExistingArmoured?.CurrentTerrain ?? "Road";
+                                        }
+                                        <option value="Road" selected="@(armouredTerrain == "Road")">Road</option>
+                                        <option value="CrossCountry" selected="@(armouredTerrain == "CrossCountry")">Cross Country</option>
+                                        <option value="Forest" selected="@(armouredTerrain == "Forest")">Forest</option>
+                                        <option value="Mountain" selected="@(armouredTerrain == "Mountain")">Mountain</option>
+                                        <option value="River" selected="@(armouredTerrain == "River")">River</option>
+                                        <option value="Urban" selected="@(armouredTerrain == "Urban")">Urban</option>
+                                        <option value="Desert" selected="@(armouredTerrain == "Desert")">Desert</option>
+                                        <option value="Swamp" selected="@(armouredTerrain == "Swamp")">Swamp</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredRemainingMovement">Remaining Movement (km)</label>
+                                    <input type="number" step="0.1" class="form-control" id="armouredRemainingMovement" 
+                                           value="@(Model.ExistingArmoured?.RemainingMovement ?? 30.0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredStrengthPercentage">Strength Percentage (%)</label>
+                                    <input type="number" step="0.1" class="form-control" id="armouredStrengthPercentage" 
+                                           value="@(Model.ExistingArmoured?.StrengthPercentage ?? 100.0)" min="0" max="100" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredSupplyState">Supply State</label>
+                                    <select class="form-control" id="armouredSupplyState">
+                                        @{
+                                            var armouredSupply = Model.ExistingArmoured?.SupplyState ?? 100;
+                                        }
+                                        <option value="100" selected="@(armouredSupply == 100)">Green (100%)</option>
+                                        <option value="75" selected="@(armouredSupply == 75)">Amber (75%)</option>
+                                        <option value="50" selected="@(armouredSupply == 50)">Red (50%)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredTerrainModifier">Terrain Modifier</label>
+                                    <input type="number" step="0.1" class="form-control" id="armouredTerrainModifier" 
+                                           value="@(Model.ExistingArmoured?.TerrainModifier ?? 1.0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredSupplyModifier">Supply Modifier</label>
+                                    <input type="number" step="0.1" class="form-control" id="armouredSupplyModifier" 
+                                           value="@(Model.ExistingArmoured?.SupplyModifier ?? 1.0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredEffectiveCombatPower">Effective Combat Power</label>
+                                    <input type="number" step="0.1" class="form-control" id="armouredEffectiveCombatPower" 
+                                           value="@(Model.ExistingArmoured?.EffectiveCombatPower ?? 1.0)" min="0" readonly />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="unit-footer">
                         <button type="button" class="btn btn-success" onclick="saveArmouredRegiment()">
                             <i class="fas fa-save"></i> Save Armoured Regiment
@@ -588,6 +778,101 @@
                                     <input type="text" class="form-control" id="artilleryDroneTypes" 
                                            value="@(Model.ExistingArtillery?.DroneTypes ?? "")" 
                                            placeholder="e.g., Recon, Surveillance, Fire Control" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Combat & Movement Properties -->
+                    <div class="unit-section">
+                        <h6>Enhanced Combat & Movement Properties</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="artilleryCombatPower">Combat Power</label>
+                                    <input type="number" step="0.1" class="form-control" id="artilleryCombatPower" 
+                                           value="@(Model.ExistingArtillery?.CombatPower ?? 1.0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="artilleryMovementPoints">Movement Points (km/turn)</label>
+                                    <input type="number" step="0.1" class="form-control" id="artilleryMovementPoints" 
+                                           value="@(Model.ExistingArtillery?.MovementPoints ?? 30.0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="artilleryCurrentTerrain">Current Terrain</label>
+                                    <select class="form-control" id="artilleryCurrentTerrain">
+                                        @{
+                                            var artilleryTerrain = Model.ExistingArtillery?.CurrentTerrain ?? "Road";
+                                        }
+                                        <option value="Road" selected="@(artilleryTerrain == "Road")">Road</option>
+                                        <option value="CrossCountry" selected="@(artilleryTerrain == "CrossCountry")">Cross Country</option>
+                                        <option value="Forest" selected="@(artilleryTerrain == "Forest")">Forest</option>
+                                        <option value="Mountain" selected="@(artilleryTerrain == "Mountain")">Mountain</option>
+                                        <option value="River" selected="@(artilleryTerrain == "River")">River</option>
+                                        <option value="Urban" selected="@(artilleryTerrain == "Urban")">Urban</option>
+                                        <option value="Desert" selected="@(artilleryTerrain == "Desert")">Desert</option>
+                                        <option value="Swamp" selected="@(artilleryTerrain == "Swamp")">Swamp</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="artilleryRemainingMovement">Remaining Movement (km)</label>
+                                    <input type="number" step="0.1" class="form-control" id="artilleryRemainingMovement" 
+                                           value="@(Model.ExistingArtillery?.RemainingMovement ?? 30.0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="artilleryStrengthPercentage">Strength Percentage (%)</label>
+                                    <input type="number" step="0.1" class="form-control" id="artilleryStrengthPercentage" 
+                                           value="@(Model.ExistingArtillery?.StrengthPercentage ?? 100.0)" min="0" max="100" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="artillerySupplyState">Supply State</label>
+                                    <select class="form-control" id="artillerySupplyState">
+                                        @{
+                                            var artillerySupply = Model.ExistingArtillery?.SupplyState ?? 100;
+                                        }
+                                        <option value="100" selected="@(artillerySupply == 100)">Green (100%)</option>
+                                        <option value="75" selected="@(artillerySupply == 75)">Amber (75%)</option>
+                                        <option value="50" selected="@(artillerySupply == 50)">Red (50%)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="artilleryTerrainModifier">Terrain Modifier</label>
+                                    <input type="number" step="0.1" class="form-control" id="artilleryTerrainModifier" 
+                                           value="@(Model.ExistingArtillery?.TerrainModifier ?? 1.0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="artillerySupplyModifier">Supply Modifier</label>
+                                    <input type="number" step="0.1" class="form-control" id="artillerySupplyModifier" 
+                                           value="@(Model.ExistingArtillery?.SupplyModifier ?? 1.0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="artilleryEffectiveCombatPower">Effective Combat Power</label>
+                                    <input type="number" step="0.1" class="form-control" id="artilleryEffectiveCombatPower" 
+                                           value="@(Model.ExistingArtillery?.EffectiveCombatPower ?? 1.0)" min="0" readonly />
                                 </div>
                             </div>
                         </div>
@@ -1096,7 +1381,17 @@ function saveInfantryBattalion() {
         marchingSpeedAPCs: parseFloat(document.getElementById('infantryMarchingSpeedAPCs').value) || 20,
         marchingSpeedCrossCountry: parseFloat(document.getElementById('infantryMarchingSpeedCrossCountry').value) || 5,
         marchingSpeedAPCsCrossCountry: parseFloat(document.getElementById('infantryMarchingSpeedAPCsCrossCountry').value) || 10,
-        combatAdvanceSpeed: parseFloat(document.getElementById('infantryCombatAdvanceSpeed').value) || 1
+        combatAdvanceSpeed: parseFloat(document.getElementById('infantryCombatAdvanceSpeed').value) || 1,
+        // Enhanced Combat & Movement Properties
+        combatPower: parseFloat(document.getElementById('infantryCombatPower').value) || 1.0,
+        movementPoints: parseFloat(document.getElementById('infantryMovementPoints').value) || 30.0,
+        currentTerrain: document.getElementById('infantryCurrentTerrain').value || "Road",
+        remainingMovement: parseFloat(document.getElementById('infantryRemainingMovement').value) || 30.0,
+        strengthPercentage: parseFloat(document.getElementById('infantryStrengthPercentage').value) || 100.0,
+        supplyState: parseInt(document.getElementById('infantrySupplyState').value) || 100,
+        terrainModifier: parseFloat(document.getElementById('infantryTerrainModifier').value) || 1.0,
+        supplyModifier: parseFloat(document.getElementById('infantrySupplyModifier').value) || 1.0,
+        effectiveCombatPower: parseFloat(document.getElementById('infantryEffectiveCombatPower').value) || 1.0
     };
     
     // Validation
@@ -1132,7 +1427,17 @@ function saveArmouredRegiment() {
         droneTypes: document.getElementById('armouredDroneTypes').value,
         marchingSpeedRoads: parseFloat(document.getElementById('armouredMarchingSpeedRoads').value) || 15,
         marchingSpeedCrossCountry: parseFloat(document.getElementById('armouredMarchingSpeedCrossCountry').value) || 10,
-        combatAdvanceSpeed: parseFloat(document.getElementById('armouredCombatAdvanceSpeed').value) || 1
+        combatAdvanceSpeed: parseFloat(document.getElementById('armouredCombatAdvanceSpeed').value) || 1,
+        // Enhanced Combat & Movement Properties
+        combatPower: parseFloat(document.getElementById('armouredCombatPower').value) || 1.0,
+        movementPoints: parseFloat(document.getElementById('armouredMovementPoints').value) || 30.0,
+        currentTerrain: document.getElementById('armouredCurrentTerrain').value || "Road",
+        remainingMovement: parseFloat(document.getElementById('armouredRemainingMovement').value) || 30.0,
+        strengthPercentage: parseFloat(document.getElementById('armouredStrengthPercentage').value) || 100.0,
+        supplyState: parseInt(document.getElementById('armouredSupplyState').value) || 100,
+        terrainModifier: parseFloat(document.getElementById('armouredTerrainModifier').value) || 1.0,
+        supplyModifier: parseFloat(document.getElementById('armouredSupplyModifier').value) || 1.0,
+        effectiveCombatPower: parseFloat(document.getElementById('armouredEffectiveCombatPower').value) || 1.0
     };
     
     // Validation
@@ -1165,7 +1470,17 @@ function saveArtilleryRegiment() {
         gunCaliber: document.getElementById('artilleryGunCaliber').value,
         hmg: parseInt(document.getElementById('artilleryHMG').value) || 0,
         drones: parseInt(document.getElementById('artilleryDrones').value) || 0,
-        droneTypes: document.getElementById('artilleryDroneTypes').value
+        droneTypes: document.getElementById('artilleryDroneTypes').value,
+        // Enhanced Combat & Movement Properties
+        combatPower: parseFloat(document.getElementById('artilleryCombatPower').value) || 1.0,
+        movementPoints: parseFloat(document.getElementById('artilleryMovementPoints').value) || 30.0,
+        currentTerrain: document.getElementById('artilleryCurrentTerrain').value || "Road",
+        remainingMovement: parseFloat(document.getElementById('artilleryRemainingMovement').value) || 30.0,
+        strengthPercentage: parseFloat(document.getElementById('artilleryStrengthPercentage').value) || 100.0,
+        supplyState: parseInt(document.getElementById('artillerySupplyState').value) || 100,
+        terrainModifier: parseFloat(document.getElementById('artilleryTerrainModifier').value) || 1.0,
+        supplyModifier: parseFloat(document.getElementById('artillerySupplyModifier').value) || 1.0,
+        effectiveCombatPower: parseFloat(document.getElementById('artilleryEffectiveCombatPower').value) || 1.0
     };
     
     // Validation

@@ -129,6 +129,11 @@ builder.Services.AddScoped<PatternAnalysisEngine>();
 
 // Unified Token Identification DAL
 builder.Services.AddScoped<TokenIdentificationDAL>();
+
+// Enhanced Wargame Services
+builder.Services.AddScoped<MovementService>();
+builder.Services.AddScoped<CombatService>();
+builder.Services.AddScoped<SupplyService>();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();

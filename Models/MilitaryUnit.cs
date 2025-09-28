@@ -46,6 +46,52 @@ namespace TechWebSol.Models
 
         [ForeignKey("TeamId")]
         public virtual Team Team { get; set; }
+
+        // Enhanced Movement Properties
+        [DisplayName("Movement Points (km/turn)")]
+        public double MovementPoints { get; set; } = 30.0; // km/turn default
+
+        [MaxLength(50)]
+        [DisplayName("Current Terrain")]
+        public string CurrentTerrain { get; set; } = "Road"; // TerrainType
+
+        [DisplayName("Remaining Movement")]
+        public double RemainingMovement { get; set; } = 30.0; // Current turn movement
+
+        // Enhanced Combat Properties
+        [DisplayName("Combat Power")]
+        public double CombatPower { get; set; } = 1.0; // Base combat effectiveness
+
+        [DisplayName("Terrain Modifier")]
+        public double TerrainModifier { get; set; } = 1.0; // Current terrain bonus/penalty
+
+        [DisplayName("Supply Modifier")]
+        public double SupplyModifier { get; set; } = 1.0; // Supply state modifier
+
+        // Enhanced Casualty Tracking
+        [DisplayName("Strength Percentage")]
+        public double StrengthPercentage { get; set; } = 100.0; // 0-100%
+
+        [DisplayName("Effective Combat Power")]
+        public double EffectiveCombatPower { get; set; } = 1.0; // Dynamic combat power
+
+        // Enhanced Supply State
+        [DisplayName("Supply State")]
+        public int SupplyState { get; set; } = 100; // 100=Green, 75=Amber, 50=Red
+
+        // Helper Methods
+        public double GetEffectiveCombatPower()
+        {
+            if (StrengthPercentage >= 50)
+                return CombatPower;
+            else
+                return CombatPower * (StrengthPercentage / 100.0) * 0.5; // Degraded effectiveness
+        }
+
+        public void UpdateSupplyModifier()
+        {
+            SupplyModifier = SupplyState / 100.0;
+        }
     }
 
     public class InfantryBattalion : MilitaryUnit

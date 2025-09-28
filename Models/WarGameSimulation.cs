@@ -75,9 +75,54 @@ namespace TechWebSol.Models
         public decimal Morale { get; set; } = 100; // 0-100
         public decimal Fatigue { get; set; } = 0; // 0-100
 
+        // Enhanced Movement Properties
+        public double MovementPoints { get; set; } = 30.0; // km/turn default
+        public string CurrentTerrain { get; set; } = "Road"; // TerrainType
+        public double RemainingMovement { get; set; } = 30.0; // Current turn movement
+
+        // Enhanced Combat Properties
+        public double CombatPower { get; set; } = 1.0; // Base combat effectiveness
+        public double TerrainModifier { get; set; } = 1.0; // Current terrain bonus/penalty
+        public double SupplyModifier { get; set; } = 1.0; // Supply state modifier
+
+        // Enhanced Casualty Tracking
+        public double StrengthPercentage { get; set; } = 100.0; // 0-100%
+        public double EffectiveCombatPower { get; set; } = 1.0; // Dynamic combat power
+
+        // Enhanced Supply State
+        public int SupplyState { get; set; } = 100; // 100=Green, 75=Amber, 50=Red
+
         // Navigation properties
         public virtual ICollection<MovementOrder> MovementOrders { get; set; } = new List<MovementOrder>();
         public virtual ICollection<BattleParticipant> BattleParticipations { get; set; } = new List<BattleParticipant>();
+
+        // Helper Methods
+        public double GetEffectiveCombatPower()
+        {
+            if (StrengthPercentage >= 50)
+                return CombatPower;
+            else
+                return CombatPower * (StrengthPercentage / 100.0) * 0.5; // Degraded effectiveness
+        }
+
+        public void UpdateSupplyModifier()
+        {
+            SupplyModifier = SupplyState / 100.0;
+        }
+
+        public void UpdateFromMilitaryUnit(MilitaryUnit unit)
+        {
+            StrengthPercentage = unit.StrengthPercentage;
+            EffectiveCombatPower = unit.EffectiveCombatPower;
+            CurrentStrength = (int)(MaxStrength * (StrengthPercentage / 100.0));
+            CombatPower = unit.CombatPower;
+            TerrainModifier = unit.TerrainModifier;
+            SupplyModifier = unit.SupplyModifier;
+            SupplyState = unit.SupplyState;
+            MovementPoints = unit.MovementPoints;
+            CurrentTerrain = unit.CurrentTerrain;
+            RemainingMovement = unit.RemainingMovement;
+        }
     }
 
     public class MovementOrder : BaseEntity
