@@ -556,188 +556,364 @@ class TokenPlacementManager {
         modal.innerHTML = `
             <div class="gameplay-modal-content">
                 <div class="gameplay-modal-header">
-                    <h3><i class="fas fa-route"></i> Confirm Move — ${token.name}</h3>
+                    <h3><i class="fas fa-route"></i> Movement Planning - ${token.name}</h3>
                     <button class="gameplay-modal-close" onclick="this.closest('.gameplay-modal').remove()">&times;</button>
                 </div>
                 <div class="gameplay-modal-body">
-                    <!-- Unit Information Section -->
-                    <div class="unit-section">
-                        <h6>Unit Information</h6>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Unit Name</label>
-                                    <div class="form-control-plaintext">${token.name}</div>
+                    <div class="data-entry-container">
+                        <div class="data-entry-form-section">
+                            <!-- Movement Planning Header -->
+                            <div class="brigade-header-section">
+                                <div class="brigade-name-display">
+                                    <h5><i class="fas fa-route"></i> Movement Planning — ${token.name}</h5>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Unit Type</label>
-                                    <div class="form-control-plaintext">${token.tokenGroupName || 'Unit'}</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Distance</label>
-                                    <div class="form-control-plaintext">${calculatedDistance ? calculatedDistance.toFixed(1) : this.calculateDistance().toFixed(1)} km</div>
-                                    <small class="form-text text-muted">* Distance calculated automatically</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Movement Planning Section -->
-                    <div class="unit-section">
-                        <h6>Movement Planning</h6>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <label>Movement Mode</label>
-                                    <div class="form-check-group">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="movementMode" id="marchMode" value="march" checked>
-                                            <label class="form-check-label" for="marchMode">Road March</label>
+                            
+                            <!-- Movement Planning Form -->
+                            <div class="brigade-data-form">
+                                <!-- Movement Planning Section -->
+                                <div class="data-tab-content active">
+                                    <div class="tab-content-header">
+                                        <h6><i class="fas fa-route"></i> Movement Planning</h6>
+                                        <p class="text-muted">Configure movement parameters and timing</p>
+                                    </div>
+                                    
+                                    <!-- Movement Mode - Full Width -->
+                                    <div class="form-group">
+                                        <label>Movement Mode</label>
+                                        <div class="form-check-group" style="display: flex; gap: 15px; margin-top: 8px;">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="movementMode" id="marchMode" value="march" checked style="margin-right: 5px;">
+                                                <label class="form-check-label" for="marchMode" style="color: #ccc; font-size: 12px;">Road March</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="movementMode" id="normalMode" value="normal" style="margin-right: 5px;">
+                                                <label class="form-check-label" for="normalMode" style="color: #ccc; font-size: 12px;">Normal</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="movementMode" id="stealthMode" value="stealth" style="margin-right: 5px;">
+                                                <label class="form-check-label" for="stealthMode" style="color: #ccc; font-size: 12px;">Stealth</label>
+                                            </div>
                                         </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="movementMode" id="normalMode" value="normal">
-                                            <label class="form-check-label" for="normalMode">Normal</label>
+                                    </div>
+                                    
+                                    <!-- Row 1: Start Turn & Start Offset -->
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="startTurn" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Start Turn</label>
+                                                <select class="form-control" id="startTurn">
+                                                    <option value="1">Turn 1</option>
+                                                    <option value="2">Turn 2</option>
+                                                    <option value="3">Turn 3</option>
+                                                    <option value="4">Turn 4</option>
+                                                    <option value="5">Turn 5</option>
+                                                </select>
+                                            </div>
                                         </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="movementMode" id="stealthMode" value="stealth">
-                                            <label class="form-check-label" for="stealthMode">Stealth</label>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="startOffset" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Start Offset (hours)</label>
+                                                <select class="form-control" id="startOffset">
+                                                    <option value="0">0 hours</option>
+                                                    <option value="1">1 hour</option>
+                                                    <option value="2">2 hours</option>
+                                                    <option value="3">3 hours</option>
+                                                    <option value="4">4 hours</option>
+                                                    <option value="5">5 hours</option>
+                                                    <option value="6">6 hours</option>
+                                                    <option value="7">7 hours</option>
+                                                    <option value="8">8 hours</option>
+                                                    <option value="9">9 hours</option>
+                                                    <option value="10">10 hours</option>
+                                                    <option value="11">11 hours</option>
+                                                    <option value="12">12 hours</option>
+                                                    <option value="13">13 hours</option>
+                                                    <option value="14">14 hours</option>
+                                                    <option value="15">15 hours</option>
+                                                </select>
+                                            </div>
                                         </div>
+                                    </div>
+                                    
+                                    <!-- Row 2: Planned ETA & Movement Speed -->
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="plannedETA" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Planned ETA (hours) *</label>
+                                                <select class="form-control" id="plannedETA" required>
+                                                    <option value="">Select ETA</option>
+                                                    <option value="1">1 hour</option>
+                                                    <option value="2">2 hours</option>
+                                                    <option value="3">3 hours</option>
+                                                    <option value="4">4 hours</option>
+                                                    <option value="5">5 hours</option>
+                                                    <option value="6">6 hours</option>
+                                                    <option value="7">7 hours</option>
+                                                    <option value="8">8 hours</option>
+                                                    <option value="9">9 hours</option>
+                                                    <option value="10">10 hours</option>
+                                                    <option value="11">11 hours</option>
+                                                    <option value="12">12 hours</option>
+                                                    <option value="13">13 hours</option>
+                                                    <option value="14">14 hours</option>
+                                                    <option value="15">15 hours</option>
+                                                </select>
+                                                <small class="text-muted" style="font-size: 11px;">Planner's estimated arrival time (required)</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="movementSpeed" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Movement Speed (km/h) *</label>
+                                                <select class="form-control" id="movementSpeed" required>
+                                                    <option value="">Select speed</option>
+                                                    <option value="1">1 km/h</option>
+                                                    <option value="2">2 km/h</option>
+                                                    <option value="3">3 km/h</option>
+                                                    <option value="4">4 km/h</option>
+                                                    <option value="5">5 km/h</option>
+                                                    <option value="8">8 km/h</option>
+                                                    <option value="10">10 km/h</option>
+                                                    <option value="12">12 km/h</option>
+                                                    <option value="14">14 km/h</option>
+                                                    <option value="18">18 km/h</option>
+                                                    <option value="30">30 km/h</option>
+                                                    <option value="40">40 km/h</option>
+                                                </select>
+                                                <small class="text-muted" style="font-size: 11px;">Unit's movement speed (required)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Row 3: Engagement Rule & Shared with Allies -->
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="engagementRule" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Engagement Rule *</label>
+                                                <select class="form-control" id="engagementRule" required>
+                                                    <option value="">Select engagement rule</option>
+                                                    <option value="avoid">Avoid Strongpoints</option>
+                                                    <option value="engage">Engage If Encountered</option>
+                                                    <option value="hold">Hold If Supply < 50%</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Options</label>
+                                                <div class="form-check" style="margin-top: 8px;">
+                                                    <input class="form-check-input" type="checkbox" id="sharedOrder" style="margin-right: 8px;">
+                                                    <label class="form-check-label" for="sharedOrder" style="color: #ccc; font-size: 12px;">Shared with Allies</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Notes - Full Width -->
+                                    <div class="form-group">
+                                        <label for="moveNotes" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Notes</label>
+                                        <textarea class="form-control" id="moveNotes" rows="3" placeholder="Planning notes..." style="resize: vertical;"></textarea>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="startTurn">Start Turn</label>
-                                    <select class="form-control" id="startTurn">
-                                        <option value="1">Turn 1</option>
-                                        <option value="2">Turn 2</option>
-                                        <option value="3">Turn 3</option>
-                                        <option value="4">Turn 4</option>
-                                        <option value="5">Turn 5</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="startOffset">Start Offset (hours)</label>
-                                    <select class="form-control" id="startOffset">
-                                        <option value="0">0 hours</option>
-                                        <option value="1">1 hour</option>
-                                        <option value="2">2 hours</option>
-                                        <option value="3">3 hours</option>
-                                        <option value="4">4 hours</option>
-                                        <option value="5">5 hours</option>
-                                        <option value="6">6 hours</option>
-                                        <option value="7">7 hours</option>
-                                        <option value="8">8 hours</option>
-                                        <option value="9">9 hours</option>
-                                        <option value="10">10 hours</option>
-                                        <option value="11">11 hours</option>
-                                        <option value="12">12 hours</option>
-                                        <option value="13">13 hours</option>
-                                        <option value="14">14 hours</option>
-                                        <option value="15">15 hours</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="plannedETA">Planned ETA (hours) *</label>
-                                    <select class="form-control" id="plannedETA" required>
-                                        <option value="">Select ETA</option>
-                                        <option value="1">1 hour</option>
-                                        <option value="2">2 hours</option>
-                                        <option value="3">3 hours</option>
-                                        <option value="4">4 hours</option>
-                                        <option value="5">5 hours</option>
-                                        <option value="6">6 hours</option>
-                                        <option value="7">7 hours</option>
-                                        <option value="8">8 hours</option>
-                                        <option value="9">9 hours</option>
-                                        <option value="10">10 hours</option>
-                                        <option value="11">11 hours</option>
-                                        <option value="12">12 hours</option>
-                                        <option value="13">13 hours</option>
-                                        <option value="14">14 hours</option>
-                                        <option value="15">15 hours</option>
-                                    </select>
-                                    <small class="form-text text-muted">Planner's estimated arrival time (required)</small>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="movementSpeed">Movement Speed (km/h) *</label>
-                                    <select class="form-control" id="movementSpeed" required>
-                                        <option value="">Select speed</option>
-                                        <option value="1">1 km/h</option>
-                                        <option value="2">2 km/h</option>
-                                        <option value="3">3 km/h</option>
-                                        <option value="4">4 km/h</option>
-                                        <option value="5">5 km/h</option>
-                                        <option value="8">8 km/h</option>
-                                        <option value="10">10 km/h</option>
-                                        <option value="12">12 km/h</option>
-                                        <option value="14">14 km/h</option>
-                                        <option value="18">18 km/h</option>
-                                        <option value="30">30 km/h</option>
-                                        <option value="40">40 km/h</option>
-                                    </select>
-                                    <small class="form-text text-muted">Unit's movement speed (required)</small>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="engagementRule">Engagement Rule *</label>
-                                    <select class="form-control" id="engagementRule" required>
-                                        <option value="">Select engagement rule</option>
-                                        <option value="avoid">Avoid Strongpoints</option>
-                                        <option value="engage">Engage If Encountered</option>
-                                        <option value="hold">Hold If Supply < 50%</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="sharedOrder">
-                                        <label class="form-check-label" for="sharedOrder">Shared with Allies</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <label for="moveNotes">Notes</label>
-                                    <textarea class="form-control" id="moveNotes" rows="3" placeholder="Planning notes..."></textarea>
-                                </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="add-unit-section">
+                                <button type="button" class="btn btn-outline-secondary" onclick="this.closest('.gameplay-modal').remove()" style="margin-right: 10px;">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                                <button type="button" class="btn btn-primary" onclick="window.tokenPlacementManager.saveMoveOrder('${token.id}')">
+                                    <i class="fas fa-check"></i> Confirm Move
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="gameplay-modal-footer">
-                    <button class="gameplay-btn" onclick="this.closest('.gameplay-modal').remove()">Cancel</button>
-                    <button class="gameplay-btn gameplay-btn-success" onclick="window.tokenPlacementManager.saveMoveOrder('${token.id}')">
-                        <i class="fas fa-check"></i> Confirm Move
-                    </button>
+                    <button class="gameplay-btn" onclick="this.closest('.gameplay-modal').remove()">Close</button>
                 </div>
             </div>
+            
+            <style>
+            /* Modal Centering */
+            .gameplay-modal {
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .gameplay-modal-content {
+                margin: 0;
+                max-width: 800px;
+                width: 90%;
+            }
+
+            /* Dark Theme Data Entry Form - Exact Copy */
+            .data-entry-container {
+                background: #1a1a1a;
+                border-radius: 8px;
+                padding: 20px;
+            }
+
+            .brigade-header-section {
+                margin-bottom: 20px;
+                padding: 15px;
+                background: #2a2a2a;
+                border-radius: 8px;
+                border-left: 4px solid #00d4ff;
+            }
+
+            .brigade-name-display {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .brigade-name-display h5 {
+                color: #00d4ff;
+                margin: 0;
+                font-weight: 600;
+            }
+
+            .data-tab-content {
+                display: none;
+                padding: 20px;
+                border: 1px solid #333;
+                border-radius: 8px;
+                background: #2a2a2a;
+                margin-top: 10px;
+            }
+
+            .data-tab-content.active {
+                display: block;
+            }
+
+            .tab-content-header {
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #444;
+            }
+
+            .tab-content-header h6 {
+                color: #00d4ff;
+                margin: 0 0 5px 0;
+                font-weight: 600;
+            }
+
+            .tab-content-header .text-muted {
+                color: #888 !important;
+                font-size: 13px;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                border-radius: 6px;
+                font-weight: 600;
+                transition: all 0.3s ease;
+            }
+
+            .btn-primary {
+                background: #00d4ff;
+                border-color: #00d4ff;
+                color: #000;
+            }
+
+            .btn-primary:hover {
+                background: #00b8e6;
+                border-color: #00b8e6;
+                color: #000;
+            }
+
+            .btn-outline-secondary {
+                background: transparent;
+                border-color: #666;
+                color: #ccc;
+            }
+
+            .btn-outline-secondary:hover {
+                background: #666;
+                border-color: #666;
+                color: #fff;
+            }
+
+            .form-control {
+                background: #1a1a1a;
+                border: 1px solid #444;
+                color: #fff;
+                border-radius: 6px;
+                padding: 10px 12px;
+            }
+
+            .form-control:focus {
+                background: #2a2a2a;
+                border-color: #00d4ff;
+                color: #fff;
+                box-shadow: 0 0 0 0.2rem rgba(0, 212, 255, 0.25);
+            }
+
+            .text-muted {
+                color: #888 !important;
+            }
+
+            .unit-item {
+                background: #2a2a2a;
+                border: 1px solid #444;
+                border-radius: 6px;
+                padding: 12px;
+                margin-bottom: 8px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                transition: all 0.3s ease;
+            }
+
+            .unit-item:hover {
+                background: #3a3a3a;
+                border-color: #00d4ff;
+            }
+
+            .unit-info {
+                flex: 1;
+                margin-right: 12px;
+                overflow: hidden;
+            }
+
+            .unit-name1 {
+                color: #fff;
+                font-weight: 600;
+                font-size: 12px;
+                margin-bottom: 4px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .unit-details {
+                color: #888;
+                font-size: 12px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .add-unit-section {
+                text-align: center;
+                padding: 15px;
+                border-top: 1px solid #444;
+                margin-top: 10px;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            .form-group label {
+                font-weight: 600;
+                color: #495057;
+                margin-bottom: 5px;
+                font-size: 14px;
+            }
+            </style>
         `;
         
         document.body.appendChild(modal);
