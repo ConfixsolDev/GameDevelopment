@@ -133,6 +133,7 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
+
 // MVC Filters and Binders
 builder.Services.AddMvc();
 
