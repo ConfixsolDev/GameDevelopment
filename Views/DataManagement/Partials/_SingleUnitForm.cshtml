@@ -6,15 +6,15 @@
     <div class="gameplay-modal-content large-modal">
         <div class="gameplay-modal-header">
             <h3>
-                <i class="fas fa-@(Model.UnitType == "infantry" ? "user-shield" : Model.UnitType == "armoured" ? "shield-alt" : Model.UnitType == "artillery" ? "crosshairs" : Model.UnitType == "intelligence" ? "eye" : "binoculars")"></i>
-                Add New @(Model.UnitType == "infantry" ? "Infantry Battalion" : Model.UnitType == "armoured" ? "Armoured Regiment" : Model.UnitType == "artillery" ? "Artillery Regiment" : Model.UnitType == "intelligence" ? "Intelligence Report" : "Reconnaissance")
+                <i class="fas fa-@(Model.UnitType == UnitType.Infantry ? "user-shield" : Model.UnitType == UnitType.Armoured ? "shield-alt" : Model.UnitType == UnitType.Artillery ? "crosshairs" : Model.UnitType == UnitType.Intelligence ? "eye" : "binoculars")"></i>
+                Add New @(Model.UnitType == UnitType.Infantry ? "Infantry Battalion" : Model.UnitType == UnitType.Armoured ? "Armoured Regiment" : Model.UnitType == UnitType.Artillery ? "Artillery Regiment" : Model.UnitType == UnitType.Intelligence ? "Intelligence Report" : "Reconnaissance")
             </h3>
             <button class="gameplay-modal-close" onclick="closeSingleUnitModal()">&times;</button>
         </div>
         
         <div class="gameplay-modal-body">
             <!-- Hidden fields -->
-            <input type="hidden" id="unitType" value="@Model.UnitType" />
+            <input type="hidden" id="unitType" value="@Model.UnitType.ToString().ToLower()" />
             <input type="hidden" id="tokenId" value="@Model.Token.Id" />
             <input type="hidden" id="brigadeId" value="@Model.Brigade.Id" />
             <input type="hidden" id="teamId" value="@Model.TeamId" />
@@ -31,113 +31,80 @@
              </div>
 
              <!-- Existing Units List -->
-             @if (Model.ExistingUnits != null && Model.ExistingUnits.Any())
+             @if ((Model.UnitType == UnitType.Infantry && Model.ExistingInfantry.Any()) ||
+                  (Model.UnitType == UnitType.Armoured && Model.ExistingArmoured.Any()) ||
+                  (Model.UnitType == UnitType.Artillery && Model.ExistingArtillery.Any()) ||
+                  (Model.UnitType == UnitType.Intelligence && Model.ExistingIntelligence.Any()) ||
+                  (Model.UnitType == UnitType.Recon && Model.ExistingRecon.Any()))
              {
                  <div class="existing-units-section">
-                     <h5><i class="fas fa-list"></i> Existing @(Model.UnitType == "infantry" ? "Infantry Battalions" : Model.UnitType == "armoured" ? "Armoured Regiments" : Model.UnitType == "artillery" ? "Artillery Regiments" : Model.UnitType == "intelligence" ? "Intelligence Reports" : "Reconnaissance")</h5>
+                     <h5><i class="fas fa-list"></i> Existing @(Model.UnitType == UnitType.Infantry ? "Infantry Battalions" : Model.UnitType == UnitType.Armoured ? "Armoured Regiments" : Model.UnitType == UnitType.Artillery ? "Artillery Regiments" : Model.UnitType == UnitType.Intelligence ? "Intelligence Reports" : "Reconnaissance")</h5>
                      <div class="existing-units-list">
-                         @foreach (var unit in Model.ExistingUnits)
+                         @if (Model.UnitType == UnitType.Infantry)
                          {
-                             <div class="existing-unit-item">
-                                 @if (Model.UnitType == "infantry")
-                                 {
-                                     var battalion = (dynamic)unit;
+                             @foreach (var battalion in Model.ExistingInfantry)
+                             {
+                                 <div class="existing-unit-item">
                                      <div class="unit-info">
                                          <div class="unit-name">@battalion.Name</div>
                                          <div class="unit-details">Code: @battalion.UnitCode | Strength: @battalion.Strength | Companies: @battalion.Companies</div>
                                      </div>
-                                 }
-                                 else if (Model.UnitType == "armoured")
-                                 {
-                                     var regiment = (dynamic)unit;
+                                 </div>
+                             }
+                         }
+                         else if (Model.UnitType == UnitType.Armoured)
+                         {
+                             @foreach (var regiment in Model.ExistingArmoured)
+                             {
+                                 <div class="existing-unit-item">
                                      <div class="unit-info">
                                          <div class="unit-name">@regiment.Name</div>
                                          <div class="unit-details">Code: @regiment.UnitCode | Strength: @regiment.Strength | Tanks: @regiment.Tanks</div>
                                      </div>
-                                 }
-                                 else if (Model.UnitType == "artillery")
-                                 {
-                                     var regiment = (dynamic)unit;
+                                 </div>
+                             }
+                         }
+                         else if (Model.UnitType == UnitType.Artillery)
+                         {
+                             @foreach (var regiment in Model.ExistingArtillery)
+                             {
+                                 <div class="existing-unit-item">
                                      <div class="unit-info">
                                          <div class="unit-name">@regiment.Name</div>
                                          <div class="unit-details">Code: @regiment.UnitCode | Strength: @regiment.Strength | Guns: @regiment.Guns</div>
                                      </div>
-                                 }
-                                 else if (Model.UnitType == "intelligence")
-                                 {
-                                     var report = (dynamic)unit;
+                                 </div>
+                             }
+                         }
+                         else if (Model.UnitType == UnitType.Intelligence)
+                         {
+                             @foreach (var report in Model.ExistingIntelligence)
+                             {
+                                 <div class="existing-unit-item">
                                      <div class="unit-info">
                                          <div class="unit-name">@report.Title</div>
                                          <div class="unit-details">Source: @report.Source | Priority: @report.Priority</div>
                                      </div>
-                                 }
-                                 else if (Model.UnitType == "recon")
-                                 {
-                                     var recon = (dynamic)unit;
+                                 </div>
+                             }
+                         }
+                         else if (Model.UnitType == UnitType.Recon)
+                         {
+                             @foreach (var recon in Model.ExistingRecon)
+                             {
+                                 <div class="existing-unit-item">
                                      <div class="unit-info">
                                          <div class="unit-name">@recon.ReconType</div>
                                          <div class="unit-details">Location: @recon.Location | Confidence: @recon.Confidence</div>
                                      </div>
-                                 }
-                                 <div class="unit-actions">
-                                     @if (Model.UnitType == "infantry")
-                                     {
-                                         var battalion = (dynamic)unit;
-                                         <button class="btn btn-sm btn-outline-secondary" onclick="editUnit('@battalion.Id')">
-                                             <i class="fas fa-edit"></i> Edit
-                                         </button>
-                                         <button class="btn btn-sm btn-outline-danger" onclick="deleteUnit('@battalion.Id')">
-                                             <i class="fas fa-trash"></i> Delete
-                                         </button>
-                                     }
-                                     else if (Model.UnitType == "armoured")
-                                     {
-                                         var regiment = (dynamic)unit;
-                                         <button class="btn btn-sm btn-outline-secondary" onclick="editUnit('@regiment.Id')">
-                                             <i class="fas fa-edit"></i> Edit
-                                         </button>
-                                         <button class="btn btn-sm btn-outline-danger" onclick="deleteUnit('@regiment.Id')">
-                                             <i class="fas fa-trash"></i> Delete
-                                         </button>
-                                     }
-                                     else if (Model.UnitType == "artillery")
-                                     {
-                                         var regiment = (dynamic)unit;
-                                         <button class="btn btn-sm btn-outline-secondary" onclick="editUnit('@regiment.Id')">
-                                             <i class="fas fa-edit"></i> Edit
-                                         </button>
-                                         <button class="btn btn-sm btn-outline-danger" onclick="deleteUnit('@regiment.Id')">
-                                             <i class="fas fa-trash"></i> Delete
-                                         </button>
-                                     }
-                                     else if (Model.UnitType == "intelligence")
-                                     {
-                                         var report = (dynamic)unit;
-                                         <button class="btn btn-sm btn-outline-secondary" onclick="editUnit('@report.Id')">
-                                             <i class="fas fa-edit"></i> Edit
-                                         </button>
-                                         <button class="btn btn-sm btn-outline-danger" onclick="deleteUnit('@report.Id')">
-                                             <i class="fas fa-trash"></i> Delete
-                                         </button>
-                                     }
-                                     else if (Model.UnitType == "recon")
-                                     {
-                                         var recon = (dynamic)unit;
-                                         <button class="btn btn-sm btn-outline-secondary" onclick="editUnit('@recon.Id')">
-                                             <i class="fas fa-edit"></i> Edit
-                                         </button>
-                                         <button class="btn btn-sm btn-outline-danger" onclick="deleteUnit('@recon.Id')">
-                                             <i class="fas fa-trash"></i> Delete
-                                         </button>
-                                     }
                                  </div>
-                             </div>
+                             }
                          }
                      </div>
                  </div>
              }
 
-             @if (Model.UnitType == "infantry")
+             @if (Model.UnitType == UnitType.Infantry)
              {
                  <!-- Infantry Battalion Form -->
                  <form id="infantryForm">
@@ -273,7 +240,7 @@
                      </div>
                  </form>
              }
-             else if (Model.UnitType == "armoured")
+             else if (Model.UnitType == UnitType.Armoured)
              {
                  <!-- Armoured Regiment Form -->
                  <form id="armouredForm">
@@ -371,7 +338,7 @@
                      </div>
                  </form>
              }
-            else if (Model.UnitType == "artillery")
+            else if (Model.UnitType == UnitType.Artillery)
             {
                 <!-- Artillery Regiment Form -->
                 <form id="artilleryForm">
@@ -448,7 +415,7 @@
                      </div>
                 </form>
             }
-            else if (Model.UnitType == "intelligence")
+            else if (Model.UnitType == UnitType.Intelligence)
             {
                 <!-- Intelligence Report Form -->
                 <form id="intelligenceForm">
@@ -484,7 +451,7 @@
                     </div>
                 </form>
             }
-            else if (Model.UnitType == "recon")
+            else if (Model.UnitType == UnitType.Recon)
             {
                 <!-- Reconnaissance Form -->
                 <form id="reconForm">
@@ -522,7 +489,7 @@
         <div class="gameplay-modal-footer">
             <button class="gameplay-btn" onclick="closeSingleUnitModal()">Cancel</button>
             <button class="gameplay-btn gameplay-btn-primary" onclick="saveSingleUnit()">
-                <i class="fas fa-save"></i> Save @(Model.UnitType == "infantry" ? "Battalion" : Model.UnitType == "armoured" ? "Regiment" : Model.UnitType == "artillery" ? "Regiment" : Model.UnitType == "intelligence" ? "Report" : "Reconnaissance")
+                <i class="fas fa-save"></i> Save @(Model.UnitType == UnitType.Infantry ? "Battalion" : Model.UnitType == UnitType.Armoured ? "Regiment" : Model.UnitType == UnitType.Artillery ? "Regiment" : Model.UnitType == UnitType.Intelligence ? "Report" : "Reconnaissance")
             </button>
         </div>
     </div>

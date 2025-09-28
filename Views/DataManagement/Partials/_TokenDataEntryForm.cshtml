@@ -59,7 +59,7 @@
                                             var battalionData = (dynamic)battalion;
                                             <div class="unit-item">
                                                 <div class="unit-info">
-                                                    <div class="unit-name">@battalionData.Name</div>
+                                                    <div class="unit-name1">@battalionData.Name</div>
                                                     <div class="unit-details">Code: @battalionData.UnitCode | Strength: @battalionData.Strength | Companies: @battalionData.Companies</div>
                                                 </div>
                                                 <div class="unit-actions">
@@ -100,7 +100,7 @@
                                             var regimentData = (dynamic)regiment;
                                             <div class="unit-item">
                                                 <div class="unit-info">
-                                                    <div class="unit-name">@regimentData.Name</div>
+                                                    <div class="unit-name1">@regimentData.Name</div>
                                                     <div class="unit-details">Code: @regimentData.UnitCode | Strength: @regimentData.Strength | Tanks: @regimentData.Tanks</div>
                                                 </div>
                                                 <div class="unit-actions">
@@ -140,7 +140,7 @@
                                             var regimentData = (dynamic)regiment;
                                             <div class="unit-item">
                                                 <div class="unit-info">
-                                                    <div class="unit-name">@regimentData.Name</div>
+                                                    <div class="unit-name1">@regimentData.Name</div>
                                                     <div class="unit-details">Code: @regimentData.UnitCode | Strength: @regimentData.Strength | Guns: @regimentData.Guns</div>
                                                 </div>
                                                 <div class="unit-actions">
@@ -180,7 +180,7 @@
                                             var reportData = (dynamic)report;
                                             <div class="unit-item">
                                                 <div class="unit-info">
-                                                    <div class="unit-name">@reportData.Title</div>
+                                                    <div class="unit-name1">@reportData.Title</div>
                                                     <div class="unit-details">Source: @reportData.Source | Priority: @reportData.Priority</div>
                                                 </div>
                                                 <div class="unit-actions">
@@ -220,7 +220,7 @@
                                             var reconData = (dynamic)recon;
                                             <div class="unit-item">
                                                 <div class="unit-info">
-                                                    <div class="unit-name">@reconData.ReconType</div>
+                                                    <div class="unit-name1">@reconData.ReconType</div>
                                                     <div class="unit-details">Location: @reconData.Location | Confidence: @reconData.Confidence</div>
                                                 </div>
                                                 <div class="unit-actions">
@@ -516,7 +516,7 @@ hr {
     margin-bottom: 8px;
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     transition: all 0.3s ease;
 }
 
@@ -527,33 +527,32 @@ hr {
 
 .unit-info {
     flex: 1;
-    min-width: 0;
     margin-right: 12px;
+    overflow: hidden;
 }
 
-.unit-name {
+.unit-name1 {
     color: #fff;
     font-weight: 600;
     font-size: 12px;
     margin-bottom: 4px;
-    word-wrap: break-word;
-    white-space: normal;
-    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .unit-details {
     color: #888;
     font-size: 12px;
-    word-wrap: break-word;
-    white-space: normal;
-    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .unit-actions {
     display: flex;
     gap: 8px;
     flex-shrink: 0;
-    align-items: flex-start;
 }
 
 .btn-sm {
