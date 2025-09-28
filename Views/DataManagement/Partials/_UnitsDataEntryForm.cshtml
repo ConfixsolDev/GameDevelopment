@@ -678,7 +678,7 @@
                                         <span class="badge badge-@(intel.Priority.ToLower() == "high" ? "danger" : intel.Priority.ToLower() == "medium" ? "warning" : "secondary")">
                                             @intel.Priority Priority
                                         </span>
-                                        <small class="text-muted">@intel.CreatedDate.ToString("yyyy-MM-dd HH:mm")</small>
+                                        <small class="text-muted">@intel.CreatedDate.Value.ToString("yyyy-MM-dd HH:mm")</small>
                                     </div>
                                     <p><strong>Source:</strong> @intel.Source</p>
                                     <p>@intel.Description</p>
@@ -780,7 +780,7 @@
                                         <span class="badge badge-@(recon.Confidence.ToLower() == "high" ? "success" : recon.Confidence.ToLower() == "medium" ? "warning" : "secondary")">
                                             @recon.Confidence Confidence
                                         </span>
-                                        <small class="text-muted">@recon.CreatedDate.ToString("yyyy-MM-dd HH:mm")</small>
+                                        <small class="text-muted">@recon.CreatedDate.Value.ToString("yyyy-MM-dd HH:mm")</small>
                                     </div>
                                     <p><strong>Location:</strong> @recon.Location</p>
                                     <p>@recon.Description</p>

@@ -39,7 +39,6 @@ namespace TechWebSol.Controllers
         [HttpGet]
         public async Task<IActionResult> GetBrigades()
         {
-            var user = await _userManager.GetUserAsync(User);
             var teamId = user?.TeamId;
 
             var brigades = await _context.Brigades
@@ -55,9 +54,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 brigade.Id = Guid.NewGuid();
                 brigade.CreatedBy = user.FullName;
                 brigade.TeamId = user.TeamId;
@@ -79,9 +75,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var existingBrigade = await _context.Brigades
                     .FirstOrDefaultAsync(b => b.Id == brigade.Id && b.TeamId == user.TeamId);
 
@@ -108,9 +101,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var brigade = await _context.Brigades
                     .FirstOrDefaultAsync(b => b.Id == id && b.TeamId == user.TeamId);
 
@@ -136,7 +126,6 @@ namespace TechWebSol.Controllers
         [HttpGet]
         public async Task<IActionResult> GetInfantryBattalions()
         {
-            var user = await _userManager.GetUserAsync(User);
             var teamId = user?.TeamId;
 
             var battalions = await _context.InfantryBattalions
@@ -152,7 +141,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
                 if (user == null) return Unauthorized();
 
                 battalion.Id = Guid.NewGuid();
@@ -176,7 +164,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
                 if (user == null) return Unauthorized();
 
                 var existingBattalion = await _context.InfantryBattalions
@@ -222,7 +209,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
                 if (user == null) return Unauthorized();
 
                 var battalion = await _context.InfantryBattalions
@@ -250,7 +236,6 @@ namespace TechWebSol.Controllers
         [HttpGet]
         public async Task<IActionResult> GetArmouredRegiments()
         {
-            var user = await _userManager.GetUserAsync(User);
             var teamId = user?.TeamId;
 
             var regiments = await _context.ArmouredRegiments
@@ -266,7 +251,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
                 if (user == null) return Unauthorized();
 
                 regiment.Id = Guid.NewGuid();
@@ -289,7 +273,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
                 if (user == null) return Unauthorized();
 
                 var existingRegiment = await _context.ArmouredRegiments
@@ -328,7 +311,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
                 if (user == null) return Unauthorized();
 
                 var regiment = await _context.ArmouredRegiments
@@ -356,7 +338,6 @@ namespace TechWebSol.Controllers
         [HttpGet]
         public async Task<IActionResult> GetArtilleryRegiments()
         {
-            var user = await _userManager.GetUserAsync(User);
             var teamId = user?.TeamId;
 
             var regiments = await _context.ArtilleryRegiments
@@ -372,7 +353,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
                 if (user == null) return Unauthorized();
 
                 regiment.Id = Guid.NewGuid();
@@ -396,7 +376,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
                 if (user == null) return Unauthorized();
 
                 var existingRegiment = await _context.ArtilleryRegiments
@@ -432,7 +411,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
                 if (user == null) return Unauthorized();
 
                 var regiment = await _context.ArtilleryRegiments
@@ -460,7 +438,6 @@ namespace TechWebSol.Controllers
         [HttpGet]
         public async Task<IActionResult> GetTerrainMobilityFactors()
         {
-            var user = await _userManager.GetUserAsync(User);
             var teamId = user?.TeamId;
 
             var factors = await _context.TerrainMobilityFactors
@@ -476,7 +453,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
                 if (user == null) return Unauthorized();
 
                 factor.Id = Guid.NewGuid();
@@ -502,7 +478,6 @@ namespace TechWebSol.Controllers
         [HttpGet]
         public async Task<IActionResult> GetForceProtections()
         {
-            var user = await _userManager.GetUserAsync(User);
             var teamId = user?.TeamId;
 
             var protections = await _context.ForceProtections
@@ -547,9 +522,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var brigade = await _context.Brigades
                     .FirstOrDefaultAsync(b => b.TokenId == tokenId && b.TeamId == user.TeamId && b.IsActive);
 
@@ -571,9 +543,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var brigade = new Brigade
                 {
                     Id = Guid.NewGuid(),
@@ -634,44 +603,49 @@ namespace TechWebSol.Controllers
         #region Token-Specific Data Management
 
         [HttpGet]
-        public  IActionResult GetTokenSummary(Guid tokenId)
+        public async Task<IActionResult> GetTokenSummary(Guid tokenId)
         {
             try
             {
-                var brigadesTask = _context.Brigades
+                var token = await _context.Tokens
+                    .Include(t => t.TokenGroup)
+                    .FirstOrDefaultAsync(t => t.Id == tokenId && t.TeamId == user.TeamId && t.IsActive);
+
+                if (token == null)
+                {
+                    return PartialView("Partials/_ErrorPartial", new { Message = "Token not found or not accessible" });
+                }
+
+                // Get all military data for this token
+                var brigades = await _context.Brigades
                     .Where(b => b.TokenId == tokenId && b.TeamId == user.TeamId && b.IsActive)
-                    .OrderBy(b => b.Name)
-                    .ToList();
+                    .OrderByDescending(b => b.CreatedDate)
+                    .ToListAsync();
 
-                var infantryTask = _context.InfantryBattalions
-                    .Where(b => b.TeamId == user.TeamId && b.IsActive)
-                        .OrderBy(b => b.Name)
-                    .ToList();
-
-                var armouredTask = _context.ArmouredRegiments
-                    .Where(r => r.TeamId == user.TeamId && r.IsActive)
-                        .OrderBy(b => b.Name)
-                    .ToList();
-
-                var artilleryTask = _context.ArtilleryRegiments
-                    .Where(r => r.TeamId == user.TeamId && r.IsActive)
-                        .OrderBy(b => b.Name)
-                    .ToList();
-
-                var intelTask = _context.Intelligence
+                var infantry = await _context.InfantryBattalions
                     .Where(i => i.TokenId == tokenId && i.TeamId == user.TeamId && i.IsActive)
                     .OrderByDescending(i => i.CreatedDate)
-                    .ToList();
+                    .ToListAsync();
 
-                var reconTask = _context.Recon
+                var armoured = await _context.ArmouredRegiments
+                    .Where(a => a.TokenId == tokenId && a.TeamId == user.TeamId && a.IsActive)
+                    .OrderByDescending(a => a.CreatedDate)
+                    .ToListAsync();
+
+                var artillery = await _context.ArtilleryRegiments
+                    .Where(a => a.TokenId == tokenId && a.TeamId == user.TeamId && a.IsActive)
+                    .OrderByDescending(a => a.CreatedDate)
+                    .ToListAsync();
+
+                var intelligence = await _context.Intelligence
+                    .Where(i => i.TokenId == tokenId && i.TeamId == user.TeamId && i.IsActive)
+                    .OrderByDescending(i => i.CreatedDate)
+                    .ToListAsync();
+
+                var recon = await _context.Recon
                     .Where(r => r.TokenId == tokenId && r.TeamId == user.TeamId && r.IsActive)
                     .OrderByDescending(r => r.CreatedDate)
-                    .ToList();
-
-                var brigades = brigadesTask;
-                var infantry = infantryTask;
-                var armoured = armouredTask;
-                var artillery = artilleryTask;
+                    .ToListAsync();
 
                 // Filter units by the brigades belonging to this token
                 var brigadeIds = brigades.Select(b => b.Id).ToHashSet();
@@ -679,34 +653,32 @@ namespace TechWebSol.Controllers
                 var armouredForToken = armoured.Where(u => u.BrigadeId.HasValue && brigadeIds.Contains(u.BrigadeId.Value)).ToList();
                 var artilleryForToken = artillery.Where(u => u.BrigadeId.HasValue && brigadeIds.Contains(u.BrigadeId.Value)).ToList();
 
-                return Json(new
+                // Create ViewModel
+                var viewModel = new TokenSummaryViewModel
                 {
-                    success = true,
-                    data = new
-                    {
-                        brigades = brigades,
-                        infantryBattalions = infantryForToken,
-                        armouredRegiments = armouredForToken,
-                        artilleryRegiments = artilleryForToken,
-                        intelligence = intelTask,
-                        recon = reconTask
-                    }
-                });
+                    Token = token,
+                    Brigades = brigades,
+                    InfantryBattalions = infantryForToken,
+                    ArmouredRegiments = armouredForToken,
+                    ArtilleryRegiments = artilleryForToken,
+                    Intelligence = intelligence,
+                    Recon = recon
+                };
+
+                return PartialView("Partials/_TokenSummaryModal", viewModel);
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message });
+                return PartialView("Partials/_ErrorPartial", new { Message = "Error loading token summary" });
             }
         }
+       
 
         [HttpGet]
         public async Task<IActionResult> GetTokenBrigades(Guid tokenId)
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var brigades = await _context.Brigades
                     .Where(b => b.TokenId == tokenId && b.TeamId == user.TeamId && b.IsActive)
                     .OrderBy(b => b.Name)
@@ -725,9 +697,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var brigade = new Brigade
                 {
                     Id = Guid.NewGuid(),
@@ -757,9 +726,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var existingBrigade = await _context.Brigades
                     .FirstOrDefaultAsync(b => b.Id == brigade.Id && b.TeamId == user.TeamId);
 
@@ -786,9 +752,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var brigade = await _context.Brigades
                     .FirstOrDefaultAsync(b => b.Id == id && b.TeamId == user.TeamId);
 
@@ -812,9 +775,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var query = _context.InfantryBattalions
                     .Where(b => b.TeamId == user.TeamId && b.IsActive);
 
@@ -840,9 +800,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var battalion = await _context.InfantryBattalions
                     .FirstOrDefaultAsync(b => b.Id == id && b.TeamId == user.TeamId);
 
@@ -866,9 +823,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var query = _context.ArmouredRegiments
                     .Where(r => r.TeamId == user.TeamId && r.IsActive);
 
@@ -894,9 +848,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var regiment = await _context.ArmouredRegiments
                     .FirstOrDefaultAsync(r => r.Id == id && r.TeamId == user.TeamId);
 
@@ -920,9 +871,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var query = _context.ArtilleryRegiments
                     .Where(r => r.TeamId == user.TeamId && r.IsActive);
 
@@ -948,9 +896,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var regiment = await _context.ArtilleryRegiments
                     .FirstOrDefaultAsync(r => r.Id == id && r.TeamId == user.TeamId);
 
@@ -974,9 +919,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var intelligence = await _context.Intelligence
                     .Where(i => i.TokenId == tokenId && i.TeamId == user.TeamId && i.IsActive)
                     .OrderByDescending(i => i.Timestamp)
@@ -995,9 +937,7 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
+                
                 var intelligence = await _context.Intelligence
                     .FirstOrDefaultAsync(i => i.Id == id && i.TeamId == user.TeamId);
 
@@ -1021,9 +961,7 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
+               
                 var recon = await _context.Recon
                     .Where(r => r.TokenId == tokenId && r.TeamId == user.TeamId && r.IsActive)
                     .OrderByDescending(r => r.Timestamp)
@@ -1042,9 +980,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var recon = await _context.Recon
                     .FirstOrDefaultAsync(r => r.Id == id && r.TeamId == user.TeamId);
 
@@ -1068,9 +1003,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var battalion = new InfantryBattalion
                 {
                     Id = Guid.NewGuid(),
@@ -1118,9 +1050,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var existingBattalion = await _context.InfantryBattalions
                     .FirstOrDefaultAsync(b => b.Id == battalion.Id && b.TeamId == user.TeamId);
 
@@ -1165,9 +1094,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var regiment = new ArmouredRegiment
                 {
                     Id = Guid.NewGuid(),
@@ -1208,9 +1134,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var existingRegiment = await _context.ArmouredRegiments
                     .FirstOrDefaultAsync(r => r.Id == regiment.Id && r.TeamId == user.TeamId);
 
@@ -1248,9 +1171,7 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
+              
                 var regiment = new ArtilleryRegiment
                 {
                     Id = Guid.NewGuid(),
@@ -1288,8 +1209,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
 
                 var existingRegiment = await _context.ArtilleryRegiments
                     .FirstOrDefaultAsync(r => r.Id == regiment.Id && r.TeamId == user.TeamId);
@@ -1325,9 +1244,7 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
+                
                 var intelligence = new Intelligence
                 {
                     Id = Guid.NewGuid(),
@@ -1357,9 +1274,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var existingIntelligence = await _context.Intelligence
                     .FirstOrDefaultAsync(i => i.Id == intelligence.Id && i.TeamId == user.TeamId);
 
@@ -1386,9 +1300,7 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
+              
                 var recon = new Recon
                 {
                     Id = Guid.NewGuid(),
@@ -1418,9 +1330,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 var existingRecon = await _context.Recon
                     .FirstOrDefaultAsync(r => r.Id == recon.Id && r.TeamId == user.TeamId);
 
@@ -1447,9 +1356,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
                 // Find the brigade
                 var brigade = await _context.Brigades
                     .FirstOrDefaultAsync(b => b.Id == request.BrigadeId && b.TeamId == user.TeamId && b.IsActive);
@@ -1526,11 +1432,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) 
-                {
-                    return PartialView("Partials/_ErrorPartial", new { Message = "User not authenticated" });
-                }
 
                 // Get the token details
                 var token = await _context.Tokens
@@ -1599,12 +1500,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) 
-                {
-                    return PartialView("Partials/_ErrorPartial", new { Message = "User not authenticated" });
-                }
-
                 // Get the token details
                 var token = await _context.Tokens
                     .Include(t => t.TokenGroup)
@@ -1660,12 +1555,6 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null)
-                {
-                    return Json(new { success = false, message = "User not authenticated" });
-                }
-
                 // Create the brigade
                 var brigade = new Brigade
                 {
@@ -1921,6 +1810,17 @@ namespace TechWebSol.Controllers
             public ArtilleryRegiment ExistingArtillery { get; set; }
             public List<Intelligence> ExistingIntelligence { get; set; }
             public List<Recon> ExistingRecon { get; set; }
+        }
+
+        public class TokenSummaryViewModel
+        {
+            public Token Token { get; set; }
+            public List<Brigade> Brigades { get; set; }
+            public List<InfantryBattalion> InfantryBattalions { get; set; }
+            public List<ArmouredRegiment> ArmouredRegiments { get; set; }
+            public List<ArtilleryRegiment> ArtilleryRegiments { get; set; }
+            public List<Intelligence> Intelligence { get; set; }
+            public List<Recon> Recon { get; set; }
         }
         // Request DTOs
         public class CreateBrigadeForTokenRequest

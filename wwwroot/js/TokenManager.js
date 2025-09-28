@@ -289,7 +289,41 @@ class TokenManager {
      * Show token details
      */
     async showTokenDetails(token) {
-        console.log('showTokenDetails called for token:', token);
+        console.log('🎯 Loading token summary modal for:', token.name, token.id);
+        
+        $("#loading").show();
+        
+        // Load the token summary directly from GetTokenSummary
+        $.ajax({
+            url: '/DataManagement/GetTokenSummary',
+            type: 'GET',
+            data: { tokenId: token.id },
+            success: function(modalHtml) {
+                console.log('✅ Token summary loaded');
+                
+                // Remove any existing modal and add the new one
+                $('#tokenSummaryModal').remove();
+                $('body').append(modalHtml);
+                
+                // Show the modal
+                const modal = document.getElementById('tokenSummaryModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    window.currentTokenId = token.id;
+                } else {
+                    console.error('❌ Token summary modal element not found');
+                    alert('Error: Could not display token summary modal');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('❌ Error loading token summary:', error);
+                alert('Failed to load token summary');
+            },
+            complete: function() {
+                $("#loading").hide();
+            }
+        });
+        return; // Exit early - rest of method is legacy code now commented out
         
         try {
             // Load all token-related data in a single request
@@ -502,6 +536,7 @@ class TokenManager {
             `);
         }
     }
+
 
     /**
      * Close token details

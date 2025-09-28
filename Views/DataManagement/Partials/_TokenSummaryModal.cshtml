@@ -1,0 +1,338 @@
+@model TechWebSol.Controllers.DataManagementController.TokenSummaryViewModel
+
+<!-- Token Summary Modal -->
+<div id="tokenSummaryModal" class="gameplay-modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeTokenSummaryModal()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">
+                <i class="fas fa-info-circle"></i>
+                <span>Token Summary</span>
+            </div>
+            <button type="button" class="close-modal-btn" onclick="closeTokenSummaryModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <!-- Token Information -->
+            <div class="token-summary-section">
+                <h6><i class="fas fa-map-marker-alt"></i> Token Information</h6>
+                <div class="summary-item">
+                    <strong>Name:</strong> @(Model.Token?.Name ?? "Unknown Token")
+                    <span class="badge-military">@(Model.Token?.TokenGroup?.Name ?? "Generic")</span>
+                </div>
+                @if (Model.Token?.MapMarkers?.Any() == true)
+                {
+                    var activeMarker = Model.Token.MapMarkers.FirstOrDefault();
+                    if (activeMarker != null)
+                    {
+                        <div class="summary-item">
+                            <strong>Position:</strong> @(activeMarker.latitude), @(activeMarker.longitude)
+                        </div>
+                    }
+                }
+                <div class="summary-item">
+                    <strong>Status:</strong> <span class="badge badge-@(Model.Token?.IsActive == true ? "success" : "secondary")">@(Model.Token?.IsActive == true ? "Active" : "Inactive")</span>
+                </div>
+            </div>
+
+            @if (Model.Brigades.Any() || Model.InfantryBattalions.Any() || Model.ArmouredRegiments.Any() || Model.ArtilleryRegiments.Any() || Model.Intelligence.Any() || Model.Recon.Any())
+            {
+                <!-- Military Hierarchy -->
+                <div class="token-summary-section">
+                    <h6><i class="fas fa-sitemap"></i> Military Hierarchy</h6>
+                    
+                    @if (Model.Brigades.Any())
+                    {
+                        @foreach (var brigade in Model.Brigades)
+                        {
+                            <div class="summary-item brigade">
+                                <strong>Brigade:</strong> @(brigade.Name ?? "Unnamed Brigade")
+                                <span class="badge-military">@(brigade.ForceType ?? "Unknown")</span>
+                                <div class="text-muted">@(brigade.Description ?? "")</div>
+                                
+                                <!-- Infantry Units under this Brigade -->
+                                @{
+                                    var brigadeInfantry = Model.InfantryBattalions.Where(i => i.BrigadeId == brigade.Id).ToList();
+                                }
+                                @if (brigadeInfantry.Any())
+                                {
+                                    @foreach (var infantry in brigadeInfantry)
+                                    {
+                                        <div class="hierarchy-level">
+                                            <div class="summary-item infantry">
+                                                <strong>Infantry Battalion:</strong> @(infantry.Name ?? "Unnamed Infantry")
+                                                <span class="badge-military">Strength: @(infantry.Strength)</span>
+                                                <div class="text-muted">@(infantry.Description ?? "")</div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                
+                                <!-- Armoured Units under this Brigade -->
+                                @{
+                                    var brigadeArmoured = Model.ArmouredRegiments.Where(a => a.BrigadeId == brigade.Id).ToList();
+                                }
+                                @if (brigadeArmoured.Any())
+                                {
+                                    @foreach (var armoured in brigadeArmoured)
+                                    {
+                                        <div class="hierarchy-level">
+                                            <div class="summary-item armoured">
+                                                <strong>Armoured Regiment:</strong> @(armoured.Name ?? "Unnamed Armoured")
+                                                <span class="badge-military">Tanks: @(armoured.Tanks)</span>
+                                                <div class="text-muted">@(armoured.Description ?? "")</div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                
+                                <!-- Artillery Units under this Brigade -->
+                                @{
+                                    var brigadeArtillery = Model.ArtilleryRegiments.Where(a => a.BrigadeId == brigade.Id).ToList();
+                                }
+                                @if (brigadeArtillery.Any())
+                                {
+                                    @foreach (var artillery in brigadeArtillery)
+                                    {
+                                        <div class="hierarchy-level">
+                                            <div class="summary-item artillery">
+                                                <strong>Artillery Regiment:</strong> @(artillery.Name ?? "Unnamed Artillery")
+                                                <span class="badge-military">Guns: @(artillery.Guns)</span>
+                                                <div class="text-muted">@(artillery.Description ?? "")</div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+                
+                @if (Model.Intelligence.Any())
+                {
+                    <!-- Intelligence Reports -->
+                    <div class="token-summary-section">
+                        <h6><i class="fas fa-eye"></i> Intelligence Reports (@Model.Intelligence.Count)</h6>
+                        @foreach (var intel in Model.Intelligence.Take(3))
+                        {
+                            <div class="summary-item intelligence">
+                                <strong>@(intel.Title ?? "Untitled Report")</strong>
+                                <span class="badge badge-@(intel.Priority?.ToString().ToLower() == "high" ? "danger" : intel.Priority?.ToString().ToLower() == "medium" ? "warning" : "secondary")">
+                                    @(intel.Priority ?? "Normal") Priority
+                                </span>
+                                <div class="text-muted">Source: @(intel.Source ?? "Unknown")</div>
+                                <div class="text-muted">@(intel.Description?.Length > 100 ? intel.Description.Substring(0, 100) + "..." : intel.Description ?? "")</div>
+                            </div>
+                        }
+                        @if (Model.Intelligence.Count > 3)
+                        {
+                            <div class="text-muted text-center">... and @(Model.Intelligence.Count - 3) more intelligence reports</div>
+                        }
+                    </div>
+                }
+                
+                @if (Model.Recon.Any())
+                {
+                    <!-- Reconnaissance Reports -->
+                    <div class="token-summary-section">
+                        <h6><i class="fas fa-search"></i> Reconnaissance Reports (@Model.Recon.Count)</h6>
+                        @foreach (var reconItem in Model.Recon.Take(3))
+                        {
+                            <div class="summary-item recon">
+                                <strong>@(reconItem.ReconType ?? "Untitled Recon")</strong>
+                                <span class="badge-military">@(reconItem.Confidence ?? "Unknown Confidence")</span>
+                                <div class="text-muted">Location: @(reconItem.Location ?? "Unknown")</div>
+                                <div class="text-muted">@(reconItem.Description?.Length > 100 ? reconItem.Description.Substring(0, 100) + "..." : reconItem.Description ?? "")</div>
+                            </div>
+                        }
+                        @if (Model.Recon.Count > 3)
+                        {
+                            <div class="text-muted text-center">... and @(Model.Recon.Count - 3) more reconnaissance reports</div>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <!-- No Data Available -->
+                <div class="no-data-message">
+                    <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
+                    <h6>No Military Data Available</h6>
+                    <p>This token has not been linked to any military units, brigades, or reports yet.</p>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="addTokenData()">
+                        <i class="fas fa-plus"></i> Add Military Data
+                    </button>
+                </div>
+            }
+        </div>
+        
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeTokenSummaryModal()">
+                <i class="fas fa-times"></i> Close
+            </button>
+            @if (Model.Brigades.Any() || Model.InfantryBattalions.Any() || Model.ArmouredRegiments.Any() || Model.ArtilleryRegiments.Any() || Model.Intelligence.Any() || Model.Recon.Any())
+            {
+                <button type="button" class="btn btn-primary" onclick="editTokenData()">
+                    <i class="fas fa-edit"></i> Edit Data
+                </button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-success" onclick="addTokenData()">
+                    <i class="fas fa-plus"></i> Add Data
+                </button>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+// Global token summary modal functions
+let currentTokenId = null;
+
+function closeTokenSummaryModal() {
+    console.log('🔒 Closing token summary modal');
+    const modal = document.getElementById('tokenSummaryModal');
+    if (modal) {
+        modal.style.display = 'none';
+        currentTokenId = null;
+    }
+}
+
+function editTokenData() {
+    if (currentTokenId) {
+        console.log('✏️ Opening data entry for token:', currentTokenId);
+        closeTokenSummaryModal();
+        // Open data entry flow for this token
+        openDataEntryForToken(currentTokenId);
+    }
+}
+
+function addTokenData() {
+    if (currentTokenId) {
+        console.log('➕ Adding new data for token:', currentTokenId);
+        closeTokenSummaryModal();
+        // Open data entry flow for this token
+        openDataEntryForToken(currentTokenId);
+    }
+}
+
+function openDataEntryForToken(tokenId) {
+    // Navigate directly to the token data entry form
+    $("#loading").show();
+    
+    $.ajax({
+        url: '/DataManagement/TokenDataEntryForm',
+        type: 'GET',
+        data: { tokenId: tokenId },
+        success: function(data) {
+            console.log('✅ Direct data entry form loaded for token:', tokenId);
+            $('#tokenDataEntryModal').remove();
+            $('body').append(data);
+            document.getElementById('tokenDataEntryModal').style.display = 'flex';
+        },
+        error: function(xhr, status, error) {
+            console.error('❌ Error loading direct data entry form:', error);
+            alert('Failed to load data entry form');
+        },
+        complete: function() {
+            $("#loading").hide();
+        }
+    });
+}
+
+// Set the current token ID when modal loads
+@if (Model.Token != null)
+{
+    <text>
+    currentTokenId = '@Model.Token.Id';
+    </text>
+}
+</script>
+
+<style>
+.token-summary-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #2c3e50;
+    border-radius: 5px;
+    border-left: 4px solid #3498db;
+}
+
+.token-summary-section h6 {
+    color: #3498db;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.summary-item {
+    margin-bottom: 8px;
+    padding: 8px;
+    background-color: #34495e;
+    border-radius: 3px;
+    border-left: 3px solid #95a5a6;
+}
+
+.summary-item.brigade {
+    border-left-color: #e74c3c;
+}
+
+.summary-item.infantry {
+    border-left-color: #f39c12;
+}
+
+.summary-item.armoured {
+    border-left-color: #27ae60;
+}
+
+.summary-item.artillery {
+    border-left-color: #9b59b6;
+}
+
+.summary-item.intelligence {
+    border-left-color: #1abc9c;
+}
+
+.summary-item.recon {
+    border-left-color: #f1c40f;
+}
+
+.summary-item strong {
+    color: #ecf0f1;
+}
+
+.summary-item .text-muted {
+    color: #95a5a6 !important;
+    font-size: 0.9em;
+}
+
+.badge-military {
+    background-color: #3498db;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    margin-left: 5px;
+}
+
+.no-data-message {
+    text-align: center;
+    padding: 20px;
+    color: #95a5a6;
+    font-style: italic;
+}
+
+.hierarchy-level {
+    margin-left: 20px;
+    position: relative;
+}
+
+.hierarchy-level::before {
+    content: "└─";
+    position: absolute;
+    left: -15px;
+    color: #7f8c8d;
+}
+</style>
