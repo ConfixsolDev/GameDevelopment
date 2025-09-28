@@ -1003,16 +1003,20 @@ namespace TechWebSol.Controllers
         {
             try
             {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
                 var battalion = new InfantryBattalion
                 {
-                    Id = Guid.NewGuid(),
+                    Id = request.Id ?? Guid.NewGuid(),
                     Name = request.Name,
                     Description = request.Description,
                     UnitCode = request.UnitCode,
                     Strength = request.Strength,
                     ForceType = request.ForceType,
                     BrigadeId = request.BrigadeId,
-                    TeamId = user.TeamId,
+                    TokenId = request.TokenId,
+                    TeamId = request.TeamId,
                     CreatedBy = user.FullName,
                     IsActive = true,
                     Companies = request.Companies,
@@ -1094,16 +1098,20 @@ namespace TechWebSol.Controllers
         {
             try
             {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
                 var regiment = new ArmouredRegiment
                 {
-                    Id = Guid.NewGuid(),
+                    Id = request.Id ?? Guid.NewGuid(),
                     Name = request.Name,
                     Description = request.Description,
                     UnitCode = request.UnitCode,
                     Strength = request.Strength,
                     ForceType = request.ForceType,
                     BrigadeId = request.BrigadeId,
-                    TeamId = user.TeamId,
+                    TokenId = request.TokenId,
+                    TeamId = request.TeamId,
                     CreatedBy = user.FullName,
                     IsActive = true,
                     Squadrons = request.Squadrons,
@@ -1171,17 +1179,20 @@ namespace TechWebSol.Controllers
         {
             try
             {
-              
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
                 var regiment = new ArtilleryRegiment
                 {
-                    Id = Guid.NewGuid(),
+                    Id = request.Id ?? Guid.NewGuid(),
                     Name = request.Name,
                     Description = request.Description,
                     UnitCode = request.UnitCode,
                     Strength = request.Strength,
                     ForceType = request.ForceType,
                     BrigadeId = request.BrigadeId,
-                    TeamId = user.TeamId,
+                    TokenId = request.TokenId,
+                    TeamId = request.TeamId,
                     CreatedBy = user.FullName,
                     IsActive = true,
                     Batteries = request.Batteries,
@@ -1835,12 +1846,15 @@ namespace TechWebSol.Controllers
 
         public class CreateTokenInfantryBattalionRequest
         {
+            public Guid? Id { get; set; }
             public string Name { get; set; }
             public string Description { get; set; }
             public string UnitCode { get; set; }
             public int Strength { get; set; }
             public string ForceType { get; set; }
             public Guid BrigadeId { get; set; }
+            public Guid TokenId { get; set; }
+            public Guid TeamId { get; set; }
             // Equipment & Weapons
             public int Companies { get; set; }
             public int ATGMS { get; set; }
@@ -1865,12 +1879,15 @@ namespace TechWebSol.Controllers
 
         public class CreateTokenArmouredRegimentRequest
         {
+            public Guid? Id { get; set; }
             public string Name { get; set; }
             public string Description { get; set; }
             public string UnitCode { get; set; }
             public int Strength { get; set; }
             public string ForceType { get; set; }
             public Guid BrigadeId { get; set; }
+            public Guid TokenId { get; set; }
+            public Guid TeamId { get; set; }
             // Equipment & Weapons
             public int Squadrons { get; set; }
             public int Tanks { get; set; }
@@ -1888,12 +1905,15 @@ namespace TechWebSol.Controllers
 
         public class CreateTokenArtilleryRegimentRequest
         {
+            public Guid? Id { get; set; }
             public string Name { get; set; }
             public string Description { get; set; }
             public string UnitCode { get; set; }
             public int Strength { get; set; }
             public string ForceType { get; set; }
             public Guid BrigadeId { get; set; }
+            public Guid TokenId { get; set; }
+            public Guid TeamId { get; set; }
             // Artillery Equipment
             public int Batteries { get; set; }
             public int Guns { get; set; }

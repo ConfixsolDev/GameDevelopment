@@ -1311,11 +1311,28 @@ function saveUnit(unitType, unitData, unitDisplayName) {
     $("#loading").show();
     
     const isUpdate = unitData.id && unitData.id !== '';
-    const endpoint = `/DataManagement/${isUpdate ? 'Update' : 'Create'}${unitType.charAt(0).toUpperCase() + unitType.slice(1)}Unit`;
+    
+    // Map unit types to correct endpoint names
+    let endpoint;
+    if (unitType === 'infantry') {
+        endpoint = `/DataManagement/${isUpdate ? 'Update' : 'Create'}TokenInfantryBattalion`;
+    } else if (unitType === 'armoured') {
+        endpoint = `/DataManagement/${isUpdate ? 'Update' : 'Create'}TokenArmouredRegiment`;
+    } else if (unitType === 'artillery') {
+        endpoint = `/DataManagement/${isUpdate ? 'Update' : 'Create'}TokenArtilleryRegiment`;
+    } else {
+        console.error('Unknown unit type:', unitType);
+        alert(`Unknown unit type: ${unitType}`);
+        $("#loading").hide();
+        return;
+    }
+    
+    console.log(`📡 Saving ${unitDisplayName} to endpoint:`, endpoint);
+    console.log('📦 Data being sent:', unitData);
     
     $.ajax({
         url: endpoint,
-        type: 'POST',
+        type: isUpdate ? 'PUT' : 'POST',
         contentType: 'application/json',
         data: JSON.stringify(unitData),
         success: function(response) {
@@ -1331,16 +1348,28 @@ function saveUnit(unitType, unitData, unitDisplayName) {
                 }
                 
                 // If it was a new unit, update the hidden ID field
-                if (!isUpdate && response.unitId) {
-                    document.getElementById(unitType + 'Id').value = response.unitId;
+                if (!isUpdate && response.data && response.data.id) {
+                    document.getElementById(unitType + 'Id').value = response.data.id;
                 }
             } else {
-                alert(`Error saving ${unitDisplayName}: ` + response.message);
+                alert(`Error saving ${unitDisplayName}: ` + (response.message || 'Unknown error'));
             }
         },
         error: function(xhr, status, error) {
             console.error(`❌ Error saving ${unitDisplayName}:`, error);
-            alert(`Error saving ${unitDisplayName}. Please try again.`);
+            console.error('   Status Code:', xhr.status);
+            console.error('   Response Text:', xhr.responseText);
+            
+            let errorMessage = `Error saving ${unitDisplayName}. Please try again.`;
+            if (xhr.status === 404) {
+                errorMessage = `Endpoint not found (404): ${endpoint}`;
+            } else if (xhr.status === 500) {
+                errorMessage = `Server error (500): ${xhr.responseText}`;
+            } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMessage = `Error: ${xhr.responseJSON.message}`;
+            }
+            
+            alert(errorMessage);
         },
         complete: function() {
             $("#loading").hide();
