@@ -17,7 +17,7 @@ namespace TechWebSol.Controllers
         private readonly IUserSessionService _userSessionService;
         private readonly ITokenPlacementService _tokenPlacementService;
         private readonly ILogger<GamePlayController> _logger;
-        private readonly ApplicationUserVM applicatonUser;
+        private readonly ApplicationUserVM user;
 
 
         public GamePlayController(
@@ -29,7 +29,7 @@ namespace TechWebSol.Controllers
             _context = context;
             _userSessionService = userSessionService;
             _tokenPlacementService = tokenPlacementService;
-            applicatonUser = userSessionService.GetCurrentUser();
+            user = userSessionService.GetCurrentUser();
             _logger = logger;
         }
 
@@ -49,7 +49,7 @@ namespace TechWebSol.Controllers
             try
             {
                 var placedTokens = await _context.Tokens
-                    .Where(t => t.TeamId == applicatonUser.TeamId && t.IsActive)
+                    .Where(t => t.TeamId == user.TeamId && t.IsActive)
                     .Where(t => t.MapMarkers.Any(m => m.IsActive))
                     .Include(t => t.MapMarkers.OrderByDescending(x=>x.CreatedDate))
                     .Include(t => t.TokenGroup)
@@ -151,15 +151,7 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                // Get user details from database to get TeamId
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == applicatonUser.ApplicationUserId);
-                if (user == null)
-                {
-                    return Json(new { success = false, message = "User not found" });
-                }
-
-                // Find the team by TeamCode and SubTeamCode
-                var team = await _context.Teams.FirstOrDefaultAsync(t => t.TeamId == user.TeamId);
+                var team = await _context.Teams.FirstOrDefaultAsync(t => t.Id == user.TeamId);
                 if (team == null)
                 {
                     return Json(new { success = false, message = "Team not found" });
@@ -207,7 +199,7 @@ namespace TechWebSol.Controllers
                     request.TokenId, 
                     request.Latitude, 
                     request.Longitude,
-                    applicatonUser.ApplicationUserId);
+                    user.ApplicationUserId);
 
                 if (result.Success)
                 {
@@ -257,7 +249,7 @@ namespace TechWebSol.Controllers
                     request.TokenId, 
                     (decimal)request.Latitude, 
                     (decimal)request.Longitude,
-                    applicatonUser.ApplicationUserId);
+                    user.ApplicationUserId);
 
                 if (result.Success)
                 {
@@ -302,7 +294,7 @@ namespace TechWebSol.Controllers
                     request.TokenId, 
                     request.Latitude, 
                     request.Longitude,
-                    applicatonUser.ApplicationUserId);
+                    user.ApplicationUserId);
 
                 if (result.Success)
                 {
@@ -350,7 +342,7 @@ namespace TechWebSol.Controllers
             {
                 var result = await _tokenPlacementService.RemoveTokenFromMapAsync(
                     request.TokenId,
-                    applicatonUser.ApplicationUserId);
+                    user.ApplicationUserId);
 
                 if (result.Success)
                 {
@@ -435,7 +427,7 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var team = await _context.Teams.FirstOrDefaultAsync(t => t.Id == applicatonUser.TeamId);
+                var team = await _context.Teams.FirstOrDefaultAsync(t => t.Id == user.TeamId);
                 if (team == null)
                 {
                     return PartialView("Partials/_ErrorPartial", new { Message = "Team not found" });

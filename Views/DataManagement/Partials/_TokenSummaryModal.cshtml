@@ -2,19 +2,13 @@
 
 <!-- Token Summary Modal -->
 <div id="tokenSummaryModal" class="gameplay-modal" style="display: none;">
-    <div class="modal-overlay" onclick="closeTokenSummaryModal()"></div>
-    <div class="modal-content">
-        <div class="modal-header">
-            <div class="modal-title">
-                <i class="fas fa-info-circle"></i>
-                <span>Token Summary</span>
-            </div>
-            <button type="button" class="close-modal-btn" onclick="closeTokenSummaryModal()">
-                <i class="fas fa-times"></i>
-            </button>
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-info-circle"></i> Token Summary</h3>
+            <button class="gameplay-modal-close" onclick="closeTokenSummaryModal()">&times;</button>
         </div>
         
-        <div class="modal-body">
+        <div class="gameplay-modal-body">
             <!-- Token Information -->
             <div class="token-summary-section">
                 <h6><i class="fas fa-map-marker-alt"></i> Token Information</h6>
@@ -33,7 +27,7 @@
                     }
                 }
                 <div class="summary-item">
-                    <strong>Status:</strong> <span class="badge badge-@(Model.Token?.IsActive == true ? "success" : "secondary")">@(Model.Token?.IsActive == true ? "Active" : "Inactive")</span>
+                    <strong>Status:</strong> <span class="badge-military">@(Model.Token?.IsActive == true ? "Active" : "Inactive")</span>
                 </div>
             </div>
 
@@ -119,7 +113,7 @@
                         {
                             <div class="summary-item intelligence">
                                 <strong>@(intel.Title ?? "Untitled Report")</strong>
-                                <span class="badge badge-@(intel.Priority?.ToString().ToLower() == "high" ? "danger" : intel.Priority?.ToString().ToLower() == "medium" ? "warning" : "secondary")">
+                                <span class="badge-military">
                                     @(intel.Priority ?? "Normal") Priority
                                 </span>
                                 <div class="text-muted">Source: @(intel.Source ?? "Unknown")</div>
@@ -168,19 +162,17 @@
             }
         </div>
         
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeTokenSummaryModal()">
-                <i class="fas fa-times"></i> Close
-            </button>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeTokenSummaryModal()">Close</button>
             @if (Model.Brigades.Any() || Model.InfantryBattalions.Any() || Model.ArmouredRegiments.Any() || Model.ArtilleryRegiments.Any() || Model.Intelligence.Any() || Model.Recon.Any())
             {
-                <button type="button" class="btn btn-primary" onclick="editTokenData()">
+                <button class="gameplay-btn gameplay-btn-primary" onclick="editTokenData()">
                     <i class="fas fa-edit"></i> Edit Data
                 </button>
             }
             else
             {
-                <button type="button" class="btn btn-success" onclick="addTokenData()">
+                <button class="gameplay-btn gameplay-btn-success" onclick="addTokenData()">
                     <i class="fas fa-plus"></i> Add Data
                 </button>
             }
@@ -253,86 +245,132 @@ function openDataEntryForToken(tokenId) {
 </script>
 
 <style>
+/* Token Summary Modal - Dark Theme Matching Place Token Modal */
 .token-summary-section {
-    margin-bottom: 20px;
-    padding: 15px;
-    background-color: #2c3e50;
-    border-radius: 5px;
-    border-left: 4px solid #3498db;
+    margin-bottom: 15px;
+    padding: 12px;
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    border: 1px solid #333;
 }
 
 .token-summary-section h6 {
-    color: #3498db;
-    margin-bottom: 10px;
+    color: #00d4ff;
+    margin-bottom: 8px;
     font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .summary-item {
-    margin-bottom: 8px;
-    padding: 8px;
-    background-color: #34495e;
-    border-radius: 3px;
-    border-left: 3px solid #95a5a6;
+    margin-bottom: 6px;
+    padding: 6px 8px;
+    background-color: #2a2a2a;
+    border-radius: 4px;
+    border-left: 3px solid #555;
+    font-size: 13px;
 }
 
 .summary-item.brigade {
-    border-left-color: #e74c3c;
+    border-left-color: #ff4444;
+    background-color: #2a1a1a;
 }
 
 .summary-item.infantry {
-    border-left-color: #f39c12;
+    border-left-color: #ffaa00;
+    background-color: #2a2a1a;
 }
 
 .summary-item.armoured {
-    border-left-color: #27ae60;
+    border-left-color: #00aa44;
+    background-color: #1a2a1a;
 }
 
 .summary-item.artillery {
-    border-left-color: #9b59b6;
+    border-left-color: #aa44ff;
+    background-color: #2a1a2a;
 }
 
 .summary-item.intelligence {
-    border-left-color: #1abc9c;
+    border-left-color: #00aaaa;
+    background-color: #1a2a2a;
 }
 
 .summary-item.recon {
-    border-left-color: #f1c40f;
+    border-left-color: #aaaa00;
+    background-color: #2a2a1a;
 }
 
 .summary-item strong {
-    color: #ecf0f1;
+    color: #ffffff;
+    font-weight: 600;
 }
 
 .summary-item .text-muted {
-    color: #95a5a6 !important;
-    font-size: 0.9em;
+    color: #888 !important;
+    font-size: 12px;
+    margin-top: 2px;
 }
 
 .badge-military {
-    background-color: #3498db;
-    color: white;
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-size: 0.8em;
+    background-color: #00d4ff;
+    color: #000;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 11px;
     margin-left: 5px;
+    font-weight: 600;
 }
 
 .no-data-message {
     text-align: center;
     padding: 20px;
-    color: #95a5a6;
+    color: #888;
     font-style: italic;
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    border: 1px solid #333;
 }
 
 .hierarchy-level {
-    margin-left: 20px;
+    margin-left: 15px;
     position: relative;
 }
 
 .hierarchy-level::before {
     content: "└─";
     position: absolute;
-    left: -15px;
-    color: #7f8c8d;
+    left: -12px;
+    color: #666;
+    font-size: 12px;
+}
+
+/* Compact layout for all information on one screen */
+.gameplay-modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.token-summary-section:last-child {
+    margin-bottom: 0;
+}
+
+/* Scrollbar styling for dark theme */
+.gameplay-modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.gameplay-modal-body::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+.gameplay-modal-body::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 3px;
+}
+
+.gameplay-modal-body::-webkit-scrollbar-thumb:hover {
+    background: #666;
 }
 </style>
