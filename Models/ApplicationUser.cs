@@ -14,12 +14,6 @@ namespace TechWebSol.Models
         public string LastName { get; set; } = string.Empty;
 
         [StringLength(255)]
-        public string Designation { get; set; } = string.Empty;
-
-        [StringLength(255)]
-        public string Department { get; set; } = string.Empty;
-
-        [StringLength(255)]
         public string FullName => $"{this.FirstName} {this.LastName}".Trim();
 
         public bool IsOnline { get; set; }
@@ -50,18 +44,13 @@ namespace TechWebSol.Models
         [ScaffoldColumn(false)]
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
-        [ScaffoldColumn(false)]
-        [DisplayName("Team")]
-        public string TeamCode { get; set; } = string.Empty;
-
-        [ScaffoldColumn(false)]
-        [DisplayName("Sub-Team")]
-        public string SubTeamCode { get; set; } = string.Empty;
         public DateTime? AssignDate { get; set; }
+
+        [StringLength(255)]
+        public string ForceType { get; set; } = string.Empty;
 
         // Foreign key to Team
         public Guid? TeamId { get; set; }
-        public string? TeamTypeCode { get; set; }
 
         // Navigation property
         public virtual Team? Team { get; set; }

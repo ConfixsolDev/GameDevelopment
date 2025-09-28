@@ -136,11 +136,9 @@ namespace TechWebSol.Controllers
 
                 _logger.LogInformation("User logged in.");
 
-                string teamTypeCode = null;
                 if (user.TeamId != Guid.Empty)
                 {
                     var team = await _Appcontext.Teams.Include(t => t.TeamType).AsNoTracking().FirstOrDefaultAsync(t => t.TeamId == user.TeamId);
-                    teamTypeCode = team?.TeamType?.TeamTypeCode;
                 }
 
                 var role = await (
@@ -157,10 +155,8 @@ namespace TechWebSol.Controllers
                     UserCode = user.UserCode,
                     FullName = user.FullName,
                     RoleName = role?.Name ?? "User",
-                    DepartmentId = "HR",
-                    DesignationId = "Manager",
                     TeamId = user.TeamId,
-                    TeamType = teamTypeCode
+                    ForceType = user.ForceType
                 };
 
                 HttpContext.Session.SetObject(SessionKeyName, applicationUserVM);
@@ -234,8 +230,8 @@ namespace TechWebSol.Controllers
                         UserCode = "Sys_" + user.UserCode,
                         FullName = "Sys_" + user.FullName,
                         RoleName = roles?.Name ?? "User",
-                        DepartmentId = "HR",
-                        DesignationId = "Manager",
+                        TeamId = user?.TeamId,
+                        ForceType = user?.ForceType
                     };
 
                     HttpContext.Session.SetObject<ApplicationUserVM>(SessionKeyName, applicaitonUserVM);

@@ -75,19 +75,52 @@ $(document).ready(function() {
     });
 });
 
-// Token selection function - same as place token but for data entry
+// Token selection function - load data entry form via AJAX
 function selectTokenForDataEntry(tokenId, tokenName) {
     console.log('🎯 Token selected for data entry:', tokenName, tokenId);
     
-    // Close the selection modal using same method as place token modal
+    // Close the selection modal
     closeDataEntryTokenModal();
     
-    // Load the token brigade data modal (this function should already exist)
-    if (typeof loadTokenBrigadeData === 'function') {
-        loadTokenBrigadeData(tokenId);
-    } else {
-        console.error('❌ loadTokenBrigadeData function not found');
-        alert('Data entry system not fully loaded. Please try again.');
-    }
+    // Show loading
+    $("#loading").show();
+    
+    // Load the data entry form via AJAX
+    $.ajax({
+        url: '/DataManagement/TokenDataEntryForm',
+        type: 'GET',
+        data: { tokenId: tokenId },
+        success: function(data) {
+            console.log('✅ Data entry form loaded for token:', tokenName);
+            
+            // Remove any existing data entry modal
+            $('#tokenDataEntryModal').remove();
+            
+            // Add the new modal to the body
+            $('body').append(data);
+            
+            // Show the modal
+            document.getElementById('tokenDataEntryModal').style.display = 'flex';
+            
+            console.log('✅ Data entry form displayed successfully');
+        },
+        error: function(xhr, status, error) {
+            console.error('❌ Error loading data entry form:', error);
+            console.error('   Status Code:', xhr.status);
+            console.error('   Response Text:', xhr.responseText);
+            
+            let errorMessage = 'Failed to load data entry form';
+            if (xhr.status === 404) {
+                errorMessage = 'Data entry form not found (404)';
+            } else if (xhr.status === 500) {
+                errorMessage = 'Server error loading data entry form (500)';
+            }
+            
+            alert(errorMessage);
+        },
+        complete: function() {
+            $("#loading").hide();
+        }
+    });
 }
 </script>

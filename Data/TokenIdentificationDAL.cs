@@ -51,7 +51,7 @@ namespace TechWebSol.Data
             }
 
             // Find the team by TeamCode and SubTeamCode
-            var team = _context.Teams.FirstOrDefault(t => t.TeamCode == user.TeamCode && t.SubTeamCode == user.SubTeamCode);
+            var team = _context.Teams.FirstOrDefault(t => t.TeamId == user.TeamId);
             if (team == null)
             {
                 throw new UnauthorizedAccessException("Team not found");

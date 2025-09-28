@@ -1,0 +1,1350 @@
+@using static TechWebSol.Controllers.DataManagementController
+@model UnitsDataEntryViewModel
+
+<!-- Units Data Entry Form Modal -->
+<div id="unitsDataEntryModal" class="gameplay-modal" style="display: none;">
+    <div class="gameplay-modal-content large-modal">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-users"></i> Add Units to Brigade: @Model.Brigade.Name (@Model.Token.Name)</h3>
+            <button class="gameplay-modal-close" onclick="closeUnitsDataEntryModal()">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <!-- Hidden fields -->
+            <input type="hidden" id="tokenId" value="@Model.Token.Id" />
+            <input type="hidden" id="brigadeId" value="@Model.Brigade.Id" />
+            <input type="hidden" id="teamId" value="@Model.Brigade.TeamId" />
+            <input type="hidden" id="forceType" value="@Model.Brigade.ForceType" />
+            
+            <!-- Brigade Information Display -->
+            <div class="brigade-info-section">
+                <div class="brigade-display">
+                    @if (!string.IsNullOrEmpty(Model.Token.AssetImagePath))
+                    {
+                        <img src="@Model.Token.AssetImagePath" alt="@Model.Token.Name" class="token-preview-image">
+                    }
+                    else
+                    {
+                        <div class="token-preview-placeholder">
+                            <i class="fas fa-crosshairs"></i>
+                        </div>
+                    }
+                    <div class="brigade-details">
+                        <h4>@Model.Brigade.Name</h4>
+                        <p class="text-muted">@Model.Token.Name • @Model.Brigade.ForceType Force</p>
+                        <span class="badge badge-primary">@Model.Brigade.BrigadeCode</span>
+                    </div>
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 
+                    <strong>Add Military Units:</strong> Use the tabs below to add different types of units to this brigade. Each unit will be saved separately.
+                </div>
+            </div>
+
+            <!-- Unit Tabs -->
+            <div class="unit-tabs">
+                <button type="button" class="unit-tab active" onclick="showUnitTab('infantry')">
+                    <i class="fas fa-user-shield"></i> Infantry Battalion
+                    @if (Model.ExistingInfantry != null)
+                    {
+                        <span class="unit-status saved">✓</span>
+                    }
+                </button>
+                <button type="button" class="unit-tab" onclick="showUnitTab('armoured')">
+                    <i class="fas fa-shield-alt"></i> Armoured Regiment
+                    @if (Model.ExistingArmoured != null)
+                    {
+                        <span class="unit-status saved">✓</span>
+                    }
+                </button>
+                <button type="button" class="unit-tab" onclick="showUnitTab('artillery')">
+                    <i class="fas fa-crosshairs"></i> Artillery Regiment
+                    @if (Model.ExistingArtillery != null)
+                    {
+                        <span class="unit-status saved">✓</span>
+                    }
+                </button>
+                <button type="button" class="unit-tab" onclick="showUnitTab('intelligence')">
+                    <i class="fas fa-eye"></i> Intelligence
+                    @if (Model.ExistingIntelligence != null && Model.ExistingIntelligence.Any())
+                    {
+                        <span class="unit-status saved">@Model.ExistingIntelligence.Count</span>
+                    }
+                </button>
+                <button type="button" class="unit-tab" onclick="showUnitTab('recon')">
+                    <i class="fas fa-binoculars"></i> Reconnaissance
+                    @if (Model.ExistingRecon != null && Model.ExistingRecon.Any())
+                    {
+                        <span class="unit-status saved">@Model.ExistingRecon.Count</span>
+                    }
+                </button>
+            </div>
+
+            <!-- Infantry Battalion Tab -->
+            <div id="infantry-tab" class="unit-tab-content active">
+                <form id="infantryForm">
+                    <div class="unit-header">
+                        <h5><i class="fas fa-user-shield"></i> Infantry Battalion Data</h5>
+                        @if (Model.ExistingInfantry != null)
+                        {
+                            <span class="badge badge-success">Unit Exists - Editing</span>
+                            <input type="hidden" id="infantryId" value="@Model.ExistingInfantry.Id" />
+                        }
+                        else
+                        {
+                            <span class="badge badge-warning">New Unit</span>
+                            <input type="hidden" id="infantryId" value="" />
+                        }
+                    </div>
+
+                    <!-- Basic Infantry Information -->
+                    <div class="unit-section">
+                        <h6>Basic Information</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantryName">Battalion Name *</label>
+                                    <input type="text" class="form-control" id="infantryName" required 
+                                           value="@(Model.ExistingInfantry?.Name ?? "")" 
+                                           placeholder="e.g., 1st Infantry Battalion" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantryCode">Unit Code *</label>
+                                    <input type="text" class="form-control" id="infantryCode" required 
+                                           value="@(Model.ExistingInfantry?.UnitCode ?? "")" 
+                                           placeholder="e.g., 1IB" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantryStrength">Strength (Personnel) *</label>
+                                    <input type="number" class="form-control" id="infantryStrength" required 
+                                           value="@(Model.ExistingInfantry?.Strength ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantryCompanies">Companies</label>
+                                    <input type="number" class="form-control" id="infantryCompanies" 
+                                           value="@(Model.ExistingInfantry?.Companies ?? 0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="infantryDescription">Description</label>
+                                    <textarea class="form-control" id="infantryDescription" rows="2" 
+                                              placeholder="Brief description of the infantry battalion">@(Model.ExistingInfantry?.Description ?? "")</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weapons & Equipment -->
+                    <div class="unit-section">
+                        <h6>Weapons & Equipment</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="infantryATGMS">ATGMS (Anti-Tank Guided Missiles)</label>
+                                    <input type="number" class="form-control" id="infantryATGMS" 
+                                           value="@(Model.ExistingInfantry?.ATGMS ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="infantryRocketLauncher">Rocket Launchers</label>
+                                    <input type="number" class="form-control" id="infantryRocketLauncher" 
+                                           value="@(Model.ExistingInfantry?.RocketLauncher ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="infantryGrenadeLaunchers">Grenade Launchers</label>
+                                    <input type="number" class="form-control" id="infantryGrenadeLaunchers" 
+                                           value="@(Model.ExistingInfantry?.GrenadeLaunchers ?? 0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="infantryMortars81mm">Mortars 81mm</label>
+                                    <input type="number" class="form-control" id="infantryMortars81mm" 
+                                           value="@(Model.ExistingInfantry?.Mortars81mm ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="infantryMortars120mm">Mortars 120mm</label>
+                                    <input type="number" class="form-control" id="infantryMortars120mm" 
+                                           value="@(Model.ExistingInfantry?.Mortars120mm ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="infantryGrenades">Grenades</label>
+                                    <input type="number" class="form-control" id="infantryGrenades" 
+                                           value="@(Model.ExistingInfantry?.Grenades ?? 0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="infantryHMG_AGL">HMG/AGL (Heavy Machine Guns/Auto Grenade Launchers)</label>
+                                    <input type="number" class="form-control" id="infantryHMG_AGL" 
+                                           value="@(Model.ExistingInfantry?.HMG_AGL ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="infantryMG_LMG">MG/LMG (Machine Guns/Light Machine Guns)</label>
+                                    <input type="number" class="form-control" id="infantryMG_LMG" 
+                                           value="@(Model.ExistingInfantry?.MG_LMG ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="infantryMANPADS">MANPADS (Man-Portable Air Defense Systems)</label>
+                                    <input type="number" class="form-control" id="infantryMANPADS" 
+                                           value="@(Model.ExistingInfantry?.MANPADS ?? 0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Drone Systems -->
+                    <div class="unit-section">
+                        <h6>Drone Systems</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantryDrones">Number of Drones</label>
+                                    <input type="number" class="form-control" id="infantryDrones" 
+                                           value="@(Model.ExistingInfantry?.Drones ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantryDroneTypes">Drone Types</label>
+                                    <input type="text" class="form-control" id="infantryDroneTypes" 
+                                           value="@(Model.ExistingInfantry?.DroneTypes ?? "")" 
+                                           placeholder="e.g., Recon, Combat, Surveillance" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobility Data -->
+                    <div class="unit-section">
+                        <h6>Mobility & Speed Data (km/h)</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantryMarchingSpeedTrucksRoads">Marching Speed - Trucks on Roads</label>
+                                    <input type="number" step="0.1" class="form-control" id="infantryMarchingSpeedTrucksRoads" 
+                                           value="@(Model.ExistingInfantry?.MarchingSpeedTrucksRoads ?? 30)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantryMarchingSpeedAPCs">Marching Speed - APCs</label>
+                                    <input type="number" step="0.1" class="form-control" id="infantryMarchingSpeedAPCs" 
+                                           value="@(Model.ExistingInfantry?.MarchingSpeedAPCs ?? 20)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantryMarchingSpeedCrossCountry">Marching Speed - Cross Country</label>
+                                    <input type="number" step="0.1" class="form-control" id="infantryMarchingSpeedCrossCountry" 
+                                           value="@(Model.ExistingInfantry?.MarchingSpeedCrossCountry ?? 5)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantryMarchingSpeedAPCsCrossCountry">Marching Speed - APCs Cross Country</label>
+                                    <input type="number" step="0.1" class="form-control" id="infantryMarchingSpeedAPCsCrossCountry" 
+                                           value="@(Model.ExistingInfantry?.MarchingSpeedAPCsCrossCountry ?? 10)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantryCombatAdvanceSpeed">Combat Advance Speed</label>
+                                    <input type="number" step="0.1" class="form-control" id="infantryCombatAdvanceSpeed" 
+                                           value="@(Model.ExistingInfantry?.CombatAdvanceSpeed ?? 1)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="unit-footer">
+                        <button type="button" class="btn btn-success" onclick="saveInfantryBattalion()">
+                            <i class="fas fa-save"></i> Save Infantry Battalion
+                        </button>
+                        @if (Model.ExistingInfantry != null)
+                        {
+                            <button type="button" class="btn btn-danger" onclick="deleteInfantryBattalion()">
+                                <i class="fas fa-trash"></i> Delete Unit
+                            </button>
+                        }
+                    </div>
+                </form>
+            </div>
+
+            <!-- Armoured Regiment Tab -->
+            <div id="armoured-tab" class="unit-tab-content">
+                <form id="armouredForm">
+                    <div class="unit-header">
+                        <h5><i class="fas fa-shield-alt"></i> Armoured Regiment Data</h5>
+                        @if (Model.ExistingArmoured != null)
+                        {
+                            <span class="badge badge-success">Unit Exists - Editing</span>
+                            <input type="hidden" id="armouredId" value="@Model.ExistingArmoured.Id" />
+                        }
+                        else
+                        {
+                            <span class="badge badge-warning">New Unit</span>
+                            <input type="hidden" id="armouredId" value="" />
+                        }
+                    </div>
+
+                    <!-- Basic Armoured Information -->
+                    <div class="unit-section">
+                        <h6>Basic Information</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredName">Regiment Name *</label>
+                                    <input type="text" class="form-control" id="armouredName" required 
+                                           value="@(Model.ExistingArmoured?.Name ?? "")" 
+                                           placeholder="e.g., 1st Armoured Regiment" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredCode">Unit Code *</label>
+                                    <input type="text" class="form-control" id="armouredCode" required 
+                                           value="@(Model.ExistingArmoured?.UnitCode ?? "")" 
+                                           placeholder="e.g., 1AR" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredStrength">Strength (Personnel) *</label>
+                                    <input type="number" class="form-control" id="armouredStrength" required 
+                                           value="@(Model.ExistingArmoured?.Strength ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredSquadrons">Squadrons</label>
+                                    <input type="number" class="form-control" id="armouredSquadrons" 
+                                           value="@(Model.ExistingArmoured?.Squadrons ?? 0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="armouredDescription">Description</label>
+                                    <textarea class="form-control" id="armouredDescription" rows="2" 
+                                              placeholder="Brief description of the armoured regiment">@(Model.ExistingArmoured?.Description ?? "")</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vehicles & Weapons -->
+                    <div class="unit-section">
+                        <h6>Vehicles & Weapons</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="armouredTanks">Tanks</label>
+                                    <input type="number" class="form-control" id="armouredTanks" 
+                                           value="@(Model.ExistingArmoured?.Tanks ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="armouredATGMS">ATGMS (Anti-Tank Guided Missiles)</label>
+                                    <input type="number" class="form-control" id="armouredATGMS" 
+                                           value="@(Model.ExistingArmoured?.ATGMS ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="armouredMortars120mm">Mortars 120mm</label>
+                                    <input type="number" class="form-control" id="armouredMortars120mm" 
+                                           value="@(Model.ExistingArmoured?.Mortars120mm ?? 0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredHMG">HMG (Heavy Machine Guns)</label>
+                                    <input type="number" class="form-control" id="armouredHMG" 
+                                           value="@(Model.ExistingArmoured?.HMG ?? 0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Drone Systems -->
+                    <div class="unit-section">
+                        <h6>Drone Systems</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredDrones">Number of Drones</label>
+                                    <input type="number" class="form-control" id="armouredDrones" 
+                                           value="@(Model.ExistingArmoured?.Drones ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredDroneTypes">Drone Types</label>
+                                    <input type="text" class="form-control" id="armouredDroneTypes" 
+                                           value="@(Model.ExistingArmoured?.DroneTypes ?? "")" 
+                                           placeholder="e.g., Recon, Combat, Surveillance" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobility Data -->
+                    <div class="unit-section">
+                        <h6>Mobility & Speed Data (km/h)</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredMarchingSpeedRoads">Marching Speed - Roads</label>
+                                    <input type="number" step="0.1" class="form-control" id="armouredMarchingSpeedRoads" 
+                                           value="@(Model.ExistingArmoured?.MarchingSpeedRoads ?? 15)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredMarchingSpeedCrossCountry">Marching Speed - Cross Country</label>
+                                    <input type="number" step="0.1" class="form-control" id="armouredMarchingSpeedCrossCountry" 
+                                           value="@(Model.ExistingArmoured?.MarchingSpeedCrossCountry ?? 10)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredCombatAdvanceSpeed">Combat Advance Speed</label>
+                                    <input type="number" step="0.1" class="form-control" id="armouredCombatAdvanceSpeed" 
+                                           value="@(Model.ExistingArmoured?.CombatAdvanceSpeed ?? 1)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="unit-footer">
+                        <button type="button" class="btn btn-success" onclick="saveArmouredRegiment()">
+                            <i class="fas fa-save"></i> Save Armoured Regiment
+                        </button>
+                        @if (Model.ExistingArmoured != null)
+                        {
+                            <button type="button" class="btn btn-danger" onclick="deleteArmouredRegiment()">
+                                <i class="fas fa-trash"></i> Delete Unit
+                            </button>
+                        }
+                    </div>
+                </form>
+            </div>
+
+            <!-- Artillery Regiment Tab -->
+            <div id="artillery-tab" class="unit-tab-content">
+                <form id="artilleryForm">
+                    <div class="unit-header">
+                        <h5><i class="fas fa-crosshairs"></i> Artillery Regiment Data</h5>
+                        @if (Model.ExistingArtillery != null)
+                        {
+                            <span class="badge badge-success">Unit Exists - Editing</span>
+                            <input type="hidden" id="artilleryId" value="@Model.ExistingArtillery.Id" />
+                        }
+                        else
+                        {
+                            <span class="badge badge-warning">New Unit</span>
+                            <input type="hidden" id="artilleryId" value="" />
+                        }
+                    </div>
+
+                    <!-- Basic Artillery Information -->
+                    <div class="unit-section">
+                        <h6>Basic Information</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="artilleryName">Regiment Name *</label>
+                                    <input type="text" class="form-control" id="artilleryName" required 
+                                           value="@(Model.ExistingArtillery?.Name ?? "")" 
+                                           placeholder="e.g., 1st Artillery Regiment" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="artilleryCode">Unit Code *</label>
+                                    <input type="text" class="form-control" id="artilleryCode" required 
+                                           value="@(Model.ExistingArtillery?.UnitCode ?? "")" 
+                                           placeholder="e.g., 1ArR" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="artilleryStrength">Strength (Personnel) *</label>
+                                    <input type="number" class="form-control" id="artilleryStrength" required 
+                                           value="@(Model.ExistingArtillery?.Strength ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="artilleryBatteries">Batteries</label>
+                                    <input type="number" class="form-control" id="artilleryBatteries" 
+                                           value="@(Model.ExistingArtillery?.Batteries ?? 0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="artilleryDescription">Description</label>
+                                    <textarea class="form-control" id="artilleryDescription" rows="2" 
+                                              placeholder="Brief description of the artillery regiment">@(Model.ExistingArtillery?.Description ?? "")</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Artillery Systems -->
+                    <div class="unit-section">
+                        <h6>Artillery Systems</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="artilleryGuns">Number of Guns</label>
+                                    <input type="number" class="form-control" id="artilleryGuns" 
+                                           value="@(Model.ExistingArtillery?.Guns ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="artilleryGunRange">Gun Range (km)</label>
+                                    <input type="number" step="0.1" class="form-control" id="artilleryGunRange" 
+                                           value="@(Model.ExistingArtillery?.GunRange ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="artilleryGunCaliber">Gun Caliber</label>
+                                    <input type="text" class="form-control" id="artilleryGunCaliber" 
+                                           value="@(Model.ExistingArtillery?.GunCaliber ?? "155mm SP")" 
+                                           placeholder="e.g., 155mm SP, 105mm" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="artilleryHMG">HMG (Heavy Machine Guns)</label>
+                                    <input type="number" class="form-control" id="artilleryHMG" 
+                                           value="@(Model.ExistingArtillery?.HMG ?? 0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Drone Systems -->
+                    <div class="unit-section">
+                        <h6>Drone Systems</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="artilleryDrones">Number of Drones</label>
+                                    <input type="number" class="form-control" id="artilleryDrones" 
+                                           value="@(Model.ExistingArtillery?.Drones ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="artilleryDroneTypes">Drone Types</label>
+                                    <input type="text" class="form-control" id="artilleryDroneTypes" 
+                                           value="@(Model.ExistingArtillery?.DroneTypes ?? "")" 
+                                           placeholder="e.g., Recon, Surveillance, Fire Control" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="unit-footer">
+                        <button type="button" class="btn btn-success" onclick="saveArtilleryRegiment()">
+                            <i class="fas fa-save"></i> Save Artillery Regiment
+                        </button>
+                        @if (Model.ExistingArtillery != null)
+                        {
+                            <button type="button" class="btn btn-danger" onclick="deleteArtilleryRegiment()">
+                                <i class="fas fa-trash"></i> Delete Unit
+                            </button>
+                        }
+                    </div>
+                </form>
+            </div>
+
+            <!-- Intelligence Tab -->
+            <div id="intelligence-tab" class="unit-tab-content">
+                <div class="unit-header">
+                    <h5><i class="fas fa-eye"></i> Intelligence Data</h5>
+                    <span class="badge badge-info">Information & Intelligence Reports</span>
+                </div>
+
+                <!-- Add New Intelligence -->
+                <div class="unit-section">
+                    <h6>Add New Intelligence Report</h6>
+                    <form id="intelligenceForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="intelTitle">Title *</label>
+                                    <input type="text" class="form-control" id="intelTitle" required 
+                                           placeholder="e.g., Enemy Movement Spotted" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="intelSource">Source</label>
+                                    <input type="text" class="form-control" id="intelSource" 
+                                           placeholder="e.g., Drone Surveillance, Human Intelligence" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="intelPriority">Priority *</label>
+                                    <select class="form-control" id="intelPriority" required>
+                                        <option value="">Select Priority</option>
+                                        <option value="High">High Priority</option>
+                                        <option value="Medium">Medium Priority</option>
+                                        <option value="Low">Low Priority</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="intelDescription">Description *</label>
+                                    <textarea class="form-control" id="intelDescription" rows="3" required
+                                              placeholder="Detailed intelligence information..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="unit-footer">
+                            <button type="button" class="btn btn-success" onclick="saveIntelligence()">
+                                <i class="fas fa-save"></i> Save Intelligence Report
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Existing Intelligence List -->
+                <div class="unit-section">
+                    <h6>Existing Intelligence Reports (@(Model.ExistingIntelligence?.Count ?? 0))</h6>
+                    @if (Model.ExistingIntelligence != null && Model.ExistingIntelligence.Any())
+                    {
+                        <div class="intelligence-list">
+                            @foreach (var intel in Model.ExistingIntelligence)
+                            {
+                                <div class="intelligence-item" data-intel-id="@intel.Id">
+                                    <div class="intel-header">
+                                        <h6>@intel.Title</h6>
+                                        <span class="badge badge-@(intel.Priority.ToLower() == "high" ? "danger" : intel.Priority.ToLower() == "medium" ? "warning" : "secondary")">
+                                            @intel.Priority Priority
+                                        </span>
+                                        <small class="text-muted">@intel.CreatedDate.ToString("yyyy-MM-dd HH:mm")</small>
+                                    </div>
+                                    <p><strong>Source:</strong> @intel.Source</p>
+                                    <p>@intel.Description</p>
+                                    <div class="intel-actions">
+                                        <button type="button" class="btn btn-sm btn-primary" onclick="editIntelligence('@intel.Id')">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteIntelligence('@intel.Id')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No intelligence reports yet. Add one above.</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Reconnaissance Tab -->
+            <div id="recon-tab" class="unit-tab-content">
+                <div class="unit-header">
+                    <h5><i class="fas fa-binoculars"></i> Reconnaissance Data</h5>
+                    <span class="badge badge-info">Reconnaissance & Surveillance Reports</span>
+                </div>
+
+                <!-- Add New Recon -->
+                <div class="unit-section">
+                    <h6>Add New Reconnaissance Report</h6>
+                    <form id="reconForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="reconType">Reconnaissance Type *</label>
+                                    <select class="form-control" id="reconType" required>
+                                        <option value="">Select Type</option>
+                                        <option value="Drone Surveillance">Drone Surveillance</option>
+                                        <option value="Ground Patrol">Ground Patrol</option>
+                                        <option value="Air Reconnaissance">Air Reconnaissance</option>
+                                        <option value="Electronic Surveillance">Electronic Surveillance</option>
+                                        <option value="Human Intelligence">Human Intelligence</option>
+                                        <option value="Signal Intelligence">Signal Intelligence</option>
+                                        <option value="Visual Observation">Visual Observation</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="reconLocation">Location</label>
+                                    <input type="text" class="form-control" id="reconLocation" 
+                                           placeholder="e.g., Grid 12345, Sector Alpha" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="reconConfidence">Confidence Level *</label>
+                                    <select class="form-control" id="reconConfidence" required>
+                                        <option value="">Select Confidence</option>
+                                        <option value="High">High Confidence</option>
+                                        <option value="Medium">Medium Confidence</option>
+                                        <option value="Low">Low Confidence</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="reconDescription">Reconnaissance Details *</label>
+                                    <textarea class="form-control" id="reconDescription" rows="3" required
+                                              placeholder="Detailed reconnaissance findings..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="unit-footer">
+                            <button type="button" class="btn btn-success" onclick="saveReconnaissance()">
+                                <i class="fas fa-save"></i> Save Reconnaissance Report
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Existing Recon List -->
+                <div class="unit-section">
+                    <h6>Existing Reconnaissance Reports (@(Model.ExistingRecon?.Count ?? 0))</h6>
+                    @if (Model.ExistingRecon != null && Model.ExistingRecon.Any())
+                    {
+                        <div class="recon-list">
+                            @foreach (var recon in Model.ExistingRecon)
+                            {
+                                <div class="recon-item" data-recon-id="@recon.Id">
+                                    <div class="recon-header">
+                                        <h6>@recon.ReconType</h6>
+                                        <span class="badge badge-@(recon.Confidence.ToLower() == "high" ? "success" : recon.Confidence.ToLower() == "medium" ? "warning" : "secondary")">
+                                            @recon.Confidence Confidence
+                                        </span>
+                                        <small class="text-muted">@recon.CreatedDate.ToString("yyyy-MM-dd HH:mm")</small>
+                                    </div>
+                                    <p><strong>Location:</strong> @recon.Location</p>
+                                    <p>@recon.Description</p>
+                                    <div class="recon-actions">
+                                        <button type="button" class="btn btn-sm btn-primary" onclick="editReconnaissance('@recon.Id')">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteReconnaissance('@recon.Id')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No reconnaissance reports yet. Add one above.</p>
+                    }
+                </div>
+            </div>
+        </div>
+        
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn gameplay-btn-success" onclick="closeUnitsDataEntryModal()">
+                <i class="fas fa-check"></i> Done Adding Units
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.large-modal {
+    max-width: 1400px;
+    width: 95%;
+    max-height: 90vh;
+}
+
+.gameplay-modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.brigade-info-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.brigade-display {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.token-preview-image {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 2px solid #007bff;
+}
+
+.token-preview-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    border: 2px solid #007bff;
+}
+
+.brigade-details h4 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.unit-tabs {
+    display: flex;
+    gap: 5px;
+    margin: 20px 0 10px 0;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.unit-tab {
+    padding: 12px 20px;
+    border: none;
+    background: #f8f9fa;
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+    font-weight: 500;
+    position: relative;
+}
+
+.unit-tab.active {
+    background: #007bff;
+    color: white;
+}
+
+.unit-tab:not(.active):hover {
+    background: #e9ecef;
+}
+
+.unit-status {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #28a745;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.unit-tab-content {
+    display: none;
+    padding: 25px;
+    background: white;
+    border-radius: 0 8px 8px 8px;
+}
+
+.unit-tab-content.active {
+    display: block;
+}
+
+.unit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.unit-header h5 {
+    margin: 0;
+    color: #495057;
+}
+
+.unit-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.unit-section h6 {
+    color: #6c757d;
+    font-weight: 600;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+.unit-footer {
+    text-align: center;
+    padding: 20px;
+    border-top: 2px solid #e9ecef;
+    margin-top: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.gameplay-btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.gameplay-btn-success:hover {
+    background: #218838;
+}
+
+/* Intelligence and Recon specific styles */
+.intelligence-list, .recon-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.intelligence-item, .recon-item {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.intel-header, .recon-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.intel-header h6, .recon-header h6 {
+    margin: 0;
+    color: #495057;
+}
+
+.intel-actions, .recon-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.badge-warning {
+    background: #ffc107;
+    color: #212529;
+}
+
+.badge-success {
+    background: #28a745;
+    color: white;
+}
+
+.badge-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.badge-info {
+    background: #17a2b8;
+    color: white;
+}
+</style>
+
+<script>
+// Close units data entry modal
+function closeUnitsDataEntryModal() {
+    console.log('🔒 Closing units data entry modal');
+    document.getElementById('unitsDataEntryModal').style.display = 'none';
+}
+
+// Show different unit tabs
+function showUnitTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.unit-tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Remove active class from all tabs
+    document.querySelectorAll('.unit-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Show selected tab content
+    document.getElementById(tabName + '-tab').classList.add('active');
+    
+    // Activate clicked tab
+    event.target.classList.add('active');
+}
+
+// Save Infantry Battalion
+function saveInfantryBattalion() {
+    console.log('💾 Saving Infantry Battalion...');
+    
+    const infantryData = {
+        id: document.getElementById('infantryId').value || null,
+        brigadeId: document.getElementById('brigadeId').value,
+        tokenId: document.getElementById('tokenId').value,
+        teamId: document.getElementById('teamId').value,
+        forceType: document.getElementById('forceType').value,
+        name: document.getElementById('infantryName').value,
+        unitCode: document.getElementById('infantryCode').value,
+        strength: parseInt(document.getElementById('infantryStrength').value) || 0,
+        companies: parseInt(document.getElementById('infantryCompanies').value) || 0,
+        description: document.getElementById('infantryDescription').value,
+        atgms: parseInt(document.getElementById('infantryATGMS').value) || 0,
+        rocketLauncher: parseInt(document.getElementById('infantryRocketLauncher').value) || 0,
+        grenadeLaunchers: parseInt(document.getElementById('infantryGrenadeLaunchers').value) || 0,
+        mortars81mm: parseInt(document.getElementById('infantryMortars81mm').value) || 0,
+        mortars120mm: parseInt(document.getElementById('infantryMortars120mm').value) || 0,
+        grenades: parseInt(document.getElementById('infantryGrenades').value) || 0,
+        hmg_AGL: parseInt(document.getElementById('infantryHMG_AGL').value) || 0,
+        mg_LMG: parseInt(document.getElementById('infantryMG_LMG').value) || 0,
+        manpads: parseInt(document.getElementById('infantryMANPADS').value) || 0,
+        drones: parseInt(document.getElementById('infantryDrones').value) || 0,
+        droneTypes: document.getElementById('infantryDroneTypes').value,
+        marchingSpeedTrucksRoads: parseFloat(document.getElementById('infantryMarchingSpeedTrucksRoads').value) || 30,
+        marchingSpeedAPCs: parseFloat(document.getElementById('infantryMarchingSpeedAPCs').value) || 20,
+        marchingSpeedCrossCountry: parseFloat(document.getElementById('infantryMarchingSpeedCrossCountry').value) || 5,
+        marchingSpeedAPCsCrossCountry: parseFloat(document.getElementById('infantryMarchingSpeedAPCsCrossCountry').value) || 10,
+        combatAdvanceSpeed: parseFloat(document.getElementById('infantryCombatAdvanceSpeed').value) || 1
+    };
+    
+    // Validation
+    if (!infantryData.name || !infantryData.unitCode) {
+        alert('Please fill in Battalion Name and Unit Code');
+        return;
+    }
+    
+    // Save via AJAX
+    saveUnit('infantry', infantryData, 'Infantry Battalion');
+}
+
+// Save Armoured Regiment
+function saveArmouredRegiment() {
+    console.log('💾 Saving Armoured Regiment...');
+    
+    const armouredData = {
+        id: document.getElementById('armouredId').value || null,
+        brigadeId: document.getElementById('brigadeId').value,
+        tokenId: document.getElementById('tokenId').value,
+        teamId: document.getElementById('teamId').value,
+        forceType: document.getElementById('forceType').value,
+        name: document.getElementById('armouredName').value,
+        unitCode: document.getElementById('armouredCode').value,
+        strength: parseInt(document.getElementById('armouredStrength').value) || 0,
+        squadrons: parseInt(document.getElementById('armouredSquadrons').value) || 0,
+        description: document.getElementById('armouredDescription').value,
+        tanks: parseInt(document.getElementById('armouredTanks').value) || 0,
+        atgms: parseInt(document.getElementById('armouredATGMS').value) || 0,
+        mortars120mm: parseInt(document.getElementById('armouredMortars120mm').value) || 0,
+        hmg: parseInt(document.getElementById('armouredHMG').value) || 0,
+        drones: parseInt(document.getElementById('armouredDrones').value) || 0,
+        droneTypes: document.getElementById('armouredDroneTypes').value,
+        marchingSpeedRoads: parseFloat(document.getElementById('armouredMarchingSpeedRoads').value) || 15,
+        marchingSpeedCrossCountry: parseFloat(document.getElementById('armouredMarchingSpeedCrossCountry').value) || 10,
+        combatAdvanceSpeed: parseFloat(document.getElementById('armouredCombatAdvanceSpeed').value) || 1
+    };
+    
+    // Validation
+    if (!armouredData.name || !armouredData.unitCode) {
+        alert('Please fill in Regiment Name and Unit Code');
+        return;
+    }
+    
+    // Save via AJAX
+    saveUnit('armoured', armouredData, 'Armoured Regiment');
+}
+
+// Save Artillery Regiment
+function saveArtilleryRegiment() {
+    console.log('💾 Saving Artillery Regiment...');
+    
+    const artilleryData = {
+        id: document.getElementById('artilleryId').value || null,
+        brigadeId: document.getElementById('brigadeId').value,
+        tokenId: document.getElementById('tokenId').value,
+        teamId: document.getElementById('teamId').value,
+        forceType: document.getElementById('forceType').value,
+        name: document.getElementById('artilleryName').value,
+        unitCode: document.getElementById('artilleryCode').value,
+        strength: parseInt(document.getElementById('artilleryStrength').value) || 0,
+        batteries: parseInt(document.getElementById('artilleryBatteries').value) || 0,
+        description: document.getElementById('artilleryDescription').value,
+        guns: parseInt(document.getElementById('artilleryGuns').value) || 0,
+        gunRange: parseFloat(document.getElementById('artilleryGunRange').value) || 0,
+        gunCaliber: document.getElementById('artilleryGunCaliber').value,
+        hmg: parseInt(document.getElementById('artilleryHMG').value) || 0,
+        drones: parseInt(document.getElementById('artilleryDrones').value) || 0,
+        droneTypes: document.getElementById('artilleryDroneTypes').value
+    };
+    
+    // Validation
+    if (!artilleryData.name || !artilleryData.unitCode) {
+        alert('Please fill in Regiment Name and Unit Code');
+        return;
+    }
+    
+    // Save via AJAX
+    saveUnit('artillery', artilleryData, 'Artillery Regiment');
+}
+
+// Save Intelligence Report
+function saveIntelligence() {
+    console.log('💾 Saving Intelligence Report...');
+    
+    const intelData = {
+        tokenId: document.getElementById('tokenId').value,
+        title: document.getElementById('intelTitle').value,
+        source: document.getElementById('intelSource').value,
+        priority: document.getElementById('intelPriority').value,
+        description: document.getElementById('intelDescription').value
+    };
+    
+    // Validation
+    if (!intelData.title || !intelData.priority || !intelData.description) {
+        alert('Please fill in Title, Priority, and Description');
+        return;
+    }
+    
+    $("#loading").show();
+    
+    $.ajax({
+        url: '/DataManagement/CreateTokenIntelligence',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(intelData),
+        success: function(response) {
+            console.log('✅ Intelligence saved successfully:', response);
+            
+            if (response.success) {
+                alert('Intelligence report saved successfully!');
+                
+                // Clear the form
+                document.getElementById('intelligenceForm').reset();
+                
+                // Update the tab counter
+                const tab = document.querySelector(`[onclick="showUnitTab('intelligence')"]`);
+                if (tab) {
+                    const statusSpan = tab.querySelector('.unit-status');
+                    if (statusSpan) {
+                        const currentCount = parseInt(statusSpan.textContent) || 0;
+                        statusSpan.textContent = currentCount + 1;
+                    } else {
+                        tab.innerHTML += '<span class="unit-status saved">1</span>';
+                    }
+                }
+                
+                // Suggest refreshing to see the new data
+                if (confirm('Intelligence saved! Would you like to refresh the form to see all reports?')) {
+                    location.reload();
+                }
+            } else {
+                alert('Error saving intelligence: ' + response.message);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('❌ Error saving intelligence:', error);
+            alert('Error saving intelligence. Please try again.');
+        },
+        complete: function() {
+            $("#loading").hide();
+        }
+    });
+}
+
+// Save Reconnaissance Report
+function saveReconnaissance() {
+    console.log('💾 Saving Reconnaissance Report...');
+    
+    const reconData = {
+        tokenId: document.getElementById('tokenId').value,
+        reconType: document.getElementById('reconType').value,
+        location: document.getElementById('reconLocation').value,
+        confidence: document.getElementById('reconConfidence').value,
+        description: document.getElementById('reconDescription').value
+    };
+    
+    // Validation
+    if (!reconData.reconType || !reconData.confidence || !reconData.description) {
+        alert('Please fill in Reconnaissance Type, Confidence Level, and Details');
+        return;
+    }
+    
+    $("#loading").show();
+    
+    $.ajax({
+        url: '/DataManagement/CreateTokenRecon',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(reconData),
+        success: function(response) {
+            console.log('✅ Reconnaissance saved successfully:', response);
+            
+            if (response.success) {
+                alert('Reconnaissance report saved successfully!');
+                
+                // Clear the form
+                document.getElementById('reconForm').reset();
+                
+                // Update the tab counter
+                const tab = document.querySelector(`[onclick="showUnitTab('recon')"]`);
+                if (tab) {
+                    const statusSpan = tab.querySelector('.unit-status');
+                    if (statusSpan) {
+                        const currentCount = parseInt(statusSpan.textContent) || 0;
+                        statusSpan.textContent = currentCount + 1;
+                    } else {
+                        tab.innerHTML += '<span class="unit-status saved">1</span>';
+                    }
+                }
+                
+                // Suggest refreshing to see the new data
+                if (confirm('Reconnaissance saved! Would you like to refresh the form to see all reports?')) {
+                    location.reload();
+                }
+            } else {
+                alert('Error saving reconnaissance: ' + response.message);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('❌ Error saving reconnaissance:', error);
+            alert('Error saving reconnaissance. Please try again.');
+        },
+        complete: function() {
+            $("#loading").hide();
+        }
+    });
+}
+
+// Generic save unit function
+function saveUnit(unitType, unitData, unitDisplayName) {
+    $("#loading").show();
+    
+    const isUpdate = unitData.id && unitData.id !== '';
+    const endpoint = `/DataManagement/${isUpdate ? 'Update' : 'Create'}${unitType.charAt(0).toUpperCase() + unitType.slice(1)}Unit`;
+    
+    $.ajax({
+        url: endpoint,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(unitData),
+        success: function(response) {
+            console.log(`✅ ${unitDisplayName} saved successfully:`, response);
+            
+            if (response.success) {
+                alert(`${unitDisplayName} saved successfully!`);
+                
+                // Update the tab to show saved status
+                const tab = document.querySelector(`[onclick="showUnitTab('${unitType}')"]`);
+                if (tab && !tab.querySelector('.unit-status')) {
+                    tab.innerHTML += '<span class="unit-status saved">✓</span>';
+                }
+                
+                // If it was a new unit, update the hidden ID field
+                if (!isUpdate && response.unitId) {
+                    document.getElementById(unitType + 'Id').value = response.unitId;
+                }
+            } else {
+                alert(`Error saving ${unitDisplayName}: ` + response.message);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error(`❌ Error saving ${unitDisplayName}:`, error);
+            alert(`Error saving ${unitDisplayName}. Please try again.`);
+        },
+        complete: function() {
+            $("#loading").hide();
+        }
+    });
+}
+</script>

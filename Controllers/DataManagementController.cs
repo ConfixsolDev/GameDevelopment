@@ -645,19 +645,22 @@ namespace TechWebSol.Controllers
 
                 var infantryTask = _context.InfantryBattalions
                     .Where(b => b.TeamId == user.TeamId && b.IsActive)
+                        .OrderBy(b => b.Name)
                     .ToList();
 
                 var armouredTask = _context.ArmouredRegiments
                     .Where(r => r.TeamId == user.TeamId && r.IsActive)
+                        .OrderBy(b => b.Name)
                     .ToList();
 
                 var artilleryTask = _context.ArtilleryRegiments
                     .Where(r => r.TeamId == user.TeamId && r.IsActive)
+                        .OrderBy(b => b.Name)
                     .ToList();
 
                 var intelTask = _context.Intelligence
                     .Where(i => i.TokenId == tokenId && i.TeamId == user.TeamId && i.IsActive)
-                    .OrderByDescending(i => i.Timestamp)
+                    .OrderByDescending(i => i.CreatedDate)
                     .ToList();
 
                 var reconTask = _context.Recon
@@ -1472,6 +1475,453 @@ namespace TechWebSol.Controllers
 
         #endregion
 
+     
+        /// <summary>
+        /// Returns the data entry form modal for a specific token
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> TokenDataEntryForm(Guid tokenId)
+        {
+            try
+            {
+                var token = await _context.Tokens
+                    .Include(t => t.TokenGroup)
+                    .FirstOrDefaultAsync(t => t.Id == tokenId && t.TeamId == user.TeamId && t.IsActive);
+
+                if (token == null)
+                {
+                    return PartialView("Partials/_ErrorPartial", new { Message = "Token not found or not accessible" });
+                }
+
+                // Check if token already has brigade data
+                var existingBrigade = await _context.Brigades
+                    .Include(b => b.InfantryBattalions)
+                    .Include(b => b.ArmouredRegiments)
+                    .Include(b => b.ArtilleryRegiments)
+                    .FirstOrDefaultAsync(b => b.TokenId == tokenId && b.TeamId == user.TeamId && b.IsActive);
+
+                var viewModel = new TokenDataEntryViewModel
+                {
+                    Token = token,
+                    ExistingBrigade = existingBrigade,
+                    AvailableBrigades = await _context.Brigades
+                        .Where(b => b.TeamId == user.TeamId && b.IsActive && b.TokenId == null)
+                        .OrderBy(b => b.Name)
+                        .ToListAsync()
+                };
+
+                return PartialView("Partials/_TokenDataEntryForm", viewModel);
+            }
+            catch (Exception ex)
+            {
+                return PartialView("Partials/_ErrorPartial", new { Message = "Error loading data entry form" });
+            }
+        }
+
+        /// <summary>
+        /// Returns the units data entry form for a specific brigade
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> UnitsDataEntryForm(Guid tokenId, Guid brigadeId)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) 
+                {
+                    return PartialView("Partials/_ErrorPartial", new { Message = "User not authenticated" });
+                }
+
+                // Get the token details
+                var token = await _context.Tokens
+                    .Include(t => t.TokenGroup)
+                    .FirstOrDefaultAsync(t => t.Id == tokenId && t.TeamId == user.TeamId && t.IsActive);
+
+                if (token == null)
+                {
+                    return PartialView("Partials/_ErrorPartial", new { Message = "Token not found or not accessible" });
+                }
+
+                // Get the brigade details
+                var brigade = await _context.Brigades
+                    .FirstOrDefaultAsync(b => b.Id == brigadeId && b.TeamId == user.TeamId && b.IsActive);
+
+                if (brigade == null)
+                {
+                    return PartialView("Partials/_ErrorPartial", new { Message = "Brigade not found or not accessible" });
+                }
+
+                // Get existing units for this brigade
+                var existingInfantry = await _context.InfantryBattalions
+                    .FirstOrDefaultAsync(i => i.BrigadeId == brigadeId && i.IsActive);
+
+                var existingArmoured = await _context.ArmouredRegiments
+                    .FirstOrDefaultAsync(a => a.BrigadeId == brigadeId && a.IsActive);
+
+                var existingArtillery = await _context.ArtilleryRegiments
+                    .FirstOrDefaultAsync(ar => ar.BrigadeId == brigadeId && ar.IsActive);
+
+                // Get existing Intelligence and Recon data for this token
+                var existingIntelligence = await _context.Intelligence
+                    .Where(i => i.TokenId == tokenId && i.TeamId == user.TeamId && i.IsActive)
+                    .OrderByDescending(i => i.CreatedDate)
+                    .ToListAsync();
+
+                var existingRecon = await _context.Recon
+                    .Where(r => r.TokenId == tokenId && r.TeamId == user.TeamId && r.IsActive)
+                    .OrderByDescending(r => r.CreatedDate)
+                    .ToListAsync();
+
+                var viewModel = new UnitsDataEntryViewModel
+                {
+                    Token = token,
+                    Brigade = brigade,
+                    ExistingInfantry = existingInfantry,
+                    ExistingArmoured = existingArmoured,
+                    ExistingArtillery = existingArtillery,
+                    ExistingIntelligence = existingIntelligence,
+                    ExistingRecon = existingRecon
+                };
+
+                return PartialView("Partials/_UnitsDataEntryForm", viewModel);
+            }
+            catch (Exception ex)
+            {
+                return PartialView("Partials/_ErrorPartial", new { Message = "Error loading units form" });
+            }
+        }
+
+        /// <summary>
+        /// Returns the new brigade creation form for a specific token
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> NewBrigadeDataEntryForm(Guid tokenId)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) 
+                {
+                    return PartialView("Partials/_ErrorPartial", new { Message = "User not authenticated" });
+                }
+
+                // Get the token details
+                var token = await _context.Tokens
+                    .Include(t => t.TokenGroup)
+                    .FirstOrDefaultAsync(t => t.Id == tokenId && t.TeamId == user.TeamId && t.IsActive);
+
+                if (token == null)
+                {
+                    return PartialView("Partials/_ErrorPartial", new { Message = "Token not found or not accessible" });
+                }
+
+                var viewModel = new NewBrigadeDataEntryViewModel
+                {
+                    Token = token,
+                    Brigade = new Brigade 
+                    { 
+                        TokenId = tokenId,
+                        TeamId = user.TeamId,
+                        ForceType = "Blue" // Default, can be changed
+                    },
+                    InfantryBattalion = new InfantryBattalion 
+                    { 
+                        TokenId = tokenId,
+                        TeamId = user.TeamId,
+                        ForceType = "Blue"
+                    },
+                    ArmouredRegiment = new ArmouredRegiment 
+                    { 
+                        TokenId = tokenId,
+                        TeamId = user.TeamId,
+                        ForceType = "Blue"
+                    },
+                    ArtilleryRegiment = new ArtilleryRegiment 
+                    { 
+                        TokenId = tokenId,
+                        TeamId = user.TeamId,
+                        ForceType = "Blue"
+                    }
+                };
+
+                return PartialView("Partials/_NewBrigadeDataEntryForm", viewModel);
+            }
+            catch (Exception ex)
+            {
+                return PartialView("Partials/_ErrorPartial", new { Message = "Error loading new brigade form" });
+            }
+        }
+
+        /// <summary>
+        /// Create a new brigade only (without units) for a token
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> CreateTokenBrigade([FromBody] CreateBrigadeOnlyRequest request)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                {
+                    return Json(new { success = false, message = "User not authenticated" });
+                }
+
+                // Create the brigade
+                var brigade = new Brigade
+                {
+                    Id = Guid.NewGuid(),
+                    Name = request.BrigadeName,
+                    BrigadeCode = request.BrigadeCode,
+                    Description = request.BrigadeDescription,
+                    ForceType = request.ForceType,
+                    TokenId = request.TokenId,
+                    TeamId = request.TeamId,
+                    CreatedBy = user.FullName,
+                    CreatedDate = DateTime.UtcNow,
+                    IsActive = true
+                };
+
+                _context.Brigades.Add(brigade);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Brigade created successfully", brigadeId = brigade.Id });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error creating brigade: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Create a new brigade with all units for a token (legacy - replaced by separate approach)
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> CreateTokenBrigadeWithUnits([FromBody] CreateTokenBrigadeRequest request)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                {
+                    return Json(new { success = false, message = "User not authenticated" });
+                }
+
+                // Create the brigade
+                var brigade = new Brigade
+                {
+                    Id = Guid.NewGuid(),
+                    Name = request.BrigadeName,
+                    BrigadeCode = request.BrigadeCode,
+                    Description = request.BrigadeDescription,
+                    ForceType = request.ForceType,
+                    TokenId = request.TokenId,
+                    TeamId = request.TeamId,
+                    CreatedBy = user.FullName,
+                    CreatedDate = DateTime.UtcNow,
+                    IsActive = true
+                };
+
+                _context.Brigades.Add(brigade);
+
+                // Create Infantry Battalion if data provided
+                if (!string.IsNullOrEmpty(request.InfantryName))
+                {
+                    var infantry = new InfantryBattalion
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = request.InfantryName,
+                        UnitCode = request.InfantryCode,
+                        Description = request.InfantryDescription,
+                        Strength = request.InfantryStrength,
+                        ForceType = request.ForceType,
+                        BrigadeId = brigade.Id,
+                        TokenId = request.TokenId,
+                        TeamId = request.TeamId,
+                        Companies = request.InfantryCompanies,
+                        ATGMS = request.InfantryATGMS,
+                        RocketLauncher = request.InfantryRocketLauncher,
+                        Mortars81mm = request.InfantryMortars81mm,
+                        Mortars120mm = request.InfantryMortars120mm,
+                        GrenadeLaunchers = request.InfantryGrenadeLaunchers,
+                        HMG_AGL = request.InfantryHMG_AGL,
+                        MG_LMG = request.InfantryMG_LMG,
+                        MANPADS = request.InfantryMANPADS,
+                        Grenades = request.InfantryGrenades,
+                        Drones = request.InfantryDrones,
+                        DroneTypes = request.InfantryDroneTypes,
+                        CreatedBy = user.FullName,
+                        CreatedDate = DateTime.UtcNow,
+                        IsActive = true
+                    };
+                    _context.InfantryBattalions.Add(infantry);
+                }
+
+                // Create Armoured Regiment if data provided
+                if (!string.IsNullOrEmpty(request.ArmouredName))
+                {
+                    var armoured = new ArmouredRegiment
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = request.ArmouredName,
+                        UnitCode = request.ArmouredCode,
+                        Description = request.ArmouredDescription,
+                        Strength = request.ArmouredStrength,
+                        ForceType = request.ForceType,
+                        BrigadeId = brigade.Id,
+                        TokenId = request.TokenId,
+                        TeamId = request.TeamId,
+                        Squadrons = request.ArmouredSquadrons,
+                        Tanks = request.ArmouredTanks,
+                        ATGMS = request.ArmouredATGMS,
+                        Mortars120mm = request.ArmouredMortars120mm,
+                        HMG = request.ArmouredHMG,
+                        Drones = request.ArmouredDrones,
+                        DroneTypes = request.ArmouredDroneTypes,
+                        CreatedBy = user.FullName,
+                        CreatedDate = DateTime.UtcNow,
+                        IsActive = true
+                    };
+                    _context.ArmouredRegiments.Add(armoured);
+                }
+
+                // Create Artillery Regiment if data provided
+                if (!string.IsNullOrEmpty(request.ArtilleryName))
+                {
+                    var artillery = new ArtilleryRegiment
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = request.ArtilleryName,
+                        UnitCode = request.ArtilleryCode,
+                        Description = request.ArtilleryDescription,
+                        Strength = request.ArtilleryStrength,
+                        ForceType = request.ForceType,
+                        BrigadeId = brigade.Id,
+                        TokenId = request.TokenId,
+                        TeamId = request.TeamId,
+                        Batteries = request.ArtilleryBatteries,
+                        Guns = request.ArtilleryGuns,
+                        GunRange = request.ArtilleryGunRange,
+                        GunCaliber = request.ArtilleryGunCaliber,
+                        HMG = request.ArtilleryHMG,
+                        Drones = request.ArtilleryDrones,
+                        DroneTypes = request.ArtilleryDroneTypes,
+                        CreatedBy = user.FullName,
+                        CreatedDate = DateTime.UtcNow,
+                        IsActive = true
+                    };
+                    _context.ArtilleryRegiments.Add(artillery);
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Brigade and units created successfully", brigadeId = brigade.Id });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error creating brigade: " + ex.Message });
+            }
+        }
+
+        public class CreateBrigadeOnlyRequest
+        {
+            public Guid TokenId { get; set; }
+            public Guid TeamId { get; set; }
+            public string BrigadeName { get; set; }
+            public string BrigadeCode { get; set; }
+            public string BrigadeDescription { get; set; }
+            public string ForceType { get; set; }
+        }
+
+        public class CreateTokenBrigadeRequest
+        {
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public Guid TokenId { get; set; }
+            public Guid TeamId { get; set; }
+            
+            // Brigade data
+            public string BrigadeName { get; set; }
+            public string BrigadeCode { get; set; }
+            public string BrigadeDescription { get; set; }
+            public string ForceType { get; set; }
+            
+            // Infantry data
+            public string InfantryName { get; set; }
+            public string InfantryCode { get; set; }
+            public string InfantryDescription { get; set; }
+            public int InfantryStrength { get; set; }
+            public int InfantryCompanies { get; set; }
+            public int InfantryATGMS { get; set; }
+            public int InfantryRocketLauncher { get; set; }
+            public int InfantryMortars81mm { get; set; }
+            public int InfantryMortars120mm { get; set; }
+            public int InfantryGrenadeLaunchers { get; set; }
+            public int InfantryHMG_AGL { get; set; }
+            public int InfantryMG_LMG { get; set; }
+            public int InfantryMANPADS { get; set; }
+            public int InfantryGrenades { get; set; }
+            public int InfantryDrones { get; set; }
+            public string InfantryDroneTypes { get; set; }
+            
+            // Armoured data
+            public string ArmouredName { get; set; }
+            public string ArmouredCode { get; set; }
+            public string ArmouredDescription { get; set; }
+            public int ArmouredStrength { get; set; }
+            public int ArmouredSquadrons { get; set; }
+            public int ArmouredTanks { get; set; }
+            public int ArmouredATGMS { get; set; }
+            public int ArmouredMortars120mm { get; set; }
+            public int ArmouredHMG { get; set; }
+            public int ArmouredDrones { get; set; }
+            public string ArmouredDroneTypes { get; set; }
+            
+            // Artillery data
+            public string ArtilleryName { get; set; }
+            public string ArtilleryCode { get; set; }
+            public string ArtilleryDescription { get; set; }
+            public int ArtilleryStrength { get; set; }
+            public int ArtilleryBatteries { get; set; }
+            public int ArtilleryGuns { get; set; }
+            public decimal ArtilleryGunRange { get; set; }
+            public string ArtilleryGunCaliber { get; set; }
+            public int ArtilleryHMG { get; set; }
+            public int ArtilleryDrones { get; set; }
+            public string ArtilleryDroneTypes { get; set; }
+        }
+
+        public class LinkBrigadeToTokenRequest
+        {
+            public Guid TokenId { get; set; }
+            public Guid BrigadeId { get; set; }
+        }
+
+        public class TokenDataEntryViewModel
+        {
+            public Token Token { get; set; }
+            public Brigade ExistingBrigade { get; set; }
+            public List<Brigade> AvailableBrigades { get; set; }
+        }
+
+        public class NewBrigadeDataEntryViewModel
+        {
+            public Token Token { get; set; }
+            public Brigade Brigade { get; set; }
+            public InfantryBattalion InfantryBattalion { get; set; }
+            public ArmouredRegiment ArmouredRegiment { get; set; }
+            public ArtilleryRegiment ArtilleryRegiment { get; set; }
+        }
+
+        public class UnitsDataEntryViewModel
+        {
+            public Token Token { get; set; }
+            public Brigade Brigade { get; set; }
+            public InfantryBattalion ExistingInfantry { get; set; }
+            public ArmouredRegiment ExistingArmoured { get; set; }
+            public ArtilleryRegiment ExistingArtillery { get; set; }
+            public List<Intelligence> ExistingIntelligence { get; set; }
+            public List<Recon> ExistingRecon { get; set; }
+        }
         // Request DTOs
         public class CreateBrigadeForTokenRequest
         {
@@ -1482,14 +1932,6 @@ namespace TechWebSol.Controllers
             public Guid TokenId { get; set; }
         }
 
-        public class CreateTokenBrigadeRequest
-        {
-            public string Name { get; set; }
-            public string Description { get; set; }
-            public string BrigadeCode { get; set; }
-            public string ForceType { get; set; }
-            public Guid TokenId { get; set; }
-        }
 
         public class CreateTokenInfantryBattalionRequest
         {
@@ -1581,10 +2023,5 @@ namespace TechWebSol.Controllers
             public Guid TokenId { get; set; }
         }
 
-        public class LinkBrigadeToTokenRequest
-        {
-            public Guid TokenId { get; set; }
-            public Guid BrigadeId { get; set; }
-        }
     }
 }

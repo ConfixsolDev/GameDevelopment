@@ -1,0 +1,282 @@
+@using static TechWebSol.Controllers.DataManagementController
+@model TokenDataEntryViewModel
+
+<!-- Token Data Entry Form Modal - Simple and Clean -->
+<div id="tokenDataEntryModal" class="gameplay-modal" style="display: none;">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-database"></i> Data Entry - @Model.Token.Name</h3>
+            <button class="gameplay-modal-close" onclick="closeTokenDataEntryModal()">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <div class="data-entry-container">
+                <!-- Token Information Display -->
+                <div class="token-info-section">
+                    <div class="token-display">
+                        @if (!string.IsNullOrEmpty(Model.Token.AssetImagePath))
+                        {
+                            <img src="@Model.Token.AssetImagePath" alt="@Model.Token.Name" class="token-preview-image">
+                        }
+                        else
+                        {
+                            <div class="token-preview-placeholder">
+                                <i class="fas fa-crosshairs"></i>
+                            </div>
+                        }
+                        <div class="token-details">
+                            <h4>@Model.Token.Name</h4>
+                            <p class="text-muted">@Model.Token.TokenGroup?.Name</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Entry Form -->
+                <div class="data-entry-form-section">
+                    @if (Model.ExistingBrigade != null)
+                    {
+                        <!-- Edit Existing Brigade Data -->
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> This token already has brigade data: <strong>@Model.ExistingBrigade.Name</strong>
+                        </div>
+                        
+                        <div class="brigade-data-form">
+                            <h5>Brigade Information</h5>
+                            <div class="form-group">
+                                <label>Brigade Name:</label>
+                                <input type="text" class="form-control" value="@Model.ExistingBrigade.Name" id="brigadeName" />
+                            </div>
+                            
+                            <!-- Infantry, Armoured, Artillery sections would go here -->
+                            <div class="data-entry-tabs">
+                                <button type="button" class="data-tab active" onclick="showDataTab('infantry')">Infantry</button>
+                                <button type="button" class="data-tab" onclick="showDataTab('armoured')">Armoured</button>
+                                <button type="button" class="data-tab" onclick="showDataTab('artillery')">Artillery</button>
+                            </div>
+                            
+                            <div id="infantry-data" class="data-tab-content active">
+                                <p>Infantry Battalion Data Entry (to be implemented)</p>
+                            </div>
+                            <div id="armoured-data" class="data-tab-content">
+                                <p>Armoured Regiment Data Entry (to be implemented)</p>
+                            </div>
+                            <div id="artillery-data" class="data-tab-content">
+                                <p>Artillery Regiment Data Entry (to be implemented)</p>
+                            </div>
+                        </div>
+                    }
+                    else if (Model.AvailableBrigades.Any())
+                    {
+                        <!-- Link to Existing Brigade -->
+                        <div class="alert alert-warning">
+                            <i class="fas fa-link"></i> Link this token to an existing brigade or create new brigade data.
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Select Existing Brigade:</label>
+                            <select class="form-control" id="brigadeSelector">
+                                <option value="">-- Select a Brigade --</option>
+                                @foreach (var brigade in Model.AvailableBrigades)
+                                {
+                                    <option value="@brigade.Id">@brigade.Name</option>
+                                }
+                            </select>
+                        </div>
+                        
+                        <div class="text-center mb-3">
+                            <button type="button" class="btn btn-primary" onclick="linkSelectedBrigade('@Model.Token.Id')">
+                                <i class="fas fa-link"></i> Link Brigade to Token
+                            </button>
+                        </div>
+                        
+                        <hr>
+                        <p class="text-center text-muted">OR</p>
+                        
+                        <div class="text-center">
+                            <button type="button" class="btn btn-success" onclick="createNewBrigadeData('@Model.Token.Id')">
+                                <i class="fas fa-plus"></i> Create New Brigade Data
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Create New Brigade -->
+                        <div class="alert alert-success">
+                            <i class="fas fa-plus"></i> Create new brigade data for this token.
+                        </div>
+                        
+                        <div class="text-center">
+                            <button type="button" class="btn btn-success" onclick="createNewBrigadeData('@Model.Token.Id')">
+                                <i class="fas fa-plus"></i> Create New Brigade Data
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeTokenDataEntryModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.token-info-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.token-display {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.token-preview-image {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 2px solid #007bff;
+}
+
+.token-preview-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    border: 2px solid #007bff;
+}
+
+.token-details h4 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.data-entry-tabs {
+    display: flex;
+    gap: 5px;
+    margin: 20px 0 10px 0;
+}
+
+.data-tab {
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    background: #f8f9fa;
+    cursor: pointer;
+    border-radius: 4px 4px 0 0;
+}
+
+.data-tab.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.data-tab-content {
+    display: none;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 0 4px 4px 4px;
+    background: white;
+}
+
+.data-tab-content.active {
+    display: block;
+}
+</style>
+
+<script>
+// Close token data entry modal
+function closeTokenDataEntryModal() {
+    console.log('🔒 Closing token data entry modal');
+    document.getElementById('tokenDataEntryModal').style.display = 'none';
+}
+
+// Show different data tabs
+function showDataTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.data-tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Remove active class from all tabs
+    document.querySelectorAll('.data-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Show selected tab content
+    document.getElementById(tabName + '-data').classList.add('active');
+    
+    // Activate clicked tab
+    event.target.classList.add('active');
+}
+
+// Link selected brigade to token
+function linkSelectedBrigade(tokenId) {
+    const brigadeId = document.getElementById('brigadeSelector').value;
+    if (!brigadeId) {
+        alert('Please select a brigade first');
+        return;
+    }
+    
+    console.log('🔗 Linking brigade', brigadeId, 'to token', tokenId);
+    // Implementation will be added later
+    alert('Brigade linking functionality to be implemented');
+}
+
+// Create new brigade data
+function createNewBrigadeData(tokenId) {
+    console.log('🆕 Creating new brigade data for token', tokenId);
+    
+    // Close current modal
+    closeTokenDataEntryModal();
+    
+    // Show loading
+    $("#loading").show();
+    
+    // Load the new brigade creation form via AJAX
+    $.ajax({
+        url: '/DataManagement/NewBrigadeDataEntryForm',
+        type: 'GET',
+        data: { tokenId: tokenId },
+        success: function(data) {
+            console.log('✅ New brigade form loaded for token:', tokenId);
+            
+            // Remove any existing new brigade modal
+            $('#newBrigadeDataEntryModal').remove();
+            
+            // Add the new modal to the body
+            $('body').append(data);
+            
+            // Show the modal
+            document.getElementById('newBrigadeDataEntryModal').style.display = 'flex';
+            
+            console.log('✅ New brigade form displayed successfully');
+        },
+        error: function(xhr, status, error) {
+            console.error('❌ Error loading new brigade form:', error);
+            console.error('   Status Code:', xhr.status);
+            console.error('   Response Text:', xhr.responseText);
+            
+            let errorMessage = 'Failed to load new brigade form';
+            if (xhr.status === 404) {
+                errorMessage = 'New brigade form not found (404)';
+            } else if (xhr.status === 500) {
+                errorMessage = 'Server error loading new brigade form (500)';
+            }
+            
+            alert(errorMessage);
+        },
+        complete: function() {
+            $("#loading").hide();
+        }
+    });
+}
+</script>

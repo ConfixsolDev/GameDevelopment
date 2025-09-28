@@ -435,15 +435,7 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                // Get user details from database to get TeamId
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == applicatonUser.ApplicationUserId);
-                if (user == null)
-                {
-                    return PartialView("Partials/_ErrorPartial", new { Message = "User not found" });
-                }
-
-                // Find the team by TeamCode and SubTeamCode
-                var team = await _context.Teams.FirstOrDefaultAsync(t => t.TeamId == user.TeamId);
+                var team = await _context.Teams.FirstOrDefaultAsync(t => t.Id == applicatonUser.TeamId);
                 if (team == null)
                 {
                     return PartialView("Partials/_ErrorPartial", new { Message = "Team not found" });

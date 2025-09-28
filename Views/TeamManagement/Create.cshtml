@@ -42,7 +42,7 @@
                                            pattern="^[A-Z0-9_]+$"
                                            title="Use only uppercase letters, numbers, and underscores (e.g., TEAM_A, BRIG_1)">
                                     <div class="form-text">Unique identifier (e.g., TEAM_A, BRIG_1)</div>
-                                    <div class="invalid-feedback">Team Code is required and must be A–Z, 0–9, or _ only.</div>
+                                    <div class="invalid-feedback">Team Code is required and must be Aï¿½Z, 0ï¿½9, or _ only.</div>
                                 </div>
                             </div>
                         </div>
@@ -59,7 +59,7 @@
                                            pattern="^[A-Z0-9_]*$"
                                            title="Use only uppercase letters, numbers, and underscores">
                                     <div class="form-text">Optional sub-team identifier</div>
-                                    <div class="invalid-feedback">Use only A–Z, 0–9, or _ for Sub Team Code.</div>
+                                    <div class="invalid-feedback">Use only Aï¿½Z, 0ï¿½9, or _ for Sub Team Code.</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -72,6 +72,33 @@
                                         <option value="Department">Department</option>
                                         <option value="Unit">Unit</option>
                                         <option value="Squad">Squad</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="teamTypeId" class="form-label">Team Type *</label>
+                                    <select class="form-control" 
+                                            id="teamTypeId" 
+                                            asp-for="TeamTypeId"
+                                            asp-items="@(ViewData["TeamTypeId"] as SelectList)"
+                                            required>
+                                        <option value="">-- Select Team Type --</option>
+                                    </select>
+                                    <div class="invalid-feedback">Please select a team type.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="forceType" class="form-label">Force Type</label>
+                                    <select class="form-control" id="forceType" name="ForceType">
+                                        <option value="">-- Select Force Type --</option>
+                                        <option value="Blueland">Blueland</option>
+                                        <option value="Foxland">Foxland</option>
+                                        <option value="Control">Control</option>
                                     </select>
                                 </div>
                             </div>

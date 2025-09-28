@@ -9,5 +9,6 @@
         public string SubTeamCode { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string TeamCategory { get; set; } = string.Empty;
+        public string ForceType { get; set; } = string.Empty;
     }
 }

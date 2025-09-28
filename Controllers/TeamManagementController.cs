@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using TechWebSol.Data;
 using TechWebSol.DTOs;
@@ -33,8 +34,10 @@ namespace TechWebSol.Controllers
         }
 
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            var teamTypes = await _context.TeamTypes.AsNoTracking().Select(tt => new { tt.Id, tt.Name }).ToListAsync();
+            ViewData["TeamTypeId"] = new SelectList(teamTypes, "Id", "Name");
             return View();
         }
 
@@ -79,8 +82,9 @@ namespace TechWebSol.Controllers
                     Description = request.Description,
                     IsActive = true,
                     CreatedBy = currentUser.FullName,
-                    Category=request.TeamCategory,
-                    TeamTypeId=request.TeamTypeId
+                    Category = request.TeamCategory,
+                    TeamTypeId = request.TeamTypeId,
+                    ForceType = request.ForceType
                 };
 
                 _context.Teams.Add(team);
@@ -264,8 +268,7 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var members = await _context.Users
-                    .Where(u => u.TeamId == teamId)
+                var members = await _context.Users.Include(x=>x.Team)                    .Where(u => u.TeamId == teamId)
                     .Select(u => new
                     {
                         id = u.Id,
@@ -273,8 +276,8 @@ namespace TechWebSol.Controllers
                         fullName = u.FullName,
                         email = u.Email,
                         teamId = u.TeamId,
-                        teamCode = u.TeamCode,
-                        subTeamCode = u.SubTeamCode,
+                        teamCode = u.Team.TeamCode,
+                        subTeamCode = u.Team.SubTeamCode,
                         assignedDate=u.AssignDate,
                     })
                     .ToListAsync();
@@ -311,10 +314,7 @@ namespace TechWebSol.Controllers
                 }
 
                 user.TeamId = request.TeamId;
-                user.TeamCode = team.TeamCode;
-                user.SubTeamCode = team.SubTeamCode;
                 user.AssignDate = DateTime.UtcNow;
-
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Assigned user {UserId} to team {TeamId} by user {CurrentUserId}", 
@@ -353,8 +353,6 @@ namespace TechWebSol.Controllers
 
                 // Unassign user from team
                 user.TeamId = null;
-                user.TeamCode = null;
-                user.SubTeamCode = null;
 
                 await _context.SaveChangesAsync();
 
@@ -386,8 +384,6 @@ namespace TechWebSol.Controllers
                         fullName = u.FullName,
                         email = u.Email,
                         teamId = u.TeamId,
-                        teamCode = u.TeamCode,
-                        subTeamCode = u.SubTeamCode,
                         isActive = u.IsActive
                     })
                     .ToListAsync();

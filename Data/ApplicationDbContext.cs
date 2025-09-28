@@ -462,7 +462,7 @@ namespace TechWebSol.Data
 
                             entry.Entity.CreatedDate = original.CreatedDate;
                             entry.Entity.CreatedBy = original.CreatedBy;
-                            entry.Entity.TeamId = original.TeamId;
+                            entry.Entity.TeamId = userDetails.TeamId;
                         }
                     }
                 }

@@ -26,6 +26,9 @@ namespace TechWebSol.Models
         [MaxLength(50)]
         public string? Category { get; set; } // e.g., "Company", "Brigade", "Department"
 
+        [MaxLength(50)]
+        public string? ForceType { get; set; } // e.g., "Blueland", "Foxland", "Control"
+
 
         [MaxLength(50)]
         public string? CreatedByUserId { get; set; }
