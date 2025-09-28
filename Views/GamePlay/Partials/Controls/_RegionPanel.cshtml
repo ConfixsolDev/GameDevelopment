@@ -23,51 +23,52 @@
                 </div>
             </div>
 
-            <!-- Region actions -->
+            <!-- Edit Mode Toggle -->
             <div class="d-grid gap-10 control-section">
                 <div class="control-row">
-                    <button id="btnSaveRegion" class="overlay-btn">Save Region</button>
-                    <button id="btnEditRegion" class="overlay-btn">Enable Edit</button>
+                    <button id="btnEditMode" class="overlay-btn" onclick="toggleEditMode()">
+                        <i class="fas fa-edit"></i>
+                        <span>Edit Mode</span>
+                    </button>
                 </div>
+            </div>
+
+            <!-- Edit Mode Controls (hidden by default) -->
+            <div class="d-grid gap-10 control-section edit-mode-control" style="display: none;">
                 <div class="control-row">
-                    <button id="btnFit" class="overlay-btn">Fit to Screen</button>
+                    <button id="btnSaveRegion" class="overlay-btn">Save Region</button>
                     <button id="btnClearSectors" class="overlay-btn">Clear Sectors</button>
                 </div>
             </div>
 
             <!-- Sectors -->
-            <div class="control-section">
+            <div class="control-section edit-mode-control" style="display: none;">
                 <h6>Sectors</h6>
                 <div class="control-row">
                     <a id="btnAddBlue" class="overlay-btn"><i>●</i><span>Add Blue</span></a>
                     <a id="btnAddFox" class="overlay-btn"><i>●</i><span>Add Fox</span></a>
                 </div>
-                <div class="control-row">
-                    <label class="overlay-btn"><input id="chkShowBlue" type="checkbox" checked /> Show Blue</label>
-                    <label class="overlay-btn"><input id="chkShowFox" type="checkbox" checked /> Show Fox</label>
-                </div>
             </div>
 
             <!-- Labels -->
-            <div class="control-section">
+            <div class="control-section edit-mode-control" style="display: none;">
                 <h6>Labels</h6>
                 <div class="control-row">
                     <a id="btnAddLabel" class="overlay-btn"><i>⌘</i><span>Add Label</span></a>
                     <a id="btnClearLabels" class="overlay-btn danger"><i>×</i><span>Clear</span></a>
                 </div>
-                <label class="overlay-btn"><input id="chkShowLabels" type="checkbox" checked /> Show Labels</label>
             </div>
 
-            <!-- Basemaps -->
+            <!-- Basemap Dropdown -->
             <div class="control-section">
                 <h6>Basemap</h6>
                 <div class="control-row">
-                    <a data-layer="Satellite" class="overlay-btn" id="bmSat">Satellite</a>
-                    <a data-layer="Streets" class="overlay-btn" id="bmSt">Streets</a>
-                </div>
-                <div class="control-row">
-                    <a data-layer="OSM" class="overlay-btn" id="bmOSM">OSM</a>
-                    <a data-layer="Topo" class="overlay-btn" id="bmTopo">Topo</a>
+                    <select id="basemapDropdown" class="overlay-btn" onchange="changeBasemap(this.value)" style="width: 100%; padding: 8px; border: 1px solid #444; background: #2d3748; color: #e2e8f0; border-radius: 4px;">
+                        <option value="Satellite" selected>Satellite</option>
+                        <option value="Streets">Streets</option>
+                        <option value="OSM">OSM</option>
+                        <option value="Topo">Topo</option>
+                    </select>
                 </div>
             </div>
 
