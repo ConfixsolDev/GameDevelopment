@@ -33,35 +33,59 @@
                 </div>
             </div>
 
-            <!-- Edit Mode Controls (hidden by default) -->
-            <div class="d-grid gap-10 control-section edit-mode-control" style="display: none;">
+            <!-- Force Selection (hidden by default) -->
+            <div class="control-section edit-mode-control" style="display: none;">
+                <h6><i class="fas fa-flag"></i> Force Selection</h6>
                 <div class="control-row">
-                    <button id="btnSaveRegion" class="overlay-btn">Save Region</button>
-                    <button id="btnClearSectors" class="overlay-btn">Clear Sectors</button>
+                    <button id="btnSelectBlue" class="overlay-btn force-btn active" onclick="selectForce('blue')">
+                        <i class="fas fa-circle" style="color: #00d4ff;"></i>
+                        <span>Blue Land</span>
+                    </button>
+                    <button id="btnSelectFox" class="overlay-btn force-btn" onclick="selectForce('fox')">
+                        <i class="fas fa-circle" style="color: #ff6b6b;"></i>
+                        <span>Fox Land</span>
+                    </button>
                 </div>
             </div>
 
-            <!-- Sectors -->
+
+            <!-- Map Regions -->
             <div class="control-section edit-mode-control" style="display: none;">
-                <h6>Sectors</h6>
+                <h6><i class="fas fa-map-marked-alt"></i> Map Regions</h6>
                 <div class="control-row">
-                    <a id="btnAddBlue" class="overlay-btn"><i>●</i><span>Add Blue</span></a>
-                    <a id="btnAddFox" class="overlay-btn"><i>●</i><span>Add Fox</span></a>
+                    <button id="btnCreateRegion" class="overlay-btn" onclick="startRegionDrawing()">
+                        <i class="fas fa-draw-polygon"></i>
+                        <span>Create Region</span>
+                    </button>
+                </div>
+                <div class="control-row">
+                    <button id="btnClearRegions" class="overlay-btn danger" onclick="clearAllRegions()">
+                        <i class="fas fa-trash"></i>
+                        <span>Clear All</span>
+                    </button>
                 </div>
             </div>
 
-            <!-- Labels -->
+            <!-- Map Labels -->
             <div class="control-section edit-mode-control" style="display: none;">
-                <h6>Labels</h6>
+                <h6><i class="fas fa-tags"></i> Map Labels</h6>
                 <div class="control-row">
-                    <a id="btnAddLabel" class="overlay-btn"><i>⌘</i><span>Add Label</span></a>
-                    <a id="btnClearLabels" class="overlay-btn danger"><i>×</i><span>Clear</span></a>
+                    <button id="btnAddLabel" class="overlay-btn" onclick="addMapLabel()">
+                        <i class="fas fa-tag"></i>
+                        <span>Add Label</span>
+                    </button>
+                </div>
+                <div class="control-row">
+                    <button id="btnClearLabels" class="overlay-btn danger" onclick="clearAllLabels()">
+                        <i class="fas fa-times"></i>
+                        <span>Clear Labels</span>
+                    </button>
                 </div>
             </div>
 
             <!-- Basemap Dropdown -->
             <div class="control-section">
-                <h6>Basemap</h6>
+                <h6><i class="fas fa-globe"></i> Basemap</h6>
                 <div class="control-row">
                     <select id="basemapDropdown" class="overlay-btn" onchange="changeBasemap(this.value)" style="width: 100%; padding: 8px; border: 1px solid #444; background: #2d3748; color: #e2e8f0; border-radius: 4px;">
                         <option value="Satellite" selected>Satellite</option>
@@ -69,6 +93,27 @@
                         <option value="OSM">OSM</option>
                         <option value="Topo">Topo</option>
                     </select>
+                </div>
+            </div>
+
+            <!-- Layer Visibility -->
+            <div class="control-section">
+                <h6><i class="fas fa-eye"></i> Layer Visibility</h6>
+                <div class="control-row">
+                    <label class="overlay-btn">
+                        <input id="chkShowRegions" type="checkbox" checked onchange="toggleLayer('regions')" />
+                        <span><i class="fas fa-map-marked-alt"></i> Regions</span>
+                    </label>
+                    <label class="overlay-btn">
+                        <input id="chkShowLabels" type="checkbox" checked onchange="toggleLayer('labels')" />
+                        <span><i class="fas fa-tags"></i> Labels</span>
+                    </label>
+                </div>
+                <div class="control-row">
+                    <label class="overlay-btn">
+                        <input id="chkShowTokens" type="checkbox" checked onchange="toggleLayer('tokens')" />
+                        <span><i class="fas fa-map-pin"></i> Tokens</span>
+                    </label>
                 </div>
             </div>
 

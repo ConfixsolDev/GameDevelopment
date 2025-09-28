@@ -245,13 +245,11 @@ function changeBasemap(basemapType) {
 }
 
 /**
- * Show layer toggle panel
+ * Show layer toggle panel (moved to region panel)
  */
 function showLayerPanel() {
-    const layerPanel = document.getElementById('layerPanel');
-    if (layerPanel) {
-        layerPanel.style.display = layerPanel.style.display === 'none' ? 'block' : 'none';
-    }
+    // Layer controls are now in the region panel
+    console.log('Layer controls are now in the region panel');
 }
 
 /**
@@ -288,6 +286,13 @@ function toggleLayer(layerType) {
             layer = window.tokenLayer;
             checkbox = document.getElementById('chkShowTokens');
             break;
+        case 'regions':
+            // Handle regions layer through region manager
+            if (window.gamePlayManager && window.gamePlayManager.regionManager) {
+                window.gamePlayManager.regionManager.toggleVisibility();
+            }
+            checkbox = document.getElementById('chkShowRegions');
+            return; // Early return since we handle this differently
         default:
             return;
     }

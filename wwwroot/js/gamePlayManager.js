@@ -46,6 +46,9 @@ class GamePlayManager {
             // Initialize token manager
             await this.initializeTokenManager();
             
+            // Initialize region manager
+            await this.initializeRegionManager();
+            
             // Load and restore placed tokens
             await this.restorePlacedTokens();
             
@@ -118,6 +121,7 @@ class GamePlayManager {
             
             // Store map globally
             window.gameMap = this.map;
+            window.gamePlayManager = this;
             
             console.log('✅ Map initialized with Qatar view and layer groups');
         } else {
@@ -136,6 +140,21 @@ class GamePlayManager {
             console.log('✅ Token manager initialized');
         } else {
             console.warn('⚠️ Token manager not available');
+        }
+    }
+
+    /**
+     * Initialize region manager
+     */
+    async initializeRegionManager() {
+        console.log('🗺️ Initializing region manager...');
+        
+        if (typeof RegionManager !== 'undefined' && this.map) {
+            this.regionManager = new RegionManager(this.map, this.showNotification.bind(this));
+            await this.regionManager.loadRegions();
+            console.log('✅ Region manager initialized');
+        } else {
+            console.warn('⚠️ Region manager not available');
         }
     }
 
