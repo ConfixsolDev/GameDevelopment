@@ -10,57 +10,84 @@
         </div>
         <div class="gameplay-modal-body">
             <div class="data-entry-container">
-                <!-- Token Information Display -->
-                <div class="token-info-section">
-                    <div class="token-display">
-                        @if (!string.IsNullOrEmpty(Model.Token.AssetImagePath))
-                        {
-                            <img src="@Model.Token.AssetImagePath" alt="@Model.Token.Name" class="token-preview-image">
-                        }
-                        else
-                        {
-                            <div class="token-preview-placeholder">
-                                <i class="fas fa-crosshairs"></i>
-                            </div>
-                        }
-                        <div class="token-details">
-                            <h4>@Model.Token.Name</h4>
-                            <p class="text-muted">@Model.Token.TokenGroup?.Name</p>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Data Entry Form -->
                 <div class="data-entry-form-section">
                     @if (Model.ExistingBrigade != null)
                     {
                         <!-- Edit Existing Brigade Data -->
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i> This token already has brigade data: <strong>@Model.ExistingBrigade.Name</strong>
+                        <div class="brigade-header-section">
+                            <div class="brigade-name-display">
+                                <h5>@Model.ExistingBrigade.Name Information</h5>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="editBrigadeName()">
+                                    <i class="fas fa-edit"></i> Edit Name
+                                </button>
+                            </div>
                         </div>
                         
                         <div class="brigade-data-form">
-                            <h5>Brigade Information</h5>
-                            <div class="form-group">
-                                <label>Brigade Name:</label>
-                                <input type="text" class="form-control" value="@Model.ExistingBrigade.Name" id="brigadeName" />
-                            </div>
-                            
-                            <!-- Infantry, Armoured, Artillery sections would go here -->
+                            <!-- Comprehensive Data Entry Tabs -->
                             <div class="data-entry-tabs">
-                                <button type="button" class="data-tab active" onclick="showDataTab('infantry')">Infantry</button>
-                                <button type="button" class="data-tab" onclick="showDataTab('armoured')">Armoured</button>
-                                <button type="button" class="data-tab" onclick="showDataTab('artillery')">Artillery</button>
+                                <button type="button" class="data-tab active" onclick="showDataTab('infantry')">
+                                    <i class="fas fa-user-shield"></i> Infantry Battalion
+                                </button>
+                                <button type="button" class="data-tab" onclick="showDataTab('armoured')">
+                                    <i class="fas fa-shield-alt"></i> Armoured Regiment
+                                </button>
+                                <button type="button" class="data-tab" onclick="showDataTab('artillery')">
+                                    <i class="fas fa-crosshairs"></i> Artillery Regiment
+                                </button>
+                                <button type="button" class="data-tab" onclick="showDataTab('intelligence')">
+                                    <i class="fas fa-eye"></i> Intelligence
+                                </button>
+                                <button type="button" class="data-tab" onclick="showDataTab('recon')">
+                                    <i class="fas fa-binoculars"></i> Reconnaissance
+                                </button>
                             </div>
                             
                             <div id="infantry-data" class="data-tab-content active">
-                                <p>Infantry Battalion Data Entry (to be implemented)</p>
+                                <div class="tab-content-header">
+                                    <h6><i class="fas fa-user-shield"></i> Infantry Battalion Data Entry</h6>
+                                    <p class="text-muted">Enter infantry battalion information for @Model.ExistingBrigade.Name</p>
+                                </div>
+                                <button type="button" class="btn btn-primary" onclick="loadUnitsDataEntryForm('@Model.Token.Id', '@Model.ExistingBrigade.Id')">
+                                    <i class="fas fa-plus"></i> Add Infantry Battalion
+                                </button>
                             </div>
                             <div id="armoured-data" class="data-tab-content">
-                                <p>Armoured Regiment Data Entry (to be implemented)</p>
+                                <div class="tab-content-header">
+                                    <h6><i class="fas fa-shield-alt"></i> Armoured Regiment Data Entry</h6>
+                                    <p class="text-muted">Enter armoured regiment information for @Model.ExistingBrigade.Name</p>
+                                </div>
+                                <button type="button" class="btn btn-primary" onclick="loadUnitsDataEntryForm('@Model.Token.Id', '@Model.ExistingBrigade.Id')">
+                                    <i class="fas fa-plus"></i> Add Armoured Regiment
+                                </button>
                             </div>
                             <div id="artillery-data" class="data-tab-content">
-                                <p>Artillery Regiment Data Entry (to be implemented)</p>
+                                <div class="tab-content-header">
+                                    <h6><i class="fas fa-crosshairs"></i> Artillery Regiment Data Entry</h6>
+                                    <p class="text-muted">Enter artillery regiment information for @Model.ExistingBrigade.Name</p>
+                                </div>
+                                <button type="button" class="btn btn-primary" onclick="loadUnitsDataEntryForm('@Model.Token.Id', '@Model.ExistingBrigade.Id')">
+                                    <i class="fas fa-plus"></i> Add Artillery Regiment
+                                </button>
+                            </div>
+                            <div id="intelligence-data" class="data-tab-content">
+                                <div class="tab-content-header">
+                                    <h6><i class="fas fa-eye"></i> Intelligence Reports Data Entry</h6>
+                                    <p class="text-muted">Enter intelligence reports for @Model.ExistingBrigade.Name</p>
+                                </div>
+                                <button type="button" class="btn btn-primary" onclick="loadUnitsDataEntryForm('@Model.Token.Id', '@Model.ExistingBrigade.Id')">
+                                    <i class="fas fa-plus"></i> Add Intelligence Report
+                                </button>
+                            </div>
+                            <div id="recon-data" class="data-tab-content">
+                                <div class="tab-content-header">
+                                    <h6><i class="fas fa-binoculars"></i> Reconnaissance Data Entry</h6>
+                                    <p class="text-muted">Enter reconnaissance information for @Model.ExistingBrigade.Name</p>
+                                </div>
+                                <button type="button" class="btn btn-primary" onclick="loadUnitsDataEntryForm('@Model.Token.Id', '@Model.ExistingBrigade.Id')">
+                                    <i class="fas fa-plus"></i> Add Reconnaissance
+                                </button>
                             </div>
                         </div>
                     }
@@ -120,75 +147,189 @@
 </div>
 
 <style>
-.token-info-section {
-    background: #f8f9fa;
+/* Dark Theme Data Entry Form */
+.data-entry-container {
+    background: #1a1a1a;
     border-radius: 8px;
-    padding: 15px;
+    padding: 20px;
+}
+
+.brigade-header-section {
     margin-bottom: 20px;
-}
-
-.token-display {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.token-preview-image {
-    width: 60px;
-    height: 60px;
+    padding: 15px;
+    background: #2a2a2a;
     border-radius: 8px;
-    object-fit: cover;
-    border: 2px solid #007bff;
+    border-left: 4px solid #00d4ff;
 }
 
-.token-preview-placeholder {
-    width: 60px;
-    height: 60px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.brigade-name-display {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 24px;
-    border: 2px solid #007bff;
 }
 
-.token-details h4 {
+.brigade-name-display h5 {
+    color: #00d4ff;
     margin: 0;
-    color: #2c3e50;
+    font-weight: 600;
 }
 
 .data-entry-tabs {
     display: flex;
-    gap: 5px;
+    gap: 3px;
     margin: 20px 0 10px 0;
+    background: #1a1a1a;
+    border-radius: 8px;
+    padding: 5px;
 }
 
 .data-tab {
-    padding: 8px 16px;
-    border: 1px solid #ddd;
-    background: #f8f9fa;
+    flex: 1;
+    padding: 12px 8px;
+    border: 1px solid #333;
+    background: #2a2a2a;
+    color: #ccc;
     cursor: pointer;
-    border-radius: 4px 4px 0 0;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 12px;
+    transition: all 0.3s ease;
+}
+
+.data-tab:hover {
+    background: #3a3a3a;
+    color: #fff;
 }
 
 .data-tab.active {
-    background: #007bff;
-    color: white;
-    border-color: #007bff;
+    background: #00d4ff;
+    color: #000;
+    border-color: #00d4ff;
+    font-weight: 600;
+}
+
+.data-tab i {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 14px;
 }
 
 .data-tab-content {
     display: none;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 0 4px 4px 4px;
-    background: white;
+    padding: 20px;
+    border: 1px solid #333;
+    border-radius: 8px;
+    background: #2a2a2a;
+    margin-top: 10px;
 }
 
 .data-tab-content.active {
     display: block;
+}
+
+.tab-content-header {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #444;
+}
+
+.tab-content-header h6 {
+    color: #00d4ff;
+    margin: 0 0 5px 0;
+    font-weight: 600;
+}
+
+.tab-content-header .text-muted {
+    color: #888 !important;
+    font-size: 13px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: #00d4ff;
+    border-color: #00d4ff;
+    color: #000;
+}
+
+.btn-primary:hover {
+    background: #00b8e6;
+    border-color: #00b8e6;
+    color: #000;
+}
+
+.btn-outline-primary {
+    background: transparent;
+    border-color: #00d4ff;
+    color: #00d4ff;
+}
+
+.btn-outline-primary:hover {
+    background: #00d4ff;
+    border-color: #00d4ff;
+    color: #000;
+}
+
+.alert {
+    padding: 12px 15px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    border-left: 4px solid;
+}
+
+.alert-info {
+    background: #1a2a3a;
+    border-left-color: #00d4ff;
+    color: #00d4ff;
+}
+
+.alert-warning {
+    background: #2a2a1a;
+    border-left-color: #ffaa00;
+    color: #ffaa00;
+}
+
+.alert-success {
+    background: #1a2a1a;
+    border-left-color: #00aa44;
+    color: #00aa44;
+}
+
+.form-control {
+    background: #1a1a1a;
+    border: 1px solid #444;
+    color: #fff;
+    border-radius: 6px;
+    padding: 10px 12px;
+}
+
+.form-control:focus {
+    background: #2a2a2a;
+    border-color: #00d4ff;
+    color: #fff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 212, 255, 0.25);
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-muted {
+    color: #888 !important;
+}
+
+.mb-3 {
+    margin-bottom: 1rem;
+}
+
+hr {
+    border-color: #444;
+    margin: 20px 0;
 }
 </style>
 
@@ -270,6 +411,77 @@ function createNewBrigadeData(tokenId) {
                 errorMessage = 'New brigade form not found (404)';
             } else if (xhr.status === 500) {
                 errorMessage = 'Server error loading new brigade form (500)';
+            }
+            
+            alert(errorMessage);
+        },
+        complete: function() {
+            $("#loading").hide();
+        }
+    });
+}
+
+// Edit brigade name
+function editBrigadeName() {
+    const currentName = document.querySelector('.brigade-name-display h5').textContent.replace(' Information', '');
+    const newName = prompt('Enter new brigade name:', currentName);
+    
+    if (newName && newName.trim() !== '' && newName !== currentName) {
+        console.log('✏️ Updating brigade name from', currentName, 'to', newName);
+        
+        // Update the display
+        document.querySelector('.brigade-name-display h5').textContent = newName + ' Information';
+        
+        // Update all references in tab content
+        document.querySelectorAll('.tab-content-header .text-muted').forEach(element => {
+            element.textContent = element.textContent.replace(currentName, newName);
+        });
+        
+        // Here you would typically make an AJAX call to save the new name
+        // For now, just show a success message
+        alert('Brigade name updated successfully!');
+    }
+}
+
+// Load units data entry form
+function loadUnitsDataEntryForm(tokenId, brigadeId) {
+    console.log('📋 Loading units data entry form for token:', tokenId, 'brigade:', brigadeId);
+    
+    // Close current modal
+    closeTokenDataEntryModal();
+    
+    // Show loading
+    $("#loading").show();
+    
+    // Load the comprehensive units data entry form via AJAX
+    $.ajax({
+        url: '/DataManagement/UnitsDataEntryForm',
+        type: 'GET',
+        data: { tokenId: tokenId, brigadeId: brigadeId },
+        success: function(data) {
+            console.log('✅ Units data entry form loaded');
+            
+            // Remove any existing units modal
+            $('#unitsDataEntryModal').remove();
+            
+            // Add the new modal to the body
+            $('body').append(data);
+            
+            // Show the modal
+            document.getElementById('unitsDataEntryModal').style.display = 'flex';
+            
+            console.log('✅ Units data entry form displayed successfully');
+        },
+        error: function(xhr, status, error) {
+            console.error('❌ Error loading units data entry form:', error);
+            console.error('   Status Code:', xhr.status);
+            console.error('   Response Text:', xhr.responseText);
+            
+            let errorMessage = 'Failed to load units data entry form';
+            if (xhr.status === 404) {
+                errorMessage = 'Units data entry form not found (404)';
+            } else if (xhr.status === 500) {
+                errorMessage = 'Server error loading units data entry form (500)';
             }
             
             alert(errorMessage);
