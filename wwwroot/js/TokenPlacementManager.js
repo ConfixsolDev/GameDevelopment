@@ -122,7 +122,13 @@ class TokenPlacementManager {
             if (result.success) {
                 // Create permanent marker
                 const marker = this.createTokenMarker(this.selectedTokenForPlacement, latlng);
-                this.map.addLayer(marker);
+                
+                // Add to token layer for visibility control
+                if (window.tokenLayer) {
+                    window.tokenLayer.addLayer(marker);
+                } else {
+                    this.map.addLayer(marker);
+                }
 
                 // Create coverage areas
                 if (result.areaCoverages && result.areaCoverages.length > 0) {
