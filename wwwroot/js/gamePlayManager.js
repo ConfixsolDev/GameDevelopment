@@ -264,26 +264,20 @@ class GamePlayManager {
                     dashArray: '10, 5'
                 }).addTo(this.map);
                 
-                // Add ETA labels for each movement point
+                // Add enhanced waypoint markers for each movement point
                 result.movementHistory.forEach((movement, index) => {
                     if (index > 0) { // Skip first position (starting point)
-                        const etaLabel = L.marker([parseFloat(movement.latitude), parseFloat(movement.longitude)], {
-                            icon: L.divIcon({
-                                className: 'eta-label',
-                                html: `<div class="eta-tag">T+${index}</div>`,
-                                iconSize: [40, 20],
-                                iconAnchor: [20, 10]
-                            })
-                        }).addTo(this.map);
+                        const waypointMarker = tokenManager.tokenPlacementManager.createWaypointMarker(movement, index, result.movementOrders);
+                        waypointMarker.addTo(this.map);
                         
                         // Store reference for cleanup
                         if (tokenManager && tokenManager.tokenPlacementManager) {
                             const tokenData = tokenManager.tokenPlacementManager.placedTokens.get(tokenId);
                             if (tokenData) {
                                 if (!tokenData.routeLines) tokenData.routeLines = [];
-                                if (!tokenData.etaLabels) tokenData.etaLabels = [];
+                                if (!tokenData.waypointMarkers) tokenData.waypointMarkers = [];
                                 tokenData.routeLines.push(routeLine);
-                                tokenData.etaLabels.push(etaLabel);
+                                tokenData.waypointMarkers.push(waypointMarker);
                             }
                         }
                     }

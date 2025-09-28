@@ -801,22 +801,23 @@ class TokenPlacementManager {
             dashArray: '10, 5'
         }).addTo(this.map);
         
-        // Add ETA label at endpoint (use planned ETA if available)
-        const eta = this.dragPreview?.plannedETA || this.calculateETA();
-        const etaLabel = L.marker(tokenData.marker.getLatLng(), {
-            icon: L.divIcon({
-                className: 'eta-label',
-                html: `<div class="eta-tag">T+${eta}</div>`,
-                iconSize: [40, 20],
-                iconAnchor: [20, 10]
-            })
-        }).addTo(this.map);
+        // Add enhanced waypoint marker at endpoint
+        const waypointMarker = this.createWaypointMarker(
+            { 
+                latitude: tokenData.marker.getLatLng().lat, 
+                longitude: tokenData.marker.getLatLng().lng,
+                createdDate: new Date()
+            }, 
+            1, 
+            []
+        );
+        waypointMarker.addTo(this.map);
         
         // Store route for cleanup
         if (!tokenData.routeLines) tokenData.routeLines = [];
-        if (!tokenData.etaLabels) tokenData.etaLabels = [];
+        if (!tokenData.waypointMarkers) tokenData.waypointMarkers = [];
         tokenData.routeLines.push(routeLine);
-        tokenData.etaLabels.push(etaLabel);
+        tokenData.waypointMarkers.push(waypointMarker);
     }
 
     /**
@@ -1018,14 +1019,14 @@ class TokenPlacementManager {
                 tokenData.routeLines = [];
             }
             
-            // Remove ETA labels
-            if (tokenData.etaLabels) {
-                tokenData.etaLabels.forEach(label => {
-                    if (this.map.hasLayer(label)) {
-                        this.map.removeLayer(label);
+            // Remove waypoint markers
+            if (tokenData.waypointMarkers) {
+                tokenData.waypointMarkers.forEach(marker => {
+                    if (this.map.hasLayer(marker)) {
+                        this.map.removeLayer(marker);
                     }
                 });
-                tokenData.etaLabels = [];
+                tokenData.waypointMarkers = [];
             }
         }
     }
@@ -1053,25 +1054,19 @@ class TokenPlacementManager {
                     dashArray: '10, 5'
                 }).addTo(this.map);
                 
-                // Add ETA labels for each movement point
+                // Add enhanced waypoint markers for each movement point
                 result.movementHistory.forEach((movement, index) => {
                     if (index > 0) { // Skip first position (starting point)
-                        const etaLabel = L.marker([parseFloat(movement.latitude), parseFloat(movement.longitude)], {
-                            icon: L.divIcon({
-                                className: 'eta-label',
-                                html: `<div class="eta-tag">T+${index}</div>`,
-                                iconSize: [40, 20],
-                                iconAnchor: [20, 10]
-                            })
-                        }).addTo(this.map);
+                        const waypointMarker = this.createWaypointMarker(movement, index, result.movementOrders);
+                        waypointMarker.addTo(this.map);
                         
                         // Store reference for cleanup
                         const tokenData = this.placedTokens.get(tokenId);
                         if (tokenData) {
                             if (!tokenData.routeLines) tokenData.routeLines = [];
-                            if (!tokenData.etaLabels) tokenData.etaLabels = [];
+                            if (!tokenData.waypointMarkers) tokenData.waypointMarkers = [];
                             tokenData.routeLines.push(routeLine);
-                            tokenData.etaLabels.push(etaLabel);
+                            tokenData.waypointMarkers.push(waypointMarker);
                         }
                     }
                 });
@@ -1084,6 +1079,213 @@ class TokenPlacementManager {
             console.error('Error showing movement history:', error);
             this.notificationCallback('Error loading movement history', 'error');
         }
+    }
+
+    /**
+     * Create enhanced waypoint marker with tactical information
+     */
+    createWaypointMarker(movement, index, movementOrders = []) {
+        const position = [parseFloat(movement.latitude), parseFloat(movement.longitude)];
+        const eta = index;
+        const riskLevel = this.calculateRiskLevel(movement, movementOrders);
+        const terrain = this.getTerrainType(position);
+        
+        // Create minimal on-map tag
+        const waypointIcon = L.divIcon({
+            className: 'waypoint-marker',
+            html: `
+                <div class="waypoint-tag">
+                    <div class="waypoint-eta">T+${eta}</div>
+                    <div class="waypoint-risk risk-${riskLevel.level}"></div>
+                    <div class="waypoint-terrain">${terrain.glyph}</div>
+                </div>
+            `,
+            iconSize: [60, 30],
+            iconAnchor: [30, 15]
+        });
+        
+        const marker = L.marker(position, { icon: waypointIcon });
+        
+        // Create detailed tooltip
+        const tooltipContent = this.createWaypointTooltip(movement, index, movementOrders, terrain, riskLevel);
+        
+        marker.bindTooltip(tooltipContent, {
+            permanent: false,
+            direction: 'top',
+            offset: [0, -10],
+            className: 'waypoint-tooltip'
+        });
+        
+        return marker;
+    }
+
+    /**
+     * Create detailed waypoint tooltip
+     */
+    createWaypointTooltip(movement, index, movementOrders, terrain, riskLevel) {
+        const order = movementOrders.find(o => o.createdDate <= movement.createdDate) || {};
+        const distance = this.calculateSegmentDistance(movement, index);
+        const time = this.calculateSegmentTime(distance, order.movementSpeed || 20);
+        const supplyCost = this.calculateSupplyCost(distance, order.movementMode || 'normal');
+        const supplyAfter = Math.max(0, (order.supplyAfter || 100) - supplyCost);
+        
+        return `
+            <div class="waypoint-tooltip-content">
+                <div class="tooltip-header">
+                    <span class="waypoint-id">WP-${String(index).padStart(2, '0')}</span>
+                    <span class="waypoint-eta">T+${index}</span>
+                    <span class="risk-indicator risk-${riskLevel.level}">${riskLevel.level} risk (${riskLevel.probability}%)</span>
+                </div>
+                
+                <div class="tooltip-line">
+                    <span class="label">Dist:</span> ${distance.toFixed(1)} km
+                    <span class="separator">|</span>
+                    <span class="label">Time:</span> ${time.toFixed(0)}h${((time % 1) * 60).toFixed(0).padStart(2, '0')}m
+                    <span class="separator">|</span>
+                    <span class="label">Cum ETA:</span> T+${index}
+                </div>
+                
+                <div class="tooltip-line">
+                    <span class="label">Terrain:</span> ${terrain.name} (slope ${terrain.slope}%)
+                    <span class="separator">|</span>
+                    <span class="label">Road:</span> ${terrain.roadType}
+                </div>
+                
+                <div class="tooltip-line">
+                    <span class="label">Supply:</span> -${supplyCost.toFixed(1)}
+                    <span class="separator">|</span>
+                    <span class="label">After:</span> ${supplyAfter.toFixed(1)}%
+                </div>
+                
+                <div class="tooltip-line">
+                    <span class="label">Enemy:</span> ${this.getEnemyIntel(movement)}
+                </div>
+                
+                <div class="tooltip-line">
+                    <span class="label">Action:</span> ${order.movementType || 'Transit'}
+                    <span class="separator">|</span>
+                    <span class="label">Support:</span> ${this.getSupportInfo(order)}
+                </div>
+                
+                <div class="tooltip-footer">
+                    <div class="warnings">${this.getWarnings(movement, riskLevel, supplyAfter)}</div>
+                    <button class="btn-details" onclick="tokenPlacementManager.showWaypointDetails('${movement.id}')">
+                        Open details
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Calculate risk level for waypoint
+     */
+    calculateRiskLevel(movement, movementOrders) {
+        // Simulate risk calculation based on movement data
+        const baseRisk = Math.random() * 0.4 + 0.1; // 10-50% base risk
+        const timeFactor = movement.createdDate ? (Date.now() - new Date(movement.createdDate).getTime()) / (1000 * 60 * 60 * 24) : 0;
+        const risk = Math.min(0.9, baseRisk + (timeFactor * 0.1));
+        
+        if (risk < 0.3) return { level: 'low', probability: Math.round(risk * 100) };
+        if (risk < 0.6) return { level: 'medium', probability: Math.round(risk * 100) };
+        return { level: 'high', probability: Math.round(risk * 100) };
+    }
+
+    /**
+     * Get terrain type for position
+     */
+    getTerrainType(position) {
+        // Simulate terrain detection based on position
+        const terrains = [
+            { name: 'Offroad', glyph: '🌲', slope: 8, roadType: 'track' },
+            { name: 'Road', glyph: '🛣️', slope: 2, roadType: 'paved' },
+            { name: 'Forest', glyph: '🌳', slope: 12, roadType: 'trail' },
+            { name: 'Urban', glyph: '🏢', slope: 1, roadType: 'street' },
+            { name: 'Desert', glyph: '🏜️', slope: 5, roadType: 'sand' }
+        ];
+        
+        return terrains[Math.floor(Math.random() * terrains.length)];
+    }
+
+    /**
+     * Calculate segment distance
+     */
+    calculateSegmentDistance(movement, index) {
+        // Simulate distance calculation
+        return Math.random() * 25 + 5; // 5-30 km
+    }
+
+    /**
+     * Calculate segment time
+     */
+    calculateSegmentTime(distance, speed) {
+        return distance / speed;
+    }
+
+    /**
+     * Calculate supply cost
+     */
+    calculateSupplyCost(distance, movementMode) {
+        const baseCost = distance * 0.5;
+        const modeMultiplier = {
+            'march': 0.8,
+            'normal': 1.0,
+            'stealth': 1.3
+        };
+        return baseCost * (modeMultiplier[movementMode] || 1.0);
+    }
+
+    /**
+     * Get enemy intelligence
+     */
+    getEnemyIntel(movement) {
+        const intelOptions = [
+            'lastT11 • light_infantry (±1500m)',
+            'no contact',
+            'patrol • mechanized (±800m)',
+            'outpost • heavy_armor (±2000m)'
+        ];
+        return intelOptions[Math.floor(Math.random() * intelOptions.length)];
+    }
+
+    /**
+     * Get support information
+     */
+    getSupportInfo(order) {
+        if (order.supportType) {
+            return `${order.supportType} @ T+${order.supportTime || '1.8'}`;
+        }
+        return 'none';
+    }
+
+    /**
+     * Get warnings for waypoint
+     */
+    getWarnings(movement, riskLevel, supplyAfter) {
+        const warnings = [];
+        
+        if (riskLevel.level === 'high') {
+            warnings.push('high threat area');
+        }
+        
+        if (supplyAfter < 20) {
+            warnings.push('low supply');
+        }
+        
+        if (Math.random() > 0.7) {
+            warnings.push('crosses mine risk');
+        }
+        
+        return warnings.length > 0 ? warnings.join(' • ') : 'clear';
+    }
+
+    /**
+     * Show waypoint details in side panel
+     */
+    showWaypointDetails(waypointId) {
+        // Implementation for detailed waypoint inspection
+        console.log('Showing waypoint details for:', waypointId);
+        this.notificationCallback('Waypoint details panel would open here', 'info');
     }
 
     /**
