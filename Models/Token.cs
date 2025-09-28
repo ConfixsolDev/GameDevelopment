@@ -38,11 +38,7 @@ namespace TechWebSol.Models
         [Column(TypeName = "decimal(8,2)")]
         public decimal? CoverageRadiusKm { get; set; } // Asset coverage radius
 
-        [Column(TypeName = "decimal(18,6)")]
-        public decimal? CurrentLatitude { get; set; } // Current position
-
-        [Column(TypeName = "decimal(18,6)")]
-        public decimal? CurrentLongitude { get; set; } // Current position
+        // Position is tracked via MapMarkers (single active marker indicates current position)
 
         // Navigation properties
         public virtual ICollection<TokenAreaCoverage> AreaCoverages { get; set; } = new List<TokenAreaCoverage>();

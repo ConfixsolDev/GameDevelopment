@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using TechWebSol.Data;
 using TechWebSol.Models;
 using TechWebSol.ViewModels;
+using System.Globalization;
 
 namespace TechWebSol.Services.TokenManagement
 {
@@ -71,16 +72,9 @@ namespace TechWebSol.Services.TokenManagement
                     };
                 }
 
-                if (token.CurrentLatitude == null)
-                {
-                    var existingMarker = await _context.MapMarkers.Where(x=>x.TokenId == tokenId && x.TeamId == applicatonUser.TeamId).ToListAsync();
-                    _context.RemoveRange(existingMarker);
-                    await _context.SaveChangesAsync();
-                }
+                // No longer using token's lat/long; MapMarkers hold placement state
 
-                // Update token position
-                token.CurrentLatitude = latitude;
-                token.CurrentLongitude = longitude;
+                // Update token usage metadata only
                 token.LastUsed = DateTime.UtcNow;
                 token.UsageCount++;
 
@@ -88,12 +82,10 @@ namespace TechWebSol.Services.TokenManagement
                 var mapMarker = new MapMarker
                 {
                     TokenId = tokenId,
-                    Location = $"{{\"lat\":{latitude},\"lng\":{longitude}}}",
-                    CreatedAt = DateTime.UtcNow,
-                    TokenName = token.Name,
+                    latitude = latitude.ToString(CultureInfo.InvariantCulture),
+                    longitude = longitude.ToString(CultureInfo.InvariantCulture),
                     CreatedBy = userId,
                     IsActive = true,
-                    LastUpdated = DateTime.UtcNow
                 };
 
                 _context.MapMarkers.Add(mapMarker);
@@ -153,9 +145,7 @@ namespace TechWebSol.Services.TokenManagement
                     };
                 }
 
-                // Update token position
-                token.CurrentLatitude = latitude;
-                token.CurrentLongitude = longitude;
+                // Update token usage metadata only
                 token.LastUsed = DateTime.UtcNow;
 
                 // Inactivate previous active marker and create a new one to preserve movement history
@@ -165,18 +155,15 @@ namespace TechWebSol.Services.TokenManagement
                 if (previousActiveMarker != null)
                 {
                     previousActiveMarker.IsActive = false;
-                    previousActiveMarker.LastUpdated = DateTime.UtcNow;
                 }
 
                 var mapMarker = new MapMarker
                 {
                     TokenId = tokenId,
-                    Location = $"{{\"lat\":{latitude},\"lng\":{longitude}}}",
-                    CreatedAt = DateTime.UtcNow,
-                    TokenName = token.Name,
+                    latitude = latitude.ToString(CultureInfo.InvariantCulture),
+                    longitude = longitude.ToString(CultureInfo.InvariantCulture),
                     CreatedBy = userId,
                     IsActive = true,
-                    LastUpdated = DateTime.UtcNow
                 };
                 _context.MapMarkers.Add(mapMarker);
 
@@ -239,12 +226,9 @@ namespace TechWebSol.Services.TokenManagement
                 if (mapMarker != null)
                 {
                     mapMarker.IsActive = false;
-                    mapMarker.LastUpdated = DateTime.UtcNow;
                 }
 
-                // Clear token position
-                token.CurrentLatitude = null;
-                token.CurrentLongitude = null;
+                // Token no longer stores position; nothing to clear on token entity
 
                 // Remove area coverages
                 var areaCoverages = await _context.TokenAreaCoverages

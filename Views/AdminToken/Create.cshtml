@@ -69,16 +69,7 @@
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label">Position (Optional)</label>
-                                            <div class="row">
-                                                <div class="col-6">
-                                                    <input asp-for="CurrentLatitude" class="form-control" type="number" step="0.000001" placeholder="Latitude" />
-                                                    <span asp-validation-for="CurrentLatitude" class="text-danger"></span>
-                                                </div>
-                                                <div class="col-6">
-                                                    <input asp-for="CurrentLongitude" class="form-control" type="number" step="0.000001" placeholder="Longitude" />
-                                                    <span asp-validation-for="CurrentLongitude" class="text-danger"></span>
-                                                </div>
-                                            </div>
+                                            <!-- Position is driven by MapMarkers; manual lat/long removed -->
                                             <div class="form-text">Current position coordinates (optional)</div>
                                         </div>
                                     </div>

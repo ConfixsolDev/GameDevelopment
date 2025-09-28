@@ -8,7 +8,7 @@ class TokenManager {
         this.placedTokens = new Map(); // tokenId -> { marker, coverageAreas, token }
         this.tokenPlacementManager = null;
         this.isInitialized = false;
-        this.placedTokensCache = []; // Cache for placed tokens
+        // No client-side cache
         
         // Bind methods to preserve context
         this.initialize = this.initialize.bind(this);
@@ -675,7 +675,7 @@ class TokenManager {
                 if (this.tokenPlacementManager && this.tokenPlacementManager.placedTokens) {
                     for (const [pid] of this.tokenPlacementManager.placedTokens) placedIds.add(pid);
                 }
-                (this.placedTokensCache || []).forEach(p => placedIds.add(p.id));
+                // no cache
 
                 // Exclude any token that is placed by id or by coordinates/status
                 tokens = tokens.filter(t => {
@@ -705,16 +705,11 @@ class TokenManager {
     isTokenAlreadyPlaced(token) {
         const statusIsPlaced = typeof token.status === 'string' && token.status.toLowerCase() === 'placed';
         const hasPosition =
-            (token.position && (token.position.lat != null && token.position.lng != null)) ||
-            (token.currentPosition && (token.currentPosition.lat != null && token.currentPosition.lng != null)) ||
-            (token.latitude != null && token.longitude != null) ||
-            (token.currentLatitude != null && token.currentLongitude != null) ||
-            (token.CurrentLatitude != null && token.CurrentLongitude != null);
+            (token.position && (token.position.lat != null && token.position.lng != null));
 
         const placedByManager = this.tokenPlacementManager && this.tokenPlacementManager.isTokenPlaced && token.id && this.tokenPlacementManager.isTokenPlaced(token.id);
-        const placedInCache = (this.placedTokensCache || []).some(p => p.id === token.id);
 
-        return statusIsPlaced || hasPosition || placedByManager || placedInCache;
+        return statusIsPlaced || hasPosition || placedByManager;
     }
 
     /**
@@ -863,10 +858,7 @@ class TokenManager {
             if (this.tokenPlacementManager) {
                 await this.tokenPlacementManager.removeTokenFromMap(tokenId);
             }
-            // Update cache
-            if (this.removeTokenFromCache) {
-                this.removeTokenFromCache(tokenId);
-            }
+            // no cache
 
             // Refresh current tab
             const placedBtn = document.getElementById('tokenTabPlaced');

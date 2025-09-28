@@ -48,24 +48,9 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                // Get current user
-                var currentUser = _userSessionService.GetCurrentUser();
-                if (currentUser == null)
-                {
-                    return Json(new { success = false, message = "User not authenticated" });
-                }
-
-                if (currentUser.TeamId == null)
-                {
-                    return Json(new { success = false, message = "User not assigned to a team" });
-                }
-
-                // Query tokens that belong to the user's team and have been placed (have lat/lng)
                 var placedTokens = await _context.Tokens
-                    .Where(t => t.TeamId == currentUser.TeamId && 
-                               t.IsActive && 
-                               t.CurrentLatitude.HasValue && 
-                               t.CurrentLongitude.HasValue)
+                    .Where(t => t.TeamId == applicatonUser.TeamId && t.IsActive)
+                    .Include(t => t.MapMarkers.OrderByDescending(x=>x.CreatedDate))
                     .Include(t => t.TokenGroup)
                     .Include(t => t.AreaCoverages)
                     .Select(t => new
@@ -75,8 +60,7 @@ namespace TechWebSol.Controllers
                         tokenGroupId = t.TokenGroupId,
                         tokenGroupName = t.TokenGroup != null ? t.TokenGroup.Name : null,
                         assetImagePath = t.AssetImagePath,
-                        latitude = t.CurrentLatitude.Value,
-                        longitude = t.CurrentLongitude.Value,
+                        position = t.MapMarkers.Where(m => m.IsActive).Select(m => new { lat = m.latitude, lng = m.longitude }).FirstOrDefault(),
                         isActive = t.IsActive,
                         isManualToken = t.IsManualToken,
                         lastUsed = t.LastUsed,
@@ -94,7 +78,6 @@ namespace TechWebSol.Controllers
                     })
                     .ToListAsync();
 
-                _logger.LogInformation($"Found {placedTokens.Count} placed tokens for team {currentUser.TeamId}");
 
                 return Json(new { 
                     success = true, 
@@ -234,8 +217,6 @@ namespace TechWebSol.Controllers
                         {
                             id = result.Token?.Id,
                             name = result.Token?.Name,
-                            latitude = result.Token?.CurrentLatitude,
-                            longitude = result.Token?.CurrentLongitude,
                             coverageRadius = result.Token?.CoverageRadiusKm
                         },
                         areaCoverages = result.AreaCoverages?.Select(ac => new
@@ -331,8 +312,6 @@ namespace TechWebSol.Controllers
                         {
                             id = result.Token?.Id,
                             name = result.Token?.Name,
-                            latitude = result.Token?.CurrentLatitude,
-                            longitude = result.Token?.CurrentLongitude,
                             coverageRadius = result.Token?.CoverageRadiusKm
                         },
                         areaCoverages = result.AreaCoverages?.Select(ac => new
@@ -406,10 +385,9 @@ namespace TechWebSol.Controllers
                     // Parse the JSON location string
                     try
                     {
-                        var locationData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, double>>(result.MapMarker.Location);
-                        if (locationData != null && locationData.ContainsKey("lat") && locationData.ContainsKey("lng"))
+                        if (result.MapMarker != null)
                         {
-                            var position = new { lat = locationData["lat"], lng = locationData["lng"] };
+                            var position = new { lat = result.MapMarker.latitude, lng = result.MapMarker.longitude };
                             return Json(new { 
                                 success = true, 
                                 position = position,

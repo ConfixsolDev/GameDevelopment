@@ -55,9 +55,7 @@ namespace TechWebSol.Controllers
                 IsManualToken = t.IsManualToken,
                 Notes = t.Notes,
                 AssetImagePath = t.AssetImagePath,
-                CoverageRadiusKm = t.CoverageRadiusKm,
-                CurrentLatitude = t.CurrentLatitude,
-                CurrentLongitude = t.CurrentLongitude
+                CoverageRadiusKm = t.CoverageRadiusKm
             });
         }
 
@@ -77,8 +75,6 @@ namespace TechWebSol.Controllers
             token.Notes = string.IsNullOrWhiteSpace(req.Notes) ? null : req.Notes.Trim();
             token.AssetImagePath = req.AssetImagePath;
             token.CoverageRadiusKm = req.CoverageRadiusKm;
-            token.CurrentLatitude = req.CurrentLatitude;
-            token.CurrentLongitude = req.CurrentLongitude;
 
 
             await _context.SaveChangesAsync();
@@ -114,9 +110,7 @@ namespace TechWebSol.Controllers
                     UsageCount = t.UsageCount,
                     Notes = t.Notes,
                     AssetImagePath = t.AssetImagePath,
-                    CoverageRadiusKm = t.CoverageRadiusKm,
-                    CurrentLatitude = t.CurrentLatitude,
-                    CurrentLongitude = t.CurrentLongitude
+                    CoverageRadiusKm = t.CoverageRadiusKm
                 })
                 .ToListAsync();
 
@@ -518,9 +512,7 @@ namespace TechWebSol.Controllers
                     IsManualToken = true,
                     IsActive = true,
                     AssetImagePath = imagePath,
-                    CoverageRadiusKm = model.CoverageRadiusKm,
-                    CurrentLatitude = model.CurrentLatitude,
-                    CurrentLongitude = model.CurrentLongitude
+                    CoverageRadiusKm = model.CoverageRadiusKm
                 };
 
                 _context.Tokens.Add(token);
@@ -578,8 +570,6 @@ namespace TechWebSol.Controllers
                     Name = token.Name,
                     TokenGroupId = token.TokenGroupId,
                     CoverageRadiusKm = token.CoverageRadiusKm,
-                    CurrentLatitude = token.CurrentLatitude,
-                    CurrentLongitude = token.CurrentLongitude,
                     AvailableTokenGroups = availableTokenGroups,
                     IsEdit = true
                 };
@@ -656,11 +646,7 @@ namespace TechWebSol.Controllers
                 token.CoverageRadiusKm = model.CoverageRadiusKm;
                 
                 // Update position if provided
-                var positionChanged = token.CurrentLatitude != model.CurrentLatitude || 
-                                    token.CurrentLongitude != model.CurrentLongitude;
-                
-                token.CurrentLatitude = model.CurrentLatitude;
-                token.CurrentLongitude = model.CurrentLongitude;
+                var positionChanged = model.CurrentLatitude.HasValue && model.CurrentLongitude.HasValue;
 
                 await _context.SaveChangesAsync();
 

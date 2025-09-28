@@ -9,7 +9,7 @@ using TechWebSol.Services.TokenManagement;
 
 namespace TechWebSol.Controllers.TokenManagement
 {
-    [AuthorizeDynamic]
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class MapMarkerController : ControllerBase
@@ -99,8 +99,8 @@ namespace TechWebSol.Controllers.TokenManagement
                 if (marker.Id != Guid.Empty)
                     return BadRequest("Marker ID is required");
 
-                if (string.IsNullOrWhiteSpace(marker.Location))
-                    return BadRequest("Location data is required");
+                if (string.IsNullOrWhiteSpace(marker.latitude) || string.IsNullOrWhiteSpace(marker.longitude))
+                    return BadRequest("Latitude and Longitude are required");
 
                 if (marker.TokenId <= Guid.Empty)
                     return BadRequest("Valid Token ID is required");
@@ -114,9 +114,6 @@ namespace TechWebSol.Controllers.TokenManagement
                 var existingMarker = await _context.MapMarkers.FindAsync(marker.Id);
                 if (existingMarker != null)
                     return BadRequest("Marker with this ID already exists");
-
-                marker.CreatedAt = DateTime.UtcNow;
-                marker.TokenName = token.Name;
 
                 _context.MapMarkers.Add(marker);
                 await _context.SaveChangesAsync();
@@ -134,19 +131,19 @@ namespace TechWebSol.Controllers.TokenManagement
         /// Update an existing map marker
         /// </summary>
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateMapMarker(string id, [FromBody] MapMarker marker)
+        public async Task<IActionResult> UpdateMapMarker(Guid id, [FromBody] MapMarker marker)
         {
             try
             {
-                    if (marker.Id != Guid.Empty)
-                        return BadRequest("Marker ID mismatch");
+                if (marker.Id != id)
+                    return BadRequest("Marker ID mismatch");
 
                 var existingMarker = await _context.MapMarkers.FindAsync(id);
                 if (existingMarker == null)
                     return NotFound();
 
-                existingMarker.Location = marker.Location;
-                existingMarker.TokenName = marker.TokenName;
+                existingMarker.latitude = marker.latitude;
+                existingMarker.longitude = marker.longitude;
 
                 await _context.SaveChangesAsync();
                 return NoContent();
@@ -162,7 +159,7 @@ namespace TechWebSol.Controllers.TokenManagement
         /// Delete a map marker
         /// </summary>
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteMapMarker(string id)
+        public async Task<IActionResult> DeleteMapMarker(Guid id)
         {
             try
             {
@@ -186,7 +183,7 @@ namespace TechWebSol.Controllers.TokenManagement
         /// Delete all map markers for a specific token
         /// </summary>
         [HttpDelete("by-token/{tokenId}")]
-        public async Task<IActionResult> DeleteMapMarkersByToken(Guid? tokenId)
+        public async Task<IActionResult> DeleteMapMarkersByToken(Guid tokenId)
         {
             try
             {
@@ -259,9 +256,9 @@ namespace TechWebSol.Controllers.TokenManagement
                                 continue;
                             }
 
-                            if (string.IsNullOrWhiteSpace(marker.Location))
+                            if (string.IsNullOrWhiteSpace(marker.latitude) || string.IsNullOrWhiteSpace(marker.longitude))
                             {
-                                results.Add(new { marker.Id, Success = false, Error = "Location data is required" });
+                                results.Add(new { marker.Id, Success = false, Error = "Latitude and Longitude are required" });
                                 continue;
                             }
 
@@ -283,7 +280,6 @@ namespace TechWebSol.Controllers.TokenManagement
                                 continue;
                             }
 
-                            marker.CreatedAt = DateTime.UtcNow;
                             //marker.TokenName = token.Name;
 
                             _context.MapMarkers.Add(marker);
