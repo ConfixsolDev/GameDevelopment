@@ -5,7 +5,8 @@ namespace TechWebSol.Services
     public interface IUserSessionService
     {
         ApplicationUserVM GetCurrentUser();
-        void SetCurrentUser(ApplicationUserVM user);
+        IEnumerable<MvcControllerInfoArea> GetCurrentRole();
+        void CreateSession(ApplicationUserVM user);
         void ClearCurrentUser();
     }
 }

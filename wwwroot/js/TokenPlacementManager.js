@@ -609,11 +609,11 @@ class TokenPlacementManager {
                                             <div class="form-group">
                                                 <label for="startTurn" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Start Turn</label>
                                                 <select class="form-control" id="startTurn">
-                                                    <option value="1">Turn 1</option>
-                                                    <option value="2">Turn 2</option>
-                                                    <option value="3">Turn 3</option>
-                                                    <option value="4">Turn 4</option>
-                                                    <option value="5">Turn 5</option>
+                                                    <option value="1">Turn 01</option>
+                                                    <option value="2">Turn 02</option>
+                                                    <option value="3">Turn 03</option>
+                                                    <option value="4">Turn 04</option>
+                                                    <option value="5">Turn 05</option>
                                                 </select>
                                             </div>
                                         </div>

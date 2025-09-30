@@ -1,27 +1,23 @@
+using System.Collections.Concurrent;
 using TechWebSol.ViewModels;
 
 namespace TechWebSol.Helpers
 {
     public static class RolesList
     {
-        private static readonly Dictionary<string, object> _roles = new Dictionary<string, object>();
+        private static readonly ConcurrentDictionary<string, IEnumerable<MvcControllerInfoArea>> Roles
+            = new ConcurrentDictionary<string, IEnumerable<MvcControllerInfoArea>>();
 
-        public static void AddValue(string roleName, object permissions)
+        public static void AddValue(string key, IEnumerable<MvcControllerInfoArea> values)
         {
-            if (!_roles.ContainsKey(roleName))
-            {
-                _roles[roleName] = permissions;
-            }
+            // Using AddOrUpdate to handle concurrent adds/updates safely.
+            Roles.AddOrUpdate(key, values, (existingKey, existingVal) => values);
         }
 
-        public static object GetValue(string roleName)
+        public static IEnumerable<MvcControllerInfoArea> GetValue(string key)
         {
-            return _roles.TryGetValue(roleName, out var value) ? value : null;
-        }
-
-        public static void Clear()
-        {
-            _roles.Clear();
+            // Direct return with conditional access to avoid returning null.
+            return Roles.TryGetValue(key, out var values) ? values : Enumerable.Empty<MvcControllerInfoArea>();
         }
     }
 }

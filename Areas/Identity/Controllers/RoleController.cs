@@ -132,6 +132,7 @@ namespace TechWebSol.Areas.Identity.Controllers
             var accessJson = JsonConvert.SerializeObject(RoleAppUpdate);
             var Approles = _context.AppRoles.FirstOrDefault(x => x.AppId == AppConstants.Id);
 
+
             if (Approles == null)
             {
                 AppRoles appRoles = new AppRoles()
@@ -145,6 +146,7 @@ namespace TechWebSol.Areas.Identity.Controllers
             else
             {
                 Approles.RoleAccess = accessJson;
+                UpdateSuperAdmin(Approles.RoleAccess);
                 _context.Update(Approles);
             }
          await _context.SaveChangesAsync();
@@ -399,6 +401,45 @@ namespace TechWebSol.Areas.Identity.Controllers
         {
             var accessJson = JsonConvert.DeserializeObject<IEnumerable<MvcControllerInfo>>(_context.AppRoles.FirstOrDefault(x => x.AppId == AppId).RoleAccess);
             return accessJson;
+        }
+        private void UpdateSuperAdmin(string SuperAdminRoles)
+        {
+            var RoleLists = JsonConvert.DeserializeObject<IEnumerable<MvcControllerInfo>>(SuperAdminRoles);
+            List<MvcControllerInfoArea> MvcControllerInfoAreaList = new List<MvcControllerInfoArea>();
+
+            var role = _context.Roles.ToList();
+            foreach (var area in RoleLists.GroupBy(x => x.AreaName))
+            {
+                var ObjArea = new MvcControllerInfoArea();
+                ObjArea.AreaName = area.FirstOrDefault().AreaName;
+                List<MvcControllerInfoCont> MvcControllerInfoContList = new List<MvcControllerInfoCont>();
+                foreach (var controller1 in area)
+                {
+                    var objcontroller = new MvcControllerInfoCont()
+                    {
+                        Id = controller1.Name,
+                    };
+
+                    List<MvcActionInfo> MvcActionInfo1List = new List<MvcActionInfo>();
+                    foreach (var action in controller1.Actions)
+                    {
+                        var MvcActionInfo1 = new MvcActionInfo()
+                        {
+                            Name = action.Name,
+                        };
+                        MvcActionInfo1List.Add(MvcActionInfo1);
+                    }
+                    objcontroller.Actions = MvcActionInfo1List;
+                    MvcControllerInfoContList.Add(objcontroller);
+
+                }
+                ObjArea.Controller = MvcControllerInfoContList;
+                MvcControllerInfoAreaList.Add(ObjArea);
+            }
+            var accessJson = JsonConvert.SerializeObject(MvcControllerInfoAreaList);
+            var RoleAppId = _context.Roles.FirstOrDefault(x => x.Name == "Super Administrator");
+            RoleAppId.Access = accessJson;
+            _context.Update(RoleAppId);
         }
     }
 }

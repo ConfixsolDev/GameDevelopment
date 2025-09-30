@@ -1745,6 +1745,14 @@ namespace TechWebSol.Controllers
                     .OrderByDescending(r => r.CreatedDate)
                     .ToListAsync();
 
+                var existingLogistics = await _context.LogisticsUnits
+                    .Where(l => l.BrigadeId == brigade.Id && l.TeamId == user.TeamId && l.IsActive)
+                    .FirstOrDefaultAsync();
+
+                var existingEngineering = await _context.CombatEngineeringCompanies
+                    .Where(e => e.BrigadeId == brigade.Id && e.TeamId == user.TeamId && e.IsActive)
+                    .FirstOrDefaultAsync();
+
                 var viewModel = new UnitsDataEntryViewModel
                 {
                     Token = token,
@@ -1753,7 +1761,9 @@ namespace TechWebSol.Controllers
                     ExistingArmoured = existingArmoured,
                     ExistingArtillery = existingArtillery,
                     ExistingIntelligence = existingIntelligence,
-                    ExistingRecon = existingRecon
+                    ExistingRecon = existingRecon,
+                    ExistingLogistics = existingLogistics,
+                    ExistingEngineering = existingEngineering
                 };
 
                 return PartialView("Partials/_UnitsDataEntryForm", viewModel);
@@ -2087,6 +2097,8 @@ namespace TechWebSol.Controllers
             public ArtilleryRegiment ExistingArtillery { get; set; }
             public List<Intelligence> ExistingIntelligence { get; set; }
             public List<Recon> ExistingRecon { get; set; }
+            public LogisticsUnit ExistingLogistics { get; set; }
+            public CombatEngineeringCompany ExistingEngineering { get; set; }
         }
 
         public class TokenSummaryViewModel

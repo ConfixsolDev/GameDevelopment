@@ -45,6 +45,8 @@ namespace TechWebSol.Data
         public DbSet<InfantryBattalion> InfantryBattalions { get; set; }
         public DbSet<ArmouredRegiment> ArmouredRegiments { get; set; }
         public DbSet<ArtilleryRegiment> ArtilleryRegiments { get; set; }
+        public DbSet<LogisticsUnit> LogisticsUnits { get; set; }
+        public DbSet<CombatEngineeringCompany> CombatEngineeringCompanies { get; set; }
         public DbSet<TerrainMobilityFactor> TerrainMobilityFactors { get; set; }
         public DbSet<ForceProtection> ForceProtections { get; set; }
         public DbSet<Brigade> Brigades { get; set; }
@@ -165,6 +167,45 @@ namespace TechWebSol.Data
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.UnitCode).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.ForceType).IsRequired().HasMaxLength(50);
+
+                entity.HasOne(e => e.Team)
+                    .WithMany()
+                    .HasForeignKey(e => e.TeamId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(e => e.Brigade)
+                    .WithMany()
+                    .HasForeignKey(e => e.BrigadeId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<LogisticsUnit>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.UnitCode).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.ForceType).IsRequired().HasMaxLength(50);
+
+                entity.HasOne(e => e.Team)
+                    .WithMany()
+                    .HasForeignKey(e => e.TeamId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(e => e.Brigade)
+                    .WithMany()
+                    .HasForeignKey(e => e.BrigadeId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<CombatEngineeringCompany>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.UnitCode).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.ForceType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.BridgeBuildingCapacity).HasMaxLength(100);
+                entity.Property(e => e.FortificationBuildingCapacity).HasMaxLength(100);
+                entity.Property(e => e.ObstacleClearingCapacity).HasMaxLength(100);
 
                 entity.HasOne(e => e.Team)
                     .WithMany()

@@ -77,6 +77,20 @@
                         <span class="unit-status saved">@Model.ExistingRecon.Count</span>
                     }
                 </button>
+                <button type="button" class="unit-tab" onclick="showUnitTab('logistics')">
+                    <i class="fas fa-truck"></i> Logistics Unit
+                    @if (Model.ExistingLogistics != null)
+                    {
+                        <span class="unit-status saved">✓</span>
+                    }
+                </button>
+                <button type="button" class="unit-tab" onclick="showUnitTab('engineering')">
+                    <i class="fas fa-hard-hat"></i> Combat Engineering
+                    @if (Model.ExistingEngineering != null)
+                    {
+                        <span class="unit-status saved">✓</span>
+                    }
+                </button>
             </div>
 
             <!-- Infantry Battalion Tab -->
@@ -1087,6 +1101,441 @@
                     }
                 </div>
             </div>
+
+            <!-- Logistics Unit Tab -->
+            <div id="logistics-tab" class="unit-tab-content">
+                <form id="logisticsForm">
+                    <div class="unit-header">
+                        <h5><i class="fas fa-truck"></i> Logistics Unit Data</h5>
+                        @if (Model.ExistingLogistics != null)
+                        {
+                            <span class="badge badge-success">Unit Exists - Editing</span>
+                            <input type="hidden" id="logisticsId" value="@Model.ExistingLogistics.Id" />
+                        }
+                        else
+                        {
+                            <span class="badge badge-warning">New Unit</span>
+                            <input type="hidden" id="logisticsId" value="" />
+                        }
+                    </div>
+
+                    <!-- Basic Logistics Information -->
+                    <div class="unit-section">
+                        <h6>Basic Information</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="logisticsName">Unit Name *</label>
+                                    <input type="text" class="form-control" id="logisticsName" required 
+                                           value="@(Model.ExistingLogistics?.Name ?? "")" 
+                                           placeholder="e.g., 1st Logistics Battalion" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="logisticsCode">Unit Code *</label>
+                                    <input type="text" class="form-control" id="logisticsCode" required 
+                                           value="@(Model.ExistingLogistics?.UnitCode ?? "")" 
+                                           placeholder="e.g., 1LB" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="logisticsStrength">Strength (Personnel) *</label>
+                                    <input type="number" class="form-control" id="logisticsStrength" required 
+                                           value="@(Model.ExistingLogistics?.Strength ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="logisticsCompanies">Companies</label>
+                                    <input type="number" class="form-control" id="logisticsCompanies" 
+                                           value="@(Model.ExistingLogistics?.Companies ?? 0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="logisticsDescription">Description</label>
+                                    <textarea class="form-control" id="logisticsDescription" rows="2" 
+                                              placeholder="Brief description of the logistics unit">@(Model.ExistingLogistics?.Description ?? "")</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vehicle Fleet -->
+                    <div class="unit-section">
+                        <h6>Vehicle Fleet</h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="logisticsSupplyTrucks">Supply Trucks</label>
+                                    <input type="number" class="form-control" id="logisticsSupplyTrucks" 
+                                           value="@(Model.ExistingLogistics?.SupplyTrucks ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="logisticsFuelTrucks">Fuel Trucks</label>
+                                    <input type="number" class="form-control" id="logisticsFuelTrucks" 
+                                           value="@(Model.ExistingLogistics?.FuelTrucks ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="logisticsWaterTrucks">Water Trucks</label>
+                                    <input type="number" class="form-control" id="logisticsWaterTrucks" 
+                                           value="@(Model.ExistingLogistics?.WaterTrucks ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="logisticsAmmunitionTrucks">Ammunition Trucks</label>
+                                    <input type="number" class="form-control" id="logisticsAmmunitionTrucks" 
+                                           value="@(Model.ExistingLogistics?.AmmunitionTrucks ?? 0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="logisticsMaintenanceVehicles">Maintenance Vehicles</label>
+                                    <input type="number" class="form-control" id="logisticsMaintenanceVehicles" 
+                                           value="@(Model.ExistingLogistics?.MaintenanceVehicles ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="logisticsRecoveryVehicles">Recovery Vehicles</label>
+                                    <input type="number" class="form-control" id="logisticsRecoveryVehicles" 
+                                           value="@(Model.ExistingLogistics?.RecoveryVehicles ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="logisticsMobileWorkshops">Mobile Workshops</label>
+                                    <input type="number" class="form-control" id="logisticsMobileWorkshops" 
+                                           value="@(Model.ExistingLogistics?.MobileWorkshops ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="logisticsHMG">Heavy Machine Guns</label>
+                                    <input type="number" class="form-control" id="logisticsHMG" 
+                                           value="@(Model.ExistingLogistics?.HMG ?? 0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Storage Capacity -->
+                    <div class="unit-section">
+                        <h6>Storage Capacity</h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="logisticsFuelCapacity">Fuel Capacity (Liters)</label>
+                                    <input type="number" class="form-control" id="logisticsFuelCapacity" 
+                                           value="@(Model.ExistingLogistics?.FuelCapacity ?? 0)" min="0" step="1000" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="logisticsWaterCapacity">Water Capacity (Liters)</label>
+                                    <input type="number" class="form-control" id="logisticsWaterCapacity" 
+                                           value="@(Model.ExistingLogistics?.WaterCapacity ?? 0)" min="0" step="1000" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="logisticsAmmunitionStorage">Ammunition Storage (Tons)</label>
+                                    <input type="number" class="form-control" id="logisticsAmmunitionStorage" 
+                                           value="@(Model.ExistingLogistics?.AmmunitionStorage ?? 0)" min="0" step="0.1" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="logisticsSupplyCapacity">Supply Capacity (Tons)</label>
+                                    <input type="number" class="form-control" id="logisticsSupplyCapacity" 
+                                           value="@(Model.ExistingLogistics?.SupplyCapacity ?? 0)" min="0" step="0.1" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobility Data -->
+                    <div class="unit-section">
+                        <h6>Mobility Data</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="logisticsMarchingSpeedRoads">Marching Speed - Roads (km/h)</label>
+                                    <input type="number" class="form-control" id="logisticsMarchingSpeedRoads" 
+                                           value="@(Model.ExistingLogistics?.MarchingSpeedRoads ?? 40)" min="0" step="1" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="logisticsMarchingSpeedCrossCountry">Marching Speed - Cross Country (km/h)</label>
+                                    <input type="number" class="form-control" id="logisticsMarchingSpeedCrossCountry" 
+                                           value="@(Model.ExistingLogistics?.MarchingSpeedCrossCountry ?? 15)" min="0" step="1" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="logisticsConvoySpeed">Convoy Speed (km/h)</label>
+                                    <input type="number" class="form-control" id="logisticsConvoySpeed" 
+                                           value="@(Model.ExistingLogistics?.ConvoySpeed ?? 25)" min="0" step="1" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="unit-footer">
+                        <button type="button" class="btn btn-success" onclick="saveLogisticsUnit()">
+                            <i class="fas fa-save"></i> Save Logistics Unit
+                        </button>
+                        @if (Model.ExistingLogistics != null)
+                        {
+                            <button type="button" class="btn btn-danger" onclick="deleteLogisticsUnit()">
+                                <i class="fas fa-trash"></i> Delete Unit
+                            </button>
+                        }
+                    </div>
+                </form>
+            </div>
+
+            <!-- Combat Engineering Company Tab -->
+            <div id="engineering-tab" class="unit-tab-content">
+                <form id="engineeringForm">
+                    <div class="unit-header">
+                        <h5><i class="fas fa-hard-hat"></i> Combat Engineering Company Data</h5>
+                        @if (Model.ExistingEngineering != null)
+                        {
+                            <span class="badge badge-success">Unit Exists - Editing</span>
+                            <input type="hidden" id="engineeringId" value="@Model.ExistingEngineering.Id" />
+                        }
+                        else
+                        {
+                            <span class="badge badge-warning">New Unit</span>
+                            <input type="hidden" id="engineeringId" value="" />
+                        }
+                    </div>
+
+                    <!-- Basic Engineering Information -->
+                    <div class="unit-section">
+                        <h6>Basic Information</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="engineeringName">Company Name *</label>
+                                    <input type="text" class="form-control" id="engineeringName" required 
+                                           value="@(Model.ExistingEngineering?.Name ?? "")" 
+                                           placeholder="e.g., 1st Combat Engineering Company" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="engineeringCode">Unit Code *</label>
+                                    <input type="text" class="form-control" id="engineeringCode" required 
+                                           value="@(Model.ExistingEngineering?.UnitCode ?? "")" 
+                                           placeholder="e.g., 1CEC" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="engineeringStrength">Strength (Personnel) *</label>
+                                    <input type="number" class="form-control" id="engineeringStrength" required 
+                                           value="@(Model.ExistingEngineering?.Strength ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="engineeringPlatoons">Platoons</label>
+                                    <input type="number" class="form-control" id="engineeringPlatoons" 
+                                           value="@(Model.ExistingEngineering?.Platoons ?? 0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="engineeringDescription">Description</label>
+                                    <textarea class="form-control" id="engineeringDescription" rows="2" 
+                                              placeholder="Brief description of the engineering company">@(Model.ExistingEngineering?.Description ?? "")</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Engineering Equipment -->
+                    <div class="unit-section">
+                        <h6>Engineering Equipment</h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="engineeringEngineerVehicles">Engineer Vehicles</label>
+                                    <input type="number" class="form-control" id="engineeringEngineerVehicles" 
+                                           value="@(Model.ExistingEngineering?.EngineerVehicles ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="engineeringBridgeLayingVehicles">Bridge Laying Vehicles</label>
+                                    <input type="number" class="form-control" id="engineeringBridgeLayingVehicles" 
+                                           value="@(Model.ExistingEngineering?.BridgeLayingVehicles ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="engineeringMineClearingVehicles">Mine Clearing Vehicles</label>
+                                    <input type="number" class="form-control" id="engineeringMineClearingVehicles" 
+                                           value="@(Model.ExistingEngineering?.MineClearingVehicles ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="engineeringBulldozers">Bulldozers</label>
+                                    <input type="number" class="form-control" id="engineeringBulldozers" 
+                                           value="@(Model.ExistingEngineering?.Bulldozers ?? 0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="engineeringExcavators">Excavators</label>
+                                    <input type="number" class="form-control" id="engineeringExcavators" 
+                                           value="@(Model.ExistingEngineering?.Excavators ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="engineeringCranes">Cranes</label>
+                                    <input type="number" class="form-control" id="engineeringCranes" 
+                                           value="@(Model.ExistingEngineering?.Cranes ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="engineeringDemolitionCharges">Demolition Charges</label>
+                                    <input type="number" class="form-control" id="engineeringDemolitionCharges" 
+                                           value="@(Model.ExistingEngineering?.DemolitionCharges ?? 0)" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="engineeringMineDetectionEquipment">Mine Detection Equipment</label>
+                                    <input type="number" class="form-control" id="engineeringMineDetectionEquipment" 
+                                           value="@(Model.ExistingEngineering?.MineDetectionEquipment ?? 0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="engineeringConstructionMaterials">Construction Materials (Tons)</label>
+                                    <input type="number" class="form-control" id="engineeringConstructionMaterials" 
+                                           value="@(Model.ExistingEngineering?.ConstructionMaterials ?? 0)" min="0" step="0.1" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="engineeringATGMS">Anti-Tank Guided Missiles</label>
+                                    <input type="number" class="form-control" id="engineeringATGMS" 
+                                           value="@(Model.ExistingEngineering?.ATGMS ?? 0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Engineering Capabilities -->
+                    <div class="unit-section">
+                        <h6>Engineering Capabilities</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="engineeringBridgeBuildingCapacity">Bridge Building Capacity</label>
+                                    <select class="form-control" id="engineeringBridgeBuildingCapacity">
+                                        <option value="Light Vehicle Bridge" selected="@(Model.ExistingEngineering?.BridgeBuildingCapacity == "Light Vehicle Bridge")">Light Vehicle Bridge</option>
+                                        <option value="Medium Vehicle Bridge" selected="@(Model.ExistingEngineering?.BridgeBuildingCapacity == "Medium Vehicle Bridge")">Medium Vehicle Bridge</option>
+                                        <option value="Heavy Vehicle Bridge" selected="@(Model.ExistingEngineering?.BridgeBuildingCapacity == "Heavy Vehicle Bridge")">Heavy Vehicle Bridge</option>
+                                        <option value="Tank Bridge" selected="@(Model.ExistingEngineering?.BridgeBuildingCapacity == "Tank Bridge")">Tank Bridge</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="engineeringFortificationBuildingCapacity">Fortification Building Capacity</label>
+                                    <select class="form-control" id="engineeringFortificationBuildingCapacity">
+                                        <option value="Basic Field Fortifications" selected="@(Model.ExistingEngineering?.FortificationBuildingCapacity == "Basic Field Fortifications")">Basic Field Fortifications</option>
+                                        <option value="Intermediate Fortifications" selected="@(Model.ExistingEngineering?.FortificationBuildingCapacity == "Intermediate Fortifications")">Intermediate Fortifications</option>
+                                        <option value="Heavy Fortifications" selected="@(Model.ExistingEngineering?.FortificationBuildingCapacity == "Heavy Fortifications")">Heavy Fortifications</option>
+                                        <option value="Complex Fortifications" selected="@(Model.ExistingEngineering?.FortificationBuildingCapacity == "Complex Fortifications")">Complex Fortifications</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="engineeringObstacleClearingCapacity">Obstacle Clearing Capacity</label>
+                                    <select class="form-control" id="engineeringObstacleClearingCapacity">
+                                        <option value="Minefields and Simple Obstacles" selected="@(Model.ExistingEngineering?.ObstacleClearingCapacity == "Minefields and Simple Obstacles")">Minefields and Simple Obstacles</option>
+                                        <option value="Complex Minefields" selected="@(Model.ExistingEngineering?.ObstacleClearingCapacity == "Complex Minefields")">Complex Minefields</option>
+                                        <option value="Heavy Obstacles" selected="@(Model.ExistingEngineering?.ObstacleClearingCapacity == "Heavy Obstacles")">Heavy Obstacles</option>
+                                        <option value="Complex Obstacles" selected="@(Model.ExistingEngineering?.ObstacleClearingCapacity == "Complex Obstacles")">Complex Obstacles</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobility Data -->
+                    <div class="unit-section">
+                        <h6>Mobility Data</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="engineeringMarchingSpeedRoads">Marching Speed - Roads (km/h)</label>
+                                    <input type="number" class="form-control" id="engineeringMarchingSpeedRoads" 
+                                           value="@(Model.ExistingEngineering?.MarchingSpeedRoads ?? 25)" min="0" step="1" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="engineeringMarchingSpeedCrossCountry">Marching Speed - Cross Country (km/h)</label>
+                                    <input type="number" class="form-control" id="engineeringMarchingSpeedCrossCountry" 
+                                           value="@(Model.ExistingEngineering?.MarchingSpeedCrossCountry ?? 10)" min="0" step="1" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="engineeringEngineeringWorkSpeed">Engineering Work Speed (hours/obstacle)</label>
+                                    <input type="number" class="form-control" id="engineeringEngineeringWorkSpeed" 
+                                           value="@(Model.ExistingEngineering?.EngineeringWorkSpeed ?? 2)" min="0" step="0.1" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="unit-footer">
+                        <button type="button" class="btn btn-success" onclick="saveCombatEngineeringCompany()">
+                            <i class="fas fa-save"></i> Save Combat Engineering Company
+                        </button>
+                        @if (Model.ExistingEngineering != null)
+                        {
+                            <button type="button" class="btn btn-danger" onclick="deleteCombatEngineeringCompany()">
+                                <i class="fas fa-trash"></i> Delete Unit
+                            </button>
+                        }
+                    </div>
+                </form>
+            </div>
         </div>
         
         <div class="gameplay-modal-footer">
@@ -1690,5 +2139,139 @@ function saveUnit(unitType, unitData, unitDisplayName) {
             $("#loading").hide();
         }
     });
+}
+
+// Save Logistics Unit
+function saveLogisticsUnit() {
+    console.log('💾 Saving Logistics Unit...');
+    
+    const logisticsData = {
+        id: document.getElementById('logisticsId').value || null,
+        brigadeId: document.getElementById('brigadeId').value,
+        tokenId: document.getElementById('tokenId').value,
+        teamId: document.getElementById('teamId').value,
+        forceType: document.getElementById('forceType').value,
+        name: document.getElementById('logisticsName').value,
+        unitCode: document.getElementById('logisticsCode').value,
+        strength: parseInt(document.getElementById('logisticsStrength').value) || 0,
+        companies: parseInt(document.getElementById('logisticsCompanies').value) || 0,
+        description: document.getElementById('logisticsDescription').value,
+        supplyTrucks: parseInt(document.getElementById('logisticsSupplyTrucks').value) || 0,
+        fuelTrucks: parseInt(document.getElementById('logisticsFuelTrucks').value) || 0,
+        waterTrucks: parseInt(document.getElementById('logisticsWaterTrucks').value) || 0,
+        ammunitionTrucks: parseInt(document.getElementById('logisticsAmmunitionTrucks').value) || 0,
+        maintenanceVehicles: parseInt(document.getElementById('logisticsMaintenanceVehicles').value) || 0,
+        recoveryVehicles: parseInt(document.getElementById('logisticsRecoveryVehicles').value) || 0,
+        mobileWorkshops: parseInt(document.getElementById('logisticsMobileWorkshops').value) || 0,
+        fuelCapacity: parseFloat(document.getElementById('logisticsFuelCapacity').value) || 0,
+        waterCapacity: parseFloat(document.getElementById('logisticsWaterCapacity').value) || 0,
+        ammunitionStorage: parseFloat(document.getElementById('logisticsAmmunitionStorage').value) || 0,
+        supplyCapacity: parseFloat(document.getElementById('logisticsSupplyCapacity').value) || 0,
+        hmg: parseInt(document.getElementById('logisticsHMG').value) || 0,
+        lmg: parseInt(document.getElementById('logisticsLMG').value) || 0,
+        marchingSpeedRoads: parseFloat(document.getElementById('logisticsMarchingSpeedRoads').value) || 40,
+        marchingSpeedCrossCountry: parseFloat(document.getElementById('logisticsMarchingSpeedCrossCountry').value) || 15,
+        convoySpeed: parseFloat(document.getElementById('logisticsConvoySpeed').value) || 25,
+        // Enhanced Combat & Movement Properties
+        combatPower: parseFloat(document.getElementById('logisticsCombatPower')?.value) || 0.5,
+        movementPoints: parseFloat(document.getElementById('logisticsMovementPoints')?.value) || 40.0,
+        currentTerrain: document.getElementById('logisticsCurrentTerrain')?.value || "Road",
+        remainingMovement: parseFloat(document.getElementById('logisticsRemainingMovement')?.value) || 40.0,
+        strengthPercentage: parseFloat(document.getElementById('logisticsStrengthPercentage')?.value) || 100.0,
+        supplyState: parseInt(document.getElementById('logisticsSupplyState')?.value) || 100,
+        terrainModifier: parseFloat(document.getElementById('logisticsTerrainModifier')?.value) || 1.0,
+        supplyModifier: parseFloat(document.getElementById('logisticsSupplyModifier')?.value) || 1.0,
+        effectiveCombatPower: parseFloat(document.getElementById('logisticsEffectiveCombatPower')?.value) || 0.5
+    };
+    
+    // Validation
+    if (!logisticsData.name || !logisticsData.unitCode) {
+        alert('Please fill in Unit Name and Unit Code');
+        return;
+    }
+    
+    // Save via AJAX
+    saveUnit('logistics', logisticsData, 'Logistics Unit');
+}
+
+// Save Combat Engineering Company
+function saveCombatEngineeringCompany() {
+    console.log('💾 Saving Combat Engineering Company...');
+    
+    const engineeringData = {
+        id: document.getElementById('engineeringId').value || null,
+        brigadeId: document.getElementById('brigadeId').value,
+        tokenId: document.getElementById('tokenId').value,
+        teamId: document.getElementById('teamId').value,
+        forceType: document.getElementById('forceType').value,
+        name: document.getElementById('engineeringName').value,
+        unitCode: document.getElementById('engineeringCode').value,
+        strength: parseInt(document.getElementById('engineeringStrength').value) || 0,
+        platoons: parseInt(document.getElementById('engineeringPlatoons').value) || 0,
+        description: document.getElementById('engineeringDescription').value,
+        engineerVehicles: parseInt(document.getElementById('engineeringEngineerVehicles').value) || 0,
+        bridgeLayingVehicles: parseInt(document.getElementById('engineeringBridgeLayingVehicles').value) || 0,
+        mineClearingVehicles: parseInt(document.getElementById('engineeringMineClearingVehicles').value) || 0,
+        bulldozers: parseInt(document.getElementById('engineeringBulldozers').value) || 0,
+        excavators: parseInt(document.getElementById('engineeringExcavators').value) || 0,
+        cranes: parseInt(document.getElementById('engineeringCranes').value) || 0,
+        demolitionCharges: parseInt(document.getElementById('engineeringDemolitionCharges').value) || 0,
+        mineDetectionEquipment: parseInt(document.getElementById('engineeringMineDetectionEquipment').value) || 0,
+        constructionMaterials: parseFloat(document.getElementById('engineeringConstructionMaterials').value) || 0,
+        hmg: parseInt(document.getElementById('engineeringHMG').value) || 0,
+        lmg: parseInt(document.getElementById('engineeringLMG').value) || 0,
+        atgms: parseInt(document.getElementById('engineeringATGMS').value) || 0,
+        bridgeBuildingCapacity: document.getElementById('engineeringBridgeBuildingCapacity').value || "Light Vehicle Bridge",
+        fortificationBuildingCapacity: document.getElementById('engineeringFortificationBuildingCapacity').value || "Basic Field Fortifications",
+        obstacleClearingCapacity: document.getElementById('engineeringObstacleClearingCapacity').value || "Minefields and Simple Obstacles",
+        marchingSpeedRoads: parseFloat(document.getElementById('engineeringMarchingSpeedRoads').value) || 25,
+        marchingSpeedCrossCountry: parseFloat(document.getElementById('engineeringMarchingSpeedCrossCountry').value) || 10,
+        engineeringWorkSpeed: parseFloat(document.getElementById('engineeringEngineeringWorkSpeed').value) || 2,
+        // Enhanced Combat & Movement Properties
+        combatPower: parseFloat(document.getElementById('engineeringCombatPower')?.value) || 0.7,
+        movementPoints: parseFloat(document.getElementById('engineeringMovementPoints')?.value) || 25.0,
+        currentTerrain: document.getElementById('engineeringCurrentTerrain')?.value || "Road",
+        remainingMovement: parseFloat(document.getElementById('engineeringRemainingMovement')?.value) || 25.0,
+        strengthPercentage: parseFloat(document.getElementById('engineeringStrengthPercentage')?.value) || 100.0,
+        supplyState: parseInt(document.getElementById('engineeringSupplyState')?.value) || 100,
+        terrainModifier: parseFloat(document.getElementById('engineeringTerrainModifier')?.value) || 1.0,
+        supplyModifier: parseFloat(document.getElementById('engineeringSupplyModifier')?.value) || 1.0,
+        effectiveCombatPower: parseFloat(document.getElementById('engineeringEffectiveCombatPower')?.value) || 0.7
+    };
+    
+    // Validation
+    if (!engineeringData.name || !engineeringData.unitCode) {
+        alert('Please fill in Company Name and Unit Code');
+        return;
+    }
+    
+    // Save via AJAX
+    saveUnit('engineering', engineeringData, 'Combat Engineering Company');
+}
+
+// Delete Logistics Unit
+function deleteLogisticsUnit() {
+    const logisticsId = document.getElementById('logisticsId').value;
+    if (!logisticsId) {
+        alert('No logistics unit to delete');
+        return;
+    }
+    
+    if (confirm('Are you sure you want to delete this logistics unit?')) {
+        deleteUnit('logistics', logisticsId, 'Logistics Unit');
+    }
+}
+
+// Delete Combat Engineering Company
+function deleteCombatEngineeringCompany() {
+    const engineeringId = document.getElementById('engineeringId').value;
+    if (!engineeringId) {
+        alert('No engineering company to delete');
+        return;
+    }
+    
+    if (confirm('Are you sure you want to delete this combat engineering company?')) {
+        deleteUnit('engineering', engineeringId, 'Combat Engineering Company');
+    }
 }
 </script>

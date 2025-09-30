@@ -229,6 +229,133 @@ namespace TechWebSol.Models
         }
     }
 
+    public class LogisticsUnit : MilitaryUnit
+    {
+        [DisplayName("Companies")]
+        public int Companies { get; set; }
+        
+        [DisplayName("Supply Trucks")]
+        public int SupplyTrucks { get; set; }
+        
+        [DisplayName("Fuel Trucks")]
+        public int FuelTrucks { get; set; }
+        
+        [DisplayName("Water Trucks")]
+        public int WaterTrucks { get; set; }
+        
+        [DisplayName("Ammunition Trucks")]
+        public int AmmunitionTrucks { get; set; }
+        
+        [DisplayName("Maintenance Vehicles")]
+        public int MaintenanceVehicles { get; set; }
+        
+        [DisplayName("Recovery Vehicles")]
+        public int RecoveryVehicles { get; set; }
+        
+        [DisplayName("Mobile Workshops")]
+        public int MobileWorkshops { get; set; }
+        
+        [DisplayName("Fuel Capacity (Liters)")]
+        public decimal FuelCapacity { get; set; }
+        
+        [DisplayName("Water Capacity (Liters)")]
+        public decimal WaterCapacity { get; set; }
+        
+        [DisplayName("Ammunition Storage (Tons)")]
+        public decimal AmmunitionStorage { get; set; }
+        
+        [DisplayName("Supply Capacity (Tons)")]
+        public decimal SupplyCapacity { get; set; }
+        
+        [DisplayName("Heavy Machine Guns")]
+        public int HMG { get; set; }
+        
+        [DisplayName("Light Machine Guns")]
+        public int LMG { get; set; }
+
+        // Mobility Data
+        [DisplayName("Marching Speed - Roads (km/h)")]
+        public decimal MarchingSpeedRoads { get; set; } = 40; // kmph
+        
+        [DisplayName("Marching Speed - Cross Country (km/h)")]
+        public decimal MarchingSpeedCrossCountry { get; set; } = 15; // kmph
+        
+        [DisplayName("Convoy Speed (km/h)")]
+        public decimal ConvoySpeed { get; set; } = 25; // kmph
+
+        public LogisticsUnit()
+        {
+            UnitType = "Logistics";
+        }
+    }
+
+    public class CombatEngineeringCompany : MilitaryUnit
+    {
+        [DisplayName("Platoons")]
+        public int Platoons { get; set; }
+        
+        [DisplayName("Engineer Vehicles")]
+        public int EngineerVehicles { get; set; }
+        
+        [DisplayName("Bridge Laying Vehicles")]
+        public int BridgeLayingVehicles { get; set; }
+        
+        [DisplayName("Mine Clearing Vehicles")]
+        public int MineClearingVehicles { get; set; }
+        
+        [DisplayName("Bulldozers")]
+        public int Bulldozers { get; set; }
+        
+        [DisplayName("Excavators")]
+        public int Excavators { get; set; }
+        
+        [DisplayName("Cranes")]
+        public int Cranes { get; set; }
+        
+        [DisplayName("Demolition Charges")]
+        public int DemolitionCharges { get; set; }
+        
+        [DisplayName("Mine Detection Equipment")]
+        public int MineDetectionEquipment { get; set; }
+        
+        [DisplayName("Construction Materials (Tons)")]
+        public decimal ConstructionMaterials { get; set; }
+        
+        [DisplayName("Heavy Machine Guns")]
+        public int HMG { get; set; }
+        
+        [DisplayName("Light Machine Guns")]
+        public int LMG { get; set; }
+        
+        [DisplayName("Anti-Tank Guided Missiles")]
+        public int ATGMS { get; set; }
+
+        // Engineering Capabilities
+        [DisplayName("Bridge Building Capacity")]
+        public string BridgeBuildingCapacity { get; set; } = "Light Vehicle Bridge";
+        
+        [DisplayName("Fortification Building Capacity")]
+        public string FortificationBuildingCapacity { get; set; } = "Basic Field Fortifications";
+        
+        [DisplayName("Obstacle Clearing Capacity")]
+        public string ObstacleClearingCapacity { get; set; } = "Minefields and Simple Obstacles";
+
+        // Mobility Data
+        [DisplayName("Marching Speed - Roads (km/h)")]
+        public decimal MarchingSpeedRoads { get; set; } = 25; // kmph
+        
+        [DisplayName("Marching Speed - Cross Country (km/h)")]
+        public decimal MarchingSpeedCrossCountry { get; set; } = 10; // kmph
+        
+        [DisplayName("Engineering Work Speed (hours/obstacle)")]
+        public decimal EngineeringWorkSpeed { get; set; } = 2; // hours per obstacle
+
+        public CombatEngineeringCompany()
+        {
+            UnitType = "Combat Engineering";
+        }
+    }
+
     public class TerrainMobilityFactor : BaseEntity
     {
         [Required]
@@ -324,5 +451,7 @@ namespace TechWebSol.Models
         public virtual ICollection<InfantryBattalion> InfantryBattalions { get; set; } = new List<InfantryBattalion>();
         public virtual ICollection<ArmouredRegiment> ArmouredRegiments { get; set; } = new List<ArmouredRegiment>();
         public virtual ICollection<ArtilleryRegiment> ArtilleryRegiments { get; set; } = new List<ArtilleryRegiment>();
+        public virtual ICollection<LogisticsUnit> LogisticsUnits { get; set; } = new List<LogisticsUnit>();
+        public virtual ICollection<CombatEngineeringCompany> CombatEngineeringCompanies { get; set; } = new List<CombatEngineeringCompany>();
     }
 }

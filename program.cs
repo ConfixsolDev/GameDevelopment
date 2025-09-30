@@ -2,12 +2,14 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using System.Globalization;
 using TechWebSol.Data;
+using TechWebSol.Filters;
 using TechWebSol.Models;
 using TechWebSol.Services;
 using TechWebSol.Services.TokenManagement;
@@ -138,9 +140,12 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
-
-// MVC Filters and Binders
-builder.Services.AddMvc();
+// MVC filters and binders
+builder.Services.AddMvc(options =>
+{
+    options.Filters.Add(typeof(DynamicAuthorizationFilter));
+    options.ModelBinderProviders.Insert(0, new DateTimeModelBinderProvider());
+});
 
 var app = builder.Build();
 

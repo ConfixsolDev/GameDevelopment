@@ -1,13 +1,14 @@
-using Microsoft.AspNetCore.Http;
-using TechWebSol.ViewModels;
-using TechWebSol.Constants;
 using TechWebSol.Extensions;
+using TechWebSol.Helpers;
+using TechWebSol.ViewModels;
 
 namespace TechWebSol.Services
 {
     public class UserSessionService : IUserSessionService
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private ISession Session => _httpContextAccessor.HttpContext.Session;
+        public string SessionKeyName { get; } = Constants.AppConstants.UserSessionKey;
 
         public UserSessionService(IHttpContextAccessor httpContextAccessor)
         {
@@ -16,28 +17,23 @@ namespace TechWebSol.Services
 
         public ApplicationUserVM GetCurrentUser()
         {
-            var session = _httpContextAccessor.HttpContext?.Session;
-            if (session == null) return null;
-
-            return session.GetObject<ApplicationUserVM>(AppConstants.UserSessionKey);
+            return Session.GetObject<ApplicationUserVM>(SessionKeyName);
         }
 
-        public void SetCurrentUser(ApplicationUserVM user)
+        public IEnumerable<MvcControllerInfoArea> GetCurrentRole()
         {
-            var session = _httpContextAccessor.HttpContext?.Session;
-            if (session != null)
-            {
-                session.SetObject(AppConstants.UserSessionKey, user);
-            }
+            var currentUser = GetCurrentUser();
+            return currentUser != null ? RolesList.GetValue(currentUser.RoleName) : null;
+        }
+
+        public void CreateSession(ApplicationUserVM user)
+        {
+            Session.SetObject(SessionKeyName, user);
         }
 
         public void ClearCurrentUser()
         {
-            var session = _httpContextAccessor.HttpContext?.Session;
-            if (session != null)
-            {
-                session.Remove(AppConstants.UserSessionKey);
-            }
+            Session.Remove(SessionKeyName);
         }
     }
 }

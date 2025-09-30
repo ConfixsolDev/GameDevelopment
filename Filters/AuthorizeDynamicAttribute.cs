@@ -1,75 +1,83 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
+using System.Reflection;
 using TechWebSol.Services;
 
 namespace TechWebSol.Filters
 {
-    public class AuthorizeDynamicAttribute : TypeFilterAttribute
+    public class AuthorizeDynamicAttribute : Attribute
     {
-        public AuthorizeDynamicAttribute() : base(typeof(AuthorizeDynamicFilter))
-        {
-        }
+        // No properties needed, just used as a marker
     }
 
-    public class AuthorizeDynamicFilter : IAuthorizationFilter
+    public class DynamicAuthorizationFilter : IAsyncActionFilter
     {
         private readonly IUserSessionService _userSessionService;
 
-        public AuthorizeDynamicFilter(IUserSessionService userSessionService)
+        public DynamicAuthorizationFilter(IUserSessionService userSessionService)
         {
             _userSessionService = userSessionService;
         }
 
-        public void OnAuthorization(AuthorizationFilterContext context)
+        public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
-            // Skip authorization for authentication-related actions to prevent redirect loops
-            var controllerName = context.RouteData.Values["controller"]?.ToString();
-            var actionName = context.RouteData.Values["action"]?.ToString();
-            var areaName = context.RouteData.Values["area"]?.ToString();
-
-            // Allow access to authentication-related actions
-            if (IsAuthenticationAction(controllerName, actionName, areaName))
+            if (!IsProtectedAction(context))
             {
+                await next();
                 return;
             }
 
-            // Check if user is authenticated via ASP.NET Core Identity
-            if (!context.HttpContext.User.Identity.IsAuthenticated)
+            var currentUserRoles = _userSessionService.GetCurrentRole();
+            if (currentUserRoles == null)
             {
-                context.Result = new RedirectToActionResult("Login", "Account", null);
+                context.Result = new RedirectResult("~/Account/Login");
                 return;
             }
 
-            // Check if user session is valid
-            var user = _userSessionService.GetCurrentUser();
-            if (user == null)
+            var controllerActionDescriptor = (ControllerActionDescriptor)context.ActionDescriptor;
+
+            var areaName = controllerActionDescriptor.ControllerTypeInfo.GetCustomAttribute<AreaAttribute>()?.RouteValue;
+            var controllerName = controllerActionDescriptor.ControllerName;
+            var actionName = controllerActionDescriptor.ActionName;
+
+            var isAuthorized = currentUserRoles.Any(area => area.AreaName == areaName &&
+                                                             area.Controller.Any(controller => controller.Id == controllerName &&
+                                                                                                controller.Actions.Any(action => action.Name == actionName)));
+
+            if (!isAuthorized)
             {
-                // Clear any invalid session data
-                context.HttpContext.Session.Clear();
-                context.Result = new RedirectToActionResult("Login", "Account", null);
+                context.Result = new RedirectResult("~/Account/AccessDenied");
                 return;
             }
 
-            // Basic authorization - you can enhance this with role-based checks
-            // For now, just ensure user is authenticated and has valid session
+            // Proceed with the action
+            await next();
         }
 
-        private bool IsAuthenticationAction(string controllerName, string actionName, string areaName)
+        private static bool IsProtectedAction(ActionContext context)
         {
-            // Allow access to authentication-related actions
-            if (string.Equals(controllerName, "Account", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(controllerName, "AccountAdmin", StringComparison.OrdinalIgnoreCase))
+            var controllerActionDescriptor = (ControllerActionDescriptor)context.ActionDescriptor;
+            if (controllerActionDescriptor != null)
             {
-                return true;
+                bool isAuthorize = controllerActionDescriptor.MethodInfo.GetCustomAttributes(inherit: true)
+                    .Any(a => a is AuthorizeAttribute) || controllerActionDescriptor.ControllerTypeInfo.GetCustomAttributes(inherit: true)
+                    .Any(a => a is AuthorizeAttribute);
+
+                if (isAuthorize)
+                {
+                    return false; // Skip custom authorization checks if Authorize is present
+                }
             }
 
-            // Allow access to Error pages
-            if (string.Equals(controllerName, "Error", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
+            // Check for AuthorizeDynamic attribute
+            var controllerTypeInfo = controllerActionDescriptor.ControllerTypeInfo;
+            var actionMethodInfo = controllerActionDescriptor.MethodInfo;
 
-            return false;
+            return controllerTypeInfo.GetCustomAttribute<AuthorizeDynamicAttribute>() != null ||
+                   actionMethodInfo.GetCustomAttribute<AuthorizeDynamicAttribute>() != null;
         }
     }
+
 }
