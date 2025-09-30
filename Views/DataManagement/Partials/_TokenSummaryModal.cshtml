@@ -31,7 +31,7 @@
                 </div>
             </div>
 
-            @if (Model.Brigades.Any() || Model.InfantryBattalions.Any() || Model.ArmouredRegiments.Any() || Model.ArtilleryRegiments.Any() || Model.Intelligence.Any() || Model.Recon.Any())
+            @if (Model.Brigades.Any() || Model.InfantryBattalions.Any() || Model.ArmouredRegiments.Any() || Model.ArtilleryRegiments.Any() || Model.Recon.Any())
             {
                 <!-- Military Hierarchy -->
                 <div class="token-summary-section">
@@ -104,28 +104,6 @@
                     }
                 </div>
                 
-                @if (Model.Intelligence.Any())
-                {
-                    <!-- Intelligence Reports -->
-                    <div class="token-summary-section">
-                        <h6><i class="fas fa-eye"></i> Intelligence Reports (@Model.Intelligence.Count)</h6>
-                        @foreach (var intel in Model.Intelligence.Take(3))
-                        {
-                            <div class="summary-item intelligence">
-                                <strong>@(intel.Title ?? "Untitled Report")</strong>
-                                <span class="badge-military">
-                                    @(intel.Priority ?? "Normal") Priority
-                                </span>
-                                <div class="text-muted">Source: @(intel.Source ?? "Unknown")</div>
-                                <div class="text-muted">@(intel.Description?.Length > 100 ? intel.Description.Substring(0, 100) + "..." : intel.Description ?? "")</div>
-                            </div>
-                        }
-                        @if (Model.Intelligence.Count > 3)
-                        {
-                            <div class="text-muted text-center">... and @(Model.Intelligence.Count - 3) more intelligence reports</div>
-                        }
-                    </div>
-                }
                 
                 @if (Model.Recon.Any())
                 {
@@ -164,7 +142,7 @@
         
         <div class="gameplay-modal-footer">
             <button class="gameplay-btn" onclick="closeTokenSummaryModal()">Close</button>
-            @if (Model.Brigades.Any() || Model.InfantryBattalions.Any() || Model.ArmouredRegiments.Any() || Model.ArtilleryRegiments.Any() || Model.Intelligence.Any() || Model.Recon.Any())
+            @if (Model.Brigades.Any() || Model.InfantryBattalions.Any() || Model.ArmouredRegiments.Any() || Model.ArtilleryRegiments.Any() || Model.Recon.Any())
             {
                 <button class="gameplay-btn gameplay-btn-primary" onclick="editTokenData()">
                     <i class="fas fa-edit"></i> Edit Data

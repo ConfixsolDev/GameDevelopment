@@ -408,7 +408,7 @@ class TokenPlacementManager {
             <div class="drag-tooltip">
                 <div class="unit-name">${token.name}</div>
                 <div class="distance">Distance: <span id="dragDistance">0</span> km</div>
-                <div class="eta">ETA: <span id="dragETA">0</span>h</div>
+                <div class="eta">ETA: <span id="dragETA">0000</span> hours</div>
             </div>
         `).setLatLng(position).addTo(this.map);
     }
@@ -422,7 +422,14 @@ class TokenPlacementManager {
             const etaSpan = document.getElementById('dragETA');
             
             if (distanceSpan) distanceSpan.textContent = distance.toFixed(1);
-            if (etaSpan) etaSpan.textContent = etaHours.toFixed(1);
+            if (etaSpan) {
+                // Convert hours to military time format (e.g., 2.5 hours = 0230 hours)
+                const totalMinutes = Math.round(etaHours * 60);
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = totalMinutes % 60;
+                const militaryTime = String(hours).padStart(2, '0') + String(minutes).padStart(2, '0');
+                etaSpan.textContent = militaryTime;
+            }
         }
     }
 
@@ -455,7 +462,7 @@ class TokenPlacementManager {
                     </div>
                     <div class="info-item">
                         <span class="label">Estimated ETA:</span>
-                        <span class="value">${etaHours.toFixed(1)}h</span>
+                        <span class="value">${Math.floor(etaHours).toString().padStart(2, '0')}${Math.round((etaHours % 1) * 60).toString().padStart(2, '0')} hours</span>
                     </div>
                 </div>
                 <div class="preview-actions">
@@ -603,17 +610,17 @@ class TokenPlacementManager {
                                         </div>
                                     </div>
                                     
-                                    <!-- Row 1: Start Turn & Start Offset -->
+                                    <!-- Row 1: Proceed & Start Offset -->
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label for="startTurn" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Start Turn</label>
+                                                <label for="startTurn" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Proceed</label>
                                                 <select class="form-control" id="startTurn">
-                                                    <option value="1">Turn 01</option>
-                                                    <option value="2">Turn 02</option>
-                                                    <option value="3">Turn 03</option>
-                                                    <option value="4">Turn 04</option>
-                                                    <option value="5">Turn 05</option>
+                                                    <option value="1">PR</option>
+                                                    <option value="2">PR</option>
+                                                    <option value="3">PR</option>
+                                                    <option value="4">PR</option>
+                                                    <option value="5">PR</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -646,26 +653,26 @@ class TokenPlacementManager {
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label for="plannedETA" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Planned ETA (hours) *</label>
+                                                <label for="plannedETA" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Planned ETA *</label>
                                                 <select class="form-control" id="plannedETA" required>
                                                     <option value="">Select ETA</option>
-                                                    <option value="1">1 hour</option>
-                                                    <option value="2">2 hours</option>
-                                                    <option value="3">3 hours</option>
-                                                    <option value="4">4 hours</option>
-                                                    <option value="5">5 hours</option>
-                                                    <option value="6">6 hours</option>
-                                                    <option value="7">7 hours</option>
-                                                    <option value="8">8 hours</option>
-                                                    <option value="9">9 hours</option>
-                                                    <option value="10">10 hours</option>
-                                                    <option value="11">11 hours</option>
-                                                    <option value="12">12 hours</option>
-                                                    <option value="13">13 hours</option>
-                                                    <option value="14">14 hours</option>
-                                                    <option value="15">15 hours</option>
+                                                    <option value="1">0600 hours</option>
+                                                    <option value="2">0800 hours</option>
+                                                    <option value="3">1000 hours</option>
+                                                    <option value="4">1200 hours</option>
+                                                    <option value="5">1400 hours</option>
+                                                    <option value="6">1600 hours</option>
+                                                    <option value="7">1700 hours</option>
+                                                    <option value="8">1800 hours</option>
+                                                    <option value="9">1900 hours</option>
+                                                    <option value="10">2000 hours</option>
+                                                    <option value="11">2100 hours</option>
+                                                    <option value="12">2200 hours</option>
+                                                    <option value="13">2300 hours</option>
+                                                    <option value="14">2400 hours</option>
+                                                    <option value="15">0100 hours</option>
                                                 </select>
-                                                <small class="text-muted" style="font-size: 11px;">Planner's estimated arrival time (required)</small>
+                                                <small class="text-muted" style="font-size: 11px;">Estimated arrival time in military format (required)</small>
                                             </div>
                                         </div>
                                         <div class="col-md-6">

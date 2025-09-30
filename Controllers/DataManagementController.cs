@@ -637,10 +637,6 @@ namespace TechWebSol.Controllers
                     .OrderByDescending(a => a.CreatedDate)
                     .ToListAsync();
 
-                var intelligence = await _context.Intelligence
-                    .Where(i => i.TokenId == tokenId && i.TeamId == user.TeamId && i.IsActive)
-                    .OrderByDescending(i => i.CreatedDate)
-                    .ToListAsync();
 
                 var recon = await _context.Recon
                     .Where(r => r.TokenId == tokenId && r.TeamId == user.TeamId && r.IsActive)
@@ -661,7 +657,6 @@ namespace TechWebSol.Controllers
                     InfantryBattalions = infantryForToken,
                     ArmouredRegiments = armouredForToken,
                     ArtilleryRegiments = artilleryForToken,
-                    Intelligence = intelligence,
                     Recon = recon
                 };
 
@@ -914,47 +909,7 @@ namespace TechWebSol.Controllers
             }
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetTokenIntelligence(Guid tokenId)
-        {
-            try
-            {
-                var intelligence = await _context.Intelligence
-                    .Where(i => i.TokenId == tokenId && i.TeamId == user.TeamId && i.IsActive)
-                    .OrderByDescending(i => i.Timestamp)
-                    .ToListAsync();
 
-                return Json(new { success = true, data = intelligence });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
-        }
-
-        [HttpDelete]
-        public async Task<IActionResult> DeleteTokenIntelligence(Guid id)
-        {
-            try
-            {
-                
-                var intelligence = await _context.Intelligence
-                    .FirstOrDefaultAsync(i => i.Id == id && i.TeamId == user.TeamId);
-
-                if (intelligence == null) return NotFound();
-
-                intelligence.IsActive = false;
-                intelligence.UpdatedBy = user.FullName;
-
-                await _context.SaveChangesAsync();
-
-                return Json(new { success = true });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
-        }
 
         [HttpGet]
         public async Task<IActionResult> GetTokenRecon(Guid tokenId)
@@ -1265,34 +1220,6 @@ namespace TechWebSol.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("GetIntelligenceReportsForBrigade")]
-        public async Task<IActionResult> GetIntelligenceReportsForBrigade(Guid tokenId, Guid brigadeId)
-        {
-            try
-            {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
-
-                var reports = await _context.Intelligence
-                    .Where(i => i.TokenId == tokenId && i.TeamId == user.TeamId && i.IsActive)
-                    .OrderByDescending(i => i.CreatedDate)
-                    .Select(i => new {
-                        i.Id,
-                        i.Title,
-                        i.Source,
-                        i.Priority,
-                        i.Description
-                    })
-                    .ToListAsync();
-
-                return Json(reports);
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
-        }
 
         [HttpGet]
         [Route("GetReconnaissanceForBrigade")]
@@ -1373,12 +1300,6 @@ namespace TechWebSol.Controllers
                             .ToListAsync();
                         break;
 
-                    case UnitType.Intelligence:
-                        viewModel.ExistingIntelligence = await _context.Intelligence
-                            .Where(i => i.TokenId == tokenId && i.TeamId == user.TeamId && i.IsActive)
-                            .OrderByDescending(i => i.CreatedDate)
-                            .ToListAsync();
-                        break;
 
                     case UnitType.Recon:
                         viewModel.ExistingRecon = await _context.Recon
@@ -1475,61 +1396,6 @@ namespace TechWebSol.Controllers
             }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CreateTokenIntelligence([FromBody] CreateTokenIntelligenceRequest request)
-        {
-            try
-            {
-                
-                var intelligence = new Intelligence
-                {
-                    Id = Guid.NewGuid(),
-                    Title = request.Title,
-                    Description = request.Description,
-                    Source = request.Source,
-                    Priority = request.Priority,
-                    TokenId = request.TokenId,
-                    TeamId = user.TeamId,
-                    CreatedBy = user.FullName,
-                    IsActive = true
-                };
-
-                _context.Intelligence.Add(intelligence);
-                await _context.SaveChangesAsync();
-
-                return Json(new { success = true, data = intelligence });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
-        }
-
-        [HttpPut]
-        public async Task<IActionResult> UpdateTokenIntelligence([FromBody] Intelligence intelligence)
-        {
-            try
-            {
-                var existingIntelligence = await _context.Intelligence
-                    .FirstOrDefaultAsync(i => i.Id == intelligence.Id && i.TeamId == user.TeamId);
-
-                if (existingIntelligence == null) return NotFound();
-
-                existingIntelligence.Title = intelligence.Title;
-                existingIntelligence.Description = intelligence.Description;
-                existingIntelligence.Source = intelligence.Source;
-                existingIntelligence.Priority = intelligence.Priority;
-                existingIntelligence.UpdatedBy = user.FullName;
-
-                await _context.SaveChangesAsync();
-
-                return Json(new { success = true, data = existingIntelligence });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
-        }
 
         [HttpPost]
         public async Task<IActionResult> CreateTokenRecon([FromBody] CreateTokenReconRequest request)
@@ -1675,11 +1541,6 @@ namespace TechWebSol.Controllers
                         .ToListAsync();
                 }
 
-                // Load Intelligence Reports (not tied to brigade)
-                viewModel.ExistingIntelligence = await _context.Intelligence
-                    .Where(i => i.TokenId == tokenId && i.TeamId == user.TeamId && i.IsActive)
-                    .OrderByDescending(i => i.CreatedDate)
-                    .ToListAsync();
 
                 // Load Reconnaissance (not tied to brigade)
                 viewModel.ExistingRecon = await _context.Recon
@@ -1734,11 +1595,7 @@ namespace TechWebSol.Controllers
                 var existingArtillery = await _context.ArtilleryRegiments
                     .FirstOrDefaultAsync(ar => ar.BrigadeId == brigadeId && ar.IsActive);
 
-                // Get existing Intelligence and Recon data for this token
-                var existingIntelligence = await _context.Intelligence
-                    .Where(i => i.TokenId == tokenId && i.TeamId == user.TeamId && i.IsActive)
-                    .OrderByDescending(i => i.CreatedDate)
-                    .ToListAsync();
+                // Get existing Recon data for this token
 
                 var existingRecon = await _context.Recon
                     .Where(r => r.TokenId == tokenId && r.TeamId == user.TeamId && r.IsActive)
@@ -1760,7 +1617,6 @@ namespace TechWebSol.Controllers
                     ExistingInfantry = existingInfantry,
                     ExistingArmoured = existingArmoured,
                     ExistingArtillery = existingArtillery,
-                    ExistingIntelligence = existingIntelligence,
                     ExistingRecon = existingRecon,
                     ExistingLogistics = existingLogistics,
                     ExistingEngineering = existingEngineering
@@ -2075,7 +1931,6 @@ namespace TechWebSol.Controllers
             public List<InfantryBattalion> ExistingInfantry { get; set; } = new List<InfantryBattalion>();
             public List<ArmouredRegiment> ExistingArmoured { get; set; } = new List<ArmouredRegiment>();
             public List<ArtilleryRegiment> ExistingArtillery { get; set; } = new List<ArtilleryRegiment>();
-            public List<Intelligence> ExistingIntelligence { get; set; } = new List<Intelligence>();
             public List<Recon> ExistingRecon { get; set; } = new List<Recon>();
         }
 
@@ -2108,7 +1963,6 @@ namespace TechWebSol.Controllers
             public List<InfantryBattalion> InfantryBattalions { get; set; }
             public List<ArmouredRegiment> ArmouredRegiments { get; set; }
             public List<ArtilleryRegiment> ArtilleryRegiments { get; set; }
-            public List<Intelligence> Intelligence { get; set; }
             public List<Recon> Recon { get; set; }
         }
         // Enums
@@ -2117,7 +1971,6 @@ namespace TechWebSol.Controllers
             Infantry,
             Armoured,
             Artillery,
-            Intelligence,
             Recon
         }
 
@@ -2142,7 +1995,6 @@ namespace TechWebSol.Controllers
             public List<InfantryBattalion> ExistingInfantry { get; set; } = new List<InfantryBattalion>();
             public List<ArmouredRegiment> ExistingArmoured { get; set; } = new List<ArmouredRegiment>();
             public List<ArtilleryRegiment> ExistingArtillery { get; set; } = new List<ArtilleryRegiment>();
-            public List<Intelligence> ExistingIntelligence { get; set; } = new List<Intelligence>();
             public List<Recon> ExistingRecon { get; set; } = new List<Recon>();
         }
 
@@ -2227,14 +2079,6 @@ namespace TechWebSol.Controllers
             public string DroneTypes { get; set; }
         }
 
-        public class CreateTokenIntelligenceRequest
-        {
-            public string Title { get; set; }
-            public string Description { get; set; }
-            public string Source { get; set; }
-            public string Priority { get; set; }
-            public Guid TokenId { get; set; }
-        }
 
         public class CreateTokenReconRequest
         {

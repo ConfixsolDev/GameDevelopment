@@ -166,46 +166,6 @@
                                     </button>
                                 </div>
                             </div>
-                            <div id="intelligence-data" class="data-tab-content">
-                                <div class="tab-content-header">
-                                    <h6><i class="fas fa-eye"></i> Intelligence Reports</h6>
-                                    <p class="text-muted">Manage intelligence reports for @Model.ExistingBrigade.Name</p>
-                                </div>
-                                
-                                <div id="intelligenceReportsList" class="units-list">
-                                    @if (Model.ExistingIntelligence != null && Model.ExistingIntelligence.Any())
-                                    {
-                                        @foreach (var report in Model.ExistingIntelligence)
-                                        {
-                                            var reportData = (dynamic)report;
-                                            <div class="unit-item">
-                                                <div class="unit-info">
-                                                    <div class="unit-name1">@reportData.Title</div>
-                                                    <div class="unit-details">Source: @reportData.Source | Priority: @reportData.Priority</div>
-                                                </div>
-                                                <div class="unit-actions">
-                                                    <button class="btn btn-sm btn-outline-secondary" onclick="editIntelligenceReport('@reportData.Id')">
-                                                        <i class="fas fa-edit"></i> Edit
-                                                    </button>
-                                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteIntelligenceReport('@reportData.Id')">
-                                                        <i class="fas fa-trash"></i> Delete
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <div class="no-units-message">No intelligence reports found. Click "Add New" to create one.</div>
-                                    }
-                                </div>
-                                
-                                <div class="add-unit-section">
-                                    <button type="button" class="btn btn-primary" onclick="openIntelligenceReportForm('@Model.Token.Id', '@Model.ExistingBrigade.Id')">
-                                        <i class="fas fa-plus"></i> Add New Intelligence Report
-                                    </button>
-                                </div>
-                            </div>
                             <div id="recon-data" class="data-tab-content">
                                 <div class="tab-content-header">
                                     <h6><i class="fas fa-binoculars"></i> Reconnaissance</h6>

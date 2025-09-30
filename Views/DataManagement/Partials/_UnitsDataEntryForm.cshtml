@@ -63,13 +63,6 @@
                         <span class="unit-status saved">✓</span>
                     }
                 </button>
-                <button type="button" class="unit-tab" onclick="showUnitTab('intelligence')">
-                    <i class="fas fa-eye"></i> Intelligence
-                    @if (Model.ExistingIntelligence != null && Model.ExistingIntelligence.Any())
-                    {
-                        <span class="unit-status saved">@Model.ExistingIntelligence.Count</span>
-                    }
-                </button>
                 <button type="button" class="unit-tab" onclick="showUnitTab('recon')">
                     <i class="fas fa-binoculars"></i> Reconnaissance
                     @if (Model.ExistingRecon != null && Model.ExistingRecon.Any())
@@ -227,6 +220,76 @@
                                     <label for="infantryMANPADS">MANPADS (Man-Portable Air Defense Systems)</label>
                                     <input type="number" class="form-control" id="infantryMANPADS" 
                                            value="@(Model.ExistingInfantry?.MANPADS ?? 0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Phase 01: Movement & Assembly Data -->
+                    <div class="unit-section phase01-section">
+                        <h6><i class="fas fa-route"></i> Phase 01: Movement & Assembly</h6>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Movement Configuration:</strong> Configure unit movement capabilities and current deployment status.
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="infantryMovementPoints">Movement Points Per Turn (km)</label>
+                                    <input type="number" class="form-control" id="infantryMovementPoints" 
+                                           value="25" min="0" max="50" 
+                                           title="Base movement points per turn in kilometers" />
+                                    <small class="form-text text-muted">Standard: 25km for Infantry</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="infantryCurrentTerrain">Current Terrain</label>
+                                    <select class="form-control" id="infantryCurrentTerrain">
+                                        <option value="OPEN">Open Terrain</option>
+                                        <option value="FOREST">Forest</option>
+                                        <option value="MOUNTAIN">Mountain</option>
+                                        <option value="RIVER">River</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="infantrySupplyState">Supply State</label>
+                                    <select class="form-control" id="infantrySupplyState">
+                                        <option value="Green">Green (Full)</option>
+                                        <option value="Amber">Amber (Reduced)</option>
+                                        <option value="Red">Red (Limited)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantryCombatPowerIndex">Combat Power Index</label>
+                                    <input type="number" class="form-control" id="infantryCombatPowerIndex" 
+                                           value="0.75" min="0" max="1" step="0.01" 
+                                           title="Base combat effectiveness (0.0 to 1.0)" />
+                                    <small class="form-text text-muted">Standard: 0.75 for Infantry</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="infantryRemainingMovement">Remaining Movement Points</label>
+                                    <input type="number" class="form-control" id="infantryRemainingMovement" 
+                                           value="25" min="0" max="50" 
+                                           title="Current turn remaining movement points" />
+                                    <small class="form-text text-muted">Starts equal to Movement Points Per Turn</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="infantryDeploymentNotes">Deployment Notes</label>
+                                    <textarea class="form-control" id="infantryDeploymentNotes" rows="2" 
+                                              placeholder="Additional notes about unit deployment, readiness, or special considerations"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -506,6 +569,76 @@
                                     <label for="armouredHMG">HMG (Heavy Machine Guns)</label>
                                     <input type="number" class="form-control" id="armouredHMG" 
                                            value="@(Model.ExistingArmoured?.HMG ?? 0)" min="0" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Phase 01: Movement & Assembly Data -->
+                    <div class="unit-section phase01-section">
+                        <h6><i class="fas fa-route"></i> Phase 01: Movement & Assembly</h6>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Movement Configuration:</strong> Configure unit movement capabilities and current deployment status.
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="armouredMovementPoints">Movement Points Per Turn (km)</label>
+                                    <input type="number" class="form-control" id="armouredMovementPoints" 
+                                           value="30" min="0" max="50" 
+                                           title="Base movement points per turn in kilometers" />
+                                    <small class="form-text text-muted">Standard: 30km for Armoured</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="armouredCurrentTerrain">Current Terrain</label>
+                                    <select class="form-control" id="armouredCurrentTerrain">
+                                        <option value="OPEN">Open Terrain</option>
+                                        <option value="FOREST">Forest</option>
+                                        <option value="MOUNTAIN">Mountain</option>
+                                        <option value="RIVER">River</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="armouredSupplyState">Supply State</label>
+                                    <select class="form-control" id="armouredSupplyState">
+                                        <option value="Green">Green (Full)</option>
+                                        <option value="Amber">Amber (Reduced)</option>
+                                        <option value="Red">Red (Limited)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredCombatPowerIndex">Combat Power Index</label>
+                                    <input type="number" class="form-control" id="armouredCombatPowerIndex" 
+                                           value="0.90" min="0" max="1" step="0.01" 
+                                           title="Base combat effectiveness (0.0 to 1.0)" />
+                                    <small class="form-text text-muted">Standard: 0.90 for Armoured</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="armouredRemainingMovement">Remaining Movement Points</label>
+                                    <input type="number" class="form-control" id="armouredRemainingMovement" 
+                                           value="30" min="0" max="50" 
+                                           title="Current turn remaining movement points" />
+                                    <small class="form-text text-muted">Starts equal to Movement Points Per Turn</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="armouredDeploymentNotes">Deployment Notes</label>
+                                    <textarea class="form-control" id="armouredDeploymentNotes" rows="2" 
+                                              placeholder="Additional notes about unit deployment, readiness, or special considerations"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -906,99 +1039,6 @@
                 </form>
             </div>
 
-            <!-- Intelligence Tab -->
-            <div id="intelligence-tab" class="unit-tab-content">
-                <div class="unit-header">
-                    <h5><i class="fas fa-eye"></i> Intelligence Data</h5>
-                    <span class="badge badge-info">Information & Intelligence Reports</span>
-                </div>
-
-                <!-- Add New Intelligence -->
-                <div class="unit-section">
-                    <h6>Add New Intelligence Report</h6>
-                    <form id="intelligenceForm">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="intelTitle">Title *</label>
-                                    <input type="text" class="form-control" id="intelTitle" required 
-                                           placeholder="e.g., Enemy Movement Spotted" />
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="intelSource">Source</label>
-                                    <input type="text" class="form-control" id="intelSource" 
-                                           placeholder="e.g., Drone Surveillance, Human Intelligence" />
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="intelPriority">Priority *</label>
-                                    <select class="form-control" id="intelPriority" required>
-                                        <option value="">Select Priority</option>
-                                        <option value="High">High Priority</option>
-                                        <option value="Medium">Medium Priority</option>
-                                        <option value="Low">Low Priority</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <label for="intelDescription">Description *</label>
-                                    <textarea class="form-control" id="intelDescription" rows="3" required
-                                              placeholder="Detailed intelligence information..."></textarea>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="unit-footer">
-                            <button type="button" class="btn btn-success" onclick="saveIntelligence()">
-                                <i class="fas fa-save"></i> Save Intelligence Report
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Existing Intelligence List -->
-                <div class="unit-section">
-                    <h6>Existing Intelligence Reports (@(Model.ExistingIntelligence?.Count ?? 0))</h6>
-                    @if (Model.ExistingIntelligence != null && Model.ExistingIntelligence.Any())
-                    {
-                        <div class="intelligence-list">
-                            @foreach (var intel in Model.ExistingIntelligence)
-                            {
-                                <div class="intelligence-item" data-intel-id="@intel.Id">
-                                    <div class="intel-header">
-                                        <h6>@intel.Title</h6>
-                                        <span class="badge badge-@(intel.Priority.ToLower() == "high" ? "danger" : intel.Priority.ToLower() == "medium" ? "warning" : "secondary")">
-                                            @intel.Priority Priority
-                                        </span>
-                                        <small class="text-muted">@intel.CreatedDate.Value.ToString("yyyy-MM-dd HH:mm")</small>
-                                    </div>
-                                    <p><strong>Source:</strong> @intel.Source</p>
-                                    <p>@intel.Description</p>
-                                    <div class="intel-actions">
-                                        <button type="button" class="btn btn-sm btn-primary" onclick="editIntelligence('@intel.Id')">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteIntelligence('@intel.Id')">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <p class="text-muted">No intelligence reports yet. Add one above.</p>
-                    }
-                </div>
-            </div>
 
             <!-- Reconnaissance Tab -->
             <div id="recon-tab" class="unit-tab-content">
@@ -1707,13 +1747,13 @@
     background: #218838;
 }
 
-/* Intelligence and Recon specific styles */
-.intelligence-list, .recon-list {
+/* Recon specific styles */
+.recon-list {
     max-height: 400px;
     overflow-y: auto;
 }
 
-.intelligence-item, .recon-item {
+.recon-item {
     background: #f8f9fa;
     border: 1px solid #dee2e6;
     border-radius: 8px;
@@ -1721,7 +1761,7 @@
     margin-bottom: 15px;
 }
 
-.intel-header, .recon-header {
+.recon-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1730,12 +1770,12 @@
     gap: 10px;
 }
 
-.intel-header h6, .recon-header h6 {
+.recon-header h6 {
     margin: 0;
     color: #495057;
 }
 
-.intel-actions, .recon-actions {
+.recon-actions {
     margin-top: 10px;
     display: flex;
     gap: 10px;
@@ -1942,69 +1982,6 @@ function saveArtilleryRegiment() {
     saveUnit('artillery', artilleryData, 'Artillery Regiment');
 }
 
-// Save Intelligence Report
-function saveIntelligence() {
-    console.log('💾 Saving Intelligence Report...');
-    
-    const intelData = {
-        tokenId: document.getElementById('tokenId').value,
-        title: document.getElementById('intelTitle').value,
-        source: document.getElementById('intelSource').value,
-        priority: document.getElementById('intelPriority').value,
-        description: document.getElementById('intelDescription').value
-    };
-    
-    // Validation
-    if (!intelData.title || !intelData.priority || !intelData.description) {
-        alert('Please fill in Title, Priority, and Description');
-        return;
-    }
-    
-    $("#loading").show();
-    
-    $.ajax({
-        url: '/DataManagement/CreateTokenIntelligence',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(intelData),
-        success: function(response) {
-            console.log('✅ Intelligence saved successfully:', response);
-            
-            if (response.success) {
-                alert('Intelligence report saved successfully!');
-                
-                // Clear the form
-                document.getElementById('intelligenceForm').reset();
-                
-                // Update the tab counter
-                const tab = document.querySelector(`[onclick="showUnitTab('intelligence')"]`);
-                if (tab) {
-                    const statusSpan = tab.querySelector('.unit-status');
-                    if (statusSpan) {
-                        const currentCount = parseInt(statusSpan.textContent) || 0;
-                        statusSpan.textContent = currentCount + 1;
-                    } else {
-                        tab.innerHTML += '<span class="unit-status saved">1</span>';
-                    }
-                }
-                
-                // Suggest refreshing to see the new data
-                if (confirm('Intelligence saved! Would you like to refresh the form to see all reports?')) {
-                    location.reload();
-                }
-            } else {
-                alert('Error saving intelligence: ' + response.message);
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error('❌ Error saving intelligence:', error);
-            alert('Error saving intelligence. Please try again.');
-        },
-        complete: function() {
-            $("#loading").hide();
-        }
-    });
-}
 
 // Save Reconnaissance Report
 function saveReconnaissance() {

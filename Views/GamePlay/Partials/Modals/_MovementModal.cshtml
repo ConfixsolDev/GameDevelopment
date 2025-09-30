@@ -1,0 +1,751 @@
+@*
+    Phase 01: Move / Assembly Modal
+    Implements the MoveConfirmModal with all required controls per Phase 01 specification
+*@
+
+<!-- Movement/Assembly Modal -->
+<div id="movementModal" class="gameplay-modal" style="display: none;">
+    <div class="gameplay-modal-content large-modal">
+        <div class="gameplay-modal-header">
+            <h3>
+                <i class="fas fa-route"></i>
+                <span id="movementModalTitle">Plan Movement / Assembly</span>
+            </h3>
+            <button class="gameplay-modal-close" onclick="closeMovementModal()">&times;</button>
+        </div>
+        
+        <div class="gameplay-modal-body">
+            <!-- Unit Information -->
+            <div class="unit-info-section">
+                <div class="unit-display">
+                    <div class="unit-details">
+                        <h4 id="selectedUnitName">—</h4>
+                        <p class="text-muted" id="selectedUnitType">—</p>
+                        <div class="unit-status-grid">
+                            <div class="status-item">
+                                <span class="status-label">Current Terrain:</span>
+                                <span class="status-value" id="currentTerrain">—</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Supply State:</span>
+                                <span class="status-value supply-indicator" id="supplyState">—</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Movement Budget:</span>
+                                <span class="status-value" id="movementBudget">—</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Combat Power:</span>
+                                <span class="status-value" id="combatPower">—</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Type Selection -->
+            <div class="form-section">
+                <h5><i class="fas fa-tasks"></i> Action Type</h5>
+                <div class="action-type-selection">
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="actionType" value="move" checked onchange="updateActionType('move')">
+                            <span class="radio-custom"></span>
+                            <div class="option-content">
+                                <i class="fas fa-walking"></i>
+                                <span>Move</span>
+                                <small>Relocate unit to new position</small>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="actionType" value="assembly" onchange="updateActionType('assembly')">
+                            <span class="radio-custom"></span>
+                            <div class="option-content">
+                                <i class="fas fa-users"></i>
+                                <span>Assembly</span>
+                                <small>Gather forces at location</small>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Route Planning Section -->
+            <div class="form-section">
+                <h5><i class="fas fa-map-marked-alt"></i> Route Planning</h5>
+                
+                <!-- Terrain Selection -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="terrainType">Terrain Type</label>
+                        <select id="terrainType" class="form-control" onchange="calculateRouteCost()">
+                            <option value="OPEN">Open Terrain</option>
+                            <option value="FOREST">Forest</option>
+                            <option value="MOUNTAIN">Mountain</option>
+                            <option value="RIVER">River</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="movementType">Movement Type</label>
+                        <select id="movementType" class="form-control" onchange="calculateRouteCost()">
+                            <option value="road">Road</option>
+                            <option value="cross_country">Cross Country</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Waypoint Management -->
+                <div class="waypoint-section">
+                    <div class="waypoint-header">
+                        <h6>Route Waypoints</h6>
+                        <button class="btn btn-sm btn-outline-primary" onclick="addWaypoint()">
+                            <i class="fas fa-plus"></i> Add Waypoint
+                        </button>
+                    </div>
+                    <div id="waypointsList" class="waypoints-list">
+                        <!-- Waypoints will be added dynamically -->
+                    </div>
+                </div>
+
+                <!-- Route Preview -->
+                <div class="route-preview-section">
+                    <h6>Route Preview</h6>
+                    <div class="route-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Total Distance:</span>
+                            <span class="stat-value" id="totalDistance">0 km</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Movement Cost:</span>
+                            <span class="stat-value" id="movementCost">0 points</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">ETA:</span>
+                            <span class="stat-value" id="eta">—</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Supply Impact:</span>
+                            <span class="stat-value" id="supplyImpact">None</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Validation and Warnings -->
+            <div id="movementValidation" class="validation-section" style="display: none;">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="validationMessage">—</span>
+                </div>
+            </div>
+
+            <!-- Budget Comparison -->
+            <div class="budget-comparison">
+                <div class="budget-item">
+                    <span class="budget-label">Available Movement Points:</span>
+                    <span class="budget-value" id="availableMovement">—</span>
+                </div>
+                <div class="budget-item">
+                    <span class="budget-label">Required Movement Points:</span>
+                    <span class="budget-value" id="requiredMovement">—</span>
+                </div>
+                <div class="budget-item budget-remaining">
+                    <span class="budget-label">Remaining After Move:</span>
+                    <span class="budget-value" id="remainingMovement">—</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="gameplay-modal-footer">
+            <button class="btn btn-secondary" onclick="closeMovementModal()">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button class="btn btn-outline-primary" onclick="saveRouteDraft()" id="saveDraftBtn">
+                <i class="fas fa-save"></i> Save Draft
+            </button>
+            <button class="btn btn-primary" onclick="commitMovement()" id="commitMoveBtn" disabled>
+                <i class="fas fa-check"></i> Commit Move
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.movement-modal .unit-status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.movement-modal .status-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border-left: 3px solid #007bff;
+}
+
+.movement-modal .status-label {
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.movement-modal .status-value {
+    font-weight: 600;
+    color: #212529;
+}
+
+.movement-modal .supply-indicator {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 600;
+}
+
+.movement-modal .supply-indicator.green {
+    background: #d4edda;
+    color: #155724;
+}
+
+.movement-modal .supply-indicator.amber {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.movement-modal .supply-indicator.red {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.movement-modal .action-type-selection {
+    margin: 15px 0;
+}
+
+.movement-modal .radio-group {
+    display: flex;
+    gap: 15px;
+}
+
+.movement-modal .radio-option {
+    flex: 1;
+    cursor: pointer;
+    position: relative;
+}
+
+.movement-modal .radio-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.movement-modal .radio-custom {
+    display: none;
+}
+
+.movement-modal .option-content {
+    padding: 20px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.movement-modal .radio-option input[type="radio"]:checked + .radio-custom + .option-content {
+    border-color: #007bff;
+    background: #f8f9ff;
+}
+
+.movement-modal .option-content i {
+    font-size: 24px;
+    color: #6c757d;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.movement-modal .option-content span {
+    font-weight: 600;
+    color: #212529;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.movement-modal .option-content small {
+    color: #6c757d;
+    font-size: 0.85em;
+}
+
+.movement-modal .form-section {
+    margin: 25px 0;
+    padding: 20px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+.movement-modal .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.movement-modal .waypoint-section {
+    margin-top: 20px;
+}
+
+.movement-modal .waypoint-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.movement-modal .waypoints-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 10px;
+    background: white;
+}
+
+.movement-modal .waypoint-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border-left: 3px solid #007bff;
+}
+
+.movement-modal .waypoint-item:last-child {
+    margin-bottom: 0;
+}
+
+.movement-modal .waypoint-number {
+    background: #007bff;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 12px;
+}
+
+.movement-modal .waypoint-coords {
+    flex: 1;
+    font-family: monospace;
+    color: #495057;
+}
+
+.movement-modal .waypoint-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.movement-modal .waypoint-actions button {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.movement-modal .route-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.movement-modal .stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 15px;
+    background: white;
+    border-radius: 4px;
+    border-left: 3px solid #28a745;
+}
+
+.movement-modal .stat-label {
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.movement-modal .stat-value {
+    font-weight: 600;
+    color: #212529;
+}
+
+.movement-modal .budget-comparison {
+    background: #e9ecef;
+    padding: 15px;
+    border-radius: 6px;
+    margin: 20px 0;
+}
+
+.movement-modal .budget-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.movement-modal .budget-item:last-child {
+    border-bottom: none;
+}
+
+.movement-modal .budget-remaining {
+    font-weight: 600;
+    background: #d4edda;
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 8px;
+}
+
+.movement-modal .validation-section {
+    margin: 15px 0;
+}
+
+.movement-modal .alert {
+    padding: 12px 15px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.movement-modal .alert i {
+    font-size: 16px;
+}
+
+.movement-modal .form-group {
+    margin-bottom: 15px;
+}
+
+.movement-modal .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #495057;
+}
+
+.movement-modal .form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.movement-modal .btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.movement-modal .btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.movement-modal .btn-primary:hover:not(:disabled) {
+    background: #0056b3;
+}
+
+.movement-modal .btn-primary:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+.movement-modal .btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.movement-modal .btn-outline-primary {
+    background: transparent;
+    color: #007bff;
+    border: 1px solid #007bff;
+}
+
+.movement-modal .btn-outline-primary:hover {
+    background: #007bff;
+    color: white;
+}
+
+.movement-modal .btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+</style>
+
+<script>
+// Movement Modal JavaScript
+let currentSelectedUnit = null;
+let currentWaypoints = [];
+let currentRouteCost = 0;
+
+function openMovementModal(unitId) {
+    console.log('Opening movement modal for unit:', unitId);
+    
+    // Load unit data
+    loadUnitData(unitId);
+    
+    // Show modal
+    document.getElementById('movementModal').style.display = 'flex';
+    
+    // Initialize route planning
+    initializeRoutePlanning();
+}
+
+function closeMovementModal() {
+    document.getElementById('movementModal').style.display = 'none';
+    currentSelectedUnit = null;
+    currentWaypoints = [];
+    currentRouteCost = 0;
+}
+
+function loadUnitData(unitId) {
+    // This would typically load from an API endpoint
+    // For now, we'll use mock data
+    const mockUnit = {
+        id: unitId,
+        name: "7th Armoured Brigade",
+        type: "Armoured Regiment",
+        currentTerrain: "OPEN",
+        supplyState: "Green",
+        movementBudget: 30,
+        combatPower: 0.85
+    };
+    
+    currentSelectedUnit = mockUnit;
+    
+    // Update UI
+    document.getElementById('selectedUnitName').textContent = mockUnit.name;
+    document.getElementById('selectedUnitType').textContent = mockUnit.type;
+    document.getElementById('currentTerrain').textContent = mockUnit.currentTerrain;
+    document.getElementById('supplyState').textContent = mockUnit.supplyState;
+    document.getElementById('supplyState').className = `status-value supply-indicator ${mockUnit.supplyState.toLowerCase()}`;
+    document.getElementById('movementBudget').textContent = `${mockUnit.movementBudget} km`;
+    document.getElementById('combatPower').textContent = mockUnit.combatPower.toFixed(2);
+    document.getElementById('availableMovement').textContent = `${mockUnit.movementBudget} points`;
+}
+
+function updateActionType(actionType) {
+    console.log('Action type changed to:', actionType);
+    
+    const title = document.getElementById('movementModalTitle');
+    if (actionType === 'assembly') {
+        title.textContent = 'Plan Assembly';
+    } else {
+        title.textContent = 'Plan Movement';
+    }
+    
+    // Recalculate route costs
+    calculateRouteCost();
+}
+
+function addWaypoint() {
+    // This would typically open a map interface to select waypoints
+    // For now, we'll add mock waypoints
+    const waypointNumber = currentWaypoints.length + 1;
+    const mockWaypoint = {
+        id: waypointNumber,
+        lat: 33.7219 + (Math.random() - 0.5) * 0.01,
+        lng: 73.0589 + (Math.random() - 0.5) * 0.01,
+        terrain: document.getElementById('terrainType').value,
+        movementType: document.getElementById('movementType').value
+    };
+    
+    currentWaypoints.push(mockWaypoint);
+    updateWaypointsDisplay();
+    calculateRouteCost();
+}
+
+function removeWaypoint(waypointId) {
+    currentWaypoints = currentWaypoints.filter(wp => wp.id !== waypointId);
+    updateWaypointsDisplay();
+    calculateRouteCost();
+}
+
+function updateWaypointsDisplay() {
+    const waypointsList = document.getElementById('waypointsList');
+    waypointsList.innerHTML = '';
+    
+    currentWaypoints.forEach((waypoint, index) => {
+        const waypointElement = document.createElement('div');
+        waypointElement.className = 'waypoint-item';
+        waypointElement.innerHTML = `
+            <div class="waypoint-number">${index + 1}</div>
+            <div class="waypoint-coords">${waypoint.lat.toFixed(4)}, ${waypoint.lng.toFixed(4)}</div>
+            <div class="waypoint-actions">
+                <button class="btn btn-sm btn-outline-danger" onclick="removeWaypoint(${waypoint.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        waypointsList.appendChild(waypointElement);
+    });
+}
+
+function calculateRouteCost() {
+    if (!currentSelectedUnit || currentWaypoints.length === 0) {
+        updateRouteStats(0, 0, 0);
+        return;
+    }
+    
+    // Calculate total distance (simplified)
+    let totalDistance = currentWaypoints.length * 10; // Mock: 10km per waypoint
+    
+    // Calculate movement cost based on terrain and movement type
+    const terrainType = document.getElementById('terrainType').value;
+    const movementType = document.getElementById('movementType').value;
+    
+    // Mock terrain multipliers
+    const terrainMultipliers = {
+        'OPEN': { 'road': 1.0, 'cross_country': 1.2 },
+        'FOREST': { 'road': 1.2, 'cross_country': 1.6 },
+        'MOUNTAIN': { 'road': 1.6, 'cross_country': 2.2 },
+        'RIVER': { 'road': 2.0, 'cross_country': 3.0 }
+    };
+    
+    const multiplier = terrainMultipliers[terrainType][movementType];
+    const movementCost = Math.ceil(totalDistance * multiplier);
+    
+    // Calculate ETA (mock: 1 hour per 10km)
+    const eta = new Date();
+    eta.setHours(eta.getHours() + (totalDistance / 10));
+    
+    // Calculate supply impact
+    let supplyImpact = 'None';
+    if (movementCost > 20) supplyImpact = 'Light';
+    if (movementCost > 40) supplyImpact = 'Moderate';
+    if (movementCost > 60) supplyImpact = 'Heavy';
+    
+    currentRouteCost = movementCost;
+    updateRouteStats(totalDistance, movementCost, eta, supplyImpact);
+    validateMovement();
+}
+
+function updateRouteStats(distance, cost, eta, supplyImpact = 'None') {
+    document.getElementById('totalDistance').textContent = `${distance.toFixed(1)} km`;
+    document.getElementById('movementCost').textContent = `${cost} points`;
+    document.getElementById('eta').textContent = eta ? eta.toLocaleTimeString() : '—';
+    document.getElementById('supplyImpact').textContent = supplyImpact;
+    
+    // Update budget comparison
+    if (currentSelectedUnit) {
+        const available = currentSelectedUnit.movementBudget;
+        const remaining = available - cost;
+        
+        document.getElementById('requiredMovement').textContent = `${cost} points`;
+        document.getElementById('remainingMovement').textContent = `${remaining} points`;
+        
+        // Color code the remaining movement
+        const remainingElement = document.getElementById('remainingMovement');
+        if (remaining < 0) {
+            remainingElement.style.color = '#dc3545';
+        } else if (remaining < 5) {
+            remainingElement.style.color = '#ffc107';
+        } else {
+            remainingElement.style.color = '#28a745';
+        }
+    }
+}
+
+function validateMovement() {
+    const validation = document.getElementById('movementValidation');
+    const commitBtn = document.getElementById('commitMoveBtn');
+    const message = document.getElementById('validationMessage');
+    
+    if (!currentSelectedUnit || currentWaypoints.length === 0) {
+        validation.style.display = 'none';
+        commitBtn.disabled = true;
+        return;
+    }
+    
+    const available = currentSelectedUnit.movementBudget;
+    const required = currentRouteCost;
+    const remaining = available - required;
+    
+    if (remaining < 0) {
+        validation.style.display = 'block';
+        message.textContent = `Insufficient movement points. Need ${required}, have ${available}.`;
+        commitBtn.disabled = true;
+    } else if (remaining < 5) {
+        validation.style.display = 'block';
+        message.textContent = `Warning: Low remaining movement points (${remaining}). Consider shorter route.`;
+        commitBtn.disabled = false;
+    } else {
+        validation.style.display = 'none';
+        commitBtn.disabled = false;
+    }
+}
+
+function initializeRoutePlanning() {
+    currentWaypoints = [];
+    updateWaypointsDisplay();
+    calculateRouteCost();
+}
+
+function saveRouteDraft() {
+    if (!currentSelectedUnit || currentWaypoints.length === 0) {
+        alert('Please add waypoints to create a route.');
+        return;
+    }
+    
+    // This would typically save to the database via API
+    console.log('Saving route draft:', {
+        unitId: currentSelectedUnit.id,
+        waypoints: currentWaypoints,
+        actionType: document.querySelector('input[name="actionType"]:checked').value,
+        terrainType: document.getElementById('terrainType').value,
+        movementType: document.getElementById('movementType').value,
+        totalCost: currentRouteCost
+    });
+    
+    alert('Route draft saved successfully!');
+}
+
+function commitMovement() {
+    if (!validateMovement()) {
+        return;
+    }
+    
+    const actionType = document.querySelector('input[name="actionType"]:checked').value;
+    
+    // This would typically commit the movement via API
+    console.log('Committing movement:', {
+        unitId: currentSelectedUnit.id,
+        actionType: actionType,
+        waypoints: currentWaypoints,
+        totalCost: currentRouteCost
+    });
+    
+    alert(`${actionType === 'assembly' ? 'Assembly' : 'Movement'} committed successfully!`);
+    closeMovementModal();
+}
+
+// Global functions for button access
+window.openMovementModal = openMovementModal;
+window.closeMovementModal = closeMovementModal;
+window.updateActionType = updateActionType;
+window.addWaypoint = addWaypoint;
+window.removeWaypoint = removeWaypoint;
+window.calculateRouteCost = calculateRouteCost;
+window.saveRouteDraft = saveRouteDraft;
+window.commitMovement = commitMovement;
+</script>

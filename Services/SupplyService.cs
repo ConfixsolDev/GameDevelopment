@@ -10,9 +10,16 @@ namespace TechWebSol.Services
             unit.UpdateSupplyModifier();
         }
 
-        public void UpdateSupplyState(UnitDeployment deployment, int newState)
+        public void UpdateSupplyState(UnitDeployment deployment, string newState)
         {
             deployment.SupplyState = newState;
+            deployment.UpdateSupplyModifier();
+        }
+
+        public void UpdateSupplyState(UnitDeployment deployment, int newState)
+        {
+            deployment.SupplyStateInt = newState;
+            deployment.SupplyState = newState == 100 ? "Green" : newState == 75 ? "Amber" : "Red";
             deployment.UpdateSupplyModifier();
         }
 
@@ -62,7 +69,8 @@ namespace TechWebSol.Services
 
         public void DegradeSupply(UnitDeployment deployment, double degradationRate = 5.0)
         {
-            deployment.SupplyState = Math.Max(50, deployment.SupplyState - (int)degradationRate);
+            deployment.SupplyStateInt = Math.Max(50, deployment.SupplyStateInt - (int)degradationRate);
+            deployment.SupplyState = deployment.SupplyStateInt == 100 ? "Green" : deployment.SupplyStateInt == 75 ? "Amber" : "Red";
             deployment.UpdateSupplyModifier();
         }
 
@@ -74,7 +82,8 @@ namespace TechWebSol.Services
 
         public void RestoreSupply(UnitDeployment deployment, double restorationRate = 10.0)
         {
-            deployment.SupplyState = Math.Min(100, deployment.SupplyState + (int)restorationRate);
+            deployment.SupplyStateInt = Math.Min(100, deployment.SupplyStateInt + (int)restorationRate);
+            deployment.SupplyState = deployment.SupplyStateInt == 100 ? "Green" : deployment.SupplyStateInt == 75 ? "Amber" : "Red";
             deployment.UpdateSupplyModifier();
         }
     }

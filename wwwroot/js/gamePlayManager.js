@@ -9,11 +9,11 @@ class GamePlayManager {
         this.lazyLoader = null;
         
         // Core component IDs
-        this.coreComponents = ['region-panel', 'overlay-controls'];
+        this.coreComponents = ['region-panel', 'overlay-controls', 'unit-status-panel'];
         this.modalComponents = [
             'data-entry-modal', 'token-management-modal', 'token-selection-modal',
             'simulation-panel', 'unit-deployment-modal', 'movement-plan-modal',
-            'battle-modal', 'objective-modal', 'settings-modal'
+            'movement-modal', 'battle-modal', 'objective-modal', 'settings-modal'
         ];
     }
 
@@ -580,6 +580,88 @@ $(document).ready(function() {
     // Initialize the game play arena
     gamePlayManager.init();
 });
+
+// Phase 01: Movement & Assembly Functions
+window.openMovementPlanning = function() {
+    console.log('Opening movement planning...');
+    // Load movement modal if not already loaded
+    if (!document.getElementById('movementModal')) {
+        loadMovementModal();
+    } else {
+        // For now, open with a mock unit
+        openMovementModal('unit-mock-1');
+    }
+};
+
+window.openAssemblyPlanning = function() {
+    console.log('Opening assembly planning...');
+    // Load movement modal in assembly mode
+    if (!document.getElementById('movementModal')) {
+        loadMovementModal();
+    } else {
+        openMovementModal('unit-mock-1');
+        // Set assembly mode
+        setTimeout(() => {
+            if (document.querySelector('input[name="actionType"][value="assembly"]')) {
+                document.querySelector('input[name="actionType"][value="assembly"]').checked = true;
+                updateActionType('assembly');
+            }
+        }, 100);
+    }
+};
+
+window.showUnitStatus = function() {
+    console.log('Showing unit status panel...');
+    if (typeof showUnitStatus === 'function') {
+        showUnitStatus();
+    } else {
+        // Load unit status panel if not already loaded
+        loadUnitStatusPanel();
+    }
+};
+
+async function loadMovementModal() {
+    try {
+        const response = await fetch('/GamePlay/Partials/Modals/_MovementModal.cshtml');
+        const html = await response.text();
+        
+        // Remove existing modal if present
+        const existingModal = document.getElementById('movementModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Add new modal to body
+        document.body.insertAdjacentHTML('beforeend', html);
+        
+        console.log('Movement modal loaded successfully');
+    } catch (error) {
+        console.error('Error loading movement modal:', error);
+    }
+}
+
+async function loadUnitStatusPanel() {
+    try {
+        const response = await fetch('/GamePlay/Partials/Controls/_UnitStatusPanel.cshtml');
+        const html = await response.text();
+        
+        // Remove existing panel if present
+        const existingPanel = document.getElementById('unitStatusPanel');
+        if (existingPanel) {
+            existingPanel.remove();
+        }
+        
+        // Add new panel to body
+        document.body.insertAdjacentHTML('beforeend', html);
+        
+        console.log('Unit status panel loaded successfully');
+    } catch (error) {
+        console.error('Error loading unit status panel:', error);
+    }
+}
+
+// Legacy function compatibility
+window.planMovement = window.openMovementPlanning;
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {

@@ -55,6 +55,10 @@ namespace TechWebSol.Data
         public DbSet<TokenAreaCoverage> TokenAreaCoverages { get; set; }
         public DbSet<Intelligence> Intelligence { get; set; }
         public DbSet<Recon> Recon { get; set; }
+        
+        // Phase 01 Models
+        public DbSet<TerrainType> TerrainTypes { get; set; }
+        public DbSet<RoutesDraft> RoutesDrafts { get; set; }
 
         // Map Data DbSets
         public DbSet<MapRegion> MapRegions { get; set; }
@@ -467,6 +471,61 @@ namespace TechWebSol.Data
                 entity.Property(p => p.RegionsJson).HasColumnType("nvarchar(max)");
                 entity.Property(p => p.ObstaclesJson).HasColumnType("nvarchar(max)");
                 entity.Property(p => p.SafeJson).HasColumnType("nvarchar(max)");
+            });
+
+            // Phase 01 Model Configurations
+            modelBuilder.Entity<TerrainType>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.TerrainCode).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.MovementCostRoad).HasPrecision(18, 2);
+                entity.Property(e => e.MovementCostCrossCountry).HasPrecision(18, 2);
+                entity.Property(e => e.CombatModifier).HasPrecision(18, 2);
+
+                entity.HasOne(e => e.Team)
+                    .WithMany()
+                    .HasForeignKey(e => e.TeamId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<RoutesDraft>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.RouteName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.WaypointsJson).IsRequired().HasColumnType("nvarchar(max)");
+                entity.Property(e => e.TotalDistanceKm).HasPrecision(18, 2);
+                entity.Property(e => e.SupplyImpact).HasPrecision(18, 2);
+
+                entity.HasOne(e => e.UnitDeployment)
+                    .WithMany()
+                    .HasForeignKey(e => e.UnitId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(e => e.Team)
+                    .WithMany()
+                    .HasForeignKey(e => e.TeamId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<UnitDeployment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Position).IsRequired().HasColumnType("nvarchar(max)");
+                entity.Property(e => e.CurrentTerrain).HasMaxLength(32);
+                entity.Property(e => e.SupplyState).HasMaxLength(8);
+                entity.Property(e => e.CombatPowerIndex).HasPrecision(18, 2);
+                entity.Property(e => e.EffectiveCombatPower_RO).HasPrecision(18, 2);
+                entity.Property(e => e.StrengthPercentage).HasPrecision(18, 2);
+                entity.Property(e => e.TerrainModifier).HasPrecision(18, 2);
+                entity.Property(e => e.SupplyModifier).HasPrecision(18, 2);
+                entity.Property(e => e.Morale).HasPrecision(18, 2);
+                entity.Property(e => e.Fatigue).HasPrecision(18, 2);
+
+                entity.HasOne(e => e.Scenario)
+                    .WithMany(e => e.UnitDeployments)
+                    .HasForeignKey(e => e.ScenarioId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
 

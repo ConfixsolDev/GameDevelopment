@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -75,39 +76,91 @@ namespace TechWebSol.Models
         public decimal Morale { get; set; } = 100; // 0-100
         public decimal Fatigue { get; set; } = 0; // 0-100
 
-        // Enhanced Movement Properties
+        // Enhanced Movement Properties - Phase 01 Specification
+        [DisplayName("Movement Points Per Turn")]
+        public int MovementPointsPerTurn { get; set; } = 30; // km/turn default
+        
+        [MaxLength(32)]
+        [DisplayName("Current Terrain")]
+        public string CurrentTerrain { get; set; } = "OPEN"; // TerrainType
+        
+        [DisplayName("Remaining Movement Points")]
+        public int RemainingMovementPoints { get; set; } = 30; // Current turn movement
+
+        // Backward compatibility properties
         public double MovementPoints { get; set; } = 30.0; // km/turn default
-        public string CurrentTerrain { get; set; } = "Road"; // TerrainType
         public double RemainingMovement { get; set; } = 30.0; // Current turn movement
 
         // Enhanced Combat Properties
-        public double CombatPower { get; set; } = 1.0; // Base combat effectiveness
+        [DisplayName("Combat Power Index")]
+        public double CombatPowerIndex { get; set; } = 1.0; // Base combat effectiveness
         public double TerrainModifier { get; set; } = 1.0; // Current terrain bonus/penalty
         public double SupplyModifier { get; set; } = 1.0; // Supply state modifier
 
-        // Enhanced Casualty Tracking
-        public double StrengthPercentage { get; set; } = 100.0; // 0-100%
+        // Backward compatibility properties
+        public double CombatPower { get; set; } = 1.0; // Base combat effectiveness
         public double EffectiveCombatPower { get; set; } = 1.0; // Dynamic combat power
 
-        // Enhanced Supply State
-        public int SupplyState { get; set; } = 100; // 100=Green, 75=Amber, 50=Red
+        // Enhanced Casualty Tracking
+        [DisplayName("Strength Percentage")]
+        public double StrengthPercentage { get; set; } = 100.0; // 0-100%
+        
+        [DisplayName("Effective Combat Power (Read-Only)")]
+        public double EffectiveCombatPower_RO { get; set; } = 1.0; // Computed, never user-editable
+
+        // Enhanced Supply State - Phase 01 Specification
+        [MaxLength(8)]
+        [DisplayName("Supply State")]
+        public string SupplyState { get; set; } = "Green"; // Green, Amber, Red
+
+        // Backward compatibility property
+        public int SupplyStateInt { get; set; } = 100; // 100=Green, 75=Amber, 50=Red
 
         // Navigation properties
         public virtual ICollection<MovementOrder> MovementOrders { get; set; } = new List<MovementOrder>();
         public virtual ICollection<BattleParticipant> BattleParticipations { get; set; } = new List<BattleParticipant>();
 
-        // Helper Methods
+        // Helper Methods - Phase 01 Specification
         public double GetEffectiveCombatPower()
         {
-            if (StrengthPercentage >= 50)
-                return CombatPower;
-            else
-                return CombatPower * (StrengthPercentage / 100.0) * 0.5; // Degraded effectiveness
+            // Formula: CombatPowerIndex * StrengthPercent/100 * SupplyModifier(CurrentSupply) * TerrainCombatModifier(CurrentTerrain)
+            double supplyModifier = GetSupplyModifier(SupplyState);
+            double terrainModifier = GetTerrainCombatModifier(CurrentTerrain);
+            
+            return CombatPowerIndex * (StrengthPercentage / 100.0) * supplyModifier * terrainModifier;
+        }
+
+        public double GetSupplyModifier(string supplyState)
+        {
+            return supplyState?.ToUpper() switch
+            {
+                "GREEN" => 1.0,
+                "AMBER" => 0.85,
+                "RED" => 0.6,
+                _ => 1.0
+            };
+        }
+
+        public double GetTerrainCombatModifier(string terrain)
+        {
+            return terrain?.ToUpper() switch
+            {
+                "OPEN" => 1.0,
+                "FOREST" => 0.9,
+                "MOUNTAIN" => 0.85,
+                "RIVER" => 0.8,
+                _ => 1.0
+            };
         }
 
         public void UpdateSupplyModifier()
         {
-            SupplyModifier = SupplyState / 100.0;
+            SupplyModifier = GetSupplyModifier(SupplyState);
+        }
+
+        public void UpdateEffectiveCombatPower()
+        {
+            EffectiveCombatPower_RO = GetEffectiveCombatPower();
         }
 
         public void UpdateFromMilitaryUnit(MilitaryUnit unit)
@@ -116,12 +169,16 @@ namespace TechWebSol.Models
             EffectiveCombatPower = unit.EffectiveCombatPower;
             CurrentStrength = (int)(MaxStrength * (StrengthPercentage / 100.0));
             CombatPower = unit.CombatPower;
+            CombatPowerIndex = unit.CombatPower;
             TerrainModifier = unit.TerrainModifier;
             SupplyModifier = unit.SupplyModifier;
-            SupplyState = unit.SupplyState;
+            SupplyStateInt = unit.SupplyState;
+            SupplyState = unit.SupplyState == 100 ? "Green" : unit.SupplyState == 75 ? "Amber" : "Red";
             MovementPoints = unit.MovementPoints;
+            MovementPointsPerTurn = (int)unit.MovementPoints;
             CurrentTerrain = unit.CurrentTerrain;
             RemainingMovement = unit.RemainingMovement;
+            RemainingMovementPoints = (int)unit.RemainingMovement;
         }
     }
 
