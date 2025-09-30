@@ -115,6 +115,18 @@ namespace TechWebSol.Controllers.TokenManagement
                 if (existingMarker != null)
                     return BadRequest("Marker with this ID already exists");
 
+                // Set required Position property if not provided
+                if (string.IsNullOrWhiteSpace(marker.Position))
+                {
+                    marker.Position = $"{{\"lat\": {marker.latitude}, \"lng\": {marker.longitude}}}";
+                }
+
+                // Set TokenId_GUID if not provided
+                if (marker.TokenId_GUID == Guid.Empty)
+                {
+                    marker.TokenId_GUID = marker.TokenId.Value;
+                }
+
                 _context.MapMarkers.Add(marker);
                 await _context.SaveChangesAsync();
 
@@ -280,7 +292,17 @@ namespace TechWebSol.Controllers.TokenManagement
                                 continue;
                             }
 
-                            //marker.TokenName = token.Name;
+                            // Set required Position property if not provided
+                            if (string.IsNullOrWhiteSpace(marker.Position))
+                            {
+                                marker.Position = $"{{\"lat\": {marker.latitude}, \"lng\": {marker.longitude}}}";
+                            }
+
+                            // Set TokenId_GUID if not provided
+                            if (marker.TokenId_GUID == Guid.Empty)
+                            {
+                                marker.TokenId_GUID = marker.TokenId.Value;
+                            }
 
                             _context.MapMarkers.Add(marker);
                             existingMarkerIds.Add(marker.Id); // prevent duplicates within the same payload

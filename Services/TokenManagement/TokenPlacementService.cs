@@ -82,6 +82,8 @@ namespace TechWebSol.Services.TokenManagement
                 var mapMarker = new MapMarker
                 {
                     TokenId = tokenId,
+                    TokenId_GUID = tokenId,
+                    Position = $"{{\"lat\": {latitude.ToString(CultureInfo.InvariantCulture)}, \"lng\": {longitude.ToString(CultureInfo.InvariantCulture)}}}",
                     latitude = latitude.ToString(CultureInfo.InvariantCulture),
                     longitude = longitude.ToString(CultureInfo.InvariantCulture),
                     CreatedBy = userId,
@@ -160,6 +162,8 @@ namespace TechWebSol.Services.TokenManagement
                 var mapMarker = new MapMarker
                 {
                     TokenId = tokenId,
+                    TokenId_GUID = tokenId,
+                    Position = $"{{\"lat\": {latitude.ToString(CultureInfo.InvariantCulture)}, \"lng\": {longitude.ToString(CultureInfo.InvariantCulture)}}}",
                     latitude = latitude.ToString(CultureInfo.InvariantCulture),
                     longitude = longitude.ToString(CultureInfo.InvariantCulture),
                     CreatedBy = userId,

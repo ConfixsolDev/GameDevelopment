@@ -1506,6 +1506,8 @@ namespace TechWebSol.Controllers
                     .Include(b => b.InfantryBattalions)
                     .Include(b => b.ArmouredRegiments)
                     .Include(b => b.ArtilleryRegiments)
+                    .Include(b => b.LogisticsUnits)
+                    .Include(b => b.CombatEngineeringCompanies)
                     .FirstOrDefaultAsync(b => b.TokenId == tokenId && b.TeamId == user.TeamId && b.IsActive);
 
                 var viewModel = new TokenDataEntryViewModel
@@ -1539,6 +1541,14 @@ namespace TechWebSol.Controllers
                         .Where(r => r.TokenId == tokenId && r.BrigadeId == existingBrigade.Id && r.TeamId == user.TeamId && r.IsActive)
                         .OrderByDescending(r => r.CreatedDate)
                         .ToListAsync();
+
+                    // Load Logistics Units
+                    viewModel.ExistingLogistics = await _context.LogisticsUnits
+                        .FirstOrDefaultAsync(l => l.TokenId == tokenId && l.BrigadeId == existingBrigade.Id && l.TeamId == user.TeamId && l.IsActive);
+
+                    // Load Combat Engineering Companies
+                    viewModel.ExistingEngineering = await _context.CombatEngineeringCompanies
+                        .FirstOrDefaultAsync(c => c.TokenId == tokenId && c.BrigadeId == existingBrigade.Id && c.TeamId == user.TeamId && c.IsActive);
                 }
 
 
@@ -1931,6 +1941,8 @@ namespace TechWebSol.Controllers
             public List<InfantryBattalion> ExistingInfantry { get; set; } = new List<InfantryBattalion>();
             public List<ArmouredRegiment> ExistingArmoured { get; set; } = new List<ArmouredRegiment>();
             public List<ArtilleryRegiment> ExistingArtillery { get; set; } = new List<ArtilleryRegiment>();
+            public LogisticsUnit ExistingLogistics { get; set; }
+            public CombatEngineeringCompany ExistingEngineering { get; set; }
             public List<Recon> ExistingRecon { get; set; } = new List<Recon>();
         }
 

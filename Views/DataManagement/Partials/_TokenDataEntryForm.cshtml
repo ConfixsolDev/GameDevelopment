@@ -36,8 +36,11 @@
                                 <button type="button" class="data-tab" onclick="showDataTab('artillery')">
                                     <i class="fas fa-crosshairs"></i> Artillery Regiment
                                 </button>
-                                <button type="button" class="data-tab" onclick="showDataTab('intelligence')">
-                                    <i class="fas fa-eye"></i> Intelligence
+                                <button type="button" class="data-tab" onclick="showDataTab('logistics')">
+                                    <i class="fas fa-truck"></i> Logistics Unit
+                                </button>
+                                <button type="button" class="data-tab" onclick="showDataTab('engineering')">
+                                    <i class="fas fa-hard-hat"></i> Combat Engineering
                                 </button>
                                 <button type="button" class="data-tab" onclick="showDataTab('recon')">
                                     <i class="fas fa-binoculars"></i> Reconnaissance
@@ -163,6 +166,78 @@
                                 <div class="add-unit-section">
                                     <button type="button" class="btn btn-primary" onclick="openArtilleryRegimentForm('@Model.Token.Id', '@Model.ExistingBrigade.Id')">
                                         <i class="fas fa-plus"></i> Add New Artillery Regiment
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="logistics-data" class="data-tab-content">
+                                <div class="tab-content-header">
+                                    <h6><i class="fas fa-truck"></i> Logistics Units</h6>
+                                    <p class="text-muted">Manage logistics units for @Model.ExistingBrigade.Name</p>
+                                </div>
+                                
+                                <div id="logisticsUnitsList" class="units-list">
+                                    @if (Model.ExistingLogistics != null)
+                                    {
+                                        <div class="unit-item">
+                                            <div class="unit-info">
+                                                <div class="unit-name1">@Model.ExistingLogistics.Name</div>
+                                                <div class="unit-details">Code: @Model.ExistingLogistics.UnitCode | Strength: @Model.ExistingLogistics.Strength | Supply Trucks: @Model.ExistingLogistics.SupplyTrucks</div>
+                                            </div>
+                                            <div class="unit-actions">
+                                                <button class="btn btn-sm btn-outline-secondary" onclick="editLogisticsUnit('@Model.ExistingLogistics.Id')">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteLogisticsUnit('@Model.ExistingLogistics.Id')">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="no-units-message">No logistics units found. Click "Add New" to create one.</div>
+                                    }
+                                </div>
+                                
+                                <div class="add-unit-section">
+                                    <button type="button" class="btn btn-primary" onclick="openLogisticsUnitForm('@Model.Token.Id', '@Model.ExistingBrigade.Id')">
+                                        <i class="fas fa-plus"></i> Add New Logistics Unit
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="engineering-data" class="data-tab-content">
+                                <div class="tab-content-header">
+                                    <h6><i class="fas fa-hard-hat"></i> Combat Engineering Companies</h6>
+                                    <p class="text-muted">Manage combat engineering companies for @Model.ExistingBrigade.Name</p>
+                                </div>
+                                
+                                <div id="engineeringCompaniesList" class="units-list">
+                                    @if (Model.ExistingEngineering != null)
+                                    {
+                                        <div class="unit-item">
+                                            <div class="unit-info">
+                                                <div class="unit-name1">@Model.ExistingEngineering.Name</div>
+                                                <div class="unit-details">Code: @Model.ExistingEngineering.UnitCode | Strength: @Model.ExistingEngineering.Strength | Vehicles: @Model.ExistingEngineering.BridgeLayingVehicles</div>
+                                            </div>
+                                            <div class="unit-actions">
+                                                <button class="btn btn-sm btn-outline-secondary" onclick="editCombatEngineeringCompany('@Model.ExistingEngineering.Id')">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCombatEngineeringCompany('@Model.ExistingEngineering.Id')">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="no-units-message">No combat engineering companies found. Click "Add New" to create one.</div>
+                                    }
+                                </div>
+                                
+                                <div class="add-unit-section">
+                                    <button type="button" class="btn btn-primary" onclick="openCombatEngineeringCompanyForm('@Model.Token.Id', '@Model.ExistingBrigade.Id')">
+                                        <i class="fas fa-plus"></i> Add New Combat Engineering Company
                                     </button>
                                 </div>
                             </div>
@@ -721,9 +796,14 @@ function openArtilleryRegimentForm(tokenId, brigadeId) {
     loadSingleUnitForm('artillery', tokenId, brigadeId);
 }
 
-function openIntelligenceReportForm(tokenId, brigadeId) {
-    console.log('🆕 Opening Intelligence Report form');
-    loadSingleUnitForm('intelligence', tokenId, brigadeId);
+function openLogisticsUnitForm(tokenId, brigadeId) {
+    console.log('🆕 Opening Logistics Unit form');
+    loadSingleUnitForm('logistics', tokenId, brigadeId);
+}
+
+function openCombatEngineeringCompanyForm(tokenId, brigadeId) {
+    console.log('🆕 Opening Combat Engineering Company form');
+    loadSingleUnitForm('engineering', tokenId, brigadeId);
 }
 
 function openReconnaissanceForm(tokenId, brigadeId) {
