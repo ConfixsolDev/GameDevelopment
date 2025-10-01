@@ -15,6 +15,8 @@ namespace TechWebSol.Controllers
         private readonly IUserSessionService _userSessionService;
         private readonly ILogger<AdminTokenController> _logger;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly ApplicationUserVM user;
+
 
         public AdminTokenController(
             ApplicationDbContext context,
@@ -26,6 +28,7 @@ namespace TechWebSol.Controllers
             _userSessionService = userSessionService;
             _logger = logger;
             _webHostEnvironment = webHostEnvironment;
+            user = userSessionService.GetCurrentUser();
         }
 
         /// <summary>
@@ -95,24 +98,35 @@ namespace TechWebSol.Controllers
         [HttpGet]
         public async Task<IActionResult> GetTokens()
         {
-            var tokens = await _context.Tokens
-                .Include(t => t.TokenGroup)
-                .OrderBy(t => t.Name)
-                .Select(t => new TokenListItemDto
-                {
-                    Id = t.Id,
-                    Name = t.Name,
-                    TokenGroupId = t.TokenGroupId,
-                    TokenGroupName = t.TokenGroup != null ? t.TokenGroup.Name : null,
-                    IsActive = t.IsActive,
-                    IsManualToken = t.IsManualToken,
-                    LastUsed = t.LastUsed,
-                    UsageCount = t.UsageCount,
-                    Notes = t.Notes,
-                    AssetImagePath = t.AssetImagePath,
-                    CoverageRadiusKm = t.CoverageRadiusKm
-                })
-                .ToListAsync();
+            var placedTokensvar = _context.Tokens
+                                            .Include(t => t.TokenGroup)
+                                            .OrderBy(t => t.Name)
+                                            .Select(t => new TokenListItemDto
+                                            {
+                                                Id = t.Id,
+                                                Name = t.Name,
+                                                TokenGroupId = t.TokenGroupId,
+                                                TokenGroupName = t.TokenGroup != null ? t.TokenGroup.Name : null,
+                                                IsActive = t.IsActive,
+                                                IsManualToken = t.IsManualToken,
+                                                LastUsed = t.LastUsed,
+                                                UsageCount = t.UsageCount,
+                                                Notes = t.Notes,
+                                                AssetImagePath = t.AssetImagePath,
+                                                CoverageRadiusKm = t.CoverageRadiusKm,
+                                                TeamId = t.TeamId,
+                                            }).AsQueryable();
+
+            if (user.TeamId != null)
+            {
+                placedTokensvar = placedTokensvar.Where(t => t.TeamId == user.TeamId && t.IsActive);
+            }
+            else
+            {
+                placedTokensvar = placedTokensvar.Where(t => t.IsActive);
+            }
+
+            var tokens = await placedTokensvar.ToListAsync();
 
             return Json(tokens);
         }
@@ -126,7 +140,7 @@ namespace TechWebSol.Controllers
         [HttpGet]
         public IActionResult Dashboard()
         {
-            
+
             return View();
         }
 
@@ -142,8 +156,8 @@ namespace TechWebSol.Controllers
             // Apply filters
             if (!string.IsNullOrEmpty(searchTerm))
             {
-                query = query.Where(g => g.Name.Contains(searchTerm) || 
-                                       g.GroupCode.Contains(searchTerm) || 
+                query = query.Where(g => g.Name.Contains(searchTerm) ||
+                                       g.GroupCode.Contains(searchTerm) ||
                                        (g.Description != null && g.Description.Contains(searchTerm)));
             }
 
@@ -208,7 +222,7 @@ namespace TechWebSol.Controllers
                     .OrderBy(g => g.Name)
                     .ToListAsync()
             };
-            
+
             return View(viewModel);
         }
 
@@ -267,7 +281,7 @@ namespace TechWebSol.Controllers
                 _context.TokenGroups.Add(tokenGroup);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Created token group: {GroupName} ({GroupCode}) by user {UserId}", 
+                _logger.LogInformation("Created token group: {GroupName} ({GroupCode}) by user {UserId}",
                     model.Name, model.GroupCode, currentUser.ApplicationUserId);
 
                 TempData["SuccessMessage"] = "Token group created successfully!";
@@ -380,7 +394,7 @@ namespace TechWebSol.Controllers
 
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Updated token group: {GroupName} ({GroupCode})", 
+                _logger.LogInformation("Updated token group: {GroupName} ({GroupCode})",
                     model.Name, model.GroupCode);
 
                 TempData["SuccessMessage"] = "Token group updated successfully!";
@@ -423,7 +437,7 @@ namespace TechWebSol.Controllers
                 tokenGroup.IsActive = false;
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Deleted token group: {GroupName} ({GroupCode})", 
+                _logger.LogInformation("Deleted token group: {GroupName} ({GroupCode})",
                     tokenGroup.Name, tokenGroup.GroupCode);
 
                 TempData["SuccessMessage"] = "Token group deleted successfully!";
@@ -519,16 +533,16 @@ namespace TechWebSol.Controllers
                 await _context.SaveChangesAsync();
 
                 // Create initial area coverage if position and radius are provided
-                if (model.CurrentLatitude.HasValue && 
-                    model.CurrentLongitude.HasValue && 
-                    model.CoverageRadiusKm.HasValue && 
+                if (model.CurrentLatitude.HasValue &&
+                    model.CurrentLongitude.HasValue &&
+                    model.CoverageRadiusKm.HasValue &&
                     model.CoverageRadiusKm.Value > 0)
                 {
-                    await CreateInitialAreaCoverage(token.Id, model.CurrentLatitude.Value, 
+                    await CreateInitialAreaCoverage(token.Id, model.CurrentLatitude.Value,
                         model.CurrentLongitude.Value, model.CoverageRadiusKm.Value);
                 }
 
-                _logger.LogInformation("Created token: {TokenName} by user {UserId}", 
+                _logger.LogInformation("Created token: {TokenName} by user {UserId}",
                     model.Name, currentUser.ApplicationUserId);
 
                 TempData["SuccessMessage"] = "Token created successfully!";
@@ -576,7 +590,7 @@ namespace TechWebSol.Controllers
 
                 ViewData["TokenId"] = id;
                 ViewData["CurrentImagePath"] = token.AssetImagePath;
-                
+
                 return View(model);
             }
             catch (Exception ex)
@@ -635,7 +649,7 @@ namespace TechWebSol.Controllers
                             System.IO.File.Delete(oldImagePath);
                         }
                     }
-                    
+
                     imagePath = await UploadAssetImage(model.AssetImage, model.Name);
                 }
 
@@ -644,21 +658,21 @@ namespace TechWebSol.Controllers
                 token.TokenGroupId = model.TokenGroupId;
                 token.AssetImagePath = imagePath;
                 token.CoverageRadiusKm = model.CoverageRadiusKm;
-                
+
                 // Update position if provided
                 var positionChanged = model.CurrentLatitude.HasValue && model.CurrentLongitude.HasValue;
 
                 await _context.SaveChangesAsync();
 
                 // Update coverage area if position or radius changed
-                if (positionChanged && model.CurrentLatitude.HasValue && 
+                if (positionChanged && model.CurrentLatitude.HasValue &&
                     model.CurrentLongitude.HasValue && model.CoverageRadiusKm.HasValue)
                 {
-                    await UpdateTokenCoverageArea(token.Id, model.CurrentLatitude.Value, 
+                    await UpdateTokenCoverageArea(token.Id, model.CurrentLatitude.Value,
                         model.CurrentLongitude.Value, model.CoverageRadiusKm.Value);
                 }
 
-                _logger.LogInformation("Updated token: {TokenName} by user {UserId}", 
+                _logger.LogInformation("Updated token: {TokenName} by user {UserId}",
                     model.Name, currentUser.ApplicationUserId);
 
                 TempData["SuccessMessage"] = "Token updated successfully!";
@@ -711,7 +725,7 @@ namespace TechWebSol.Controllers
         private async Task<string> UploadAssetImage(IFormFile imageFile, string assetName)
         {
             var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "asset-images");
-            
+
             if (!Directory.Exists(uploadPath))
             {
                 Directory.CreateDirectory(uploadPath);
@@ -765,7 +779,7 @@ namespace TechWebSol.Controllers
 
             // Update or create default operational area
             var operationalArea = existingCoverages.FirstOrDefault(c => c.CoverageType == "Operational");
-            
+
             if (operationalArea != null)
             {
                 // Update existing area
@@ -806,7 +820,7 @@ namespace TechWebSol.Controllers
         {
             var coordinates = new List<double[]>();
             var segments = 32;
-            
+
             for (int i = 0; i <= segments; i++)
             {
                 var angle = (2 * Math.PI * i) / segments;
@@ -814,7 +828,7 @@ namespace TechWebSol.Controllers
                 var y = (double)lat + (double)radiusDegrees * Math.Sin(angle);
                 coordinates.Add(new double[] { x, y });
             }
-            
+
             return coordinates.ToArray();
         }
     }
@@ -842,6 +856,7 @@ namespace TechWebSol.Controllers
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public Guid? TokenGroupId { get; set; }
+        public Guid? TeamId { get; set; }
         public string TokenGroupName { get; set; }
         public bool IsActive { get; set; }
         public bool IsManualToken { get; set; }

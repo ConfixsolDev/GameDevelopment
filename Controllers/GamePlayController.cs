@@ -48,8 +48,7 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var placedTokens = await _context.Tokens
-                    .Where(t => t.TeamId == user.TeamId && t.IsActive)
+                var placedTokensvar =  _context.Tokens
                     .Where(t => t.MapMarkers.Any(m => m.IsActive))
                     .Include(t => t.MapMarkers.OrderByDescending(x=>x.CreatedDate))
                     .Include(t => t.TokenGroup)
@@ -67,6 +66,8 @@ namespace TechWebSol.Controllers
                         lastUsed = t.LastUsed,
                         usageCount = t.UsageCount,
                         notes = t.Notes,
+                        t.TeamId,
+                        t.IsActive,
                         status = "placed",
                         areaCoverages = t.AreaCoverages.Select(ac => new
                         {
@@ -76,14 +77,23 @@ namespace TechWebSol.Controllers
                             coverageType = ac.CoverageType,
                             geometry = ac.Geometry
                         }).ToList()
-                    })
-                    .ToListAsync();
+                    }).AsQueryable();
 
+                if (user.TeamId != null)
+                {
+                    placedTokensvar = placedTokensvar.Where(t => t.TeamId == user.TeamId && t.IsActive);
+                }
+                else
+                {
+                    placedTokensvar = placedTokensvar.Where(t => t.IsActive);
+                }
 
-                return Json(new { 
-                    success = true, 
-                    tokens = placedTokens 
-                });
+                 var  placedTokens = await placedTokensvar.ToListAsync();
+                return Json(new
+                    {
+                        success = true,
+                        tokens = placedTokens
+                    });
             }
             catch (Exception ex)
             {
@@ -159,7 +169,7 @@ namespace TechWebSol.Controllers
                 // Get tokens for this team
                 var tokens = await _context.Tokens
                     .Include(t => t.TokenGroup)
-                    .Where(t => t.IsActive)
+                    .Where(t => t.TeamId == user.TeamId && t.IsActive)
                     .OrderBy(t => t.Name)
                     .Select(t => new
                     {
