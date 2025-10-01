@@ -59,6 +59,7 @@ namespace TechWebSol.Data
         // Suspected Tokens & ISR Missions (Fog of War Intelligence)
         public DbSet<SuspectedToken> SuspectedTokens { get; set; }
         public DbSet<ISRMission> ISRMissions { get; set; }
+        public DbSet<AttackOrder> AttackOrders { get; set; }
         
         // Phase 01 Models
         public DbSet<TerrainType> TerrainTypes { get; set; }
@@ -345,6 +346,42 @@ namespace TechWebSol.Data
                     .HasForeignKey(e => e.SuspectedTokenId)
                     .OnDelete(DeleteBehavior.Cascade);
 
+            });
+
+            // Configure Attack Order entities
+            modelBuilder.Entity<AttackOrder>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.AttackerTokenId).IsRequired();
+                entity.Property(e => e.TargetTokenId).IsRequired();
+                entity.Property(e => e.AxisId).HasMaxLength(50);
+                entity.Property(e => e.ArtilleryAttached).HasMaxLength(1000);
+                entity.Property(e => e.Posture).HasMaxLength(20);
+                entity.Property(e => e.ExecutionMode).HasMaxLength(20);
+                entity.Property(e => e.Status).HasMaxLength(20);
+                entity.Property(e => e.PayloadJson).HasMaxLength(2000);
+
+                // Configure relationships
+                entity.HasOne(e => e.AttackerToken)
+                    .WithMany()
+                    .HasForeignKey(e => e.AttackerTokenId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.TargetToken)
+                    .WithMany()
+                    .HasForeignKey(e => e.TargetTokenId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Team)
+                    .WithMany()
+                    .HasForeignKey(e => e.TeamId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                // Indexes for performance
+                entity.HasIndex(e => e.ExpectedStartTurn);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.AttackerTokenId);
+                entity.HasIndex(e => e.TargetTokenId);
             });
 
             // Configure Map Data entities

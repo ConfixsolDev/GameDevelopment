@@ -20,6 +20,8 @@ namespace TechWebSol.Controllers
         private readonly MovementService _movementService;
         private readonly CombatService _combatService;
         private readonly SupplyService _supplyService;
+        private readonly IOrderPersistenceService _orderPersistenceService;
+        private readonly IDetectionService _detectionService;
 
         public SimulationController(
             ApplicationDbContext context,
@@ -27,7 +29,9 @@ namespace TechWebSol.Controllers
             IUserSessionService userSessionService,
             MovementService movementService,
             CombatService combatService,
-            SupplyService supplyService)
+            SupplyService supplyService,
+            IOrderPersistenceService orderPersistenceService,
+            IDetectionService detectionService)
         {
             _context = context;
             _userManager = userManager;
@@ -35,6 +39,8 @@ namespace TechWebSol.Controllers
             _movementService = movementService;
             _combatService = combatService;
             _supplyService = supplyService;
+            _orderPersistenceService = orderPersistenceService;
+            _detectionService = detectionService;
         }
 
         #region Scenario Management
@@ -773,6 +779,271 @@ namespace TechWebSol.Controllers
         }
 
         #endregion
+
+        #region Attack Order Execution
+
+        /// <summary>
+        /// Execute a specific attack order
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> ExecuteAttackOrder([FromBody] ExecuteAttackOrderRequest request)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var order = await _orderPersistenceService.GetAttackOrderAsync(request.OrderId);
+                if (order == null)
+                {
+                    return NotFound(new { success = false, message = "Attack order not found" });
+                }
+
+                // Verify user has access to this order
+                if (order.TeamId != user.TeamId)
+                {
+                    return Forbid("Access denied to this attack order");
+                }
+
+                // Check if order can be executed
+                if (order.Status != "Planned" && order.Status != "Executing")
+                {
+                    return BadRequest(new { success = false, message = $"Cannot execute order with status: {order.Status}" });
+                }
+
+                // Update status to executing
+                await _orderPersistenceService.UpdateStatusAsync(order.Id, "Executing");
+
+                // Execute the attack
+                var result = await ExecuteAttackOrderInternal(order);
+
+                // Update final status
+                await _orderPersistenceService.UpdateStatusAsync(order.Id, result.Success ? "Completed" : "Failed");
+
+                return Json(new
+                {
+                    success = result.Success,
+                    message = result.Message,
+                    casualties = result.Casualties,
+                    orderId = order.Id
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Error executing attack order" });
+            }
+        }
+
+        /// <summary>
+        /// Execute all due attack orders for the current turn
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> AdvanceTurnExecutePlannedAttacks([FromBody] AdvanceTurnRequest request)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
+
+                var dueOrders = await _orderPersistenceService.GetDueOrdersAsync(request.CurrentTurn);
+                var results = new List<object>();
+
+                foreach (var order in dueOrders)
+                {
+                    try
+                    {
+                        // Only execute orders for this user's team
+                        if (order.TeamId != user.TeamId) continue;
+
+                        var result = await ExecuteAttackOrderInternal(order);
+                        await _orderPersistenceService.UpdateStatusAsync(order.Id, result.Success ? "Completed" : "Failed");
+
+                        results.Add(new
+                        {
+                            orderId = order.Id,
+                            success = result.Success,
+                            message = result.Message,
+                            casualties = result.Casualties
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        await _orderPersistenceService.UpdateStatusAsync(order.Id, "Failed");
+                        results.Add(new
+                        {
+                            orderId = order.Id,
+                            success = false,
+                            message = "Execution failed",
+                            error = ex.Message
+                        });
+                    }
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    executedOrders = results.Count,
+                    results = results
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Error executing planned attacks" });
+            }
+        }
+
+        /// <summary>
+        /// Internal method to execute an attack order
+        /// </summary>
+        private async Task<AttackExecutionResult> ExecuteAttackOrderInternal(AttackOrder order)
+        {
+            try
+            {
+                // Get attacker and target deployments
+                var attackerDeployment = await _context.UnitDeployments
+                    .FirstOrDefaultAsync(d => d.TokenId == order.AttackerTokenId);
+
+                var targetDeployment = await _context.UnitDeployments
+                    .FirstOrDefaultAsync(d => d.TokenId == order.TargetTokenId);
+
+                if (attackerDeployment == null || targetDeployment == null)
+                {
+                    return new AttackExecutionResult
+                    {
+                        Success = false,
+                        Message = "Attacker or target deployment not found"
+                    };
+                }
+
+                // Check detection confidence
+                var detectionConfidence = await _detectionService.GetDetectionConfidenceAsync(
+                    order.AttackerTokenId.ToString(), order.TargetTokenId.ToString());
+
+                if (detectionConfidence < 0.3)
+                {
+                    return new AttackExecutionResult
+                    {
+                        Success = false,
+                        Message = "Target cannot be detected - attack aborted"
+                    };
+                }
+
+                // Calculate movement needed
+                var attackerToken = await _context.Tokens
+                    .Include(t => t.MapMarkers.Where(m => m.IsActive))
+                    .FirstOrDefaultAsync(t => t.Id == order.AttackerTokenId);
+
+                var targetToken = await _context.Tokens
+                    .Include(t => t.MapMarkers.Where(m => m.IsActive))
+                    .FirstOrDefaultAsync(t => t.Id == order.TargetTokenId);
+
+                if (attackerToken?.MapMarkers?.FirstOrDefault() == null || 
+                    targetToken?.MapMarkers?.FirstOrDefault() == null)
+                {
+                    return new AttackExecutionResult
+                    {
+                        Success = false,
+                        Message = "Attacker or target position not found"
+                    };
+                }
+
+                // Calculate distance and movement cost
+                var attackerLat = double.Parse(attackerToken.MapMarkers.First().latitude);
+                var attackerLng = double.Parse(attackerToken.MapMarkers.First().longitude);
+                var targetLat = double.Parse(targetToken.MapMarkers.First().latitude);
+                var targetLng = double.Parse(targetToken.MapMarkers.First().longitude);
+
+                var distance = CalculateDistance(attackerLat, attackerLng, targetLat, targetLng);
+                var movementCost = distance; // Simplified - in reality would use terrain modifiers
+
+                // Check if attacker has enough movement points
+                var requiredMovement = movementCost + (attackerDeployment.MovementPointsPerTurn * (double)order.MpReservePercent);
+                if (attackerDeployment.RemainingMovementPoints < requiredMovement)
+                {
+                    return new AttackExecutionResult
+                    {
+                        Success = false,
+                        Message = "Insufficient movement points for attack"
+                    };
+                }
+
+                // Deduct movement points
+                attackerDeployment.RemainingMovementPoints -= (int)requiredMovement;
+
+                // Execute combat
+                var combatResult = _combatService.ResolveCombat(
+                    ConvertToMilitaryUnit(attackerDeployment),
+                    ConvertToMilitaryUnit(targetDeployment),
+                    attackerDeployment.CurrentTerrain);
+
+                // Update unit strengths
+                attackerDeployment.CurrentStrength = (int)(attackerDeployment.CurrentStrength * (1.0 - combatResult.AttackerCasualties / 100.0));
+                targetDeployment.CurrentStrength = (int)(targetDeployment.CurrentStrength * (1.0 - combatResult.DefenderCasualties / 100.0));
+
+                // Update strength percentages
+                attackerDeployment.StrengthPercentage = (attackerDeployment.CurrentStrength / (double)attackerDeployment.MaxStrength) * 100.0;
+                targetDeployment.StrengthPercentage = (targetDeployment.CurrentStrength / (double)targetDeployment.MaxStrength) * 100.0;
+
+                // Save changes
+                await _context.SaveChangesAsync();
+
+                return new AttackExecutionResult
+                {
+                    Success = true,
+                    Message = "Attack executed successfully",
+                    Casualties = new
+                    {
+                        attacker = combatResult.AttackerCasualties,
+                        defender = combatResult.DefenderCasualties
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                return new AttackExecutionResult
+                {
+                    Success = false,
+                    Message = $"Attack execution failed: {ex.Message}"
+                };
+            }
+        }
+
+        /// <summary>
+        /// Convert UnitDeployment to MilitaryUnit for combat calculations
+        /// </summary>
+        private MilitaryUnit ConvertToMilitaryUnit(UnitDeployment deployment)
+        {
+            return new MilitaryUnit
+            {
+                StrengthPercentage = deployment.StrengthPercentage,
+                CombatPower = deployment.CombatPowerIndex,
+                TerrainModifier = deployment.TerrainModifier,
+                SupplyState = deployment.SupplyStateInt,
+                CurrentTerrain = deployment.CurrentTerrain
+            };
+        }
+
+        /// <summary>
+        /// Calculate distance between two points in kilometers
+        /// </summary>
+        private double CalculateDistance(double lat1, double lng1, double lat2, double lng2)
+        {
+            const double R = 6371; // Earth's radius in kilometers
+            var dLat = ToRadians(lat2 - lat1);
+            var dLng = ToRadians(lng2 - lng1);
+            var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                    Math.Cos(ToRadians(lat1)) * Math.Cos(ToRadians(lat2)) *
+                    Math.Sin(dLng / 2) * Math.Sin(dLng / 2);
+            var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+            return R * c;
+        }
+
+        private double ToRadians(double degrees)
+        {
+            return degrees * (Math.PI / 180);
+        }
+
+        #endregion
     }
 
     // Request/Response DTOs
@@ -830,6 +1101,19 @@ namespace TechWebSol.Controllers
     {
         public string ScenarioId { get; set; }
         public double SupplyDegradationRate { get; set; } = 5.0;
+        public int CurrentTurn { get; set; } = 1;
+    }
+
+    public class ExecuteAttackOrderRequest
+    {
+        public Guid OrderId { get; set; }
+    }
+
+    public class AttackExecutionResult
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public object? Casualties { get; set; }
     }
 
     public class UpdateSupplyRequest

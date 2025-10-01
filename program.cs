@@ -133,9 +133,12 @@ builder.Services.AddScoped<PatternAnalysisEngine>();
 builder.Services.AddScoped<TokenIdentificationDAL>();
 
 // Enhanced Wargame Services
-builder.Services.AddScoped<MovementService>();
+builder.Services.AddScoped<IMovementService, MovementService>();
 builder.Services.AddScoped<CombatService>();
 builder.Services.AddScoped<SupplyService>();
+builder.Services.AddScoped<IDetectionService, DetectionService>();
+builder.Services.AddScoped<IAttackPreviewService, AttackPreviewService>();
+builder.Services.AddScoped<IOrderPersistenceService, OrderPersistenceService>();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();

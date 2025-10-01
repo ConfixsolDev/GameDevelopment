@@ -52,6 +52,9 @@ class GamePlayManager {
             // Initialize suspected token manager (fog of war)
             await this.initializeSuspectedTokenManager();
             
+            // Initialize token action mode manager
+            await this.initializeTokenActionModeManager();
+            
             // Load and restore placed tokens
             await this.restorePlacedTokens();
             
@@ -173,6 +176,27 @@ class GamePlayManager {
             console.log('✅ Suspected token manager initialized');
         } else {
             console.warn('⚠️ Suspected token manager not available');
+        }
+    }
+
+    /**
+     * Initialize token action mode manager
+     */
+    async initializeTokenActionModeManager() {
+        console.log('🎯 Initializing token action mode manager...');
+        
+        if (typeof TokenActionModeManager !== 'undefined' && window.tokenActionModeManager) {
+            // Set map reference for the mode manager
+            window.tokenActionModeManager.setMap(this.map);
+            
+            // Set token manager reference if available
+            if (window.tokenManager) {
+                window.tokenActionModeManager.setTokenManager(window.tokenManager);
+            }
+            
+            console.log('✅ Token action mode manager initialized');
+        } else {
+            console.warn('⚠️ Token action mode manager not available');
         }
     }
 

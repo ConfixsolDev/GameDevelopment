@@ -36,6 +36,139 @@
 }
 
 /* ========================================
+   ATTACK PANEL STYLES
+   ======================================== */
+
+/* Attack panel modal styling */
+#attackPanelModal .gameplay-modal-content {
+    background: var(--gameplay-darker);
+    border: 2px solid rgba(255, 68, 68, 0.3);
+    max-width: 600px;
+}
+
+#attackPanelModal .gameplay-modal-header {
+    background: linear-gradient(135deg, rgba(255, 68, 68, 0.1), rgba(255, 68, 68, 0.05));
+    border-bottom: 1px solid rgba(255, 68, 68, 0.2);
+    color: var(--gameplay-text);
+}
+
+#attackPanelModal .gameplay-modal-header h3 {
+    color: var(--fox-land-color);
+    text-shadow: var(--fox-land-glow);
+}
+
+/* Attack planning form */
+.attack-planning-form {
+    padding: 20px;
+}
+
+.attack-planning-form .form-group {
+    margin-bottom: 20px;
+}
+
+.attack-planning-form label {
+    color: var(--gameplay-text);
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.attack-planning-form .form-control,
+.attack-planning-form .form-range {
+    background: var(--gameplay-light);
+    border: 1px solid rgba(255, 68, 68, 0.3);
+    color: var(--gameplay-text);
+    border-radius: 4px;
+}
+
+.attack-planning-form .form-control:focus,
+.attack-planning-form .form-range:focus {
+    border-color: var(--fox-land-color);
+    box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+    outline: none;
+}
+
+.attack-planning-form .form-range {
+    background: transparent;
+    border: none;
+}
+
+.attack-planning-form .form-range::-webkit-slider-thumb {
+    background: var(--fox-land-color);
+    border: 2px solid var(--gameplay-text);
+    box-shadow: var(--fox-land-glow);
+}
+
+.attack-planning-form .form-range::-moz-range-thumb {
+    background: var(--fox-land-color);
+    border: 2px solid var(--gameplay-text);
+    box-shadow: var(--fox-land-glow);
+}
+
+/* Attack preview results */
+.attack-preview-results {
+    background: var(--gameplay-light);
+    border: 1px solid rgba(255, 68, 68, 0.3);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.attack-preview-results h5 {
+    color: var(--fox-land-color);
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.attack-preview-results p {
+    color: var(--gameplay-text);
+    margin-bottom: 8px;
+}
+
+.attack-preview-results .alert {
+    margin-top: 15px;
+    border-radius: 4px;
+}
+
+/* Form actions */
+.attack-planning-form .form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 68, 68, 0.2);
+}
+
+.attack-planning-form .gameplay-btn {
+    background: var(--gameplay-light);
+    border: 1px solid rgba(255, 68, 68, 0.3);
+    color: var(--gameplay-text);
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.attack-planning-form .gameplay-btn:hover {
+    background: var(--gameplay-lighter);
+    border-color: var(--fox-land-color);
+    box-shadow: var(--fox-land-glow);
+}
+
+.attack-planning-form .gameplay-btn-primary {
+    background: var(--fox-land-color);
+    border-color: var(--fox-land-color);
+    color: white;
+}
+
+.attack-planning-form .gameplay-btn-primary:hover {
+    background: #ff6666;
+    box-shadow: var(--fox-land-glow);
+}
+
+/* ========================================
    SUSPECTED TOKENS (FOG OF WAR) STYLES
    ======================================== */
 
@@ -2909,5 +3042,158 @@ html, body {
     
     .tooltip-line {
         font-size: 10px;
+    }
+}
+
+/* ========================================
+   TOKEN ACTION MODES STYLES
+   ======================================== */
+
+/* Token Actions Section */
+.token-actions-section {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.management-tools-section {
+    margin-top: 15px;
+}
+
+.section-subtitle {
+    font-size: 12px;
+    color: var(--gameplay-text-dim);
+    margin: 0 0 10px 0;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Token Action Buttons */
+.token-action-btn {
+    position: relative;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.token-action-btn:hover {
+    background: var(--gameplay-lighter);
+    border-color: var(--gameplay-primary);
+    box-shadow: var(--gameplay-glow);
+    transform: translateY(-2px);
+}
+
+/* Active Mode States */
+.token-action-btn.active {
+    background: var(--gameplay-primary);
+    color: var(--gameplay-dark);
+    border-color: var(--gameplay-primary);
+    box-shadow: var(--gameplay-glow);
+    font-weight: 600;
+}
+
+.token-action-btn.active::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, var(--gameplay-primary), var(--gameplay-secondary));
+    border-radius: 6px;
+    z-index: -1;
+    animation: activeModePulse 2s ease-in-out infinite;
+}
+
+/* Mode-specific colors */
+.token-action-btn[data-mode="place"].active {
+    background: var(--gameplay-primary);
+    color: var(--gameplay-dark);
+}
+
+.token-action-btn[data-mode="move"].active {
+    background: var(--blue-land-color);
+    color: white;
+}
+
+.token-action-btn[data-mode="attack"].active {
+    background: var(--fox-land-color);
+    color: white;
+}
+
+.token-action-btn[data-mode="pan-attack"].active {
+    background: var(--spectator-color);
+    color: var(--gameplay-dark);
+}
+
+.token-action-btn[data-mode="select"].active {
+    background: var(--gameplay-secondary);
+    color: white;
+}
+
+
+/* Map cursor changes based on mode */
+.map-mode-place {
+    cursor: crosshair !important;
+}
+
+.map-mode-move {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%230088ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"></path><path d="M13 13l6 6"></path></svg>'), auto !important;
+}
+
+.map-mode-attack {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23ff4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>'), auto !important;
+}
+
+.map-mode-pan-attack {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23ffaa00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path><path d="M12 8v8"></path></svg>'), auto !important;
+}
+
+.map-mode-select {
+    cursor: pointer !important;
+}
+
+/* Animations */
+@keyframes activeModePulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+}
+
+
+/* Token hover effects based on mode */
+.token-hover-place {
+    border: 2px dashed var(--gameplay-primary) !important;
+    box-shadow: var(--gameplay-glow) !important;
+}
+
+.token-hover-move {
+    border: 2px dashed var(--blue-land-color) !important;
+    box-shadow: var(--blue-land-glow) !important;
+}
+
+.token-hover-attack {
+    border: 2px dashed var(--fox-land-color) !important;
+    box-shadow: var(--fox-land-glow) !important;
+}
+
+.token-hover-pan-attack {
+    border: 2px dashed var(--spectator-color) !important;
+    box-shadow: var(--spectator-glow) !important;
+}
+
+.token-hover-select {
+    border: 2px solid var(--gameplay-secondary) !important;
+    box-shadow: 0 0 20px rgba(0, 136, 255, 0.5) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .token-action-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    .section-subtitle {
+        font-size: 11px;
     }
 }

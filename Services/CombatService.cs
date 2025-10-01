@@ -4,9 +4,9 @@ namespace TechWebSol.Services
 {
     public class CombatService
     {
-        private readonly MovementService _movementService;
+        private readonly IMovementService _movementService;
 
-        public CombatService(MovementService movementService)
+        public CombatService(IMovementService movementService)
         {
             _movementService = movementService;
         }

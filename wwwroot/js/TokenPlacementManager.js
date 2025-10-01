@@ -14,6 +14,13 @@ class TokenPlacementManager {
 		this.isDraggingMarker = false;
 		this.suppressNextClick = false;
         
+        // Attack mode properties
+        this.attackMode = false;
+        this.attackerToken = null;
+        this.attackTargetHandler = null;
+        this.currentAttackerToken = null;
+        this.currentTargetToken = null;
+        
         this.setupEventListeners();
     }
 
@@ -176,6 +183,75 @@ class TokenPlacementManager {
         this.isMovingToken = false;
         this.movingToken = null;
         this.map.getContainer().style.cursor = 'default';
+    }
+
+    /**
+     * Enable token dragging for all placed tokens
+     */
+    enableTokenDragging() {
+        this.placedTokens.forEach((tokenInfo, tokenId) => {
+            if (tokenInfo.marker) {
+                tokenInfo.marker.draggable = true;
+            }
+        });
+        console.log('✅ Token dragging enabled for all tokens');
+    }
+
+    /**
+     * Disable token dragging for all placed tokens
+     */
+    disableTokenDragging() {
+        this.placedTokens.forEach((tokenInfo, tokenId) => {
+            if (tokenInfo.marker) {
+                tokenInfo.marker.draggable = false;
+            }
+        });
+        console.log('🚫 Token dragging disabled for all tokens');
+    }
+
+    /**
+     * Enable token selection (click events) for all placed tokens
+     */
+    enableTokenSelection() {
+        this.placedTokens.forEach((tokenInfo, tokenId) => {
+            if (tokenInfo.marker) {
+                // Ensure click events are enabled
+                tokenInfo.marker.options.clickable = true;
+            }
+        });
+        console.log('✅ Token selection enabled for all tokens');
+    }
+
+    /**
+     * Find token at location
+     */
+    findTokenAtLocation(latlng) {
+        const tolerance = 0.001; // Small tolerance for click detection
+        
+        for (const [tokenId, tokenInfo] of this.placedTokens) {
+            if (tokenInfo.marker) {
+                const markerLatLng = tokenInfo.marker.getLatLng();
+                const distance = this.calculateDistance(
+                    latlng.lat, latlng.lng,
+                    markerLatLng.lat, markerLatLng.lng
+                );
+                
+                if (distance < tolerance) {
+                    return tokenInfo.token;
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Calculate distance between two points
+     */
+    calculateDistance(lat1, lng1, lat2, lng2) {
+        const dx = lat2 - lat1;
+        const dy = lng2 - lng1;
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
     /**
@@ -1307,6 +1383,9 @@ class TokenPlacementManager {
                     <button class="btn btn-sm btn-warning" onclick="tokenPlacementManager.clearTokenRoutes('${token.id}')">
                         <i class="fas fa-eye-slash"></i> Hide Routes
                     </button>
+                    <button class="btn btn-sm btn-dark" onclick="tokenPlacementManager.startAttackMode('${token.id}')">
+                        <i class="fas fa-crosshairs"></i> Plan Attack (Token)
+                    </button>
                     <button class="btn btn-sm btn-danger" onclick="tokenPlacementManager.removeTokenFromMap('${token.id}')">
                         <i class="fas fa-trash"></i> Remove
                     </button>
@@ -1809,6 +1888,327 @@ class TokenPlacementManager {
             }
             this.coverageAreas.clear();
         }
+    }
+
+    /**
+     * Start attack mode for token-to-token attacks
+     */
+    startAttackMode(attackerTokenId) {
+        try {
+            // Get attacker token info
+            const attackerToken = this.placedTokens.get(attackerTokenId);
+            if (!attackerToken) {
+                console.error('Attacker token not found:', attackerTokenId);
+                return;
+            }
+
+            // Store attacker token for attack planning
+            this.attackerToken = attackerToken;
+            this.attackMode = true;
+
+            // Show notification
+            if (this.notificationCallback) {
+                this.notificationCallback('Attack mode activated. Click on an enemy token to target.', 'info');
+            }
+
+            // Change cursor to crosshair
+            this.map.getContainer().style.cursor = 'crosshair';
+
+            // Add click handler for target selection
+            this.map.off('click', this.attackTargetHandler);
+            this.attackTargetHandler = (e) => {
+                this.selectAttackTarget(e.latlng);
+            };
+            this.map.on('click', this.attackTargetHandler);
+
+            console.log('Attack mode started for token:', attackerTokenId);
+        } catch (err) {
+            console.error('Error starting attack mode:', err);
+        }
+    }
+
+    /**
+     * Select attack target
+     */
+    selectAttackTarget(latlng) {
+        try {
+            if (!this.attackMode || !this.attackerToken) {
+                return;
+            }
+
+            // Find token at clicked location
+            const targetToken = this.findTokenAtLocation(latlng);
+            if (!targetToken) {
+                if (this.notificationCallback) {
+                    this.notificationCallback('No token found at selected location.', 'warning');
+                }
+                return;
+            }
+
+            // Check if target is different from attacker
+            if (targetToken.id === this.attackerToken.id) {
+                if (this.notificationCallback) {
+                    this.notificationCallback('Cannot attack own token.', 'warning');
+                }
+                return;
+            }
+
+            // Open attack panel
+            this.openAttackPanel(this.attackerToken, targetToken);
+
+            // Exit attack mode
+            this.exitAttackMode();
+        } catch (err) {
+            console.error('Error selecting attack target:', err);
+        }
+    }
+
+    /**
+     * Find token at specific location
+     */
+    findTokenAtLocation(latlng) {
+        for (const [tokenId, tokenInfo] of this.placedTokens) {
+            const markerLatLng = tokenInfo.marker.getLatLng();
+            const distance = this.map.distance(latlng, markerLatLng);
+            
+            // If within 50 meters, consider it a hit
+            if (distance < 50) {
+                return tokenInfo.token;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Open attack panel
+     */
+    openAttackPanel(attackerToken, targetToken) {
+        try {
+            // Create attack panel modal
+            const attackPanelHtml = `
+                <div id="attackPanelModal" class="gameplay-modal" style="display: block;">
+                    <div class="gameplay-modal-content">
+                        <div class="gameplay-modal-header">
+                            <h3><i class="fas fa-crosshairs"></i> Plan Attack</h3>
+                            <button class="gameplay-modal-close" onclick="tokenPlacementManager.closeAttackPanel()">&times;</button>
+                        </div>
+                        <div class="gameplay-modal-body">
+                            <div class="attack-planning-form">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span>Planning attack from <strong>${attackerToken.name}</strong> to <strong>${targetToken.name}</strong></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="attackAxisId">Axis ID (Optional)</label>
+                                    <input type="text" id="attackAxisId" class="form-control" placeholder="e.g., Alpha, Bravo, Charlie" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="attackPosture">Attack Posture</label>
+                                    <select id="attackPosture" class="form-control">
+                                        <option value="Advance">Advance</option>
+                                        <option value="Fix">Fix</option>
+                                        <option value="Feint">Feint</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="attackMpReserve">Movement Points Reserve (%)</label>
+                                    <input type="range" id="attackMpReserve" class="form-range" min="0" max="50" value="10" oninput="document.getElementById('mpReserveValue').textContent = this.value + '%'" />
+                                    <div class="d-flex justify-content-between">
+                                        <span>0%</span>
+                                        <span id="mpReserveValue">10%</span>
+                                        <span>50%</span>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="attackStartTurn">Expected Start Turn</label>
+                                    <input type="number" id="attackStartTurn" class="form-control" min="1" value="1" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="attackDuration">Duration (Turns)</label>
+                                    <input type="number" id="attackDuration" class="form-control" min="1" max="10" value="1" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="attackExecutionMode">Execution Mode</label>
+                                    <select id="attackExecutionMode" class="form-control">
+                                        <option value="Plan">Plan for Later</option>
+                                        <option value="ExecuteNow">Execute Now</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button class="gameplay-btn" onclick="tokenPlacementManager.previewAttack()">
+                                        <i class="fas fa-eye"></i> Preview
+                                    </button>
+                                    <button class="gameplay-btn gameplay-btn-primary" onclick="tokenPlacementManager.executeAttack()">
+                                        <i class="fas fa-play"></i> Execute Attack
+                                    </button>
+                                    <button class="gameplay-btn" onclick="tokenPlacementManager.closeAttackPanel()">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Add to page
+            document.body.insertAdjacentHTML('beforeend', attackPanelHtml);
+
+            // Store token references
+            this.currentAttackerToken = attackerToken;
+            this.currentTargetToken = targetToken;
+
+            console.log('Attack panel opened');
+        } catch (err) {
+            console.error('Error opening attack panel:', err);
+        }
+    }
+
+    /**
+     * Close attack panel
+     */
+    closeAttackPanel() {
+        try {
+            const modal = document.getElementById('attackPanelModal');
+            if (modal) {
+                modal.remove();
+            }
+            this.currentAttackerToken = null;
+            this.currentTargetToken = null;
+        } catch (err) {
+            console.error('Error closing attack panel:', err);
+        }
+    }
+
+    /**
+     * Preview attack
+     */
+    async previewAttack() {
+        try {
+            if (!this.currentAttackerToken || !this.currentTargetToken) {
+                return;
+            }
+
+            const startTurn = parseInt(document.getElementById('attackStartTurn').value) || 1;
+            
+            // Call preview API
+            const response = await fetch(`/api/orders/preview-attack-token?attackerId=${this.currentAttackerToken.id}&targetId=${this.currentTargetToken.id}&startTurn=${startTurn}`);
+            const result = await response.json();
+
+            if (result.success) {
+                // Show preview results
+                this.showAttackPreview(result.preview);
+            } else {
+                if (this.notificationCallback) {
+                    this.notificationCallback('Failed to preview attack: ' + result.message, 'error');
+                }
+            }
+        } catch (err) {
+            console.error('Error previewing attack:', err);
+            if (this.notificationCallback) {
+                this.notificationCallback('Error previewing attack', 'error');
+            }
+        }
+    }
+
+    /**
+     * Show attack preview results
+     */
+    showAttackPreview(preview) {
+        const previewHtml = `
+            <div class="attack-preview-results">
+                <h5>Attack Preview</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Detection Confidence:</strong> ${(preview.detectionConfidence * 100).toFixed(1)}%</p>
+                        <p><strong>Attacker Combat Power:</strong> ${preview.attackerEffectiveCombatPower.toFixed(1)}</p>
+                        <p><strong>Defender Combat Power:</strong> ${preview.defenderEffectiveCombatPowerEstimated.toFixed(1)}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Attacker Casualties:</strong> ${preview.attackerExpectedCasualtyPercent.toFixed(1)}%</p>
+                        <p><strong>Defender Casualties:</strong> ${preview.defenderExpectedCasualtyPercent.toFixed(1)}%</p>
+                        <p><strong>Success Probability:</strong> ${(preview.probabilityOfSuccess * 100).toFixed(1)}%</p>
+                    </div>
+                </div>
+                ${preview.uncertaintyNotes ? `<div class="alert alert-warning">${preview.uncertaintyNotes}</div>` : ''}
+                ${preview.supplyWarnings.length > 0 ? `<div class="alert alert-danger">${preview.supplyWarnings.join('<br>')}</div>` : ''}
+            </div>
+        `;
+
+        // Insert preview into modal
+        const modalBody = document.querySelector('#attackPanelModal .gameplay-modal-body');
+        const existingPreview = modalBody.querySelector('.attack-preview-results');
+        if (existingPreview) {
+            existingPreview.remove();
+        }
+        modalBody.insertAdjacentHTML('beforeend', previewHtml);
+    }
+
+    /**
+     * Execute attack
+     */
+    async executeAttack() {
+        try {
+            if (!this.currentAttackerToken || !this.currentTargetToken) {
+                return;
+            }
+
+            // Gather form data
+            const attackData = {
+                attackerId: this.currentAttackerToken.id,
+                targetId: this.currentTargetToken.id,
+                axisId: document.getElementById('attackAxisId').value || null,
+                artilleryAttached: [], // TODO: Add artillery selection
+                mpReservePercent: parseInt(document.getElementById('attackMpReserve').value) / 100,
+                posture: document.getElementById('attackPosture').value,
+                expectedStartTurn: parseInt(document.getElementById('attackStartTurn').value),
+                durationTurns: parseInt(document.getElementById('attackDuration').value),
+                executionMode: document.getElementById('attackExecutionMode').value,
+                notes: `Attack planned from ${this.currentAttackerToken.name} to ${this.currentTargetToken.name}`
+            };
+
+            // Call plan attack API
+            const response = await fetch('/api/orders/plan-attack-token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(attackData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                if (this.notificationCallback) {
+                    this.notificationCallback(`Attack ${result.status === 'Executed' ? 'executed' : 'planned'} successfully!`, 'success');
+                }
+                this.closeAttackPanel();
+            } else {
+                if (this.notificationCallback) {
+                    this.notificationCallback('Failed to execute attack: ' + result.message, 'error');
+                }
+            }
+        } catch (err) {
+            console.error('Error executing attack:', err);
+            if (this.notificationCallback) {
+                this.notificationCallback('Error executing attack', 'error');
+            }
+        }
+    }
+
+    /**
+     * Exit attack mode
+     */
+    exitAttackMode() {
+        this.attackMode = false;
+        this.attackerToken = null;
+        this.map.getContainer().style.cursor = '';
+        this.map.off('click', this.attackTargetHandler);
     }
 }
 

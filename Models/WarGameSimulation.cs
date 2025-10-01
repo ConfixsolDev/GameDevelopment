@@ -116,6 +116,13 @@ namespace TechWebSol.Models
         // Backward compatibility property
         public int SupplyStateInt { get; set; } = 100; // 100=Green, 75=Amber, 50=Red
 
+        /// <summary>
+        /// Detection probability for this unit (0.0 to 1.0)
+        /// Used for fog-of-war mechanics
+        /// </summary>
+        [Column(TypeName = "decimal(5,2)")]
+        public decimal? DetectionProbability { get; set; }
+
         // Navigation properties
         public virtual ICollection<MovementOrder> MovementOrders { get; set; } = new List<MovementOrder>();
         public virtual ICollection<BattleParticipant> BattleParticipations { get; set; } = new List<BattleParticipant>();

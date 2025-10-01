@@ -1063,6 +1063,46 @@ class TokenManager {
     }
 
     /**
+     * Enable token movement (dragging)
+     */
+    enableTokenMovement() {
+        if (this.tokenPlacementManager) {
+            this.tokenPlacementManager.enableTokenDragging();
+        }
+        console.log('✅ Token movement enabled');
+    }
+
+    /**
+     * Disable token movement (dragging)
+     */
+    disableTokenMovement() {
+        if (this.tokenPlacementManager) {
+            this.tokenPlacementManager.disableTokenDragging();
+        }
+        console.log('🚫 Token movement disabled');
+    }
+
+    /**
+     * Enable token selection only
+     */
+    enableTokenSelection() {
+        if (this.tokenPlacementManager) {
+            this.tokenPlacementManager.enableTokenSelection();
+        }
+        console.log('✅ Token selection enabled');
+    }
+
+    /**
+     * Find token at location
+     */
+    findTokenAtLocation(latlng) {
+        if (this.tokenPlacementManager) {
+            return this.tokenPlacementManager.findTokenAtLocation(latlng);
+        }
+        return null;
+    }
+
+    /**
      * Get all placed tokens (from cache and server)
      */
     async getAllPlacedTokens() {
