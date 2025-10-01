@@ -237,9 +237,9 @@ class GamePlayManager {
                 const marker = tokenManager.tokenPlacementManager.createTokenMarker(tokenData, latlng);
                 this.map.addLayer(marker);
                 
-                // Create coverage areas if they exist
+                // Create coverage areas if they exist (with force type color)
                 if (tokenData.areaCoverages && tokenData.areaCoverages.length > 0) {
-                    tokenManager.tokenPlacementManager.createCoverageAreas(tokenData.areaCoverages, latlng);
+                    tokenManager.tokenPlacementManager.createCoverageAreas(tokenData.areaCoverages, latlng, tokenData.forceType);
                 }
                 
                 // Store token info for tracking
@@ -249,8 +249,10 @@ class GamePlayManager {
                     coverageAreas: tokenData.areaCoverages || []
                 });
                 
-                // Restore movement history and route lines
-                await this.restoreTokenMovementHistory(tokenData.id);
+                // Restore movement history and route lines with force type
+                if (tokenData.movementHistory && tokenData.movementHistory.length > 1) {
+                    await this.drawTokenMovementHistory(tokenData);
+                }
             } else {
                 // Fallback: Create basic marker
                 await this.createBasicTokenMarker(tokenData, latlng);
@@ -262,54 +264,101 @@ class GamePlayManager {
     }
 
     /**
-     * Restore movement history and route lines for a token
+     * Draw movement history for a token with color-coded paths based on force type
+     */
+    async drawTokenMovementHistory(tokenData) {
+        try {
+            const tokenId = tokenData.id;
+            const movementHistory = tokenData.movementHistory;
+            const forceType = tokenData.forceType;
+            
+            console.log(`🔄 Drawing movement history for token: ${tokenData.name} (Force: ${forceType})`);
+            
+            if (!movementHistory || movementHistory.length < 2) {
+                console.log('No movement history to display');
+                return;
+            }
+            
+            console.log(`📍 Found ${movementHistory.length} movement points`);
+            
+            // Determine color based on force type (Fox Land / Blue Land)
+            let lineColor = '#4299e1'; // Default blue
+            if (forceType) {
+                const forceTypeLower = forceType.toLowerCase();
+                if (forceTypeLower.includes('fox')) {
+                    lineColor = '#ff0000'; // Red for Fox Land
+                } else if (forceTypeLower.includes('blue')) {
+                    lineColor = '#0000ff'; // Blue for Blue Land
+                }
+            }
+            
+            // Create route lines for each movement
+            const positions = movementHistory.map(m => [
+                typeof m.latitude === 'string' ? parseFloat(m.latitude) : m.latitude,
+                typeof m.longitude === 'string' ? parseFloat(m.longitude) : m.longitude
+            ]);
+            
+            // Create the main route line (dotted)
+            const routeLine = L.polyline(positions, {
+                color: lineColor,
+                weight: 3,
+                opacity: 0.7,
+                dashArray: '10, 10' // Dotted line pattern
+            }).addTo(this.map);
+            
+            // Add small circular markers for each waypoint (except current position)
+            const waypointMarkers = [];
+            movementHistory.forEach((movement, index) => {
+                if (index > 0 && index < movementHistory.length - 1) { // Skip first and last (current position)
+                    const lat = typeof movement.latitude === 'string' ? parseFloat(movement.latitude) : movement.latitude;
+                    const lng = typeof movement.longitude === 'string' ? parseFloat(movement.longitude) : movement.longitude;
+                    
+                    const waypointMarker = L.circleMarker([lat, lng], {
+                        radius: 4,
+                        color: lineColor,
+                        fillColor: lineColor,
+                        fillOpacity: 0.8,
+                        weight: 2
+                    }).addTo(this.map);
+                    
+                    // Add popup with movement details
+                    waypointMarker.bindPopup(`
+                        <div class="waypoint-popup">
+                            <strong>${tokenData.name}</strong><br/>
+                            <small>Waypoint ${index}</small><br/>
+                            <small>${movement.createdDate ? new Date(movement.createdDate).toLocaleString() : 'Unknown time'}</small>
+                        </div>
+                    `);
+                    
+                    waypointMarkers.push(waypointMarker);
+                }
+            });
+            
+            // Store reference for cleanup
+            if (tokenManager && tokenManager.tokenPlacementManager) {
+                const tokenInfo = tokenManager.tokenPlacementManager.placedTokens.get(tokenId);
+                if (tokenInfo) {
+                    if (!tokenInfo.routeLines) tokenInfo.routeLines = [];
+                    if (!tokenInfo.waypointMarkers) tokenInfo.waypointMarkers = [];
+                    tokenInfo.routeLines.push(routeLine);
+                    tokenInfo.waypointMarkers.push(...waypointMarkers);
+                }
+            }
+            
+            console.log(`✅ Movement history drawn for token ${tokenData.name} with ${lineColor} color`);
+        } catch (error) {
+            console.error(`❌ Error drawing movement history for token ${tokenData.name}:`, error);
+        }
+    }
+    
+    /**
+     * Restore movement history and route lines for a token (legacy method - no longer needed, kept for backward compatibility)
+     * Movement history is now passed with token data, no need for additional API calls
      */
     async restoreTokenMovementHistory(tokenId) {
-        try {
-            console.log(`🔄 Restoring movement history for token: ${tokenId}`);
-            
-            // Get movement history from backend
-            const response = await fetch(`/GamePlay/GetTokenMovementHistory?tokenId=${tokenId}`);
-            const result = await response.json();
-            
-            if (result.success && result.movementHistory && result.movementHistory.length > 1) {
-                console.log(`📍 Found ${result.movementHistory.length} movement points for token ${tokenId}`);
-                
-                // Create route lines for each movement
-                const positions = result.movementHistory.map(m => [parseFloat(m.latitude), parseFloat(m.longitude)]);
-                
-                // Create the main route line
-                const routeLine = L.polyline(positions, {
-                    color: '#4299e1',
-                    weight: 3,
-                    opacity: 0.8,
-                    dashArray: '10, 5'
-                }).addTo(this.map);
-                
-                // Add enhanced waypoint markers for each movement point
-                result.movementHistory.forEach((movement, index) => {
-                    if (index > 0) { // Skip first position (starting point)
-                        const waypointMarker = tokenManager.tokenPlacementManager.createWaypointMarker(movement, index, result.movementOrders);
-                        waypointMarker.addTo(this.map);
-                        
-                        // Store reference for cleanup
-                        if (tokenManager && tokenManager.tokenPlacementManager) {
-                            const tokenData = tokenManager.tokenPlacementManager.placedTokens.get(tokenId);
-                            if (tokenData) {
-                                if (!tokenData.routeLines) tokenData.routeLines = [];
-                                if (!tokenData.waypointMarkers) tokenData.waypointMarkers = [];
-                                tokenData.routeLines.push(routeLine);
-                                tokenData.waypointMarkers.push(waypointMarker);
-                            }
-                        }
-                    }
-                });
-                
-                console.log(`✅ Movement history restored for token ${tokenId}`);
-            }
-        } catch (error) {
-            console.error(`❌ Error restoring movement history for token ${tokenId}:`, error);
-        }
+        console.log(`ℹ️ restoreTokenMovementHistory called for ${tokenId} - This method is deprecated. Movement history is now included in token data.`);
+        // This method is no longer needed as movement history is included in GetPlacedTokens response
+        // Kept for backward compatibility only
     }
 
     /**
@@ -317,49 +366,41 @@ class GamePlayManager {
      */
     async createBasicTokenMarker(tokenData, latlng) {
         const hasImage = tokenData.assetImagePath && tokenData.assetImagePath.trim() !== '';
-        const size = 40;
+        const size = 48;
+        
+        // Determine border color based on force type
+        let borderColor = '#00ff88'; // Default green
+        if (tokenData.forceType) {
+            const forceTypeLower = tokenData.forceType.toLowerCase();
+            if (forceTypeLower.includes('fox')) {
+                borderColor = '#ff0000'; // Red for Fox Land
+            } else if (forceTypeLower.includes('blue')) {
+                borderColor = '#0000ff'; // Blue for Blue Land
+            }
+        }
         
         let iconHtml;
         if (hasImage) {
             iconHtml = `
-                <div class="token-marker" style="
-                    width: ${size}px; 
-                    height: ${size}px; 
-                    border-radius: 50%; 
-                    overflow: hidden;
-                    border: 3px solid #00ff88;
-                    box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
-                    background: white;
-                ">
+                <div class="token-square" style="border-color: ${borderColor};">
                     <img src="${tokenData.assetImagePath}" 
-                         alt="${tokenData.name}" 
-                         style="width: 100%; height: 100%; object-fit: cover;" />
+                         class="token-image"
+                         alt="${tokenData.name}" />
                 </div>
             `;
         } else {
             iconHtml = `
-                <div class="token-marker" style="
-                    width: ${size}px; 
-                    height: ${size}px; 
-                    border-radius: 50%; 
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    border: 3px solid #00ff88;
-                    box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: white;
-                    font-weight: bold;
-                    font-size: 18px;
-                ">
-                    <i class="fas fa-map-marker-alt"></i>
+                <div class="token-square" style="border-color: ${borderColor};">
+                    <div class="token-fallback-icon">
+                        <i class="fas fa-crosshairs"></i>
+                    </div>
                 </div>
             `;
         }
         
         const icon = L.divIcon({
             html: iconHtml,
-            className: 'custom-token-marker',
+            className: 'token-marker-container',
             iconSize: [size, size],
             iconAnchor: [size/2, size/2],
             popupAnchor: [0, -size/2]
@@ -374,6 +415,7 @@ class GamePlayManager {
         marker.bindPopup(`
             <div class="token-popup">
                 <h4>${tokenData.name}</h4>
+                <p><strong>Force:</strong> ${tokenData.forceType || 'Unknown'}</p>
                 <p><strong>Group:</strong> ${tokenData.tokenGroupName || 'Unknown'}</p>
                 <p><strong>Position:</strong> ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}</p>
                 <p><strong>Status:</strong> Placed</p>
@@ -387,7 +429,7 @@ class GamePlayManager {
             this.map.addLayer(marker);
         }
         
-        console.log(`✅ Basic marker created for token: ${tokenData.name}`);
+        console.log(`✅ Basic marker created for token: ${tokenData.name} (${tokenData.forceType})`);
     }
 
     /**

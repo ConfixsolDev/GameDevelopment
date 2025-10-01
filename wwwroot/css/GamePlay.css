@@ -36,6 +36,128 @@
 }
 
 /* ========================================
+   MAP COVERAGE & WAYPOINT POPUPS
+   ======================================== */
+
+.coverage-popup {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 8px;
+    min-width: 150px;
+}
+
+.coverage-popup strong {
+    color: #333;
+    font-size: 14px;
+    display: block;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 4px;
+}
+
+.coverage-popup small {
+    color: #666;
+    font-size: 12px;
+    display: block;
+    margin-top: 3px;
+}
+
+.waypoint-popup {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 6px;
+    min-width: 120px;
+}
+
+.waypoint-popup strong {
+    color: #333;
+    font-size: 13px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.waypoint-popup small {
+    color: #666;
+    font-size: 11px;
+    display: block;
+    margin-top: 2px;
+}
+
+/* ========================================
+   TOKEN MARKERS (SQUARE SHAPE)
+   ======================================== */
+
+.token-marker-container {
+    background: transparent !important;
+    border: none !important;
+}
+
+.token-square {
+    width: 48px;
+    height: 48px;
+    background: white;
+    border: 4px solid #00ff88;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.token-square:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+}
+
+.token-square .token-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.token-square .token-fallback-icon {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 24px;
+}
+
+.token-square .token-fallback-icon i {
+    color: white;
+}
+
+/* Token marker for dragging */
+.leaflet-marker-icon.token-marker-container.leaflet-drag-target {
+    opacity: 0.8;
+}
+
+/* Token marker animation on placement */
+@keyframes tokenAppear {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.token-marker-container {
+    animation: tokenAppear 0.5s ease-out;
+}
+
+/* ========================================
    BASE STYLES
    ======================================== */
 

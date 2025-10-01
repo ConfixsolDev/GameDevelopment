@@ -26,7 +26,10 @@ namespace TechWebSol.Models
 
         public int UsageCount { get; set; } = 0;
         [MaxLength(1000)]
-        public string? Notes { get; set; }
+        public string? Notes { get; set; } = string.Empty;
+
+        [MaxLength(100)]
+        public string? ForceType { get; set; } = string.Empty;
         public Guid? TokenGroupId { get; set; }
         public virtual TokenGroup? TokenGroup { get; set; }
         public virtual ICollection<MapMarker> MapMarkers { get; set; } = new List<MapMarker>();

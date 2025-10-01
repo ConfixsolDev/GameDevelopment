@@ -130,9 +130,9 @@ class TokenPlacementManager {
                     this.map.addLayer(marker);
                 }
 
-                // Create coverage areas
+                // Create coverage areas with force type color
                 if (result.areaCoverages && result.areaCoverages.length > 0) {
-                    this.createCoverageAreas(result.areaCoverages, latlng);
+                    this.createCoverageAreas(result.areaCoverages, latlng, this.selectedTokenForPlacement.forceType);
                 }
 
                 // Store token info
@@ -207,6 +207,12 @@ class TokenPlacementManager {
                 if (result.areaCoverages && result.areaCoverages.length > 0) {
                     this.updateCoverageAreas(this.movingToken.token.id, result.areaCoverages, latlng);
                 }
+
+                // Clear existing movement history visuals
+                this.clearMovementHistory(this.movingToken.token.id);
+
+                // Refresh movement history to show the new path
+                await this.refreshMovementHistory(this.movingToken.token.id);
 
                 this.notificationCallback(result.message, 'success');
             } else {
@@ -1108,30 +1114,88 @@ class TokenPlacementManager {
     }
 
 	createTokenIcon(token) {
+        // Determine border color based on force type
+        let borderColor = '#00ff88'; // Default green
+        if (token.forceType) {
+            const forceTypeLower = token.forceType.toLowerCase();
+            if (forceTypeLower.includes('fox')) {
+                borderColor = '#ff0000'; // Red for Fox Land
+            } else if (forceTypeLower.includes('blue')) {
+                borderColor = '#0000ff'; // Blue for Blue Land
+            }
+        }
+
+        // Create square token with colored border
         const iconHtml = token.assetImagePath ? 
-            `<img src="${token.assetImagePath}" class="token-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"><i class="fas fa-crosshairs token-fallback-icon" style="display:none;"></i>` :
-            `<i class="fas fa-crosshairs"></i>`;
+            `<div class="token-square" style="border-color: ${borderColor};">
+                <img src="${token.assetImagePath}" class="token-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="token-fallback-icon" style="display:none;">
+                    <i class="fas fa-crosshairs"></i>
+                </div>
+             </div>` :
+            `<div class="token-square" style="border-color: ${borderColor};">
+                <div class="token-fallback-icon">
+                    <i class="fas fa-crosshairs"></i>
+                </div>
+             </div>`;
 
         return L.divIcon({
-            className: 'token-marker',
+            className: 'token-marker-container',
             html: iconHtml,
-			iconSize: [48, 64],
-			iconAnchor: [24, 32]
+			iconSize: [50, 50],
+			iconAnchor: [25, 25],
+            popupAnchor: [0, -25]
         });
     }
 
     /**
-     * Create coverage areas
+     * Create coverage areas with force-type-based colors
      */
-    createCoverageAreas(areaCoverages, centerLatLng) {
+    createCoverageAreas(areaCoverages, centerLatLng, forceType = null) {
         areaCoverages.forEach(coverage => {
 			if (coverage.radiusKm) {
-				const color = this.getCoverageColor(coverage.coverageType);
-				const plus = this.createPlusCoverage(centerLatLng, coverage.radiusKm * 1000, color, 3, 0.35);
-				const layer = plus.addTo(this.map);
+				// Determine color based on force type (Fox Land / Blue Land)
+				let fillColor, strokeColor;
+				if (forceType) {
+					const forceTypeLower = forceType.toLowerCase();
+					if (forceTypeLower.includes('fox')) {
+						fillColor = '#ff0000'; // Red for Fox Land
+						strokeColor = '#cc0000'; // Darker red for border
+					} else if (forceTypeLower.includes('blue')) {
+						fillColor = '#0000ff'; // Blue for Blue Land
+						strokeColor = '#0000cc'; // Darker blue for border
+					} else {
+						fillColor = '#3388ff'; // Default light blue
+						strokeColor = '#2266dd';
+					}
+				} else {
+					// Fallback to coverage type color
+					fillColor = this.getCoverageColor(coverage.coverageType);
+					strokeColor = fillColor;
+				}
+
+				// Create a filled circle with semi-transparent fill
+				const circle = L.circle(centerLatLng, {
+					radius: coverage.radiusKm * 1000, // Convert km to meters
+					color: strokeColor,
+					fillColor: fillColor,
+					fillOpacity: 0.2, // Semi-transparent
+					opacity: 0.6,
+					weight: 2
+				}).addTo(this.map);
+
+				// Add popup with coverage info
+				circle.bindPopup(`
+					<div class="coverage-popup">
+						<strong>${coverage.coverageType || 'Operational'} Range</strong><br/>
+						<small>Radius: ${coverage.radiusKm} km</small><br/>
+						<small>Force: ${forceType || 'Unknown'}</small>
+					</div>
+				`);
+
 				// Store reference for later updates
 				if (!this.coverageAreas) this.coverageAreas = new Map();
-				this.coverageAreas.set(coverage.id, layer);
+				this.coverageAreas.set(coverage.id, circle);
 			}
         });
     }
@@ -1168,8 +1232,12 @@ class TokenPlacementManager {
         // Remove existing coverage areas for this token
         this.removeCoverageAreas(tokenId);
 
-        // Create new coverage areas
-        this.createCoverageAreas(areaCoverages, newCenterLatLng);
+        // Get force type from token
+        const tokenInfo = this.placedTokens.get(tokenId);
+        const forceType = tokenInfo?.token?.forceType;
+
+        // Create new coverage areas with force type color
+        this.createCoverageAreas(areaCoverages, newCenterLatLng, forceType);
     }
 
     /**
@@ -1567,6 +1635,152 @@ class TokenPlacementManager {
     }
 
     /**
+     * Clear movement history visuals (route lines and waypoint markers) for a token
+     */
+    clearMovementHistory(tokenId) {
+        const tokenInfo = this.placedTokens.get(tokenId);
+        if (!tokenInfo) return;
+
+        // Remove route lines
+        if (tokenInfo.routeLines) {
+            tokenInfo.routeLines.forEach(line => {
+                this.map.removeLayer(line);
+            });
+            tokenInfo.routeLines = [];
+        }
+
+        // Remove waypoint markers
+        if (tokenInfo.waypointMarkers) {
+            tokenInfo.waypointMarkers.forEach(marker => {
+                this.map.removeLayer(marker);
+            });
+            tokenInfo.waypointMarkers = [];
+        }
+    }
+
+    /**
+     * Refresh movement history for a token after it has been moved
+     * This fetches the latest token data (including updated movement history) in one API call
+     */
+    async refreshMovementHistory(tokenId) {
+        try {
+            console.log(`🔄 Refreshing movement history for token ${tokenId}`);
+            
+            // Get updated token data with movement history from single API call
+            const response = await fetch('/GamePlay/GetPlacedTokens');
+            const result = await response.json();
+
+            if (result.success && result.tokens) {
+                const tokenData = result.tokens.find(t => t.id === tokenId);
+                if (tokenData) {
+                    // Update stored token data with latest info
+                    const tokenInfo = this.placedTokens.get(tokenId);
+                    if (tokenInfo) {
+                        tokenInfo.token = tokenData;
+                    }
+                    
+                    // Draw movement history if it exists
+                    if (tokenData.movementHistory && tokenData.movementHistory.length > 1) {
+                        // Use the gamePlayManager's method to draw movement history
+                        if (window.gamePlayManager && typeof window.gamePlayManager.drawTokenMovementHistory === 'function') {
+                            await window.gamePlayManager.drawTokenMovementHistory(tokenData);
+                        } else {
+                            // Fallback: Draw movement history inline
+                            await this.drawMovementHistoryInline(tokenData);
+                        }
+                    }
+                    
+                    console.log(`✅ Movement history refreshed for token ${tokenId}`);
+                }
+            }
+        } catch (error) {
+            console.error(`❌ Error refreshing movement history for token ${tokenId}:`, error);
+        }
+    }
+
+    /**
+     * Draw movement history inline (fallback method)
+     */
+    async drawMovementHistoryInline(tokenData) {
+        try {
+            const tokenId = tokenData.id;
+            const movementHistory = tokenData.movementHistory;
+            const forceType = tokenData.forceType;
+
+            console.log(`🔄 Drawing movement history inline for token: ${tokenData.name}`);
+
+            if (!movementHistory || movementHistory.length < 2) {
+                return;
+            }
+
+            // Determine color based on force type (Fox Land / Blue Land)
+            let lineColor = '#4299e1';
+            if (forceType) {
+                const forceTypeLower = forceType.toLowerCase();
+                if (forceTypeLower.includes('fox')) {
+                    lineColor = '#ff0000'; // Red for Fox Land
+                } else if (forceTypeLower.includes('blue')) {
+                    lineColor = '#0000ff'; // Blue for Blue Land
+                }
+            }
+
+            // Create positions array
+            const positions = movementHistory.map(m => [
+                typeof m.latitude === 'string' ? parseFloat(m.latitude) : m.latitude,
+                typeof m.longitude === 'string' ? parseFloat(m.longitude) : m.longitude
+            ]);
+
+            // Create dotted route line
+            const routeLine = L.polyline(positions, {
+                color: lineColor,
+                weight: 3,
+                opacity: 0.7,
+                dashArray: '10, 10'
+            }).addTo(this.map);
+
+            // Add waypoint markers
+            const waypointMarkers = [];
+            movementHistory.forEach((movement, index) => {
+                if (index > 0 && index < movementHistory.length - 1) {
+                    const lat = typeof movement.latitude === 'string' ? parseFloat(movement.latitude) : movement.latitude;
+                    const lng = typeof movement.longitude === 'string' ? parseFloat(movement.longitude) : movement.longitude;
+
+                    const waypointMarker = L.circleMarker([lat, lng], {
+                        radius: 4,
+                        color: lineColor,
+                        fillColor: lineColor,
+                        fillOpacity: 0.8,
+                        weight: 2
+                    }).addTo(this.map);
+
+                    waypointMarker.bindPopup(`
+                        <div class="waypoint-popup">
+                            <strong>${tokenData.name}</strong><br/>
+                            <small>Waypoint ${index}</small><br/>
+                            <small>${movement.createdDate ? new Date(movement.createdDate).toLocaleString() : 'Unknown time'}</small>
+                        </div>
+                    `);
+
+                    waypointMarkers.push(waypointMarker);
+                }
+            });
+
+            // Store references
+            const tokenInfo = this.placedTokens.get(tokenId);
+            if (tokenInfo) {
+                if (!tokenInfo.routeLines) tokenInfo.routeLines = [];
+                if (!tokenInfo.waypointMarkers) tokenInfo.waypointMarkers = [];
+                tokenInfo.routeLines.push(routeLine);
+                tokenInfo.waypointMarkers.push(...waypointMarkers);
+            }
+
+            console.log(`✅ Movement history drawn inline with ${lineColor} color`);
+        } catch (error) {
+            console.error('Error drawing movement history inline:', error);
+        }
+    }
+
+    /**
      * Clean up resources
      */
     destroy() {
@@ -1576,6 +1790,11 @@ class TokenPlacementManager {
         if (this.tempMarker) {
             this.map.removeLayer(this.tempMarker);
         }
+
+        // Clean up all movement history visuals
+        this.placedTokens.forEach((tokenInfo, tokenId) => {
+            this.clearMovementHistory(tokenId);
+        });
 
         // Remove all placed tokens
         for (const [tokenId, tokenInfo] of this.placedTokens) {

@@ -68,7 +68,7 @@ namespace TechWebSol.Controllers
                         notes = t.Notes,
                         t.TeamId,
                         status = "placed",
-                        forceType = _context.Teams.FirstOrDefault(x=>x.TeamId == t.TeamId).ForceType,
+                        forceType = t.ForceType,
                         areaCoverages = t.AreaCoverages.Select(ac => new
                         {
                             id = ac.Id,
@@ -76,7 +76,16 @@ namespace TechWebSol.Controllers
                             radiusKm = ac.RadiusKm,
                             coverageType = ac.CoverageType,
                             geometry = ac.Geometry
-                        }).ToList()
+                        }).ToList(),
+                        movementHistory = t.MapMarkers
+                            .OrderBy(m => m.CreatedDate)
+                            .Select(m => new
+                            {
+                                latitude = decimal.Parse(m.latitude),
+                                longitude = decimal.Parse(m.longitude),
+                                createdDate = m.CreatedDate,
+                                isActive = m.IsActive,
+                            }).ToList()
                     }).AsQueryable();
 
                 if (user.TeamId != null)

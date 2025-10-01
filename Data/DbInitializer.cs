@@ -32,15 +32,6 @@ namespace TechWebSol.Data
             // Apply migrations
             await context.Database.MigrateAsync().ConfigureAwait(false);
 
-            // ---- TeamTypes (ensure & get IDs) ---------------------------------
-            var foxType = await EnsureTeamTypeAsync(context, "Fox Land", "This is the default team.", "fox-land");
-            var blueType = await EnsureTeamTypeAsync(context, "Blue Land", "This is the default team.", "blue-land");
-
-            // ---- Teams (ensure) -----------------------------------------------
-            await EnsureTeamAsync(context, "Team Fox Land", "This is the default team.", foxType.Id);
-            await EnsureTeamAsync(context, "Team Blue Land", "This is the default team.", blueType.Id);
-
-            // ---- Discover controllers/actions & serialize full access ----------
             var mvcControllers = _mvcControllerDiscovery.GetControllers();
             foreach (var controller in mvcControllers)
             {
