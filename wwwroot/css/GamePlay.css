@@ -36,6 +36,534 @@
 }
 
 /* ========================================
+   SUSPECTED TOKENS (FOG OF WAR) STYLES
+   ======================================== */
+
+/* Suspected token modal styling */
+#suspectedTokenModal .gameplay-modal-content,
+#suspectedTokensListModal .gameplay-modal-content {
+    background: var(--gameplay-darker);
+    border: 2px solid rgba(0, 255, 136, 0.3);
+}
+
+#suspectedTokenModal .gameplay-modal-header,
+#suspectedTokensListModal .gameplay-modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-bottom: 2px solid rgba(0, 255, 136, 0.3);
+}
+
+#suspectedTokenModal .gameplay-modal-header h3,
+#suspectedTokensListModal .gameplay-modal-header h3 {
+    color: var(--gameplay-text);
+}
+
+#suspectedTokenModal .gameplay-modal-body,
+#suspectedTokensListModal .gameplay-modal-body {
+    background: var(--gameplay-dark);
+}
+
+#suspectedTokenModal .alert-info {
+    background: rgba(102, 126, 234, 0.2);
+    border: 1px solid rgba(102, 126, 234, 0.5);
+    color: var(--gameplay-text);
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+#suspectedTokenModal .form-group label {
+    color: var(--gameplay-text);
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+}
+
+#suspectedTokenModal .form-control,
+#suspectedTokenModal select,
+#suspectedTokenModal textarea {
+    background: var(--gameplay-lighter);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    color: var(--gameplay-text);
+    padding: 10px;
+    border-radius: 4px;
+    width: 100%;
+}
+
+#suspectedTokenModal .form-control:focus,
+#suspectedTokenModal select:focus,
+#suspectedTokenModal textarea:focus {
+    border-color: var(--gameplay-primary);
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+    outline: none;
+}
+
+#suspectedTokenModal .form-range {
+    width: 100%;
+    height: 6px;
+    background: var(--gameplay-lighter);
+    border-radius: 3px;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+#suspectedTokenModal .form-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--gameplay-primary);
+    cursor: pointer;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+#suspectedTokenModal .form-range::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--gameplay-primary);
+    cursor: pointer;
+    border-radius: 50%;
+    border: none;
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+#suspectedTokenModal .confidence-indicators {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 11px;
+}
+
+#suspectedTokenModal .confidence-low {
+    color: #ffff00;
+}
+
+#suspectedTokenModal .confidence-medium {
+    color: #ffa500;
+}
+
+#suspectedTokenModal .confidence-high {
+    color: #ff4444;
+}
+
+#suspectedTokenModal .form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+#suspectedTokenModal .gameplay-btn {
+    flex: 1;
+    padding: 12px 20px;
+    background: var(--gameplay-lighter);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    color: var(--gameplay-text);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#suspectedTokenModal .gameplay-btn:hover {
+    background: var(--gameplay-light);
+    border-color: var(--gameplay-primary);
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+}
+
+#suspectedTokenModal .gameplay-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+}
+
+#suspectedTokenModal .gameplay-btn-primary:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+}
+
+/* Suspected tokens list modal - Enhanced */
+.suspected-tokens-list-container {
+    padding: 15px;
+}
+
+.list-header {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.list-header input {
+    flex: 1;
+    background: var(--gameplay-lighter);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    color: var(--gameplay-text);
+    padding: 12px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.list-header input:focus {
+    border-color: var(--gameplay-primary);
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+    outline: none;
+}
+
+.suspected-tokens-list {
+    max-height: 550px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+/* Custom scrollbar for list */
+.suspected-tokens-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.suspected-tokens-list::-webkit-scrollbar-track {
+    background: var(--gameplay-darker);
+}
+
+.suspected-tokens-list::-webkit-scrollbar-thumb {
+    background: var(--gameplay-primary);
+    border-radius: 4px;
+}
+
+.suspected-token-item {
+    background: var(--gameplay-lighter);
+    border: 2px solid rgba(255, 165, 0, 0.4);
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 15px;
+    transition: all 0.3s ease;
+}
+
+.suspected-token-item:hover {
+    border-color: #ffa500;
+    box-shadow: 0 0 15px rgba(255, 165, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+.suspected-token-item .token-info-full {
+    flex: 1;
+}
+
+.suspected-token-item .token-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid rgba(255, 165, 0, 0.3);
+}
+
+.suspected-token-item .token-header-row h5 {
+    color: var(--gameplay-text);
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.suspected-token-item .confidence-badge-large {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    color: white;
+    text-transform: uppercase;
+}
+
+.suspected-token-item .token-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.suspected-token-item .detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.suspected-token-item .detail-label {
+    font-size: 11px;
+    color: var(--gameplay-text-dim);
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+.suspected-token-item .detail-value {
+    font-size: 13px;
+    color: var(--gameplay-text);
+    font-weight: 600;
+}
+
+.suspected-token-item .badge-count {
+    background: var(--gameplay-primary);
+    color: var(--gameplay-dark);
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: bold;
+    font-size: 11px;
+}
+
+.suspected-token-item .token-actions-column {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 120px;
+}
+
+.suspected-token-item .token-actions-column .btn {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.suspected-token-item .token-actions-column .btn:hover {
+    transform: translateX(3px);
+}
+
+/* Status colors in list */
+.suspected-token-item .status-suspected {
+    color: #ffa500;
+}
+
+.suspected-token-item .status-confirmed {
+    color: #ff4444;
+}
+
+.suspected-token-item .status-dismissed {
+    color: #999;
+}
+
+.no-tokens {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--gameplay-text-dim);
+}
+
+.no-tokens i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    color: rgba(255, 165, 0, 0.5);
+    display: block;
+}
+
+.no-tokens p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.loading-tokens {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--gameplay-text-dim);
+}
+
+.loading-tokens i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    color: var(--gameplay-primary);
+    display: block;
+}
+
+.loading-tokens p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Suspected token markers on map */
+.suspected-token-container {
+    background: transparent !important;
+    border: none !important;
+}
+
+.suspected-token-marker {
+    width: 45px;
+    height: 45px;
+    background: rgba(255, 165, 0, 0.3);
+    border: 3px dashed #ffa500;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.suspected-token-marker:hover {
+    transform: scale(1.15);
+    background: rgba(255, 165, 0, 0.5);
+}
+
+.suspected-token-marker i {
+    font-size: 20px;
+    color: #ffa500;
+    margin-bottom: 2px;
+}
+
+.confidence-indicator {
+    font-size: 9px;
+    font-weight: bold;
+    color: white;
+    background-color: #ffa500;
+    padding: 1px 3px;
+    border-radius: 2px;
+    position: absolute;
+    bottom: 2px;
+}
+
+/* Suspected token popup - Enhanced UI */
+.suspected-token-popup {
+    min-width: 280px;
+    max-width: 350px;
+    background: var(--gameplay-dark);
+    color: var(--gameplay-text);
+    padding: 0;
+    border-radius: 4px;
+}
+
+.suspected-token-popup .popup-header {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+    padding: 12px;
+    border-bottom: 2px solid #ffa500;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.suspected-token-popup .popup-header h4 {
+    margin: 0;
+    color: var(--gameplay-text);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.suspected-token-popup .enemy-badge {
+    background: #ff4444;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.suspected-token-popup .popup-section {
+    padding: 12px;
+}
+
+.suspected-token-popup .popup-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin: 8px 0;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.suspected-token-popup .popup-row:last-child {
+    border-bottom: none;
+}
+
+.suspected-token-popup .popup-label {
+    color: var(--gameplay-text-dim);
+    font-size: 12px;
+    font-weight: 500;
+    min-width: 120px;
+}
+
+.suspected-token-popup .popup-value {
+    color: var(--gameplay-text);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: right;
+    flex: 1;
+}
+
+.suspected-token-popup .popup-notes {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.suspected-token-popup .popup-notes .popup-label {
+    margin-bottom: 4px;
+}
+
+.suspected-token-popup .popup-notes .popup-value {
+    text-align: left;
+    font-size: 12px;
+    font-weight: normal;
+    font-style: italic;
+    color: var(--gameplay-text-dim);
+}
+
+.suspected-token-popup .confidence-badge {
+    background: #ffa500;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.suspected-token-popup .badge-count {
+    background: var(--gameplay-primary);
+    color: var(--gameplay-dark);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: bold;
+    font-size: 11px;
+}
+
+.suspected-token-popup .popup-actions {
+    padding: 10px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.suspected-token-popup .popup-actions .btn {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Status colors */
+.suspected-token-popup .status-suspected {
+    color: #ffa500;
+}
+
+.suspected-token-popup .status-confirmed {
+    color: #ff4444;
+}
+
+.suspected-token-popup .status-dismissed {
+    color: #999;
+}
+
+/* Intelligence button styling */
+.overlay-btn-intel {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.overlay-btn-intel:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* ========================================
    MAP COVERAGE & WAYPOINT POPUPS
    ======================================== */
 

@@ -1,0 +1,107 @@
+<!-- Suspected Token Placement Modal (Fog of War Intelligence) -->
+<div id="suspectedTokenModal" class="gameplay-modal" style="display: none;">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-crosshairs"></i> Add Enemy Token</h3>
+            <button class="gameplay-modal-close" onclick="closeSuspectedTokenModal()">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <div class="suspected-token-form">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Mark suspected enemy positions on the map based on intelligence gathered. Click map to place after filling the form.</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="suspectedTokenName">Enemy Token Name</label>
+                    <input type="text" id="suspectedTokenName" class="form-control" placeholder="e.g., Enemy-Alpha-1, Unknown-Tank-1" />
+                </div>
+
+                <div class="form-group">
+                    <label for="suspectedTokenSource">Intelligence Source</label>
+                    <select id="suspectedTokenSource" class="form-control">
+                        <option value="human">Human Intelligence (HUMINT)</option>
+                        <option value="radar">Radar Detection</option>
+                        <option value="uav">UAV Observation</option>
+                        <option value="satellite">Satellite Imagery</option>
+                        <option value="signals">Signals Intelligence (SIGINT)</option>
+                        <option value="patrol">Patrol Report</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="suspectedTokenConfidence">Confidence Level: <span id="confidenceValue">40</span>%</label>
+                    <input type="range" id="suspectedTokenConfidence" class="form-range" min="0" max="100" value="40" step="5" oninput="updateConfidenceValue(this.value)" />
+                    <div class="confidence-indicators">
+                        <span class="confidence-low">Low (0-30%)</span>
+                        <span class="confidence-medium">Medium (35-65%)</span>
+                        <span class="confidence-high">High (70-100%)</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="suspectedTokenType">Suspected Unit Type (Optional)</label>
+                    <select id="suspectedTokenType" class="form-control">
+                        <option value="">Unknown</option>
+                        <option value="infantry">Infantry Unit</option>
+                        <option value="armor">Armor/Tank Unit</option>
+                        <option value="artillery">Artillery Unit</option>
+                        <option value="mechanized">Mechanized Infantry</option>
+                        <option value="logistics">Logistics/Supply</option>
+                        <option value="command">Command Post</option>
+                        <option value="air_defense">Air Defense</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="suspectedTokenNotes">Additional Notes</label>
+                    <textarea id="suspectedTokenNotes" class="form-control" rows="3" placeholder="Additional intelligence details..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button class="gameplay-btn gameplay-btn-primary" onclick="startSuspectedTokenPlacement()">
+                        <i class="fas fa-crosshairs"></i> Click Map to Place
+                    </button>
+                    <button class="gameplay-btn" onclick="closeSuspectedTokenModal()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Suspected Tokens List Modal -->
+<div id="suspectedTokensListModal" class="gameplay-modal" style="display: none;">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-list-ul"></i> Enemy Tokens Management</h3>
+            <button class="gameplay-modal-close" onclick="closeSuspectedTokensListModal()">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <div class="suspected-tokens-list-container">
+                <div class="list-header">
+                    <input type="text" id="suspectedTokenSearch" class="form-control" placeholder="Search enemy tokens..." />
+                    <button class="gameplay-btn gameplay-btn-primary" onclick="closeSuspectedTokensListModal(); openSuspectedTokenModal();">
+                        <i class="fas fa-plus-circle"></i> Add New
+                    </button>
+                </div>
+                <div id="suspectedTokensList" class="suspected-tokens-list">
+                    <div class="loading-tokens">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Loading enemy tokens...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateConfidenceValue(value) {
+        document.getElementById('confidenceValue').textContent = value;
+    }
+</script>
+

@@ -133,6 +133,7 @@ namespace TechWebSol.Controllers
                     { "data-entry-modal", "Partials/Modals/_DataEntryModal" },
                     { "token-management-modal", "Partials/Modals/_TokenManagementModal" },
                     { "token-selection-modal", "Partials/Modals/_TokenSelectionModal" },
+                    { "suspected-token-modal", "Partials/Modals/_SuspectedTokenModal" },
                     { "simulation-panel", "Partials/Modals/_SimulationPanel" },
                     { "unit-deployment-modal", "Partials/Modals/_UnitDeploymentModal" },
                     { "movement-plan-modal", "Partials/Modals/_MovementPlanModal" },

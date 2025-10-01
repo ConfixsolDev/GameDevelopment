@@ -49,6 +49,9 @@ class GamePlayManager {
             // Initialize region manager
             await this.initializeRegionManager();
             
+            // Initialize suspected token manager (fog of war)
+            await this.initializeSuspectedTokenManager();
+            
             // Load and restore placed tokens
             await this.restorePlacedTokens();
             
@@ -155,6 +158,21 @@ class GamePlayManager {
             console.log('✅ Region manager initialized');
         } else {
             console.warn('⚠️ Region manager not available');
+        }
+    }
+
+    /**
+     * Initialize suspected token manager (fog of war intelligence)
+     */
+    async initializeSuspectedTokenManager() {
+        console.log('👁️ Initializing suspected token manager...');
+        
+        if (typeof SuspectedTokenManager !== 'undefined' && this.map) {
+            window.suspectedTokenManager = new SuspectedTokenManager(this.map, this.showNotification.bind(this));
+            await window.suspectedTokenManager.loadSuspectedTokens();
+            console.log('✅ Suspected token manager initialized');
+        } else {
+            console.warn('⚠️ Suspected token manager not available');
         }
     }
 

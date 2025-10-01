@@ -56,6 +56,10 @@ namespace TechWebSol.Data
         public DbSet<Intelligence> Intelligence { get; set; }
         public DbSet<Recon> Recon { get; set; }
         
+        // Suspected Tokens & ISR Missions (Fog of War Intelligence)
+        public DbSet<SuspectedToken> SuspectedTokens { get; set; }
+        public DbSet<ISRMission> ISRMissions { get; set; }
+        
         // Phase 01 Models
         public DbSet<TerrainType> TerrainTypes { get; set; }
         public DbSet<RoutesDraft> RoutesDrafts { get; set; }
@@ -312,6 +316,35 @@ namespace TechWebSol.Data
                     .WithMany()
                     .HasForeignKey(e => e.TokenId)
                     .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // Configure Suspected Token entities (Fog of War)
+            modelBuilder.Entity<SuspectedToken>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.PlacerSide).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Source).HasMaxLength(50);
+                entity.Property(e => e.Status).HasMaxLength(50);
+                entity.Property(e => e.SuspectedType).HasMaxLength(100);
+                entity.Property(e => e.MarkerStyle).HasMaxLength(50);
+                entity.Property(e => e.VisibleTo).HasMaxLength(200);
+
+            });
+
+            modelBuilder.Entity<ISRMission>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.AssetType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Status).HasMaxLength(50);
+                entity.Property(e => e.RequestedBy).HasMaxLength(100);
+
+                entity.HasOne(e => e.SuspectedToken)
+                    .WithMany(st => st.ISRMissions)
+                    .HasForeignKey(e => e.SuspectedTokenId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
             });
 
             // Configure Map Data entities
