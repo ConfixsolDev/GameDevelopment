@@ -67,8 +67,8 @@ namespace TechWebSol.Controllers
                         usageCount = t.UsageCount,
                         notes = t.Notes,
                         t.TeamId,
-                        t.IsActive,
                         status = "placed",
+                        forceType = _context.Teams.FirstOrDefault(x=>x.TeamId == t.TeamId).ForceType,
                         areaCoverages = t.AreaCoverages.Select(ac => new
                         {
                             id = ac.Id,
@@ -81,11 +81,11 @@ namespace TechWebSol.Controllers
 
                 if (user.TeamId != null)
                 {
-                    placedTokensvar = placedTokensvar.Where(t => t.TeamId == user.TeamId && t.IsActive);
+                    placedTokensvar = placedTokensvar.Where(t => t.TeamId == user.TeamId && t.isActive);
                 }
                 else
                 {
-                    placedTokensvar = placedTokensvar.Where(t => t.IsActive);
+                    placedTokensvar = placedTokensvar.Where(t => t.isActive);
                 }
 
                  var  placedTokens = await placedTokensvar.ToListAsync();
