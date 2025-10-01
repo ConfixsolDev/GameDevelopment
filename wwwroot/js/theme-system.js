@@ -5,7 +5,7 @@
 
 class ThemeSystem {
     constructor() {
-        this.currentTheme = 'light';
+        this.currentTheme = 'dark'; // Default to dark theme
         this.themes = {
             light: 'light',
             dark: 'dark'
@@ -36,8 +36,8 @@ class ThemeSystem {
         if (stored && this.themes[stored]) {
             this.currentTheme = stored;
         } else {
-            // Use system preference as default
-            this.currentTheme = this.mediaQuery.matches ? 'dark' : 'light';
+            // Default to dark theme
+            this.currentTheme = 'dark';
         }
     }
 
