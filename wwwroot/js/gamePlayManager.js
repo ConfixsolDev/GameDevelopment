@@ -194,6 +194,9 @@ class GamePlayManager {
                 window.tokenActionModeManager.setTokenManager(window.tokenManager);
             }
             
+            // Set notification callback
+            window.tokenActionModeManager.setNotificationCallback(this.showNotification.bind(this));
+            
             console.log('✅ Token action mode manager initialized');
         } else {
             console.warn('⚠️ Token action mode manager not available');

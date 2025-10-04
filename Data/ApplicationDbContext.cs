@@ -60,6 +60,16 @@ namespace TechWebSol.Data
         public DbSet<SuspectedToken> SuspectedTokens { get; set; }
         public DbSet<ISRMission> ISRMissions { get; set; }
         public DbSet<AttackOrder> AttackOrders { get; set; }
+
+        // Attack Planning Models
+        public DbSet<Models.AttackPlanning.EnhancedAttackOrder> EnhancedAttackOrders { get; set; }
+        public DbSet<Models.AttackPlanning.AttackIntent> AttackIntents { get; set; }
+        public DbSet<Models.AttackPlanning.AttackTiming> AttackTimings { get; set; }
+        public DbSet<Models.AttackPlanning.AttackMovement> AttackMovements { get; set; }
+        public DbSet<Models.AttackPlanning.FiresSupport> FiresSupports { get; set; }
+        public DbSet<Models.AttackPlanning.FogOfWar> FogOfWars { get; set; }
+        public DbSet<Models.AttackPlanning.AttackLogistics> AttackLogistics { get; set; }
+        public DbSet<Models.AttackPlanning.RulesOfEngagement> RulesOfEngagements { get; set; }
         
         // Phase 01 Models
         public DbSet<TerrainType> TerrainTypes { get; set; }

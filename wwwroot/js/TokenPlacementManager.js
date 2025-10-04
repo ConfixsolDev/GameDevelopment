@@ -226,9 +226,18 @@ class TokenPlacementManager {
      * Find token at location
      */
     findTokenAtLocation(latlng) {
-        const tolerance = 0.001; // Small tolerance for click detection
+        console.log('🔍 TokenPlacementManager finding token at:', latlng);
+        console.log('🔍 Placed tokens count:', this.placedTokens.size);
+        
+        // Debug: Log all placed tokens
+        for (const [tokenId, tokenInfo] of this.placedTokens) {
+            console.log('🔍 Placed token:', tokenId, tokenInfo.token?.name, tokenInfo.marker ? 'has marker' : 'no marker');
+        }
+        
+        const tolerance = 0.01; // Increased tolerance from 0.001
         
         for (const [tokenId, tokenInfo] of this.placedTokens) {
+            console.log('🔍 Checking token:', tokenId, tokenInfo.token?.name);
             if (tokenInfo.marker) {
                 const markerLatLng = tokenInfo.marker.getLatLng();
                 const distance = this.calculateDistance(
@@ -236,12 +245,18 @@ class TokenPlacementManager {
                     markerLatLng.lat, markerLatLng.lng
                 );
                 
+                console.log(`🔍 Token ${tokenInfo.token?.name} at ${markerLatLng.lat}, ${markerLatLng.lng}, distance: ${distance}`);
+                
                 if (distance < tolerance) {
+                    console.log('✅ Token found:', tokenInfo.token);
                     return tokenInfo.token;
                 }
+            } else {
+                console.log('❌ Token has no marker:', tokenId);
             }
         }
         
+        console.log('❌ No token found in TokenPlacementManager');
         return null;
     }
 

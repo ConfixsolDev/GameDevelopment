@@ -1096,9 +1096,16 @@ class TokenManager {
      * Find token at location
      */
     findTokenAtLocation(latlng) {
+        console.log('🔍 TokenManager.findTokenAtLocation called with:', latlng);
+        console.log('🔍 TokenManager has tokenPlacementManager:', !!this.tokenPlacementManager);
+        
         if (this.tokenPlacementManager) {
-            return this.tokenPlacementManager.findTokenAtLocation(latlng);
+            const result = this.tokenPlacementManager.findTokenAtLocation(latlng);
+            console.log('🔍 TokenManager returning result:', result);
+            return result;
         }
+        
+        console.log('❌ TokenManager has no tokenPlacementManager');
         return null;
     }
 

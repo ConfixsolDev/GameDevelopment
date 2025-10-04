@@ -1,0 +1,538 @@
+@model TechWebSol.Models.AttackPlanning.AttackMovement
+
+<div class="attack-form-section">
+    <div class="section-header">
+        <h4><i class="fas fa-route"></i> Attack Movement</h4>
+        <p class="text-muted">Plan the movement route and reserve movement points for the attack.</p>
+    </div>
+
+    <form id="movementForm" class="attack-planning-form">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="MpReservePercent" class="form-label">Movement Points Reserve (%) *</label>
+                <div class="range-container">
+                    <input type="range" asp-for="MpReservePercent" class="form-range" id="MpReservePercent" 
+                           min="0" max="50" step="5" value="10" required>
+                    <div class="range-value">
+                        <span id="mpReserveValue">10%</span>
+                    </div>
+                </div>
+                <small class="form-text text-muted">Percentage of movement points to reserve for flexibility during attack.</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Movement Points Available</label>
+                <div class="calculated-field">
+                    <span id="mpAvailable">-</span>
+                </div>
+                <small class="form-text text-muted">Movement points available after reserve.</small>
+            </div>
+        </div>
+
+        <div class="waypoints-section">
+            <div class="waypoints-header">
+                <h5><i class="fas fa-map-marker-alt"></i> Waypoints</h5>
+                <div class="waypoints-actions">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addWaypoint()">
+                        <i class="fas fa-plus"></i> Add Waypoint
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearWaypoints()">
+                        <i class="fas fa-trash"></i> Clear All
+                    </button>
+                </div>
+            </div>
+
+            <div class="waypoints-list" id="waypointsList">
+                <div class="waypoint-item">
+                    <div class="waypoint-info">
+                        <span class="waypoint-number">1</span>
+                        <span class="waypoint-label">Start Position</span>
+                        <span class="waypoint-coords" id="startPosition">-</span>
+                    </div>
+                    <div class="waypoint-actions">
+                        <span class="waypoint-status">Starting Point</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="waypoint-input" id="waypointInput" style="display: none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Latitude</label>
+                        <input type="number" class="form-control" id="newWaypointLat" step="0.000001" placeholder="0.000000">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Longitude</label>
+                        <input type="number" class="form-control" id="newWaypointLng" step="0.000001" placeholder="0.000000">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Waypoint Name (Optional)</label>
+                    <input type="text" class="form-control" id="newWaypointName" placeholder="e.g., Assembly Area, Rally Point">
+                </div>
+                <div class="waypoint-input-actions">
+                    <button type="button" class="btn btn-sm btn-primary" onclick="saveWaypoint()">
+                        <i class="fas fa-save"></i> Add Waypoint
+                    </button>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="cancelWaypoint()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="movement-summary">
+            <div class="summary-row">
+                <div class="summary-item">
+                    <label>Total Waypoints:</label>
+                    <span id="totalWaypoints">1</span>
+                </div>
+                <div class="summary-item">
+                    <label>Total Distance:</label>
+                    <span id="totalDistance">0 km</span>
+                </div>
+                <div class="summary-item">
+                    <label>MP Reserve:</label>
+                    <span id="mpReserveSummary">10%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="Notes" class="form-label">Movement Notes</label>
+            <textarea asp-for="Notes" class="form-control" id="Notes" rows="3" 
+                      placeholder="Route considerations, terrain notes, or movement constraints..."></textarea>
+            <small class="form-text text-muted">Optional notes about the movement plan.</small>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn btn-outline-secondary" onclick="resetMovementForm()">
+                <i class="fas fa-undo"></i> Reset
+            </button>
+            <button type="button" class="btn btn-primary" onclick="validateMovementForm()">
+                <i class="fas fa-check"></i> Validate
+            </button>
+        </div>
+    </form>
+
+    <div class="movement-summary-detail" id="movementSummary" style="display: none;">
+        <h5>Movement Summary</h5>
+        <div class="summary-content">
+            <p><strong>MP Reserve:</strong> <span id="summaryMpReserve">-</span></p>
+            <p><strong>Total Waypoints:</strong> <span id="summaryTotalWaypoints">-</span></p>
+            <p><strong>Total Distance:</strong> <span id="summaryTotalDistance">-</span></p>
+            <p><strong>Estimated MP Cost:</strong> <span id="summaryMpCost">-</span></p>
+            <p><strong>Notes:</strong> <span id="summaryNotes">-</span></p>
+        </div>
+    </div>
+</div>
+
+<style>
+.range-container {
+    position: relative;
+}
+
+.form-range {
+    width: 100%;
+    height: 6px;
+    background: #444;
+    border-radius: 3px;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.form-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #00d4ff;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.form-range::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #00d4ff;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+.range-value {
+    position: absolute;
+    top: -30px;
+    right: 0;
+    background: #00d4ff;
+    color: #000;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.waypoints-section {
+    margin-top: 20px;
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 15px;
+    border: 1px solid #333;
+}
+
+.waypoints-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.waypoints-header h5 {
+    color: #00d4ff;
+    margin: 0;
+    font-size: 14px;
+}
+
+.waypoints-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.waypoints-list {
+    margin-bottom: 15px;
+}
+
+.waypoint-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: #2a2a2a;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border: 1px solid #444;
+}
+
+.waypoint-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.waypoint-number {
+    background: #00d4ff;
+    color: #000;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.waypoint-label {
+    color: #ccc;
+    font-weight: 600;
+}
+
+.waypoint-coords {
+    color: #888;
+    font-size: 11px;
+}
+
+.waypoint-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.waypoint-status {
+    color: #888;
+    font-size: 11px;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 11px;
+}
+
+.waypoint-input {
+    background: #2a2a2a;
+    border-radius: 6px;
+    padding: 15px;
+    border: 1px solid #444;
+    margin-bottom: 15px;
+}
+
+.waypoint-input-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.movement-summary {
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 20px 0;
+    border: 1px solid #333;
+}
+
+.summary-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+}
+
+.summary-item {
+    text-align: center;
+}
+
+.summary-item label {
+    display: block;
+    color: #888;
+    font-size: 11px;
+    margin-bottom: 5px;
+}
+
+.summary-item span {
+    color: #00d4ff;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.movement-summary-detail {
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 20px;
+    border: 1px solid #333;
+}
+
+.movement-summary-detail h5 {
+    color: #00d4ff;
+    margin: 0 0 10px 0;
+    font-size: 14px;
+}
+
+.summary-content p {
+    margin: 5px 0;
+    font-size: 12px;
+    color: #ccc;
+}
+
+.summary-content strong {
+    color: #fff;
+}
+
+@@media (max-width: 768px) {
+    .summary-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .waypoints-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+    
+    .waypoints-actions {
+        justify-content: center;
+    }
+}
+</style>
+
+<script>
+// Movement Form JavaScript
+let waypoints = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeMovementForm();
+});
+
+function initializeMovementForm() {
+    console.log('Initializing movement form');
+    
+    // Initialize with attacker position as start waypoint
+    if (window.currentAttackOrder && window.currentAttackOrder.attackerTokenId) {
+        // TODO: Get actual attacker position from token system
+        document.getElementById('startPosition').textContent = 'Attacker Position';
+    }
+    
+    // Add change listeners
+    document.getElementById('MpReservePercent').addEventListener('input', updateMovementCalculations);
+    document.getElementById('Notes').addEventListener('input', updateMovementSummary);
+    
+    // Mark form as dirty when changed
+    document.querySelectorAll('#movementForm input, #movementForm select, #movementForm textarea').forEach(element => {
+        element.addEventListener('change', () => {
+            if (window.currentAttackOrder) {
+                window.currentAttackOrder.isDirty = true;
+            }
+        });
+    });
+    
+    updateMovementCalculations();
+}
+
+function updateMovementCalculations() {
+    const mpReserve = document.getElementById('MpReservePercent').value;
+    document.getElementById('mpReserveValue').textContent = mpReserve + '%';
+    document.getElementById('mpReserveSummary').textContent = mpReserve + '%';
+    
+    // TODO: Calculate actual MP available based on unit stats
+    const totalMP = 30; // Placeholder - should come from unit data
+    const availableMP = totalMP * (1 - mpReserve / 100);
+    document.getElementById('mpAvailable').textContent = Math.round(availableMP) + ' MP';
+    
+    updateMovementSummary();
+}
+
+function addWaypoint() {
+    document.getElementById('waypointInput').style.display = 'block';
+    document.getElementById('newWaypointLat').focus();
+}
+
+function cancelWaypoint() {
+    document.getElementById('waypointInput').style.display = 'none';
+    document.getElementById('newWaypointLat').value = '';
+    document.getElementById('newWaypointLng').value = '';
+    document.getElementById('newWaypointName').value = '';
+}
+
+function saveWaypoint() {
+    const lat = parseFloat(document.getElementById('newWaypointLat').value);
+    const lng = parseFloat(document.getElementById('newWaypointLng').value);
+    const name = document.getElementById('newWaypointName').value;
+    
+    if (!lat || !lng) {
+        showNotification('Please enter valid coordinates', 'warning');
+        return;
+    }
+    
+    const waypoint = {
+        id: Date.now(),
+        latitude: lat,
+        longitude: lng,
+        name: name || `Waypoint ${waypoints.length + 1}`,
+        distanceToNext: 0 // TODO: Calculate actual distance
+    };
+    
+    waypoints.push(waypoint);
+    updateWaypointsList();
+    cancelWaypoint();
+    
+    if (window.currentAttackOrder) {
+        window.currentAttackOrder.isDirty = true;
+    }
+}
+
+function updateWaypointsList() {
+    const list = document.getElementById('waypointsList');
+    
+    // Clear existing waypoints (except start position)
+    const startItem = list.querySelector('.waypoint-item');
+    list.innerHTML = '';
+    list.appendChild(startItem);
+    
+    // Add waypoints
+    waypoints.forEach((waypoint, index) => {
+        const waypointElement = document.createElement('div');
+        waypointElement.className = 'waypoint-item';
+        waypointElement.innerHTML = `
+            <div class="waypoint-info">
+                <span class="waypoint-number">${index + 2}</span>
+                <span class="waypoint-label">${waypoint.name}</span>
+                <span class="waypoint-coords">${waypoint.latitude.toFixed(6)}, ${waypoint.longitude.toFixed(6)}</span>
+            </div>
+            <div class="waypoint-actions">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeWaypoint(${waypoint.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        list.appendChild(waypointElement);
+    });
+    
+    updateMovementCalculations();
+}
+
+function removeWaypoint(waypointId) {
+    waypoints = waypoints.filter(wp => wp.id !== waypointId);
+    updateWaypointsList();
+    
+    if (window.currentAttackOrder) {
+        window.currentAttackOrder.isDirty = true;
+    }
+}
+
+function clearWaypoints() {
+    if (waypoints.length === 0) return;
+    
+    if (confirm('Are you sure you want to clear all waypoints?')) {
+        waypoints = [];
+        updateWaypointsList();
+        
+        if (window.currentAttackOrder) {
+            window.currentAttackOrder.isDirty = true;
+        }
+    }
+}
+
+function updateMovementSummary() {
+    const mpReserve = document.getElementById('MpReservePercent').value;
+    const notes = document.getElementById('Notes').value;
+    
+    const totalWaypoints = waypoints.length + 1; // +1 for start position
+    const totalDistance = waypoints.reduce((sum, wp) => sum + wp.distanceToNext, 0);
+    
+    document.getElementById('totalWaypoints').textContent = totalWaypoints;
+    document.getElementById('totalDistance').textContent = totalDistance.toFixed(1) + ' km';
+    
+    // Update detailed summary
+    if (totalWaypoints > 1 || notes) {
+        document.getElementById('summaryMpReserve').textContent = mpReserve + '%';
+        document.getElementById('summaryTotalWaypoints').textContent = totalWaypoints;
+        document.getElementById('summaryTotalDistance').textContent = totalDistance.toFixed(1) + ' km';
+        document.getElementById('summaryMpCost').textContent = (totalDistance * (1 - mpReserve / 100)).toFixed(1) + ' MP';
+        document.getElementById('summaryNotes').textContent = notes || 'None';
+        
+        document.getElementById('movementSummary').style.display = 'block';
+    } else {
+        document.getElementById('movementSummary').style.display = 'none';
+    }
+}
+
+function validateMovementForm() {
+    const mpReserve = document.getElementById('MpReservePercent').value;
+    
+    if (!mpReserve || mpReserve < 0 || mpReserve > 50) {
+        showNotification('MP Reserve must be between 0% and 50%', 'warning');
+        return false;
+    }
+    
+    // Validate waypoints
+    for (const waypoint of waypoints) {
+        if (!waypoint.latitude || !waypoint.longitude) {
+            showNotification('All waypoints must have valid coordinates', 'warning');
+            return false;
+        }
+    }
+    
+    console.log('Movement form validated successfully');
+    showNotification('Movement form validated successfully', 'success');
+    return true;
+}
+
+function resetMovementForm() {
+    document.getElementById('movementForm').reset();
+    waypoints = [];
+    updateWaypointsList();
+    document.getElementById('movementSummary').style.display = 'none';
+    document.getElementById('waypointInput').style.display = 'none';
+    console.log('Movement form reset');
+}
+</script>

@@ -391,12 +391,48 @@ class TokenActionModeManager {
     }
 
     openAttackDataEntry(attackerToken, targetToken) {
-        // Open the attack planning modal with pre-filled data
-        if (window.tokenPlacementManager && window.tokenPlacementManager.openAttackPanel) {
-            window.tokenPlacementManager.openAttackPanel(attackerToken, targetToken);
+        // Open our new attack planning modal
+        console.log('Opening attack planning modal:', attackerToken.name, '->', targetToken.name);
+        
+        // Load the attack planning modal
+        this.loadAttackPlanningModal(attackerToken, targetToken);
+    }
+
+    // Load attack planning modal via AJAX
+    loadAttackPlanningModal(attackerToken, targetToken) {
+        console.log('Loading attack planning modal...');
+        
+        // Check if modal already exists
+        let modalContainer = document.getElementById('attackPlanningModal');
+        
+        if (!modalContainer) {
+            // Load modal HTML via AJAX
+            fetch('/AttackPlanning/CreateAttackOrder')
+                .then(response => response.text())
+                .then(html => {
+                    // Add modal to modals container
+                    const modalsContainer = document.getElementById('modalsContainer');
+                    if (modalsContainer) {
+                        modalsContainer.insertAdjacentHTML('beforeend', html);
+                        
+                        // Initialize the modal with token data
+                        if (window.initializeAttackPlanning) {
+                            window.initializeAttackPlanning(attackerToken.id, targetToken.id, attackerToken.name, targetToken.name);
+                        }
+                    } else {
+                        console.error('Modals container not found');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading attack planning modal:', error);
+                    // Fallback to basic attack info
+                    this.showAttackInfo(attackerToken, targetToken);
+                });
         } else {
-            // Fallback: show basic attack info
-            this.showAttackInfo(attackerToken, targetToken);
+            // Modal exists, just initialize it
+            if (window.initializeAttackPlanning) {
+                window.initializeAttackPlanning(attackerToken.id, targetToken.id, attackerToken.name, targetToken.name);
+            }
         }
     }
 
@@ -660,14 +696,19 @@ class TokenActionModeManager {
     }
 
     findTokenAtLocation(latlng) {
+        console.log('🔍 Finding token at location:', latlng);
+        
         // Find token at the given location using existing token management
         if (window.tokenManager && window.tokenManager.findTokenAtLocation) {
-            return window.tokenManager.findTokenAtLocation(latlng);
+            const token = window.tokenManager.findTokenAtLocation(latlng);
+            console.log('🔍 TokenManager found token:', token);
+            return token;
         }
         
         // Fallback: search through all token markers
         if (this.map) {
-            const tolerance = 0.001; // Small tolerance for click detection
+            console.log('🔍 Using fallback method to find token');
+            const tolerance = 0.01; // Increased tolerance
             const markers = this.map._layers;
             
             for (const layerId in markers) {
@@ -679,13 +720,17 @@ class TokenActionModeManager {
                         markerLatLng.lat, markerLatLng.lng
                     );
                     
+                    console.log(`🔍 Checking marker at ${markerLatLng.lat}, ${markerLatLng.lng}, distance: ${distance}`);
+                    
                     if (distance < tolerance) {
+                        console.log('✅ Token found via fallback:', layer.tokenData);
                         return layer.tokenData;
                     }
                 }
             }
         }
         
+        console.log('❌ No token found at location');
         return null;
     }
 
@@ -780,6 +825,10 @@ class TokenActionModeManager {
 
     setTokenManager(tokenManagerInstance) {
         this.tokenManager = tokenManagerInstance;
+    }
+
+    setNotificationCallback(callback) {
+        this.notificationCallback = callback;
     }
 }
 

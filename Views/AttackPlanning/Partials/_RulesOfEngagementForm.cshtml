@@ -1,0 +1,590 @@
+@model TechWebSol.Models.AttackPlanning.RulesOfEngagement
+
+<div class="attack-form-section">
+    <div class="section-header">
+        <h4><i class="fas fa-gavel"></i> Rules of Engagement</h4>
+        <p class="text-muted">Define engagement parameters and operational constraints.</p>
+    </div>
+
+    <form id="roeForm" class="attack-planning-form">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="CollateralSensitivity" class="form-label">Collateral Sensitivity *</label>
+                <select asp-for="CollateralSensitivity" class="form-control" id="CollateralSensitivity" required>
+                    <option value="">Select Collateral Sensitivity</option>
+                    <option value="Low">Low (Minimal Restrictions)</option>
+                    <option value="Medium">Medium (Moderate Restrictions)</option>
+                    <option value="High">High (Strict Restrictions)</option>
+                </select>
+                <small class="form-text text-muted">Level of restrictions on collateral damage.</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Engagement Level</label>
+                <div class="engagement-indicator" id="engagementIndicator">
+                    <div class="engagement-bar">
+                        <div class="engagement-fill" id="engagementFill"></div>
+                    </div>
+                    <div class="engagement-label" id="engagementLabel">Medium</div>
+                </div>
+                <small class="form-text text-muted">Automatically calculated based on collateral sensitivity.</small>
+            </div>
+        </div>
+
+        <div class="engagement-rules">
+            <h5><i class="fas fa-shield-alt"></i> Engagement Rules</h5>
+            <div class="rules-grid">
+                <div class="rule-item">
+                    <div class="rule-icon">🎯</div>
+                    <div class="rule-info">
+                        <div class="rule-name">Target Identification</div>
+                        <div class="rule-details">Positive identification required before engagement</div>
+                    </div>
+                    <div class="rule-status">
+                        <span class="status-indicator green"></span>
+                        <span class="status-text">Required</span>
+                    </div>
+                </div>
+                
+                <div class="rule-item">
+                    <div class="rule-icon">🏥</div>
+                    <div class="rule-info">
+                        <div class="rule-name">Medical Facilities</div>
+                        <div class="rule-details">Medical facilities are protected targets</div>
+                    </div>
+                    <div class="rule-status">
+                        <span class="status-indicator green"></span>
+                        <span class="status-text">Protected</span>
+                    </div>
+                </div>
+                
+                <div class="rule-item">
+                    <div class="rule-icon">🏫</div>
+                    <div class="rule-info">
+                        <div class="rule-name">Civilian Infrastructure</div>
+                        <div class="rule-details">Civilian infrastructure protection level</div>
+                    </div>
+                    <div class="rule-status">
+                        <span class="status-indicator amber"></span>
+                        <span class="status-text">Conditional</span>
+                    </div>
+                </div>
+                
+                <div class="rule-item">
+                    <div class="rule-icon">👥</div>
+                    <div class="rule-info">
+                        <div class="rule-name">Civilian Presence</div>
+                        <div class="rule-details">Rules for engagement near civilians</div>
+                    </div>
+                    <div class="rule-status">
+                        <span class="status-indicator amber"></span>
+                        <span class="status-text">Restricted</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="weapons-restrictions">
+            <h5><i class="fas fa-ban"></i> Weapons Restrictions</h5>
+            <div class="restrictions-list">
+                <div class="restriction-item">
+                    <div class="form-group">
+                        <label class="form-label">Artillery Restrictions</label>
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="artilleryRestricted" class="form-check-input">
+                            <label for="artilleryRestricted" class="form-check-label">Artillery use restricted in urban areas</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="restriction-item">
+                    <div class="form-group">
+                        <label class="form-label">Air Support Restrictions</label>
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="airSupportRestricted" class="form-check-input">
+                            <label for="airSupportRestricted" class="form-check-label">Air support restricted near civilian areas</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="restriction-item">
+                    <div class="form-group">
+                        <label class="form-label">Heavy Weapons</label>
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="heavyWeaponsRestricted" class="form-check-input">
+                            <label for="heavyWeaponsRestricted" class="form-check-label">Heavy weapons restricted in populated areas</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="escalation-controls">
+            <h5><i class="fas fa-exclamation-triangle"></i> Escalation Controls</h5>
+            <div class="escalation-options">
+                <div class="form-group">
+                    <label class="form-label">Escalation Authority</label>
+                    <select class="form-control" id="escalationAuthority">
+                        <option value="">Select Escalation Authority</option>
+                        <option value="company">Company Commander</option>
+                        <option value="battalion">Battalion Commander</option>
+                        <option value="brigade">Brigade Commander</option>
+                        <option value="division">Division Commander</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Escalation Triggers</label>
+                    <div class="trigger-list">
+                        <div class="trigger-item">
+                            <input type="checkbox" id="triggerCasualties" class="form-check-input">
+                            <label for="triggerCasualties" class="form-check-label">High casualty rate</label>
+                        </div>
+                        <div class="trigger-item">
+                            <input type="checkbox" id="triggerCollateral" class="form-check-input">
+                            <label for="triggerCollateral" class="form-check-label">Excessive collateral damage</label>
+                        </div>
+                        <div class="trigger-item">
+                            <input type="checkbox" id="triggerTime" class="form-check-input">
+                            <label for="triggerTime" class="form-check-label">Mission duration exceeded</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="roe-summary">
+            <div class="summary-row">
+                <div class="summary-item">
+                    <label>Collateral Sensitivity:</label>
+                    <span id="summaryCollateralSensitivity">-</span>
+                </div>
+                <div class="summary-item">
+                    <label>Engagement Level:</label>
+                    <span id="summaryEngagementLevel">-</span>
+                </div>
+                <div class="summary-item">
+                    <label>Restrictions:</label>
+                    <span id="summaryRestrictions">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="Notes" class="form-label">ROE Notes</label>
+            <textarea asp-for="Notes" class="form-control" id="Notes" rows="3" 
+                      placeholder="Special engagement rules, restrictions, or operational constraints..."></textarea>
+            <small class="form-text text-muted">Optional notes about rules of engagement.</small>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn btn-outline-secondary" onclick="resetRoeForm()">
+                <i class="fas fa-undo"></i> Reset
+            </button>
+            <button type="button" class="btn btn-primary" onclick="validateRoeForm()">
+                <i class="fas fa-check"></i> Validate
+            </button>
+        </div>
+    </form>
+
+    <div class="roe-summary-detail" id="roeSummary" style="display: none;">
+        <h5>Rules of Engagement Summary</h5>
+        <div class="summary-content">
+            <p><strong>Collateral Sensitivity:</strong> <span id="summaryDetailCollateralSensitivity">-</span></p>
+            <p><strong>Engagement Level:</strong> <span id="summaryDetailEngagementLevel">-</span></p>
+            <p><strong>Weapons Restrictions:</strong> <span id="summaryDetailWeaponsRestrictions">-</span></p>
+            <p><strong>Escalation Authority:</strong> <span id="summaryDetailEscalationAuthority">-</span></p>
+            <p><strong>Escalation Triggers:</strong> <span id="summaryDetailEscalationTriggers">-</span></p>
+            <p><strong>Notes:</strong> <span id="summaryDetailNotes">-</span></p>
+        </div>
+    </div>
+</div>
+
+<style>
+.engagement-indicator {
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 15px;
+    border: 1px solid #333;
+}
+
+.engagement-bar {
+    width: 100%;
+    height: 20px;
+    background: #333;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.engagement-fill {
+    height: 100%;
+    transition: all 0.3s ease;
+    border-radius: 10px;
+}
+
+.engagement-fill.low {
+    background: linear-gradient(90deg, #00ff88, #00cc66);
+    width: 30%;
+}
+
+.engagement-fill.medium {
+    background: linear-gradient(90deg, #ffaa00, #ff8800);
+    width: 60%;
+}
+
+.engagement-fill.high {
+    background: linear-gradient(90deg, #ff4444, #cc0000);
+    width: 90%;
+}
+
+.engagement-label {
+    text-align: center;
+    font-weight: 600;
+    font-size: 12px;
+    color: #00d4ff;
+}
+
+.engagement-rules {
+    margin-top: 20px;
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 15px;
+    border: 1px solid #333;
+}
+
+.engagement-rules h5 {
+    color: #00d4ff;
+    margin: 0 0 15px 0;
+    font-size: 14px;
+}
+
+.rules-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.rule-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    background: #2a2a2a;
+    border-radius: 6px;
+    border: 1px solid #444;
+}
+
+.rule-icon {
+    font-size: 20px;
+    width: 30px;
+    text-align: center;
+}
+
+.rule-info {
+    flex: 1;
+}
+
+.rule-name {
+    color: #fff;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.rule-details {
+    color: #888;
+    font-size: 10px;
+}
+
+.rule-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-indicator.green {
+    background: #00ff88;
+}
+
+.status-indicator.amber {
+    background: #ffaa00;
+}
+
+.status-indicator.red {
+    background: #ff4444;
+}
+
+.status-text {
+    color: #ccc;
+    font-size: 11px;
+}
+
+.weapons-restrictions {
+    margin-top: 20px;
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 15px;
+    border: 1px solid #333;
+}
+
+.weapons-restrictions h5 {
+    color: #00d4ff;
+    margin: 0 0 15px 0;
+    font-size: 14px;
+}
+
+.restrictions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.restriction-item {
+    padding: 10px;
+    background: #2a2a2a;
+    border-radius: 6px;
+    border: 1px solid #444;
+}
+
+.escalation-controls {
+    margin-top: 20px;
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 15px;
+    border: 1px solid #333;
+}
+
+.escalation-controls h5 {
+    color: #00d4ff;
+    margin: 0 0 15px 0;
+    font-size: 14px;
+}
+
+.escalation-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.trigger-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.trigger-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.roe-summary {
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 20px 0;
+    border: 1px solid #333;
+}
+
+.summary-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+}
+
+.summary-item {
+    text-align: center;
+}
+
+.summary-item label {
+    display: block;
+    color: #888;
+    font-size: 11px;
+    margin-bottom: 5px;
+}
+
+.summary-item span {
+    color: #00d4ff;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.roe-summary-detail {
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 20px;
+    border: 1px solid #333;
+}
+
+.roe-summary-detail h5 {
+    color: #00d4ff;
+    margin: 0 0 10px 0;
+    font-size: 14px;
+}
+
+.summary-content p {
+    margin: 5px 0;
+    font-size: 12px;
+    color: #ccc;
+}
+
+.summary-content strong {
+    color: #fff;
+}
+
+@@media (max-width: 768px) {
+    .rules-grid, .escalation-options {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .summary-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+}
+</style>
+
+<script>
+// ROE Form JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    initializeRoeForm();
+});
+
+function initializeRoeForm() {
+    console.log('Initializing ROE form');
+    
+    // Add change listeners
+    document.getElementById('CollateralSensitivity').addEventListener('change', updateEngagementLevel);
+    document.getElementById('escalationAuthority').addEventListener('change', updateRoeSummary);
+    document.getElementById('Notes').addEventListener('input', updateRoeSummary);
+    
+    // Add listeners for checkboxes
+    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', updateRoeSummary);
+    });
+    
+    // Mark form as dirty when changed
+    document.querySelectorAll('#roeForm input, #roeForm select, #roeForm textarea').forEach(element => {
+        element.addEventListener('change', () => {
+            if (window.currentAttackOrder) {
+                window.currentAttackOrder.isDirty = true;
+            }
+        });
+    });
+    
+    updateEngagementLevel();
+}
+
+function updateEngagementLevel() {
+    const collateralSensitivity = document.getElementById('CollateralSensitivity').value;
+    const engagementFill = document.getElementById('engagementFill');
+    const engagementLabel = document.getElementById('engagementLabel');
+    
+    if (collateralSensitivity === 'Low') {
+        engagementFill.className = 'engagement-fill low';
+        engagementLabel.textContent = 'Low (Minimal Restrictions)';
+    } else if (collateralSensitivity === 'Medium') {
+        engagementFill.className = 'engagement-fill medium';
+        engagementLabel.textContent = 'Medium (Moderate Restrictions)';
+    } else if (collateralSensitivity === 'High') {
+        engagementFill.className = 'engagement-fill high';
+        engagementLabel.textContent = 'High (Strict Restrictions)';
+    } else {
+        engagementFill.className = 'engagement-fill medium';
+        engagementLabel.textContent = 'Medium (Moderate Restrictions)';
+    }
+    
+    updateRoeSummary();
+}
+
+function updateRoeSummary() {
+    const collateralSensitivity = document.getElementById('CollateralSensitivity').value;
+    const escalationAuthority = document.getElementById('escalationAuthority').value;
+    const notes = document.getElementById('Notes').value;
+    
+    // Count restrictions
+    const restrictions = [];
+    if (document.getElementById('artilleryRestricted').checked) restrictions.push('Artillery');
+    if (document.getElementById('airSupportRestricted').checked) restrictions.push('Air Support');
+    if (document.getElementById('heavyWeaponsRestricted').checked) restrictions.push('Heavy Weapons');
+    
+    // Count escalation triggers
+    const triggers = [];
+    if (document.getElementById('triggerCasualties').checked) triggers.push('High Casualties');
+    if (document.getElementById('triggerCollateral').checked) triggers.push('Excessive Collateral');
+    if (document.getElementById('triggerTime').checked) triggers.push('Time Exceeded');
+    
+    // Update summary row
+    document.getElementById('summaryCollateralSensitivity').textContent = collateralSensitivity || '-';
+    document.getElementById('summaryEngagementLevel').textContent = getEngagementLevel(collateralSensitivity);
+    document.getElementById('summaryRestrictions').textContent = restrictions.length > 0 ? restrictions.length : 'None';
+    
+    // Update detailed summary
+    if (collateralSensitivity || escalationAuthority || restrictions.length > 0 || triggers.length > 0 || notes) {
+        document.getElementById('summaryDetailCollateralSensitivity').textContent = collateralSensitivity || 'Not selected';
+        document.getElementById('summaryDetailEngagementLevel').textContent = getEngagementLevel(collateralSensitivity);
+        document.getElementById('summaryDetailWeaponsRestrictions').textContent = restrictions.length > 0 ? 
+            restrictions.join(', ') : 'None';
+        document.getElementById('summaryDetailEscalationAuthority').textContent = escalationAuthority ? 
+            document.getElementById('escalationAuthority').options[document.getElementById('escalationAuthority').selectedIndex].text : 'Not selected';
+        document.getElementById('summaryDetailEscalationTriggers').textContent = triggers.length > 0 ? 
+            triggers.join(', ') : 'None';
+        document.getElementById('summaryDetailNotes').textContent = notes || 'None';
+        
+        document.getElementById('roeSummary').style.display = 'block';
+    } else {
+        document.getElementById('roeSummary').style.display = 'none';
+    }
+}
+
+function getEngagementLevel(sensitivity) {
+    if (sensitivity === 'Low') return 'Low';
+    else if (sensitivity === 'Medium') return 'Medium';
+    else if (sensitivity === 'High') return 'High';
+    else return 'Medium';
+}
+
+function validateRoeForm() {
+    const collateralSensitivity = document.getElementById('CollateralSensitivity').value;
+    const escalationAuthority = document.getElementById('escalationAuthority').value;
+    
+    if (!collateralSensitivity) {
+        showNotification('Please select collateral sensitivity level', 'warning');
+        return false;
+    }
+    
+    if (!escalationAuthority) {
+        showNotification('Please select escalation authority', 'warning');
+        return false;
+    }
+    
+    // Check if escalation triggers are selected
+    const triggers = [];
+    if (document.getElementById('triggerCasualties').checked) triggers.push('High Casualties');
+    if (document.getElementById('triggerCollateral').checked) triggers.push('Excessive Collateral');
+    if (document.getElementById('triggerTime').checked) triggers.push('Time Exceeded');
+    
+    if (triggers.length === 0) {
+        showNotification('Consider selecting escalation triggers for mission control', 'warning');
+    }
+    
+    console.log('ROE form validated successfully');
+    showNotification('ROE form validated successfully', 'success');
+    return true;
+}
+
+function resetRoeForm() {
+    document.getElementById('roeForm').reset();
+    document.getElementById('roeSummary').style.display = 'none';
+    updateEngagementLevel();
+    console.log('ROE form reset');
+}
+</script>
