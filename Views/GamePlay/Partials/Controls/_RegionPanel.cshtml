@@ -2,87 +2,11 @@
 <aside class="team-status-panel slide-up" id="regionPanel">
     <div class="team-status-header">
         <div class="team-status-icon">⚑</div>
-        <div class="team-status-info">
             <h5>Region Controls</h5>
-            <p>One main AO • Mask outside</p>
-        </div>
-        <button id="toggleRegionPanel" class="panel-toggle" title="Collapse / Expand">▾</button>
     </div>
 
     <div class="panel-body">
-        <div>
-            <!-- Metrics -->
-            <div class="status-metrics mb-10">
-                <div class="metric-item">
-                    <span class="metric-value" id="metric-area">—</span>
-                    <span class="metric-label">Area (km²)</span>
-                </div>
-                <div class="metric-item">
-                    <span class="metric-value" id="metric-sectors">0</span>
-                    <span class="metric-label">Sectors</span>
-                </div>
-            </div>
-
-            <!-- Edit Mode Toggle -->
-            <div class="d-grid gap-10 control-section">
-                <div class="control-row">
-                    <button id="btnEditMode" class="overlay-btn" onclick="toggleEditMode()">
-                        <i class="fas fa-edit"></i>
-                        <span>Edit Mode</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Force Selection (hidden by default) -->
-            <div class="control-section edit-mode-control" style="display: none;">
-                <h6><i class="fas fa-flag"></i> Force Selection</h6>
-                <div class="control-row">
-                    <button id="btnSelectBlue" class="overlay-btn force-btn active" onclick="selectForce('blue')">
-                        <i class="fas fa-circle" style="color: #00d4ff;"></i>
-                        <span>Blue Land</span>
-                    </button>
-                    <button id="btnSelectFox" class="overlay-btn force-btn" onclick="selectForce('fox')">
-                        <i class="fas fa-circle" style="color: #ff6b6b;"></i>
-                        <span>Fox Land</span>
-                    </button>
-                </div>
-            </div>
-
-
-            <!-- Map Regions -->
-            <div class="control-section edit-mode-control" style="display: none;">
-                <h6><i class="fas fa-map-marked-alt"></i> Map Regions</h6>
-                <div class="control-row">
-                    <button id="btnCreateRegion" class="overlay-btn" onclick="startRegionDrawing()">
-                        <i class="fas fa-draw-polygon"></i>
-                        <span>Create Region</span>
-                    </button>
-                </div>
-                <div class="control-row">
-                    <button id="btnClearRegions" class="overlay-btn danger" onclick="clearAllRegions()">
-                        <i class="fas fa-trash"></i>
-                        <span>Clear All</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Map Labels -->
-            <div class="control-section edit-mode-control" style="display: none;">
-                <h6><i class="fas fa-tags"></i> Map Labels</h6>
-                <div class="control-row">
-                    <button id="btnAddLabel" class="overlay-btn" onclick="addMapLabel()">
-                        <i class="fas fa-tag"></i>
-                        <span>Add Label</span>
-                    </button>
-                </div>
-                <div class="control-row">
-                    <button id="btnClearLabels" class="overlay-btn danger" onclick="clearAllLabels()">
-                        <i class="fas fa-times"></i>
-                        <span>Clear Labels</span>
-                    </button>
-                </div>
-            </div>
-
+           
             <!-- Basemap Dropdown -->
             <div class="control-section">
                 <h6><i class="fas fa-globe"></i> Basemap</h6>
@@ -98,6 +22,7 @@
 
             <!-- Layer Visibility -->
             <div class="control-section">
+                <br />
                 <h6><i class="fas fa-eye"></i> Layer Visibility</h6>
                 <div class="control-row">
                     <label class="overlay-btn">
@@ -111,7 +36,54 @@
                 </div>
             </div>
 
-            <div class="mt-12 gameplay-note" id="saveStatus">Ready</div>
+            <!-- Edit Mode Toggle -->
+            <div class="d-grid gap-10 control-section">
+                    <button id="btnEditMode" class="overlay-btn mb-2" onclick="toggleEditMode()">
+                        <i class="fas fa-edit"></i>
+                        <span>Edit Mode</span>
+                    </button>
+            </div>
+        <div class="control-section edit-mode-control" style="display: none;">
+            <h6><i class="fas fa-flag"></i> Force Selection</h6>
+            <div class="control-row">
+                <button id="btnSelectBlue" class="overlay-btn force-btn active" onclick="selectForce('blue')">
+                    <i class="fas fa-circle" style="color: #00d4ff;"></i>
+                    <span>Blue Land</span>
+                </button>
+                <button id="btnSelectFox" class="overlay-btn force-btn" onclick="selectForce('fox')">
+                    <i class="fas fa-circle" style="color: #ff6b6b;"></i>
+                    <span>Fox Land</span>
+                </button>
+            </div>
         </div>
-    </div>
+            <!-- Map Regions -->
+            <div class="control-section edit-mode-control" style="display: none;">
+                <h6><i class="fas fa-map-marked-alt"></i> Map Regions</h6>
+                <div class="control-row">
+                    <button id="btnCreateRegion" class="overlay-btn" onclick="startRegionDrawing()">
+                        <i class="fas fa-draw-polygon"></i>
+                        <span>Create Region</span>
+                    </button>
+                    <button id="btnClearRegions" class="overlay-btn danger" onclick="clearAllRegions()">
+                        <i class="fas fa-trash"></i>
+                        <span>Clear All</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Map Labels -->
+            <div class="control-section edit-mode-control" style="display: none;">
+                <h6><i class="fas fa-tags"></i> Map Labels</h6>
+                <div class="control-row">
+                    <button id="btnAddLabel" class="overlay-btn" onclick="addMapLabel()">
+                        <i class="fas fa-tag"></i>
+                        <span>Add Label</span>
+                    </button>
+                    <button id="btnClearLabels" class="overlay-btn danger" onclick="clearAllLabels()">
+                        <i class="fas fa-times"></i>
+                        <span>Clear Labels</span>
+                    </button>
+                </div>
+            </div>
+        </div>
 </aside>

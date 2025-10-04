@@ -96,6 +96,9 @@ class TokenActionModeManager {
         this.saveModeToStorage();
         this.updateUI();
         this.updateMapCursor();
+        
+        // Enable default mode when no mode is selected
+        this.enableDefaultMode();
     }
 
     triggerModeAction(mode) {
@@ -123,6 +126,10 @@ class TokenActionModeManager {
                 // Enable selection mode with movement and context menus
                 this.enableSelectionMode();
                 break;
+            default:
+                // Default mode (no mode selected) - enable token details and dragging
+                this.enableDefaultMode();
+                break;
         }
     }
 
@@ -130,6 +137,11 @@ class TokenActionModeManager {
         // Disable token dragging/movement
         if (window.tokenManager && window.tokenManager.disableTokenMovement) {
             window.tokenManager.disableTokenMovement();
+        }
+        
+        // Disable token dragging in TokenPlacementManager
+        if (window.tokenPlacementManager && window.tokenPlacementManager.disableTokenDragging) {
+            window.tokenPlacementManager.disableTokenDragging();
         }
         
         // Disable token placement
@@ -163,6 +175,11 @@ class TokenActionModeManager {
         // Enable token dragging/movement
         if (window.tokenManager && window.tokenManager.enableTokenMovement) {
             window.tokenManager.enableTokenMovement();
+        }
+        
+        // Enable token dragging in TokenPlacementManager
+        if (window.tokenPlacementManager && window.tokenPlacementManager.enableTokenDragging) {
+            window.tokenPlacementManager.enableTokenDragging();
         }
         
         // Re-enable context menus for movement mode
@@ -206,12 +223,34 @@ class TokenActionModeManager {
             window.tokenManager.enableTokenMovement();
         }
         
+        // Enable token dragging in TokenPlacementManager
+        if (window.tokenPlacementManager && window.tokenPlacementManager.enableTokenDragging) {
+            window.tokenPlacementManager.enableTokenDragging();
+        }
+        
         if (window.tokenManager && window.tokenManager.enableTokenSelection) {
             window.tokenManager.enableTokenSelection();
         }
         
         // Re-enable right-click context menus for selection mode
         this.enableTokenContextMenus();
+    }
+
+    enableDefaultMode() {
+        // Enable token dragging and details for default mode
+        if (window.tokenManager && window.tokenManager.enableTokenMovement) {
+            window.tokenManager.enableTokenMovement();
+        }
+        
+        // Enable token dragging in TokenPlacementManager
+        if (window.tokenPlacementManager && window.tokenPlacementManager.enableTokenDragging) {
+            window.tokenPlacementManager.enableTokenDragging();
+        }
+        
+        // Re-enable right-click context menus for default mode
+        this.enableTokenContextMenus();
+        
+        console.log('Default mode enabled - token details and dragging available');
     }
 
     closeAttackPanel() {

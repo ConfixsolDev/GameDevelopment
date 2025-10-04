@@ -351,23 +351,28 @@ class TokenPlacementManager {
      */
 	createTokenMarker(token, latlng) {
         const icon = this.createTokenIcon(token);
-		const marker = L.marker(latlng, { icon: icon, draggable: true, autoPan: true });
+        
+        // Make dragging mode-dependent
+        const currentMode = window.tokenActionModeManager?.getCurrentMode();
+        const isDraggable = currentMode === 'move' || currentMode === 'select' || !currentMode;
+        
+		const marker = L.marker(latlng, { 
+            icon: icon, 
+            draggable: isDraggable,  // Only draggable in specific modes
+            autoPan: true 
+        });
 
-        // Add click event for token details
+        // Add mode-dependent click event
 		marker.on('click', () => {
 			if (this.suppressNextClick) {
 				this.suppressNextClick = false;
 				return;
 			}
 			if (!this.isDraggingMarker) {
-				this.showTokenDetails(token);
+				this.handleTokenClick(token, marker);
 			}
 		});
 
-        // Add context menu for token actions
-        marker.on('contextmenu', (e) => {
-            this.showTokenContextMenu(e, token);
-        });
 
 		// Enable drag-to-move behavior with enhanced planning
 		marker.on('dragstart', (e) => {
@@ -1346,6 +1351,49 @@ class TokenPlacementManager {
     }
 
     /**
+     * Handle token click based on current mode
+     */
+    handleTokenClick(token, marker) {
+        const currentMode = window.tokenActionModeManager?.getCurrentMode();
+        
+        switch (currentMode) {
+            case null: // No mode selected - show token details
+            case 'select':
+                this.showTokenDetails(token);
+                break;
+                
+            case 'attack':
+                // Start attack mode with this token as attacker
+                if (window.tokenActionModeManager) {
+                    window.tokenActionModeManager.handleTokenAttack(marker.getLatLng());
+                }
+                break;
+                
+            case 'pan-attack':
+                // Start pan attack mode with this token
+                if (window.tokenActionModeManager) {
+                    window.tokenActionModeManager.handlePanAttack(marker.getLatLng());
+                }
+                break;
+                
+            case 'move':
+                // Show token details and enable movement
+                this.showTokenDetails(token);
+                break;
+                
+            case 'place':
+                // In placement mode, clicking tokens shouldn't do anything
+                console.log('Token click ignored in placement mode');
+                break;
+                
+            default:
+                // Fallback to showing details
+                this.showTokenDetails(token);
+                break;
+        }
+    }
+
+    /**
      * Show token details
      */
     showTokenDetails(token) {
@@ -1361,38 +1409,7 @@ class TokenPlacementManager {
 		}
     }
 
-    /**
-     * Show token context menu
-     */
-    showTokenContextMenu(e, token) {
-        // Create context menu
-        const contextMenu = L.popup()
-            .setLatLng(e.latlng)
-            .setContent(`
-                <div class="token-context-menu">
-                    <h6>${token.name}</h6>
-                    <button class="btn btn-sm btn-primary" onclick="tokenPlacementManager.startMoveMode('${token.id}')">
-                        <i class="fas fa-arrows-alt"></i> Move
-                    </button>
-                    <button class="btn btn-sm btn-info" onclick="tokenPlacementManager.showTokenDetails(${JSON.stringify(token).replace(/"/g, '&quot;')})">
-                        <i class="fas fa-info-circle"></i> Details
-                    </button>
-                    <button class="btn btn-sm btn-success" onclick="tokenPlacementManager.showTokenMovementHistory('${token.id}')">
-                        <i class="fas fa-route"></i> Show History
-                    </button>
-                    <button class="btn btn-sm btn-warning" onclick="tokenPlacementManager.clearTokenRoutes('${token.id}')">
-                        <i class="fas fa-eye-slash"></i> Hide Routes
-                    </button>
-                    <button class="btn btn-sm btn-dark" onclick="tokenPlacementManager.startAttackMode('${token.id}')">
-                        <i class="fas fa-crosshairs"></i> Plan Attack (Token)
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="tokenPlacementManager.removeTokenFromMap('${token.id}')">
-                        <i class="fas fa-trash"></i> Remove
-                    </button>
-                </div>
-            `)
-            .openOn(this.map);
-    }
+
 
     /**
      * Load existing placed tokens

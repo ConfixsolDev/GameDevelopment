@@ -1,20 +1,8 @@
 <div class="map-overlay-controls">
     <div class="overlay-control-group">
         <h6>War Game Tools</h6>
-        
         <!-- Token Actions Section -->
         <div class="token-actions-section">
-            <h6 class="section-subtitle">Token Actions</h6>
-            <div class="control-row">
-                <button class="overlay-btn token-action-btn" id="btnPlaceToken" data-mode="place">
-                    <i class="fas fa-plus"></i>
-                    <span>Place Token</span>
-                </button>
-                <button class="overlay-btn token-action-btn" id="btnPlanMove" data-mode="move">
-                    <i class="fas fa-route"></i>
-                    <span>Plan Move</span>
-                </button>
-            </div>
             <div class="control-row">
                 <button class="overlay-btn token-action-btn" id="btnPlanAttack" data-mode="attack">
                     <i class="fas fa-crosshairs"></i>
@@ -26,31 +14,42 @@
                 </button>
             </div>
             <div class="control-row">
-                <button class="overlay-btn token-action-btn" id="btnSelectToken" data-mode="select">
-                    <i class="fas fa-hand-pointer"></i>
-                    <span>Select Token</span>
+                <button class="overlay-btn token-action-btn" id="btnPlanMove" data-mode="move">
+                    <i class="fas fa-route"></i>
+                    <span>Plan Move</span>
                 </button>
                 <button class="overlay-btn" id="btnCancelMode" onclick="cancelTokenMode()">
                     <i class="fas fa-times"></i>
                     <span>Cancel Mode</span>
                 </button>
             </div>
+            <div class="control-row" hidden>
+                <button class="overlay-btn token-action-btn" id="btnSelectToken" data-mode="select">
+                    <i class="fas fa-hand-pointer"></i>
+                    <span>Select Token</span>
+                </button>
+            </div>
         </div>
 
         <!-- Management Tools Section -->
         <div class="management-tools-section">
-            <h6 class="section-subtitle">Management Tools</h6>
+            <h6 class="section-subtitle">Token Actions</h6>
             <div class="control-row">
+                <button class="overlay-btn token-action-btn" id="btnPlaceToken" data-mode="place">
+                    <i class="fas fa-plus"></i>
+                    <span>Place Token</span>
+                </button>
                 <button class="overlay-btn" onclick="openDataEntry()">
                     <i class="fas fa-database"></i>
-                    <span>Military Units</span>
+                    <span>Military Data</span>
                 </button>
-                <button class="overlay-btn" onclick="createObjective()">
+            </div>
+        </div>
+        @*  
+                  <button class="overlay-btn" onclick="createObjective()">
                     <i class="fas fa-flag"></i>
                     <span>Objective</span>
                 </button>
-            </div>
-            <div class="control-row">
                 <button class="overlay-btn" onclick="openAssemblyPlanning()">
                     <i class="fas fa-users"></i>
                     <span>Assembly</span>
@@ -58,9 +57,7 @@
                 <button class="overlay-btn" onclick="showUnitStatus()">
                     <i class="fas fa-chart-line"></i>
                     <span>Unit Status</span>
-                </button>
-            </div>
-        </div>
+                </button> *@
     </div>
 
 
@@ -73,7 +70,7 @@
             </button>
             <button class="overlay-btn overlay-btn-intel" onclick="openSuspectedTokensListModal()">
                 <i class="fas fa-list-ul"></i>
-                <span>Manage Enemies</span>
+                <span>Manage Enemy Token</span>
             </button>
         </div>
     </div>
