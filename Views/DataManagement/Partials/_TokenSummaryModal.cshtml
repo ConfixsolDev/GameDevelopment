@@ -160,7 +160,9 @@
 
 <script>
 // Global token summary modal functions
-let currentTokenId = null;
+if (typeof currentTokenId === 'undefined') {
+    var currentTokenId = null;
+}
 
 function closeTokenSummaryModal() {
     console.log('🔒 Closing token summary modal');

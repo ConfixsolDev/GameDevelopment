@@ -494,9 +494,15 @@
 
 <script>
 // Movement Modal JavaScript
-let currentSelectedUnit = null;
-let currentWaypoints = [];
-let currentRouteCost = 0;
+if (typeof currentSelectedUnit === 'undefined') {
+    var currentSelectedUnit = null;
+}
+if (typeof currentWaypoints === 'undefined') {
+    var currentWaypoints = [];
+}
+if (typeof currentRouteCost === 'undefined') {
+    var currentRouteCost = 0;
+}
 
 function openMovementModal(unitId) {
     console.log('Opening movement modal for unit:', unitId);

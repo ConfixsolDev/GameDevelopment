@@ -101,21 +101,10 @@
     <script src="~/assets/js/jquery.min.js"></script>
     <script src="~/assets/js/bootstrap.bundle.min.js"></script>
 
-    <!-- jQuery Fallback -->
+    <!-- Initialize Game Play Scripts -->
     <script>
-        if (typeof jQuery === 'undefined') {
-            console.error('jQuery not loaded from local file, loading from CDN...');
-            var script = document.createElement('script');
-            script.src = 'https://code.jquery.com/jquery-3.6.0.min.js';
-            script.onload = function() {
-                console.log('jQuery loaded from CDN');
-                initializeGamePlayScripts();
-            };
-            document.head.appendChild(script);
-        } else {
-            console.log('jQuery loaded successfully');
-            initializeGamePlayScripts();
-        }
+        console.log('jQuery loaded successfully from local file');
+        initializeGamePlayScripts();
 
         function initializeGamePlayScripts() {
         $(document).ready(function() {
