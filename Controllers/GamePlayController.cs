@@ -73,7 +73,10 @@ namespace TechWebSol.Controllers
                         {
                             id = ac.Id,
                             shapeType = ac.ShapeType,
-                            radiusKm = ac.RadiusKm,
+                            frontRadiusKm = ac.FrontRadiusKm,
+                            rearRadiusKm = ac.RearRadiusKm,
+                            sideRadiusKm = ac.SideRadiusKm,
+                            rotationDegrees = ac.RotationDegrees,
                             coverageType = ac.CoverageType,
                             geometry = ac.Geometry
                         }).ToList(),
@@ -230,7 +233,7 @@ namespace TechWebSol.Controllers
                         {
                             id = result.Token?.Id,
                             name = result.Token?.Name,
-                            coverageRadius = result.Token?.CoverageRadiusKm
+                            coverageRadius = result.Token?.FrontCoverageKm
                         },
                         areaCoverages = result.AreaCoverages?.Select(ac => new
                         {
@@ -239,7 +242,10 @@ namespace TechWebSol.Controllers
                             geometry = ac.Geometry,
                             coverageType = ac.CoverageType,
                             shapeType = ac.ShapeType,
-                            radiusKm = ac.RadiusKm,
+                            frontRadiusKm = ac.FrontRadiusKm,
+                            rearRadiusKm = ac.RearRadiusKm,
+                            sideRadiusKm = ac.SideRadiusKm,
+                            rotationDegrees = ac.RotationDegrees,
                             areaKm2 = ac.AreaKm2
                         })
                     });
@@ -283,7 +289,10 @@ namespace TechWebSol.Controllers
                             geometry = ac.Geometry,
                             coverageType = ac.CoverageType,
                             shapeType = ac.ShapeType,
-                            radiusKm = ac.RadiusKm,
+                            frontRadiusKm = ac.FrontRadiusKm,
+                            rearRadiusKm = ac.RearRadiusKm,
+                            sideRadiusKm = ac.SideRadiusKm,
+                            rotationDegrees = ac.RotationDegrees,
                             areaKm2 = ac.AreaKm2
                         })
                     });
@@ -331,7 +340,7 @@ namespace TechWebSol.Controllers
                         {
                             id = result.Token?.Id,
                             name = result.Token?.Name,
-                            coverageRadius = result.Token?.CoverageRadiusKm
+                            coverageRadius = result.Token?.FrontCoverageKm
                         },
                         areaCoverages = result.AreaCoverages?.Select(ac => new
                         {
@@ -340,7 +349,10 @@ namespace TechWebSol.Controllers
                             geometry = ac.Geometry,
                             coverageType = ac.CoverageType,
                             shapeType = ac.ShapeType,
-                            radiusKm = ac.RadiusKm,
+                            frontRadiusKm = ac.FrontRadiusKm,
+                            rearRadiusKm = ac.RearRadiusKm,
+                            sideRadiusKm = ac.SideRadiusKm,
+                            rotationDegrees = ac.RotationDegrees,
                             areaKm2 = ac.AreaKm2
                         })
                     });
@@ -716,7 +728,7 @@ namespace TechWebSol.Controllers
                                 {
                                     id = result.Token?.Id,
                                     name = result.Token?.Name,
-                                    coverageRadius = result.Token?.CoverageRadiusKm
+                                    coverageRadius = result.Token?.FrontCoverageKm
                                 },
                                 areaCoverages = result.AreaCoverages?.Select(ac => new
                                 {
@@ -725,7 +737,10 @@ namespace TechWebSol.Controllers
                                     geometry = ac.Geometry,
                                     coverageType = ac.CoverageType,
                                     shapeType = ac.ShapeType,
-                                    radiusKm = ac.RadiusKm,
+                                    frontRadiusKm = ac.FrontRadiusKm,
+                            rearRadiusKm = ac.RearRadiusKm,
+                            sideRadiusKm = ac.SideRadiusKm,
+                            rotationDegrees = ac.RotationDegrees,
                                     areaKm2 = ac.AreaKm2
                                 })
                             });

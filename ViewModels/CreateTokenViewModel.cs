@@ -21,9 +21,17 @@ namespace TechWebSol.ViewModels
         [Display(Name = "Asset Image/Symbol")]
         public IFormFile? AssetImage { get; set; }
 
-        [Display(Name = "Coverage Radius (km)")]
-        [Range(0.1, 1000, ErrorMessage = "Coverage radius must be between 0.1 and 1000 km")]
-        public decimal? CoverageRadiusKm { get; set; }
+        [Display(Name = "Front Coverage (km)")]
+        [Range(0.1, 1000, ErrorMessage = "Front coverage must be between 0.1 and 1000 km")]
+        public decimal? FrontCoverageKm { get; set; }
+
+        [Display(Name = "Rear Coverage (km)")]
+        [Range(0.1, 1000, ErrorMessage = "Rear coverage must be between 0.1 and 1000 km")]
+        public decimal? RearCoverageKm { get; set; }
+
+        [Display(Name = "Side Coverage (km)")]
+        [Range(0.1, 1000, ErrorMessage = "Side coverage must be between 0.1 and 1000 km")]
+        public decimal? SideCoverageKm { get; set; }
 
         [Display(Name = "Current Latitude")]
         public decimal? CurrentLatitude { get; set; }

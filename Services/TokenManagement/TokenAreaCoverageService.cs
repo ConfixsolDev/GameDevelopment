@@ -60,7 +60,6 @@ namespace TechWebSol.Services.TokenManagement
                     Name = "Operational Area",
                     Geometry = JsonSerializer.Serialize(geometry),
                     AreaKm2 = areaKm2,
-                    RadiusKm = radiusKm,
                     CoverageType = "Operational",
                     ShapeType = "Circle",
                     IsActive = true,
@@ -73,8 +72,7 @@ namespace TechWebSol.Services.TokenManagement
                 _context.TokenAreaCoverages.Add(areaCoverage);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Created initial coverage area for token {TokenId} with radius {RadiusKm}km", 
-                    tokenId, radiusKm);
+                _logger.LogInformation("Created initial coverage area for token {TokenId}", tokenId);
 
                 return new TokenAreaCoverageResult
                 {
@@ -114,7 +112,9 @@ namespace TechWebSol.Services.TokenManagement
                     var geometry = CreateCircleGeometry(latitude, longitude, radiusKm);
                     operationalArea.Geometry = JsonSerializer.Serialize(geometry);
                     operationalArea.AreaKm2 = (decimal)(Math.PI * Math.Pow((double)radiusKm, 2));
-                    operationalArea.RadiusKm = radiusKm;
+                    operationalArea.FrontRadiusKm = radiusKm;
+                    operationalArea.RearRadiusKm = radiusKm;
+                    operationalArea.SideRadiusKm = radiusKm;
                     operationalArea.LastUpdated = DateTime.UtcNow;
                     updatedCoverages.Add(operationalArea);
                 }
@@ -131,11 +131,16 @@ namespace TechWebSol.Services.TokenManagement
                 // Update other dynamic coverage areas if they exist
                 foreach (var coverage in existingCoverages.Where(c => c.CoverageType != "Operational"))
                 {
-                    if (coverage.ShapeType == "Circle" && coverage.RadiusKm.HasValue)
+                    if (coverage.ShapeType == "Oval" && coverage.FrontRadiusKm.HasValue && coverage.RearRadiusKm.HasValue)
                     {
-                        var geometry = CreateCircleGeometry(latitude, longitude, coverage.RadiusKm.Value);
+                        var geometry = CreateCircleGeometry(latitude, longitude, coverage.FrontRadiusKm.Value);
                         coverage.Geometry = JsonSerializer.Serialize(geometry);
-                        coverage.AreaKm2 = (decimal)(Math.PI * Math.Pow((double)coverage.RadiusKm.Value, 2));
+                        
+                        // Calculate area for oval (approximate using ellipse formula: π * a * b)
+                        var semiMajorAxis = Math.Max((double)coverage.FrontRadiusKm.Value, (double)coverage.RearRadiusKm.Value) / 2;
+                        var semiMinorAxis = (double)(coverage.SideRadiusKm ?? (coverage.FrontRadiusKm.Value + coverage.RearRadiusKm.Value) / 2) / 2;
+                        coverage.AreaKm2 = (decimal)(Math.PI * semiMajorAxis * semiMinorAxis);
+                        
                         coverage.LastUpdated = DateTime.UtcNow;
                         updatedCoverages.Add(coverage);
                     }

@@ -97,9 +97,18 @@ class TokenPlacementManager {
         this.tempMarker = L.marker(latlng, { icon: icon })
             .addTo(this.map);
 
-		// Add coverage area preview as a plus shape if token has radius
-		if (this.selectedTokenForPlacement.coverageRadius && this.selectedTokenForPlacement.coverageRadius > 0) {
-			const radiusMeters = this.selectedTokenForPlacement.coverageRadius * 1000;
+		// Add coverage area preview
+		if (this.selectedTokenForPlacement.frontCoverageKm && this.selectedTokenForPlacement.rearCoverageKm) {
+			// Oval coverage preview
+			const sideKm = this.selectedTokenForPlacement.sideCoverageKm || 
+				(this.selectedTokenForPlacement.frontCoverageKm + this.selectedTokenForPlacement.rearCoverageKm) / 2;
+			
+			const maxRadius = Math.max(
+				this.selectedTokenForPlacement.frontCoverageKm, 
+				this.selectedTokenForPlacement.rearCoverageKm, 
+				sideKm
+			);
+			const radiusMeters = maxRadius * 1000;
 			const plus = this.createPlusCoverage(latlng, radiusMeters, '#3388ff', 3, 0.5, '5, 5');
 			this.tempMarker.coveragePreview = plus.addTo(this.map);
 		}
@@ -375,6 +384,30 @@ class TokenPlacementManager {
             icon: icon, 
             draggable: isDraggable,  // Only draggable in specific modes
             autoPan: true 
+        });
+
+        // Add token ID as data attribute for easy access by other frontend tools
+        marker.tokenData = token;
+        marker.tokenId = token.id;
+        
+        // Also add to the marker element itself for DOM access
+        marker.on('add', function() {
+            if (this.getElement) {
+                const element = this.getElement();
+                if (element) {
+                    element.setAttribute('data-id', token.id);
+                    element.setAttribute('data-token-id', token.id);
+                    element.setAttribute('data-token-name', token.name);
+                    element.setAttribute('data-token-type', token.forceType || 'Unknown');
+                    element.setAttribute('data-token-guid', token.id);
+                    element.classList.add('token-marker');
+                    
+                    // Add title attribute to show token GUID on hover
+                    element.setAttribute('title', `Token: ${token.name} (ID: ${token.id})`);
+                    
+                    console.log(`✅ Token marker DOM attributes set for ${token.name}: data-id="${token.id}"`);
+                }
+            }
         });
 
         // Add mode-dependent click event
@@ -1249,51 +1282,146 @@ class TokenPlacementManager {
      */
     createCoverageAreas(areaCoverages, centerLatLng, forceType = null) {
         areaCoverages.forEach(coverage => {
-			if (coverage.radiusKm) {
-				// Determine color based on force type (Fox Land / Blue Land)
-				let fillColor, strokeColor;
-				if (forceType) {
-					const forceTypeLower = forceType.toLowerCase();
-					if (forceTypeLower.includes('fox')) {
-						fillColor = '#ff0000'; // Red for Fox Land
-						strokeColor = '#cc0000'; // Darker red for border
-					} else if (forceTypeLower.includes('blue')) {
-						fillColor = '#0000ff'; // Blue for Blue Land
-						strokeColor = '#0000cc'; // Darker blue for border
-					} else {
-						fillColor = '#3388ff'; // Default light blue
-						strokeColor = '#2266dd';
-					}
-				} else {
-					// Fallback to coverage type color
-					fillColor = this.getCoverageColor(coverage.coverageType);
-					strokeColor = fillColor;
-				}
+            // Determine color based on force type (Fox Land / Blue Land)
+            let fillColor, strokeColor;
+            if (forceType) {
+                const forceTypeLower = forceType.toLowerCase();
+                if (forceTypeLower.includes('fox')) {
+                    fillColor = '#ff0000'; // Red for Fox Land
+                    strokeColor = '#cc0000'; // Darker red for border
+                } else if (forceTypeLower.includes('blue')) {
+                    fillColor = '#0000ff'; // Blue for Blue Land
+                    strokeColor = '#0000cc'; // Darker blue for border
+                } else {
+                    fillColor = '#3388ff'; // Default light blue
+                    strokeColor = '#2266dd';
+                }
+            } else {
+                // Fallback to coverage type color
+                fillColor = this.getCoverageColor(coverage.coverageType);
+                strokeColor = fillColor;
+            }
 
-				// Create a filled circle with semi-transparent fill
-				const circle = L.circle(centerLatLng, {
-					radius: coverage.radiusKm * 1000, // Convert km to meters
-					color: strokeColor,
-					fillColor: fillColor,
-					fillOpacity: 0.2, // Semi-transparent
-					opacity: 0.6,
-					weight: 2
-				}).addTo(this.map);
-
-				// Add popup with coverage info
-				circle.bindPopup(`
-					<div class="coverage-popup">
-						<strong>${coverage.coverageType || 'Operational'} Range</strong><br/>
-						<small>Radius: ${coverage.radiusKm} km</small><br/>
-						<small>Force: ${forceType || 'Unknown'}</small>
-					</div>
-				`);
-
-				// Store reference for later updates
-				if (!this.coverageAreas) this.coverageAreas = new Map();
-				this.coverageAreas.set(coverage.id, circle);
-			}
+            // Create oval coverage (front/rear radius required)
+            if (coverage.frontRadiusKm && coverage.rearRadiusKm) {
+                this.createOvalCoverage(coverage, centerLatLng, fillColor, strokeColor, forceType);
+            }
         });
+    }
+
+    /**
+     * Create oval coverage area
+     */
+    createOvalCoverage(coverage, centerLatLng, fillColor, strokeColor, forceType) {
+        // Parse the GeoJSON geometry if available
+        let polygon = null;
+        if (coverage.geometry) {
+            try {
+                const geoJson = typeof coverage.geometry === 'string' 
+                    ? JSON.parse(coverage.geometry) 
+                    : coverage.geometry;
+                
+                if (geoJson.type === 'Polygon' && geoJson.coordinates && geoJson.coordinates[0]) {
+                    // Convert GeoJSON coordinates to Leaflet format
+                    const coordinates = geoJson.coordinates[0].map(coord => [coord[1], coord[0]]); // [lng, lat] -> [lat, lng]
+                    polygon = L.polygon(coordinates, {
+                        color: strokeColor,
+                        fillColor: fillColor,
+                        fillOpacity: 0.2,
+                        opacity: 0.6,
+                        weight: 2
+                    }).addTo(this.map);
+                }
+            } catch (error) {
+                console.warn('Failed to parse coverage geometry:', error);
+            }
+        }
+
+        // Fallback: create oval using front/rear/side radius
+        if (!polygon) {
+            polygon = this.createOvalFromRadii(
+                centerLatLng, 
+                coverage.frontRadiusKm, 
+                coverage.rearRadiusKm, 
+                coverage.sideRadiusKm || (coverage.frontRadiusKm + coverage.rearRadiusKm) / 2,
+                coverage.rotationDegrees || 0,
+                fillColor, 
+                strokeColor
+            );
+        }
+
+        // Add popup with coverage info
+        polygon.bindPopup(`
+            <div class="coverage-popup">
+                <strong>${coverage.coverageType || 'Operational'} Range</strong><br/>
+                <small>Front: ${coverage.frontRadiusKm} km</small><br/>
+                <small>Rear: ${coverage.rearRadiusKm} km</small><br/>
+                ${coverage.sideRadiusKm ? `<small>Side: ${coverage.sideRadiusKm} km</small><br/>` : ''}
+                <small>Force: ${forceType || 'Unknown'}</small>
+            </div>
+        `);
+
+        // Store reference for later updates
+        if (!this.coverageAreas) this.coverageAreas = new Map();
+        this.coverageAreas.set(coverage.id, polygon);
+    }
+
+    /**
+     * Create oval polygon from front/rear/side radius values
+     */
+    createOvalFromRadii(centerLatLng, frontKm, rearKm, sideKm, rotationDegrees, fillColor, strokeColor) {
+        const points = [];
+        const numPoints = 32; // Number of points to approximate the oval
+        
+        // Convert km to degrees (approximate)
+        const frontDegrees = frontKm / 111.32;
+        const rearDegrees = rearKm / 111.32;
+        const sideDegrees = sideKm / 111.32;
+        
+        // Calculate rotation in radians
+        const rotationRad = (rotationDegrees * Math.PI) / 180;
+        
+        for (let i = 0; i < numPoints; i++) {
+            const angle = (i * 2 * Math.PI) / numPoints;
+            
+            // Calculate radius based on angle (oval shape)
+            let radius;
+            if (angle >= -Math.PI/2 && angle <= Math.PI/2) {
+                // Front half (0 to 180 degrees)
+                const normalizedAngle = angle + Math.PI/2; // 0 to PI
+                radius = frontDegrees * Math.cos(normalizedAngle) + rearDegrees * Math.sin(normalizedAngle);
+            } else {
+                // Rear half (180 to 360 degrees)
+                const normalizedAngle = angle - Math.PI/2; // 0 to PI
+                radius = rearDegrees * Math.cos(normalizedAngle) + frontDegrees * Math.sin(normalizedAngle);
+            }
+            
+            // Apply side radius scaling
+            const sideScale = Math.abs(Math.cos(angle));
+            const finalRadius = radius * sideScale + sideDegrees * (1 - sideScale);
+            
+            // Calculate position
+            const x = finalRadius * Math.cos(angle);
+            const y = finalRadius * Math.sin(angle);
+            
+            // Apply rotation
+            const rotatedX = x * Math.cos(rotationRad) - y * Math.sin(rotationRad);
+            const rotatedY = x * Math.sin(rotationRad) + y * Math.cos(rotationRad);
+            
+            // Convert to lat/lng
+            const lat = centerLatLng.lat + rotatedY;
+            const lng = centerLatLng.lng + rotatedX;
+            
+            points.push([lat, lng]);
+        }
+        
+        return L.polygon(points, {
+            color: strokeColor,
+            fillColor: fillColor,
+            fillOpacity: 0.2,
+            opacity: 0.6,
+            weight: 2
+        }).addTo(this.map);
     }
 
 	/**

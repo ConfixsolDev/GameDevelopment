@@ -58,7 +58,9 @@ namespace TechWebSol.Controllers
                 IsManualToken = t.IsManualToken,
                 Notes = t.Notes,
                 AssetImagePath = t.AssetImagePath,
-                CoverageRadiusKm = t.CoverageRadiusKm
+                FrontCoverageKm = t.FrontCoverageKm,
+                RearCoverageKm = t.RearCoverageKm,
+                SideCoverageKm = t.SideCoverageKm
             });
         }
 
@@ -77,7 +79,9 @@ namespace TechWebSol.Controllers
             token.IsManualToken = req.IsManualToken;
             token.Notes = string.IsNullOrWhiteSpace(req.Notes) ? null : req.Notes.Trim();
             token.AssetImagePath = req.AssetImagePath;
-            token.CoverageRadiusKm = req.CoverageRadiusKm;
+            token.FrontCoverageKm = req.FrontCoverageKm;
+            token.RearCoverageKm = req.RearCoverageKm;
+            token.SideCoverageKm = req.SideCoverageKm;
 
 
             await _context.SaveChangesAsync();
@@ -113,7 +117,9 @@ namespace TechWebSol.Controllers
                                                 UsageCount = t.UsageCount,
                                                 Notes = t.Notes,
                                                 AssetImagePath = t.AssetImagePath,
-                                                CoverageRadiusKm = t.CoverageRadiusKm,
+                                                FrontCoverageKm = t.FrontCoverageKm,
+                RearCoverageKm = t.RearCoverageKm,
+                SideCoverageKm = t.SideCoverageKm,
                                                 TeamId = t.TeamId,
                                             }).AsQueryable();
 
@@ -526,20 +532,24 @@ namespace TechWebSol.Controllers
                     IsManualToken = true,
                     IsActive = true,
                     AssetImagePath = imagePath,
-                    CoverageRadiusKm = model.CoverageRadiusKm
+                    FrontCoverageKm = model.FrontCoverageKm,
+                    RearCoverageKm = model.RearCoverageKm,
+                    SideCoverageKm = model.SideCoverageKm
                 };
 
                 _context.Tokens.Add(token);
                 await _context.SaveChangesAsync();
 
-                // Create initial area coverage if position and radius are provided
-                if (model.CurrentLatitude.HasValue &&
-                    model.CurrentLongitude.HasValue &&
-                    model.CoverageRadiusKm.HasValue &&
-                    model.CoverageRadiusKm.Value > 0)
+                // Create initial area coverage if position and coverage values are provided
+                if (model.CurrentLatitude.HasValue && model.CurrentLongitude.HasValue)
                 {
-                    await CreateInitialAreaCoverage(token.Id, model.CurrentLatitude.Value,
-                        model.CurrentLongitude.Value, model.CoverageRadiusKm.Value);
+                    // Create oval coverage if front/rear values are specified
+                    if (model.FrontCoverageKm.HasValue && model.RearCoverageKm.HasValue)
+                    {
+                        await CreateInitialOvalAreaCoverage(token.Id, model.CurrentLatitude.Value,
+                            model.CurrentLongitude.Value, model.FrontCoverageKm.Value, 
+                            model.RearCoverageKm.Value, model.SideCoverageKm);
+                    }
                 }
 
                 _logger.LogInformation("Created token: {TokenName} by user {UserId}",
@@ -583,7 +593,9 @@ namespace TechWebSol.Controllers
                 {
                     Name = token.Name,
                     TokenGroupId = token.TokenGroupId,
-                    CoverageRadiusKm = token.CoverageRadiusKm,
+                    FrontCoverageKm = token.FrontCoverageKm,
+                    RearCoverageKm = token.RearCoverageKm,
+                    SideCoverageKm = token.SideCoverageKm,
                     AvailableTokenGroups = availableTokenGroups,
                     IsEdit = true
                 };
@@ -657,19 +669,25 @@ namespace TechWebSol.Controllers
                 token.Name = model.Name;
                 token.TokenGroupId = model.TokenGroupId;
                 token.AssetImagePath = imagePath;
-                token.CoverageRadiusKm = model.CoverageRadiusKm;
+                token.FrontCoverageKm = model.FrontCoverageKm;
+                token.RearCoverageKm = model.RearCoverageKm;
+                token.SideCoverageKm = model.SideCoverageKm;
+                token.FrontCoverageKm = model.FrontCoverageKm;
+                token.RearCoverageKm = model.RearCoverageKm;
+                token.SideCoverageKm = model.SideCoverageKm;
 
                 // Update position if provided
                 var positionChanged = model.CurrentLatitude.HasValue && model.CurrentLongitude.HasValue;
 
                 await _context.SaveChangesAsync();
 
-                // Update coverage area if position or radius changed
+                // Update coverage area if position or coverage changed
                 if (positionChanged && model.CurrentLatitude.HasValue &&
-                    model.CurrentLongitude.HasValue && model.CoverageRadiusKm.HasValue)
+                    model.CurrentLongitude.HasValue && model.FrontCoverageKm.HasValue && model.RearCoverageKm.HasValue)
                 {
-                    await UpdateTokenCoverageArea(token.Id, model.CurrentLatitude.Value,
-                        model.CurrentLongitude.Value, model.CoverageRadiusKm.Value);
+                    await UpdateTokenOvalCoverageArea(token.Id, model.CurrentLatitude.Value,
+                        model.CurrentLongitude.Value, model.FrontCoverageKm.Value, 
+                        model.RearCoverageKm.Value, model.SideCoverageKm);
                 }
 
                 _logger.LogInformation("Updated token: {TokenName} by user {UserId}",
@@ -755,7 +773,6 @@ namespace TechWebSol.Controllers
                 Name = "Operational Area",
                 Geometry = System.Text.Json.JsonSerializer.Serialize(geometry),
                 AreaKm2 = (decimal)(Math.PI * Math.Pow((double)radiusKm, 2)),
-                RadiusKm = radiusKm,
                 CoverageType = "Operational",
                 ShapeType = "Circle",
                 IsActive = true,
@@ -768,7 +785,84 @@ namespace TechWebSol.Controllers
         }
 
         /// <summary>
-        /// Update token coverage area when position or radius changes
+        /// Create initial oval area coverage for token with front/rear/side distances
+        /// </summary>
+        private async Task CreateInitialOvalAreaCoverage(Guid tokenId, decimal latitude, decimal longitude, 
+            decimal frontKm, decimal rearKm, decimal? sideKm = null)
+        {
+            // Calculate side coverage if not provided (average of front and rear)
+            if (!sideKm.HasValue)
+            {
+                sideKm = (frontKm + rearKm) / 2;
+            }
+
+            var geometry = CreateOvalGeometry(latitude, longitude, frontKm, rearKm, sideKm.Value);
+
+            // Calculate area for oval (approximate using ellipse formula: π * a * b)
+            var semiMajorAxis = Math.Max((double)frontKm, (double)rearKm) / 2;
+            var semiMinorAxis = (double)sideKm.Value / 2;
+            var areaKm2 = (decimal)(Math.PI * semiMajorAxis * semiMinorAxis);
+
+            var areaCoverage = new TokenAreaCoverage
+            {
+                TokenId = tokenId,
+                Name = "Oval Operational Area",
+                Geometry = System.Text.Json.JsonSerializer.Serialize(geometry),
+                AreaKm2 = areaKm2,
+                FrontRadiusKm = frontKm,
+                RearRadiusKm = rearKm,
+                SideRadiusKm = sideKm,
+                CoverageType = "Operational",
+                ShapeType = "Oval",
+                IsActive = true,
+                IsDynamic = true,
+                Description = "Initial oval operational area for token"
+            };
+
+            _context.TokenAreaCoverages.Add(areaCoverage);
+            await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Update oval coverage area for a token
+        /// </summary>
+        private async Task UpdateTokenOvalCoverageArea(Guid tokenId, decimal latitude, decimal longitude, 
+            decimal frontKm, decimal rearKm, decimal? sideKm = null)
+        {
+            var existingCoverages = await _context.TokenAreaCoverages
+                .Where(tac => tac.TokenId == tokenId && tac.IsActive)
+                .ToListAsync();
+
+            var operationalArea = existingCoverages.FirstOrDefault(c => c.CoverageType == "Operational");
+
+            if (operationalArea != null)
+            {
+                // Update existing area
+                var geometry = CreateOvalGeometry(latitude, longitude, frontKm, rearKm, sideKm ?? (frontKm + rearKm) / 2);
+                operationalArea.Geometry = System.Text.Json.JsonSerializer.Serialize(geometry);
+                
+                // Calculate area for oval (approximate using ellipse formula: π * a * b)
+                var semiMajorAxis = Math.Max((double)frontKm, (double)rearKm) / 2;
+                var semiMinorAxis = (double)(sideKm ?? (frontKm + rearKm) / 2) / 2;
+                operationalArea.AreaKm2 = (decimal)(Math.PI * semiMajorAxis * semiMinorAxis);
+                
+                operationalArea.FrontRadiusKm = frontKm;
+                operationalArea.RearRadiusKm = rearKm;
+                operationalArea.SideRadiusKm = sideKm ?? (frontKm + rearKm) / 2;
+                operationalArea.ShapeType = "Oval";
+                operationalArea.LastUpdated = DateTime.UtcNow;
+            }
+            else
+            {
+                // Create new coverage area
+                await CreateInitialOvalAreaCoverage(tokenId, latitude, longitude, frontKm, rearKm, sideKm);
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Update token coverage area when position or radius changes (legacy method)
         /// </summary>
         private async Task UpdateTokenCoverageArea(Guid tokenId, decimal latitude, decimal longitude, decimal radiusKm)
         {
@@ -786,7 +880,9 @@ namespace TechWebSol.Controllers
                 var geometry = CreateCircleGeometry(latitude, longitude, radiusKm);
                 operationalArea.Geometry = System.Text.Json.JsonSerializer.Serialize(geometry);
                 operationalArea.AreaKm2 = (decimal)(Math.PI * Math.Pow((double)radiusKm, 2));
-                operationalArea.RadiusKm = radiusKm;
+                operationalArea.FrontRadiusKm = radiusKm;
+                operationalArea.RearRadiusKm = radiusKm;
+                operationalArea.SideRadiusKm = radiusKm;
                 operationalArea.LastUpdated = DateTime.UtcNow;
             }
             else
@@ -814,6 +910,24 @@ namespace TechWebSol.Controllers
         }
 
         /// <summary>
+        /// Create oval geometry for coverage area
+        /// </summary>
+        private object CreateOvalGeometry(decimal lat, decimal lng, decimal frontKm, decimal rearKm, decimal sideKm)
+        {
+            var frontDegrees = frontKm / 111.32m; // Approximate conversion
+            var rearDegrees = rearKm / 111.32m;
+            var sideDegrees = sideKm / 111.32m;
+            
+            var coordinates = GenerateOvalCoordinates(lat, lng, frontDegrees, rearDegrees, sideDegrees);
+
+            return new
+            {
+                type = "Polygon",
+                coordinates = new[] { coordinates }
+            };
+        }
+
+        /// <summary>
         /// Generate coordinates for a circle
         /// </summary>
         private double[][] GenerateCircleCoordinates(decimal lat, decimal lng, decimal radiusDegrees)
@@ -826,6 +940,51 @@ namespace TechWebSol.Controllers
                 var angle = (2 * Math.PI * i) / segments;
                 var x = (double)lng + (double)radiusDegrees * Math.Cos(angle);
                 var y = (double)lat + (double)radiusDegrees * Math.Sin(angle);
+                coordinates.Add(new double[] { x, y });
+            }
+
+            return coordinates.ToArray();
+        }
+
+        /// <summary>
+        /// Generate coordinates for an oval (ellipse)
+        /// </summary>
+        private double[][] GenerateOvalCoordinates(decimal lat, decimal lng, decimal frontDegrees, decimal rearDegrees, decimal sideDegrees)
+        {
+            var coordinates = new List<double[]>();
+            var segments = 32;
+
+            // Calculate semi-major and semi-minor axes
+            var semiMajorAxis = Math.Max((double)frontDegrees, (double)rearDegrees);
+            var semiMinorAxis = (double)sideDegrees;
+
+            for (int i = 0; i <= segments; i++)
+            {
+                var angle = (2 * Math.PI * i) / segments;
+                
+                // Calculate radius based on angle (front/rear direction)
+                double radius;
+                if (angle >= 0 && angle <= Math.PI / 2) // Front-right quadrant
+                {
+                    radius = (double)frontDegrees;
+                }
+                else if (angle > Math.PI / 2 && angle <= Math.PI) // Rear-right quadrant
+                {
+                    radius = (double)rearDegrees;
+                }
+                else if (angle > Math.PI && angle <= 3 * Math.PI / 2) // Rear-left quadrant
+                {
+                    radius = (double)rearDegrees;
+                }
+                else // Front-left quadrant
+                {
+                    radius = (double)frontDegrees;
+                }
+
+                // Apply elliptical scaling for side coverage
+                var x = (double)lng + radius * Math.Cos(angle) * ((double)sideDegrees / semiMajorAxis);
+                var y = (double)lat + radius * Math.Sin(angle);
+
                 coordinates.Add(new double[] { x, y });
             }
 
@@ -864,7 +1023,9 @@ namespace TechWebSol.Controllers
         public int UsageCount { get; set; }
         public string? Notes { get; set; }
         public string? AssetImagePath { get; set; }
-        public decimal? CoverageRadiusKm { get; set; }
+        public decimal? FrontCoverageKm { get; set; }
+        public decimal? RearCoverageKm { get; set; }
+        public decimal? SideCoverageKm { get; set; }
         public decimal? CurrentLatitude { get; set; }
         public decimal? CurrentLongitude { get; set; }
     }
@@ -878,7 +1039,9 @@ namespace TechWebSol.Controllers
         public bool IsManualToken { get; set; }
         public string? Notes { get; set; }
         public string? AssetImagePath { get; set; }
-        public decimal? CoverageRadiusKm { get; set; }
+        public decimal? FrontCoverageKm { get; set; }
+        public decimal? RearCoverageKm { get; set; }
+        public decimal? SideCoverageKm { get; set; }
         public decimal? CurrentLatitude { get; set; }
         public decimal? CurrentLongitude { get; set; }
     }
@@ -892,7 +1055,9 @@ namespace TechWebSol.Controllers
         public bool IsManualToken { get; set; }
         public string? Notes { get; set; }
         public string? AssetImagePath { get; set; }
-        public decimal? CoverageRadiusKm { get; set; }
+        public decimal? FrontCoverageKm { get; set; }
+        public decimal? RearCoverageKm { get; set; }
+        public decimal? SideCoverageKm { get; set; }
         public decimal? CurrentLatitude { get; set; }
         public decimal? CurrentLongitude { get; set; }
     }

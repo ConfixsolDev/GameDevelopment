@@ -86,6 +86,30 @@ class SuspectedTokenManager {
             draggable: true 
         });
 
+        // Add token ID as data attribute for easy access by other frontend tools
+        marker.tokenData = tokenData;
+        marker.tokenId = tokenData.id;
+        
+        // Also add to the marker element itself for DOM access
+        marker.on('add', function() {
+            if (this.getElement) {
+                const element = this.getElement();
+                if (element) {
+                    element.setAttribute('data-id', tokenData.id);
+                    element.setAttribute('data-token-id', tokenData.id);
+                    element.setAttribute('data-token-name', tokenData.name);
+                    element.setAttribute('data-token-type', 'Suspected');
+                    element.setAttribute('data-token-guid', tokenData.id);
+                    element.classList.add('suspected-token-marker');
+                    
+                    // Add title attribute to show token GUID on hover
+                    element.setAttribute('title', `Suspected Token: ${tokenData.name} (ID: ${tokenData.id})`);
+                    
+                    console.log(`✅ Suspected token marker DOM attributes set for ${tokenData.name}: data-id="${tokenData.id}"`);
+                }
+            }
+        });
+
         // Add popup
         marker.bindPopup(this.createPopupContent(tokenData));
 
@@ -95,9 +119,36 @@ class SuspectedTokenManager {
             await this.updateSuspectedTokenPosition(tokenData.id, newPos.lat, newPos.lng);
         });
 
-        // Click event
+        // Click event - Generic token click handler
         marker.on('click', () => {
             console.log('Suspected token clicked:', tokenData.name);
+            
+            // Use the generic token click handler from TokenActionModeManager
+            if (window.tokenActionModeManager) {
+                const currentMode = window.tokenActionModeManager.getCurrentMode();
+                console.log('🔍 Current mode:', currentMode);
+                
+                if (currentMode === 'attack') {
+                    // In attack mode - check if we have an attacker selected
+                    const attackerToken = window.tokenActionModeManager.getSelectedAttacker();
+                    if (attackerToken) {
+                        console.log('🎯 Suspected token selected as target for attack planning');
+                        // Trigger attack planning with suspected token as target
+                        window.tokenActionModeManager.openAttackDataEntry(attackerToken, tokenData);
+                    } else {
+                        console.log('❌ No attacker selected - select attacker first');
+                        if (window.tokenActionModeManager.notificationCallback) {
+                            window.tokenActionModeManager.notificationCallback('Please select an attacker token first', 'warning');
+                        }
+                    }
+                } else {
+                    // In other modes - show token info (default behavior)
+                    console.log('🔍 Showing suspected token info');
+                    this.showSuspectedTokenInfo(tokenData);
+                }
+            } else {
+                console.log('❌ TokenActionModeManager not available');
+            }
         });
 
         marker.addTo(this.map);
@@ -303,6 +354,26 @@ class SuspectedTokenManager {
             console.error('Error placing suspected token:', error);
             this.notificationCallback('Error placing suspected contact', 'error');
         }
+    }
+
+    /**
+     * Show suspected token information
+     */
+    showSuspectedTokenInfo(tokenData) {
+        // Create a popup with suspected token information
+        const popup = L.popup()
+            .setLatLng([tokenData.latitude, tokenData.longitude])
+            .setContent(`
+                <div class="suspected-token-info">
+                    <h4><i class="fas fa-question-circle"></i> Suspected Contact</h4>
+                    <p><strong>Name:</strong> ${tokenData.name}</p>
+                    <p><strong>Confidence:</strong> ${tokenData.confidence}%</p>
+                    <p><strong>Type:</strong> ${tokenData.type || 'Unknown'}</p>
+                    <p><strong>Last Updated:</strong> ${new Date(tokenData.lastUpdated).toLocaleString()}</p>
+                    <p><strong>Notes:</strong> ${tokenData.notes || 'No additional information'}</p>
+                </div>
+            `)
+            .openOn(this.map);
     }
 
     /**

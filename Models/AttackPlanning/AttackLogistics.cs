@@ -5,7 +5,7 @@ namespace TechWebSol.Models.AttackPlanning
     /// <summary>
     /// Represents logistics and supply considerations for an attack
     /// </summary>
-    public class AttackLogistics : BaseEntity
+    public class AttackLogistics : Models.BaseEntity
     {
         [Required]
         [Display(Name = "Supply Threshold")]

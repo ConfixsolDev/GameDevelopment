@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TechWebSol.Data;
 
@@ -11,9 +12,11 @@ using TechWebSol.Data;
 namespace TechWebSol.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251004124339_Attackupdate12")]
+    partial class Attackupdate12
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -3345,9 +3348,6 @@ namespace TechWebSol.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<decimal?>("FrontCoverageKm")
-                        .HasColumnType("decimal(8,2)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -3365,12 +3365,6 @@ namespace TechWebSol.Migrations
                     b.Property<string>("Notes")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
-
-                    b.Property<decimal?>("RearCoverageKm")
-                        .HasColumnType("decimal(8,2)");
-
-                    b.Property<decimal?>("SideCoverageKm")
-                        .HasColumnType("decimal(8,2)");
 
                     b.Property<Guid?>("TeamId")
                         .HasColumnType("uniqueidentifier");
@@ -3424,9 +3418,6 @@ namespace TechWebSol.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<decimal?>("FrontRadiusKm")
-                        .HasColumnType("decimal(8,2)");
-
                     b.Property<string>("Geometry")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -3448,18 +3439,9 @@ namespace TechWebSol.Migrations
                     b.Property<decimal?>("RadiusKm")
                         .HasColumnType("decimal(8,2)");
 
-                    b.Property<decimal?>("RearRadiusKm")
-                        .HasColumnType("decimal(8,2)");
-
-                    b.Property<decimal?>("RotationDegrees")
-                        .HasColumnType("decimal(8,2)");
-
                     b.Property<string>("ShapeType")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
-
-                    b.Property<decimal?>("SideRadiusKm")
-                        .HasColumnType("decimal(8,2)");
 
                     b.Property<Guid?>("TeamId")
                         .HasColumnType("uniqueidentifier");

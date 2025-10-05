@@ -36,8 +36,111 @@
 }
 
 /* ========================================
-   ATTACK PANEL STYLES
+   ATTACK LINE STYLES (SOLID CURVED LINES)
    ======================================== */
+
+/* Solid attack line styles */
+.attack-line-solid {
+    stroke: #c03737 !important;
+    stroke-width: 10px !important;
+    stroke-opacity: 0.9 !important;
+    fill: none !important;
+    stroke-dasharray: none !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+    filter: drop-shadow(0 0 4px rgba(255, 68, 68, 0.6));
+}
+
+/* Attack arrow styles */
+.attack-arrow-solid {
+    background: transparent !important;
+    border: none !important;
+}
+
+.attack-arrow-head-solid {
+    width: 0;
+    height: 0;
+    border-left: 12px solid #ff4444;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    filter: drop-shadow(0 0 4px rgba(255, 68, 68, 0.8));
+    animation: arrowheadPulse 2s ease-in-out infinite;
+}
+
+@keyframes arrowheadPulse {
+    0%, 100% { 
+        opacity: 0.8;
+        transform: scale(1);
+    }
+    50% { 
+        opacity: 1;
+        transform: scale(1.2);
+    }
+}
+
+/* Attack line hover effects */
+.leaflet-interactive.attack-line-solid:hover {
+    stroke-width: 12px !important;
+    stroke-opacity: 1 !important;
+    filter: drop-shadow(0 0 8px rgba(255, 68, 68, 0.8));
+}
+
+/* Attack line click effects */
+.leaflet-interactive.attack-line-solid:active {
+    stroke-width: 11px !important;
+    stroke-opacity: 0.95 !important;
+}
+
+/* Attack line group styling */
+.attack-line-group {
+    z-index: 600;
+}
+
+/* Attack line popup styling */
+.attack-line-popup {
+    background: var(--gameplay-darker);
+    color: var(--gameplay-text);
+    padding: 15px;
+    border-radius: 8px;
+    min-width: 250px;
+    border: 1px solid rgba(255, 68, 68, 0.3);
+}
+
+.attack-line-popup h4 {
+    color: var(--fox-land-color);
+    margin-bottom: 10px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.attack-line-popup .attack-info {
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.attack-line-popup .attack-info strong {
+    color: var(--gameplay-primary);
+}
+
+.attack-line-popup .btn {
+    width: 100%;
+    margin-top: 10px;
+    background: var(--fox-land-color);
+    border-color: var(--fox-land-color);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.attack-line-popup .btn:hover {
+    background: #ff6666;
+    border-color: #ff6666;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(255, 68, 68, 0.3);
+}
 
 /* Attack panel modal styling */
 #attackPanelModal .gameplay-modal-content {

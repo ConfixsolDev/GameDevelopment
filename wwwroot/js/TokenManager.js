@@ -1149,6 +1149,9 @@ class TokenManager {
 // Create global instance
 const tokenManager = new TokenManager();
 
+// Make globally accessible
+window.tokenManager = tokenManager;
+
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = TokenManager;

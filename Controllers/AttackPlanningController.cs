@@ -118,6 +118,137 @@ namespace TechWebSol.Controllers
         }
 
         /// <summary>
+        /// Check if attack order exists for token pair
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> CheckExistingAttackOrder(Guid attackerTokenId, Guid targetTokenId)
+        {
+            try
+            {
+                var existingOrder = await _context.EnhancedAttackOrders
+                    .FirstOrDefaultAsync(o => o.AttackerTokenId == attackerTokenId && o.TargetTokenId == targetTokenId);
+
+                if (existingOrder != null)
+                {
+                    return Json(new { 
+                        success = true, 
+                        exists = true, 
+                        orderId = existingOrder.Id.ToString(),
+                        createdDate = existingOrder.CreatedDate,
+                        updatedDate = existingOrder.UpdatedDate,
+                        data = new
+                        {
+                            intent = existingOrder.IntentJson,
+                            timing = existingOrder.TimingJson,
+                            movement = existingOrder.MovementJson,
+                            fires = existingOrder.FiresJson,
+                            fogOfWar = existingOrder.FogOfWarJson,
+                            logistics = existingOrder.LogisticsJson,
+                            roe = existingOrder.ROEJson
+                        }
+                    });
+                }
+
+                return Json(new { success = true, exists = false });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking existing attack order");
+                return Json(new { success = false, message = "Failed to check existing attack order" });
+            }
+        }
+
+        /// <summary>
+        /// Get all attack orders for visualization
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetAllAttackOrders()
+        {
+            try
+            {
+                var attackOrders = await _context.EnhancedAttackOrders
+                    .Where(o => o.AttackerTokenId != Guid.Empty && o.TargetTokenId != Guid.Empty)
+                    .Select(o => new
+                    {
+                        Id = o.Id,
+                        AttackerTokenId = o.AttackerTokenId,
+                        TargetTokenId = o.TargetTokenId,
+                        IntentJson = o.IntentJson,
+                        TimingJson = o.TimingJson,
+                        MovementJson = o.MovementJson,
+                        FiresJson = o.FiresJson,
+                        FogOfWarJson = o.FogOfWarJson,
+                        LogisticsJson = o.LogisticsJson,
+                        ROEJson = o.ROEJson,
+                        CreatedDate = o.CreatedDate,
+                        UpdatedDate = o.UpdatedDate
+                    })
+                    .ToListAsync();
+
+                return Json(new { success = true, attackOrders });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting attack orders");
+                return Json(new { success = false, message = "Failed to get attack orders" });
+            }
+        }
+
+        /// <summary>
+        /// Update an attack order's token IDs
+        /// </summary>
+    [HttpDelete]
+    [Route("DeleteAttackOrder/{orderId}")]
+    public async Task<IActionResult> DeleteAttackOrder(string orderId)
+    {
+        try
+        {
+            var order = await _context.EnhancedAttackOrders.FindAsync(Guid.Parse(orderId));
+            if (order == null)
+            {
+                return Json(new { success = false, message = "Attack order not found" });
+            }
+
+            _context.EnhancedAttackOrders.Remove(order);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Attack order deleted successfully" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting attack order");
+            return Json(new { success = false, message = "Failed to delete attack order" });
+        }
+    }
+
+        /// <summary>
+        /// Delete an attack order
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> DeleteAttackOrder([FromBody] DeleteAttackOrderRequest request)
+        {
+            try
+            {
+                var order = await _context.EnhancedAttackOrders
+                    .FirstOrDefaultAsync(o => o.Id == request.OrderId);
+
+                if (order != null)
+                {
+                    _context.EnhancedAttackOrders.Remove(order);
+                    await _context.SaveChangesAsync();
+                    return Json(new { success = true, message = "Attack order deleted successfully" });
+                }
+
+                return Json(new { success = false, message = "Attack order not found" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting attack order");
+                return Json(new { success = false, message = "Failed to delete attack order" });
+            }
+        }
+
+        /// <summary>
         /// Save draft attack order (auto-save or manual save)
         /// </summary>
         [HttpPost]
@@ -125,21 +256,19 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                _logger.LogInformation($"Saving draft for order ID: {request.OrderId}, Tab: {request.TabName}");
-
                 // Check if order already exists
-                var existingOrder = await _context.EnhancedAttackOrders
-                    .FirstOrDefaultAsync(o => o.Id.ToString() == request.OrderId);
+                var existingOrder = await _context.EnhancedAttackOrders.FirstOrDefaultAsync(o => o.Id.ToString() == request.OrderId || o.AttackerTokenId == request.AttackerTokenId && o.TargetTokenId == request.TargetTokenId);
 
                 if (existingOrder == null)
                 {
-                    // Create new order
+                    // Create new order with attacker and target token IDs
                     existingOrder = new EnhancedAttackOrder
                     {
-                        Id = Guid.Parse(request.OrderId),
+                        AttackerTokenId = request.AttackerTokenId ?? Guid.Empty,
+                        TargetTokenId = request.TargetTokenId ?? Guid.Empty,
                     };
                     _context.EnhancedAttackOrders.Add(existingOrder);
-                }
+                } 
                
                 // Update specific tab data based on TabName
                 switch (request.TabName.ToLower())
@@ -340,5 +469,19 @@ namespace TechWebSol.Controllers
         public string OrderId { get; set; } = string.Empty;
         public string TabName { get; set; } = string.Empty;
         public Dictionary<string, object> Data { get; set; } = new();
+        public Guid? AttackerTokenId { get; set; }
+        public Guid? TargetTokenId { get; set; }
+    }
+
+    public class UpdateAttackOrderRequest
+    {
+        public string OrderId { get; set; } = string.Empty;
+        public Guid? AttackerTokenId { get; set; }
+        public Guid? TargetTokenId { get; set; }
+    }
+
+    public class DeleteAttackOrderRequest
+    {
+        public Guid OrderId { get; set; }
     }
 }

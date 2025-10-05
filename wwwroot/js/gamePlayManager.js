@@ -55,8 +55,14 @@ class GamePlayManager {
             // Initialize token action mode manager
             await this.initializeTokenActionModeManager();
             
+            // Initialize attack visualization manager
+            await this.initializeAttackVisualizationManager();
+            
             // Load and restore placed tokens
             await this.restorePlacedTokens();
+            
+            // Load attack orders after tokens are placed
+            await this.loadAttackOrdersAfterTokensPlaced();
             
             // Setup control handlers
             this.setupControlHandlers();
@@ -200,6 +206,40 @@ class GamePlayManager {
             console.log('✅ Token action mode manager initialized');
         } else {
             console.warn('⚠️ Token action mode manager not available');
+        }
+    }
+
+    /**
+     * Initialize attack visualization manager
+     */
+    async initializeAttackVisualizationManager() {
+        console.log('🎯 Initializing attack visualization manager...');
+        
+        // Debug: Check what's available
+        console.log('🔍 Debug - AttackVisualizationManager class:', typeof AttackVisualizationManager);
+        console.log('🔍 Debug - window.attackVisualizationManager:', window.attackVisualizationManager);
+        console.log('🔍 Debug - Map instance:', this.map);
+        
+        if (typeof AttackVisualizationManager !== 'undefined' && window.attackVisualizationManager) {
+            // Initialize with map
+            await window.attackVisualizationManager.initialize(this.map);
+            
+            console.log('✅ Attack visualization manager initialized');
+        } else {
+            console.warn('⚠️ Attack visualization manager not available');
+            console.log('🔍 Available window objects:', Object.keys(window).filter(key => key.includes('attack') || key.includes('Attack')));
+        }
+    }
+    
+    /**
+     * Load attack orders after tokens are placed
+     */
+    async loadAttackOrdersAfterTokensPlaced() {
+        console.log('🎯 Loading attack orders after tokens are placed...');
+        
+        if (window.attackVisualizationManager) {
+            await window.attackVisualizationManager.loadAttackOrdersAfterTokensPlaced();
+            console.log('✅ Attack orders loaded after tokens placed');
         }
     }
 
@@ -455,6 +495,30 @@ class GamePlayManager {
             icon: icon,
             title: tokenData.name 
         });
+
+        // Add token ID as data attribute for easy access by other frontend tools
+        marker.tokenData = tokenData;
+        marker.tokenId = tokenData.id;
+        
+        // Also add to the marker element itself for DOM access
+        marker.on('add', function() {
+            if (this.getElement) {
+                const element = this.getElement();
+                if (element) {
+                    element.setAttribute('data-id', tokenData.id);
+                    element.setAttribute('data-token-id', tokenData.id);
+                    element.setAttribute('data-token-name', tokenData.name);
+                    element.setAttribute('data-token-type', tokenData.forceType || 'Unknown');
+                    element.setAttribute('data-token-guid', tokenData.id);
+                    element.classList.add('token-marker');
+                    
+                    // Add title attribute to show token GUID on hover
+                    element.setAttribute('title', `Token: ${tokenData.name} (ID: ${tokenData.id})`);
+                    
+                    console.log(`✅ Basic token marker DOM attributes set for ${tokenData.name}: data-id="${tokenData.id}"`);
+                }
+            }
+        });
         
         // Add popup with token info
         marker.bindPopup(`
@@ -464,6 +528,7 @@ class GamePlayManager {
                 <p><strong>Group:</strong> ${tokenData.tokenGroupName || 'Unknown'}</p>
                 <p><strong>Position:</strong> ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}</p>
                 <p><strong>Status:</strong> Placed</p>
+                <p><strong>Token ID:</strong> ${tokenData.id}</p>
             </div>
         `);
         
@@ -560,11 +625,6 @@ class GamePlayManager {
      */
     showNotification(message, type = 'info') {
         console.log(`📢 ${type.toUpperCase()}: ${message}`);
-        
-        // Use external notification system if available
-        if (typeof showNotification === 'function') {
-            showNotification(message, type);
-        }
         
         // Simple fallback notification system
         if (type === 'error') {

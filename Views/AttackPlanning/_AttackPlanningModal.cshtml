@@ -101,14 +101,8 @@
         
         <div class="gameplay-modal-footer">
             <div class="attack-planning-actions">
-                <button class="gameplay-btn" onclick="saveAttackDraft()">
-                    <i class="fas fa-save"></i> Save Draft
-                </button>
-                <button class="gameplay-btn" onclick="previewAttack()">
-                    <i class="fas fa-eye"></i> Preview
-                </button>
-                <button class="gameplay-btn gameplay-btn-primary" onclick="executeAttack()">
-                    <i class="fas fa-play"></i> Execute Attack
+                <button class="gameplay-btn gameplay-btn-primary" onclick="saveAttackDraft()">
+                    <i class="fas fa-save"></i> Save Attack Order
                 </button>
                 <button class="gameplay-btn" onclick="closeAttackPlanningModal()">Cancel</button>
             </div>
@@ -400,23 +394,6 @@ function collectCurrentTabData() {
 function updateAutoSaveIndicator() {
     const now = new Date();
     document.getElementById('autoSaveTime').textContent = now.toLocaleTimeString();
-}
-
-// Preview attack
-function previewAttack() {
-    console.log('Generating attack preview');
-    
-    // TODO: Collect all form data and generate preview
-    showNotification('Attack preview generated', 'info');
-}
-
-// Execute attack
-function executeAttack() {
-    console.log('Executing attack');
-    
-    // TODO: Validate and execute attack
-    showNotification('Attack executed successfully', 'success');
-    closeAttackPlanningModal();
 }
 
 // Close attack planning modal (global function)

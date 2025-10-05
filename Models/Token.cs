@@ -39,7 +39,13 @@ namespace TechWebSol.Models
         public string? AssetImagePath { get; set; } // Path to asset image/insignia
 
         [Column(TypeName = "decimal(8,2)")]
-        public decimal? CoverageRadiusKm { get; set; } // Asset coverage radius
+        public decimal? FrontCoverageKm { get; set; } // Front coverage distance in kilometers
+
+        [Column(TypeName = "decimal(8,2)")]
+        public decimal? RearCoverageKm { get; set; } // Rear coverage distance in kilometers
+
+        [Column(TypeName = "decimal(8,2)")]
+        public decimal? SideCoverageKm { get; set; } // Side coverage distance in kilometers (optional)
 
         // Position is tracked via MapMarkers (single active marker indicates current position)
 
