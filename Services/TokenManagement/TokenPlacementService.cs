@@ -92,12 +92,12 @@ namespace TechWebSol.Services.TokenManagement
 
                 _context.MapMarkers.Add(mapMarker);
 
-                // Create area coverage if token has oval coverage values
+                // Create area coverage if token has coverage values
                 List<TokenAreaCoverage>? areaCoverages = null;
                 if (token.FrontCoverageKm.HasValue && token.RearCoverageKm.HasValue)
                 {
                     var coverageResult = await _coverageService.CreateInitialCoverageAsync(
-                        tokenId, latitude, longitude, token.FrontCoverageKm.Value);
+                        tokenId, latitude, longitude, 0, 0, 0); // Values will be taken from token attributes
                     
                     if (coverageResult.Success)
                     {
@@ -171,12 +171,12 @@ namespace TechWebSol.Services.TokenManagement
                 };
                 _context.MapMarkers.Add(mapMarker);
 
-                // Update area coverage if token has oval coverage values
+                // Update area coverage if token has coverage values
                 List<TokenAreaCoverage>? areaCoverages = null;
                 if (token.FrontCoverageKm.HasValue && token.RearCoverageKm.HasValue)
                 {
                     var coverageResult = await _coverageService.UpdateCoverageAreaAsync(
-                        tokenId, latitude, longitude, token.FrontCoverageKm.Value);
+                        tokenId, latitude, longitude, 0, 0, 0); // Values will be taken from token attributes
                     
                     if (coverageResult.Success)
                     {

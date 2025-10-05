@@ -146,10 +146,8 @@ class TokenPlacementManager {
                     this.map.addLayer(marker);
                 }
 
-                // Create coverage areas with force type color
-                if (result.areaCoverages && result.areaCoverages.length > 0) {
-                    this.createCoverageAreas(result.areaCoverages, latlng, this.selectedTokenForPlacement.forceType);
-                }
+                // Create coverage areas with force type color using token attributes
+                this.createCoverageAreas(null, latlng, this.selectedTokenForPlacement.forceType, this.selectedTokenForPlacement);
 
                 // Store token info
                 this.placedTokens.set(this.selectedTokenForPlacement.id, {
@@ -1278,41 +1276,184 @@ class TokenPlacementManager {
     }
 
     /**
-     * Create coverage areas with force-type-based colors
+     * Create coverage areas with force-type-based colors using token attributes
      */
-    createCoverageAreas(areaCoverages, centerLatLng, forceType = null) {
+    createCoverageAreas(areaCoverages, centerLatLng, forceType = null, token = null) {
+        // Clear any existing coverage areas for this token first
+        if (token && token.id) {
+            this.removeCoverageAreas(token.id);
+        }
+        
+        // If we have token attributes, create a single 4-sided polygon coverage that matches token definition
+        if (token && token.frontCoverageKm && token.rearCoverageKm) {
+            console.log(`🎯 Creating 4-sided coverage for token ${token.name}: Front=${token.frontCoverageKm}km, Rear=${token.rearCoverageKm}km, Side=${token.sideCoverageKm || 'auto'}km`);
+            
+            const sideKm = token.sideCoverageKm || (token.frontCoverageKm + token.rearCoverageKm) / 2;
+            
+            // Create single 4-sided polygon coverage area using token attributes
+            const coverage = {
+                id: 'token_coverage_' + token.id,
+                name: 'Token Coverage',
+                coverageType: 'Operational',
+                frontRadiusKm: token.frontCoverageKm,
+                rearRadiusKm: token.rearCoverageKm,
+                sideRadiusKm: sideKm,
+                rotationDegrees: 0
+            };
+            
+            this.create4SidedCoverageFromToken(coverage, centerLatLng, forceType || token.forceType);
+        } else if (areaCoverages && areaCoverages.length > 0) {
+            console.log(`⚠️ Using fallback areaCoverages data (${areaCoverages.length} areas) instead of token attributes`);
+            // Fallback to existing areaCoverages data
         areaCoverages.forEach(coverage => {
-            // Determine color based on force type (Fox Land / Blue Land)
-            let fillColor, strokeColor;
+                this.createOvalCoverageFromToken(coverage, centerLatLng, forceType);
+            });
+        } else {
+            console.log(`⚠️ No coverage data available for token ${token?.name || 'unknown'}`);
+        }
+    }
+
+    /**
+     * Create 4-sided polygon coverage area from token attributes
+     */
+    create4SidedCoverageFromToken(coverage, centerLatLng, forceType = null) {
+        // Determine color based on force type
+        let fillColor, strokeColor, opacity;
+        
+        // Use force type color for single coverage area
             if (forceType) {
                 const forceTypeLower = forceType.toLowerCase();
                 if (forceTypeLower.includes('fox')) {
                     fillColor = '#ff0000'; // Red for Fox Land
-                    strokeColor = '#cc0000'; // Darker red for border
+                strokeColor = '#cc0000';
                 } else if (forceTypeLower.includes('blue')) {
                     fillColor = '#0000ff'; // Blue for Blue Land
-                    strokeColor = '#0000cc'; // Darker blue for border
+                strokeColor = '#0000cc';
+            } else {
+                fillColor = '#3388ff'; // Default light blue
+                strokeColor = '#2266dd';
+            }
+        } else {
+            fillColor = '#3388ff'; // Default light blue
+            strokeColor = '#2266dd';
+        }
+        
+        opacity = 0.2;
+
+        // Create 4-sided polygon using front/rear/side radius
+        if (coverage.frontRadiusKm && coverage.rearRadiusKm) {
+            const polygon = this.create4SidedPolygon(
+                centerLatLng, 
+                coverage.frontRadiusKm, 
+                coverage.rearRadiusKm, 
+                coverage.sideRadiusKm || (coverage.frontRadiusKm + coverage.rearRadiusKm) / 2,
+                coverage.rotationDegrees || 0,
+                fillColor, 
+                strokeColor,
+                opacity
+            );
+
+            // Add popup with coverage info
+            polygon.bindPopup(`
+                <div class="coverage-popup">
+                    <strong>${coverage.name || coverage.coverageType || 'Operational'} Range</strong><br/>
+                    <small>Front: ${coverage.frontRadiusKm} km</small><br/>
+                    <small>Rear: ${coverage.rearRadiusKm} km</small><br/>
+                    ${coverage.sideRadiusKm ? `<small>Side: ${coverage.sideRadiusKm} km</small><br/>` : ''}
+                    <small>Force: ${forceType || 'Unknown'}</small>
+                </div>
+            `);
+
+            // Store reference for later updates
+            if (!this.coverageAreas) this.coverageAreas = new Map();
+            this.coverageAreas.set(coverage.id, polygon);
+        }
+    }
+
+    /**
+     * Create oval coverage area from token attributes or coverage data
+     */
+    createOvalCoverageFromToken(coverage, centerLatLng, forceType = null) {
+        // Determine color based on force type
+        let fillColor, strokeColor, opacity;
+        
+        // Use force type color for single coverage area
+        if (forceType) {
+            const forceTypeLower = forceType.toLowerCase();
+            if (forceTypeLower.includes('fox')) {
+                fillColor = '#ff0000'; // Red for Fox Land
+                strokeColor = '#cc0000';
+            } else if (forceTypeLower.includes('blue')) {
+                fillColor = '#0000ff'; // Blue for Blue Land
+                strokeColor = '#0000cc';
                 } else {
                     fillColor = '#3388ff'; // Default light blue
                     strokeColor = '#2266dd';
                 }
             } else {
                 // Fallback to coverage type color
-                fillColor = this.getCoverageColor(coverage.coverageType);
-                strokeColor = fillColor;
+            switch (coverage.coverageType) {
+                case 'Frontside':
+                    fillColor = '#00ff00'; // Green for frontside
+                    strokeColor = '#00cc00';
+                    opacity = 0.2;
+                    break;
+                case 'Backside':
+                    fillColor = '#ff6600'; // Orange for backside
+                    strokeColor = '#cc5500';
+                    opacity = 0.2;
+                    break;
+                case 'Fighting':
+                    fillColor = '#ff0000'; // Red for fighting
+                    strokeColor = '#cc0000';
+                    opacity = 0.3;
+                    break;
+                default:
+                    fillColor = '#3388ff'; // Default light blue
+                    strokeColor = '#2266dd';
+                    opacity = 0.2;
             }
+        }
+        
+        // Set default opacity if not set
+        if (opacity === undefined) {
+            opacity = 0.2;
+        }
 
-            // Create oval coverage (front/rear radius required)
+        // Create oval coverage using front/rear/side radius
             if (coverage.frontRadiusKm && coverage.rearRadiusKm) {
-                this.createOvalCoverage(coverage, centerLatLng, fillColor, strokeColor, forceType);
-            }
-        });
+            const polygon = this.createOvalFromRadii(
+                centerLatLng, 
+                coverage.frontRadiusKm, 
+                coverage.rearRadiusKm, 
+                coverage.sideRadiusKm || (coverage.frontRadiusKm + coverage.rearRadiusKm) / 2,
+                coverage.rotationDegrees || 0,
+                fillColor, 
+                strokeColor,
+                opacity
+            );
+
+            // Add popup with coverage info
+            polygon.bindPopup(`
+                <div class="coverage-popup">
+                    <strong>${coverage.name || coverage.coverageType || 'Operational'} Range</strong><br/>
+                    <small>Front: ${coverage.frontRadiusKm} km</small><br/>
+                    <small>Rear: ${coverage.rearRadiusKm} km</small><br/>
+                    ${coverage.sideRadiusKm ? `<small>Side: ${coverage.sideRadiusKm} km</small><br/>` : ''}
+                    <small>Force: ${forceType || 'Unknown'}</small>
+                </div>
+            `);
+
+            // Store reference for later updates
+            if (!this.coverageAreas) this.coverageAreas = new Map();
+            this.coverageAreas.set(coverage.id, polygon);
+        }
     }
 
     /**
      * Create oval coverage area
      */
-    createOvalCoverage(coverage, centerLatLng, fillColor, strokeColor, forceType) {
+    createOvalCoverage(coverage, centerLatLng, fillColor, strokeColor, forceType, opacity = 0.2) {
         // Parse the GeoJSON geometry if available
         let polygon = null;
         if (coverage.geometry) {
@@ -1327,7 +1468,7 @@ class TokenPlacementManager {
                     polygon = L.polygon(coordinates, {
                         color: strokeColor,
                         fillColor: fillColor,
-                        fillOpacity: 0.2,
+                        fillOpacity: opacity,
                         opacity: 0.6,
                         weight: 2
                     }).addTo(this.map);
@@ -1346,14 +1487,15 @@ class TokenPlacementManager {
                 coverage.sideRadiusKm || (coverage.frontRadiusKm + coverage.rearRadiusKm) / 2,
                 coverage.rotationDegrees || 0,
                 fillColor, 
-                strokeColor
+                strokeColor,
+                opacity
             );
         }
 
         // Add popup with coverage info
         polygon.bindPopup(`
             <div class="coverage-popup">
-                <strong>${coverage.coverageType || 'Operational'} Range</strong><br/>
+                <strong>${coverage.name || coverage.coverageType || 'Operational'} Range</strong><br/>
                 <small>Front: ${coverage.frontRadiusKm} km</small><br/>
                 <small>Rear: ${coverage.rearRadiusKm} km</small><br/>
                 ${coverage.sideRadiusKm ? `<small>Side: ${coverage.sideRadiusKm} km</small><br/>` : ''}
@@ -1367,12 +1509,9 @@ class TokenPlacementManager {
     }
 
     /**
-     * Create oval polygon from front/rear/side radius values
+     * Create 4-sided polygon from front/rear/side radius values
      */
-    createOvalFromRadii(centerLatLng, frontKm, rearKm, sideKm, rotationDegrees, fillColor, strokeColor) {
-        const points = [];
-        const numPoints = 32; // Number of points to approximate the oval
-        
+    create4SidedPolygon(centerLatLng, frontKm, rearKm, sideKm, rotationDegrees, fillColor, strokeColor, opacity = 0.2) {
         // Convert km to degrees (approximate)
         const frontDegrees = frontKm / 111.32;
         const rearDegrees = rearKm / 111.32;
@@ -1381,44 +1520,40 @@ class TokenPlacementManager {
         // Calculate rotation in radians
         const rotationRad = (rotationDegrees * Math.PI) / 180;
         
-        for (let i = 0; i < numPoints; i++) {
-            const angle = (i * 2 * Math.PI) / numPoints;
+        // Create 4 points for diamond/rhombus shape
+        const points = [
+            // Front point (North)
+            [centerLatLng.lat + frontDegrees, centerLatLng.lng],
+            // Right side point (East)
+            [centerLatLng.lat, centerLatLng.lng + sideDegrees],
+            // Rear point (South)
+            [centerLatLng.lat - rearDegrees, centerLatLng.lng],
+            // Left side point (West)
+            [centerLatLng.lat, centerLatLng.lng - sideDegrees]
+        ];
+        
+        // Apply rotation if needed
+        if (rotationRad !== 0) {
+            const cos = Math.cos(rotationRad);
+            const sin = Math.sin(rotationRad);
             
-            // Calculate radius based on angle (oval shape)
-            let radius;
-            if (angle >= -Math.PI/2 && angle <= Math.PI/2) {
-                // Front half (0 to 180 degrees)
-                const normalizedAngle = angle + Math.PI/2; // 0 to PI
-                radius = frontDegrees * Math.cos(normalizedAngle) + rearDegrees * Math.sin(normalizedAngle);
-            } else {
-                // Rear half (180 to 360 degrees)
-                const normalizedAngle = angle - Math.PI/2; // 0 to PI
-                radius = rearDegrees * Math.cos(normalizedAngle) + frontDegrees * Math.sin(normalizedAngle);
-            }
-            
-            // Apply side radius scaling
-            const sideScale = Math.abs(Math.cos(angle));
-            const finalRadius = radius * sideScale + sideDegrees * (1 - sideScale);
-            
-            // Calculate position
-            const x = finalRadius * Math.cos(angle);
-            const y = finalRadius * Math.sin(angle);
+            points.forEach(point => {
+                const x = point[1] - centerLatLng.lng; // lng offset
+                const y = point[0] - centerLatLng.lat; // lat offset
             
             // Apply rotation
-            const rotatedX = x * Math.cos(rotationRad) - y * Math.sin(rotationRad);
-            const rotatedY = x * Math.sin(rotationRad) + y * Math.cos(rotationRad);
-            
-            // Convert to lat/lng
-            const lat = centerLatLng.lat + rotatedY;
-            const lng = centerLatLng.lng + rotatedX;
-            
-            points.push([lat, lng]);
+                const rotatedX = x * cos - y * sin;
+                const rotatedY = x * sin + y * cos;
+                
+                point[0] = centerLatLng.lat + rotatedY;
+                point[1] = centerLatLng.lng + rotatedX;
+            });
         }
         
         return L.polygon(points, {
             color: strokeColor,
             fillColor: fillColor,
-            fillOpacity: 0.2,
+            fillOpacity: opacity,
             opacity: 0.6,
             weight: 2
         }).addTo(this.map);
@@ -1465,15 +1600,17 @@ class TokenPlacementManager {
     }
 
     /**
-     * Remove coverage areas
+     * Remove coverage areas for a specific token
      */
     removeCoverageAreas(tokenId) {
         if (!this.coverageAreas) return;
 
-        // Find and remove coverage areas for this token
-        for (const [coverageId, circle] of this.coverageAreas) {
-            this.map.removeLayer(circle);
+        // Find and remove coverage areas for this specific token
+        for (const [coverageId, polygon] of this.coverageAreas) {
+            if (coverageId.includes(tokenId)) {
+                this.map.removeLayer(polygon);
             this.coverageAreas.delete(coverageId);
+            }
         }
     }
 

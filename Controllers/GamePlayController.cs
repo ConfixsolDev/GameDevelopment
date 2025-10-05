@@ -233,7 +233,10 @@ namespace TechWebSol.Controllers
                         {
                             id = result.Token?.Id,
                             name = result.Token?.Name,
-                            coverageRadius = result.Token?.FrontCoverageKm
+                            frontCoverageKm = result.Token?.FrontCoverageKm,
+                            rearCoverageKm = result.Token?.RearCoverageKm,
+                            sideCoverageKm = result.Token?.SideCoverageKm,
+                            forceType = result.Token?.ForceType
                         },
                         areaCoverages = result.AreaCoverages?.Select(ac => new
                         {
@@ -340,7 +343,10 @@ namespace TechWebSol.Controllers
                         {
                             id = result.Token?.Id,
                             name = result.Token?.Name,
-                            coverageRadius = result.Token?.FrontCoverageKm
+                            frontCoverageKm = result.Token?.FrontCoverageKm,
+                            rearCoverageKm = result.Token?.RearCoverageKm,
+                            sideCoverageKm = result.Token?.SideCoverageKm,
+                            forceType = result.Token?.ForceType
                         },
                         areaCoverages = result.AreaCoverages?.Select(ac => new
                         {

@@ -446,10 +446,8 @@ class GamePlayManager {
                 const marker = tokenManager.tokenPlacementManager.createTokenMarker(tokenData, latlng);
                 this.map.addLayer(marker);
                 
-                // Create coverage areas if they exist (with force type color)
-                if (tokenData.areaCoverages && tokenData.areaCoverages.length > 0) {
-                    tokenManager.tokenPlacementManager.createCoverageAreas(tokenData.areaCoverages, latlng, tokenData.forceType);
-                }
+                // Create coverage areas using token attributes
+                tokenManager.tokenPlacementManager.createCoverageAreas(null, latlng, tokenData.forceType, tokenData);
                 
                 // Store token info for tracking
                 tokenManager.tokenPlacementManager.placedTokens.set(tokenData.id, {
