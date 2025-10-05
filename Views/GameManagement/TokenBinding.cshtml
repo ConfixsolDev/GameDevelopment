@@ -188,7 +188,9 @@
         let isDrawing = false;
         let touchPoints = [];
         let currentSessionId = null;
-        let currentTokenId = null;
+        if (typeof currentTokenId === 'undefined') {
+            var currentTokenId = null;
+        }
 
         $(document).ready(function() {
             initializePatternCanvas();

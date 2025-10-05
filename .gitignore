@@ -347,3 +347,5 @@ FodyWeavers.xsd
 .idea/
 *.sln.iml
 /Models/Token.cs
+/App_Data/tiles/map.mbtiles
+/App_Data/tiles/map.mbtiles

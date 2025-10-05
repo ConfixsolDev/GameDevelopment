@@ -136,7 +136,9 @@
 
 @section Scripts {
     <script>
-        let currentTokenId = null;
+        if (typeof currentTokenId === 'undefined') {
+            var currentTokenId = null;
+        }
 
         $(document).ready(function() {
             loadFreeTokens();

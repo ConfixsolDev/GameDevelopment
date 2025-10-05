@@ -6,16 +6,20 @@
 // Global variables for map controls
 let isFullscreen = false;
 let isEditMode = false;
-let currentBasemap = 'Satellite';
+let currentBasemap = 'Offline'; // Default to offline for security
 
 /**
- * Initialize basemap dropdown with saved state
+ * Initialize basemap dropdown with saved state - OFFLINE ONLY
  */
 function initializeBasemapDropdown() {
-    // Load saved basemap from localStorage
+    // Load saved basemap from localStorage, default to Offline
     const savedBasemap = localStorage.getItem('currentBasemap');
-    if (savedBasemap) {
+    if (savedBasemap && savedBasemap.startsWith('Offline')) {
         currentBasemap = savedBasemap;
+    } else {
+        // Default to offline mode for security
+        currentBasemap = 'Offline';
+        localStorage.setItem('currentBasemap', currentBasemap);
     }
     
     // Update dropdown to show current basemap
@@ -24,7 +28,7 @@ function initializeBasemapDropdown() {
         basemapDropdown.value = currentBasemap;
     }
     
-    console.log(`🗺️ Basemap dropdown initialized with: ${currentBasemap}`);
+    console.log(`🗺️ Basemap dropdown initialized with: ${currentBasemap} (OFFLINE ONLY)`);
 }
 
 /**
@@ -198,7 +202,7 @@ function toggleEditMode() {
 }
 
 /**
- * Change basemap layer
+ * Change basemap layer - OFFLINE ONLY VERSION
  */
 function changeBasemap(basemapType) {
     if (window.gameMap) {
@@ -209,23 +213,59 @@ function changeBasemap(basemapType) {
             }
         });
         
-        // Add new basemap
+        // Add new basemap - ALL OFFLINE SOURCES ONLY
         let newLayer;
+        
+        // Base configuration for all offline tiles
+        const baseConfig = {
+            minZoom: 3,
+            maxZoom: 22,
+            tileSize: 256,
+            updateWhenIdle: true,
+            updateWhenZooming: false,
+            keepBuffer: 2,
+            crossOrigin: true,
+            detectRetina: true
+        };
+        
         switch (basemapType) {
-            case 'Satellite':
-                newLayer = L.tileLayer.provider('Esri.WorldImagery');
+            case 'Offline':
+                // Default offline tiles from local mbtiles service
+                newLayer = L.tileLayer('/tiles/{z}/{x}/{y}.png', {
+                    ...baseConfig,
+                    attribution: 'Offline tiles from mbtiles'
+                });
                 break;
-            case 'Streets':
-                newLayer = L.tileLayer.provider('Esri.WorldStreetMap');
+            case 'Offline_Dark':
+                // Dark style offline tiles with CSS filters
+                newLayer = L.tileLayer('/tiles/{z}/{x}/{y}.png', {
+                    ...baseConfig,
+                    attribution: 'Offline tiles - Dark style',
+                    className: 'dark-tiles'
+                });
                 break;
-            case 'OSM':
-                newLayer = L.tileLayer.provider('OpenStreetMap.Mapnik');
+            case 'Offline_Light':
+                // Light style offline tiles with CSS filters
+                newLayer = L.tileLayer('/tiles/{z}/{x}/{y}.png', {
+                    ...baseConfig,
+                    attribution: 'Offline tiles - Light style',
+                    className: 'light-tiles'
+                });
                 break;
-            case 'Topo':
-                newLayer = L.tileLayer.provider('OpenTopoMap');
+            case 'Offline_Terrain':
+                // Terrain style offline tiles with CSS filters
+                newLayer = L.tileLayer('/tiles/{z}/{x}/{y}.png', {
+                    ...baseConfig,
+                    attribution: 'Offline tiles - Terrain style',
+                    className: 'terrain-tiles'
+                });
                 break;
             default:
-                newLayer = L.tileLayer.provider('Esri.WorldImagery');
+                // Fallback to default offline tiles
+                newLayer = L.tileLayer('/tiles/{z}/{x}/{y}.png', {
+                    ...baseConfig,
+                    attribution: 'Offline tiles from mbtiles'
+                });
         }
         
         newLayer.addTo(window.gameMap);
@@ -240,7 +280,48 @@ function changeBasemap(basemapType) {
             basemapDropdown.value = basemapType;
         }
         
-        console.log(`Basemap changed to: ${basemapType}`);
+        console.log(`Basemap changed to: ${basemapType} (OFFLINE ONLY)`);
+        
+        // Show notification about offline mode
+        if (typeof showNotification === 'function') {
+            showNotification(`Map style changed to: ${basemapType} (Offline Mode)`, 'info');
+        }
+        
+        // Load and apply mbtiles metadata if available
+        loadMbtilesMetadata();
+    }
+}
+
+/**
+ * Load mbtiles metadata and apply to current layer
+ */
+async function loadMbtilesMetadata() {
+    try {
+        const response = await fetch('/tiles/metadata');
+        if (response.ok) {
+            const metadata = await response.json();
+            console.log('📋 MBTiles metadata loaded:', metadata);
+            
+            // Update attribution if available
+            if (metadata.attribution) {
+                const currentLayer = window.gameMap.getLayers().find(layer => layer instanceof L.TileLayer);
+                if (currentLayer) {
+                    currentLayer.options.attribution = metadata.attribution;
+                }
+            }
+            
+            // Log zoom levels for debugging
+            if (metadata.minZoom !== undefined && metadata.maxZoom !== undefined) {
+                console.log(`🗺️ MBTiles zoom range: ${metadata.minZoom} to ${metadata.maxZoom}`);
+            }
+            
+            if (typeof showNotification === 'function') {
+                showNotification(`MBTiles loaded: ${metadata.name || 'Unknown'} (Zoom ${metadata.minZoom || '?'}-${metadata.maxZoom || '?'})`, 'success');
+            }
+        }
+    } catch (error) {
+        console.warn('Could not load mbtiles metadata:', error);
+        // This is not critical - tiles will still work
     }
 }
 
@@ -362,3 +443,4 @@ window.showLayerPanel = showLayerPanel;
 window.toggleLayer = toggleLayer;
 window.toggleOverflowMenu = toggleOverflowMenu;
 window.initializeBasemapDropdown = initializeBasemapDropdown;
+window.loadMbtilesMetadata = loadMbtilesMetadata;

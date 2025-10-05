@@ -3462,3 +3462,47 @@ html, body {
         padding: 10px;
     }
 }
+
+/* ========================================
+   OFFLINE MAP STYLES
+   ======================================== */
+
+/* Dark tiles styling - Enhanced for better visibility */
+.dark-tiles {
+    filter: brightness(0.6) contrast(1.4) saturate(0.7) hue-rotate(-10deg);
+}
+
+/* Light tiles styling - Enhanced for better visibility */
+.light-tiles {
+    filter: brightness(1.4) contrast(0.8) saturate(1.3) hue-rotate(5deg);
+}
+
+/* Terrain tiles styling - Enhanced for terrain features */
+.terrain-tiles {
+    filter: contrast(1.5) saturate(1.4) hue-rotate(15deg) brightness(1.1);
+}
+
+/* Offline map notification */
+.offline-map-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 255, 136, 0.9);
+    color: var(--gameplay-dark);
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-weight: bold;
+    z-index: 2000;
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}

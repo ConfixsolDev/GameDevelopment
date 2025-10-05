@@ -48,6 +48,9 @@ class GamePlayManager {
             
             // Initialize region manager
             await this.initializeRegionManager();
+
+            // Initialize label manager (custom place labels)
+            await this.initializeLabelManager();
             
             // Initialize suspected token manager (fog of war)
             await this.initializeSuspectedTokenManager();
@@ -108,8 +111,77 @@ class GamePlayManager {
         console.log('🗺️ Initializing map...');
         
         if (typeof L !== 'undefined') {
-            this.map = L.map('gameMap').setView([25.2854, 51.5310], 6);
+            // Focused area: Arnarstapi, Iceland (exactly 100 km²) - moved a bit more right to reduce sea
+            const centerLat = 64.780;   // Moved north (up) to reduce sea
+            const centerLng = -23.720;  // Moved a bit more west (right) to reduce sea
+            
+            // Calculate rectangular bounds for 100km² that fits screen aspect ratio
+            // At this latitude, 1 degree ≈ 111.32 km
+            const kmPerDegreeLat = 111.32;
+            const kmPerDegreeLng = 111.32 * Math.cos(centerLat * Math.PI / 180);
+            
+            // Create a rectangular area that perfectly fits the screen
+            // Calculate screen dimensions and create rectangle to match exactly
+            const screenDimensions = this.getScreenDimensions();
+            const screenAspectRatio = screenDimensions.width / screenDimensions.height;
+            
+            // Calculate the area that will fit perfectly on screen
+            // We'll use the screen aspect ratio directly for perfect fitting
+            const aspectRatio = screenAspectRatio;
+            const totalAreaKm2 = 100; // Keep 100km² total area
+            
+            // Calculate dimensions: width * height = area, width/height = aspectRatio
+            // height = sqrt(area / aspectRatio), width = height * aspectRatio
+            const heightKm = Math.sqrt(totalAreaKm2 / aspectRatio);
+            const widthKm = heightKm * aspectRatio;
+            
+            const halfHeightKm = heightKm / 2;
+            const halfWidthKm = widthKm / 2;
+            
+            const halfSideLatDeg = halfHeightKm / kmPerDegreeLat;
+            const halfSideLngDeg = halfWidthKm / kmPerDegreeLng;
+            
+            const gameAreaBounds = L.latLngBounds(
+                L.latLng(centerLat - halfSideLatDeg, centerLng - halfSideLngDeg),
+                L.latLng(centerLat + halfSideLatDeg, centerLng + halfSideLngDeg)
+            );
+
+            this.map = L.map('gameMap', {
+                maxBounds: gameAreaBounds,
+                maxBoundsViscosity: 1.0, // Strict bounds - no panning outside
+                worldCopyJump: false,
+                // Use integer zoom levels to avoid fractional z tile requests (e.g., 12.5)
+                zoomSnap: 1,
+                zoomDelta: 1,
+                inertia: true,
+                inertiaDeceleration: 6000,
+                preferCanvas: true,
+                zoomAnimation: false,
+                markerZoomAnimation: false,
+                fadeAnimation: false,
+                // Restrict zoom to levels that keep the view within bounds
+                minZoom: 12, // Higher min zoom to prevent seeing outside area
+                maxZoom: 18
+            });
             this.map.zoomControl.setPosition('bottomright');
+            
+            // Add visual boundary overlay to show the restricted 100km² area
+            this.addGameAreaBoundary(gameAreaBounds);
+            
+            // Add zoom event listeners to enforce bounds
+            this.setupZoomRestrictions(gameAreaBounds);
+            
+            // Override zoom controls to prevent zooming out too far
+            this.overrideZoomControls(gameAreaBounds);
+            
+            // Set initial view to fit the game area perfectly to screen
+            this.map.fitBounds(gameAreaBounds, { 
+                padding: [0, 0], // No padding for perfect screen fit
+                maxZoom: 18 // Allow full zoom for perfect fitting
+            });
+            
+            // Add window resize handler to keep game area fitted to screen
+            this.setupResizeHandler();
             
             // Create layer groups
             window.regionGroup = new L.FeatureGroup().addTo(this.map);
@@ -120,22 +192,54 @@ class GamePlayManager {
             window.reconGroup = new L.FeatureGroup().addTo(this.map);
             window.tokenLayer = new L.FeatureGroup().addTo(this.map);
             
-            // Define base layers
+            // Define base layers (Offline tiles from local mbtiles service)
             const layers = {
-                "OSM": L.tileLayer.provider('OpenStreetMap.Mapnik'),
-                "Topo": L.tileLayer.provider('OpenTopoMap'),
-                "Satellite": L.tileLayer.provider('Esri.WorldImagery'),
-                "Streets": L.tileLayer.provider('Esri.WorldStreetMap')
+                "Offline": L.tileLayer('/tiles/{z}/{x}/{y}.png', {
+                    minZoom: 3,
+                    maxZoom: 22,           // allow overzoom; will cap via maxNativeZoom from metadata
+                    tileSize: 256,
+                    updateWhenIdle: true,
+                    updateWhenZooming: false,
+                    keepBuffer: 2,
+                    crossOrigin: true,
+                    detectRetina: true,
+                    attribution: 'Offline tiles'
+                })
             };
             
-            // Add default layer (Satellite)
-            layers.Satellite.addTo(this.map);
+            // Add default layer (Offline)
+            layers.Offline.addTo(this.map);
+
+            // Enforce focus: fit strictly to Arnarstapi bounds and lock
+            try {
+                this.map.fitBounds(gameAreaBounds, { padding: [10, 10] });
+            } catch (_) { /* ignore */ }
+
+            // Calibrate zoom levels using mbtiles metadata (for maxNativeZoom overzoom beyond native tiles)
+            try {
+                const res = await fetch('/tiles/metadata');
+                if (res.ok) {
+                    const meta = await res.json();
+                    const nativeMax = (meta && Number.isFinite(meta.maxZoom)) ? meta.maxZoom : ((meta && Number.isFinite(meta.zoom)) ? Math.floor(meta.zoom) : 13);
+                    const nativeMin = (meta && Number.isFinite(meta.minZoom)) ? meta.minZoom : 3;
+                    // Apply native bounds so Leaflet overzooms smoothly beyond native tiles
+                    layers.Offline.options.maxNativeZoom = nativeMax;
+                    layers.Offline.options.minNativeZoom = nativeMin;
+                    // Allow some overzoom but cap to 22
+                    const targetMaxZoom = Math.min(nativeMax + 3, 22);
+                    this.map.setMaxZoom(targetMaxZoom);
+                    this.map.setMinZoom(nativeMin);
+                    layers.Offline.redraw();
+                }
+            } catch (_) { /* ignore */ }
+
+            // Do not expand beyond Arnarstapi: ignore broader mbtiles metadata for bounds
             
             // Store map globally
             window.gameMap = this.map;
             window.gamePlayManager = this;
             
-            console.log('✅ Map initialized with Qatar view and layer groups');
+            console.log('✅ Map initialized with Arnarstapi Iceland view and layer groups');
         } else {
             console.warn('⚠️ Leaflet not loaded, map initialization skipped');
         }
@@ -167,6 +271,26 @@ class GamePlayManager {
             console.log('✅ Region manager initialized');
         } else {
             console.warn('⚠️ Region manager not available');
+        }
+    }
+
+    /**
+     * Initialize custom map label manager (mountains/places/etc.)
+     */
+    async initializeLabelManager() {
+        console.log('🏷️ Initializing label manager...');
+        try {
+            if (typeof LabelManager === 'undefined') {
+                // Dynamically load script if not present
+                await this.injectScript('/js/LabelManager.js');
+            }
+            if (typeof LabelManager !== 'undefined' && this.map) {
+                this.labelManager = new LabelManager(this.map);
+                await this.labelManager.initialize();
+                console.log('✅ Label manager initialized');
+            }
+        } catch (e) {
+            console.warn('Label manager failed to initialize', e);
         }
     }
 
@@ -652,6 +776,255 @@ class GamePlayManager {
     }
 }
 
+// Helper methods for Arnarstapi game area management
+GamePlayManager.prototype.addGameAreaBoundary = function(bounds) {
+    // Create a rectangle overlay to show the game area boundary
+    const boundaryOverlay = L.rectangle(bounds, {
+        color: '#ff6b6b',
+        weight: 3,
+        opacity: 0.8,
+        fillColor: 'transparent',
+        fillOpacity: 0,
+        dashArray: '10, 10',
+        className: 'game-area-boundary'
+    }).addTo(this.map);
+
+    // Store references for potential removal
+    this.gameAreaBoundary = boundaryOverlay;
+    this.gameAreaLabel = null; // No label
+
+    console.log('🎯 Game area boundary added - 100km² restricted area');
+};
+
+GamePlayManager.prototype.setupZoomRestrictions = function(gameAreaBounds) {
+    // Store the bounds for later use
+    this.gameAreaBounds = gameAreaBounds;
+    
+    // Add zoom event listener to check bounds after zoom (with delay to avoid initialization issues)
+    setTimeout(() => {
+        this.map.on('zoomend', () => {
+            this.enforceZoomBounds();
+            this.updateZoomDisplay();
+        });
+        
+        // Add move event listener to check bounds after pan
+        this.map.on('moveend', () => {
+            this.enforceZoomBounds();
+        });
+        
+        // Add zoomstart event to show zoom level immediately
+        this.map.on('zoomstart', () => {
+            this.updateZoomDisplay();
+        });
+        
+        // Initial zoom display update
+        this.updateZoomDisplay();
+    }, 1000); // Delay to ensure map is fully initialized
+    
+    console.log('🔒 Zoom restrictions setup - view locked to 100km² area');
+};
+
+GamePlayManager.prototype.overrideZoomControls = function(gameAreaBounds) {
+    // Store original zoom methods
+    const originalZoomIn = this.map.zoomIn.bind(this.map);
+    const originalZoomOut = this.map.zoomOut.bind(this.map);
+    const originalSetZoom = this.map.setZoom.bind(this.map);
+    
+    // Override zoomIn
+    this.map.zoomIn = (options) => {
+        originalZoomIn(options);
+        this.enforceZoomBounds();
+    };
+    
+    // Override zoomOut with bounds checking
+    this.map.zoomOut = (options) => {
+        const currentZoom = this.map.getZoom();
+        const minAllowedZoom = this.calculateMaxZoomForBounds();
+        
+        if (currentZoom > minAllowedZoom) {
+            originalZoomOut(options);
+            this.enforceZoomBounds();
+        } else {
+            console.log('🔒 Zoom out prevented - would show outside game area');
+        }
+    };
+    
+    // Override setZoom with bounds checking
+    this.map.setZoom = (zoomLevel, options) => {
+        const minAllowedZoom = this.calculateMaxZoomForBounds();
+        
+        if (zoomLevel >= minAllowedZoom) {
+            originalSetZoom(zoomLevel, options);
+            this.enforceZoomBounds();
+        } else {
+            console.log(`🔒 Zoom to level ${zoomLevel} prevented - would show outside game area`);
+            originalSetZoom(minAllowedZoom, options);
+        }
+    };
+    
+    console.log('🔒 Zoom controls overridden to enforce game area bounds');
+};
+
+GamePlayManager.prototype.enforceZoomBounds = function() {
+    if (!this.gameAreaBounds) return;
+    
+    const currentZoom = this.map.getZoom();
+    const minAllowedZoom = this.calculateMaxZoomForBounds();
+    
+    // Check if zoom level is too low (would show outside game area)
+    if (currentZoom < minAllowedZoom) {
+        // Zoom in to stay within bounds
+        this.map.setZoom(minAllowedZoom);
+        console.log(`🔒 Zoom restricted to level ${minAllowedZoom} to stay within game area`);
+    }
+    
+    // Also ensure the map center stays within bounds
+    const mapCenter = this.map.getCenter();
+    if (!this.gameAreaBounds.contains(mapCenter)) {
+        // Reset to game area center
+        const gameCenter = this.gameAreaBounds.getCenter();
+        this.map.setView(gameCenter, minAllowedZoom);
+        console.log('🔒 Map center reset to game area');
+    }
+};
+
+GamePlayManager.prototype.calculateMaxZoomForBounds = function() {
+    if (!this.gameAreaBounds) return 12;
+    
+    // Use a simpler approach - just return a safe minimum zoom level
+    // This prevents users from zooming out too far to see outside the game area
+    return 12;
+};
+
+GamePlayManager.prototype.resetViewToGameArea = function() {
+    if (!this.gameAreaBounds) return;
+    
+    this.map.fitBounds(this.gameAreaBounds, { 
+        padding: [0, 0], // No padding for perfect screen fit
+        maxZoom: 18 // Allow full zoom for perfect fitting
+    });
+    
+    console.log('🎯 View reset to game area bounds');
+};
+
+GamePlayManager.prototype.setupResizeHandler = function() {
+    let resizeTimeout;
+    
+    window.addEventListener('resize', () => {
+        // Debounce resize events
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            if (this.gameAreaBounds) {
+                this.map.fitBounds(this.gameAreaBounds, { 
+                    padding: [0, 0], // No padding for perfect screen fit
+                    maxZoom: 18 // Allow full zoom for perfect fitting
+                });
+                console.log('🔄 Map refitted to screen after resize');
+            }
+        }, 250);
+    });
+    
+    console.log('📱 Window resize handler setup - game area will stay fitted to screen');
+};
+
+GamePlayManager.prototype.getScreenDimensions = function() {
+    const mapContainer = document.getElementById('gameMap');
+    if (!mapContainer) {
+        return { width: 1920, height: 1080 }; // Default dimensions
+    }
+    
+    const rect = mapContainer.getBoundingClientRect();
+    const dimensions = {
+        width: rect.width,
+        height: rect.height
+    };
+    
+    console.log(`📐 Screen dimensions: ${dimensions.width}x${dimensions.height}`);
+    return dimensions;
+};
+
+GamePlayManager.prototype.calculateScreenAspectRatio = function() {
+    const dimensions = this.getScreenDimensions();
+    const aspectRatio = dimensions.width / dimensions.height;
+    
+    console.log(`📐 Screen aspect ratio: ${aspectRatio.toFixed(2)}`);
+    return aspectRatio;
+};
+
+GamePlayManager.prototype.isWithinGameArea = function(lat, lng) {
+    if (!this.map || !this.map.getBounds) return true;
+    
+    const bounds = this.map.getBounds();
+    return bounds.contains([lat, lng]);
+};
+
+/**
+ * Update zoom level display
+ */
+GamePlayManager.prototype.updateZoomDisplay = function() {
+    if (!this.map) return;
+    
+    const currentZoom = Math.round(this.map.getZoom());
+    const zoomElement = document.getElementById('zoomVal');
+    
+    if (zoomElement) {
+        zoomElement.textContent = currentZoom;
+        
+        // Add zoom level description
+        const zoomDescriptions = {
+            12: 'District View',
+            13: 'District View', 
+            14: 'Neighborhood View',
+            15: 'Street View',
+            16: 'Street View',
+            17: 'Building View',
+            18: 'Building View'
+        };
+        
+        const description = zoomDescriptions[currentZoom] || 'Custom View';
+        
+        // Show notification for zoom level changes
+        if (typeof showNotification === 'function') {
+            showNotification(`Zoom Level: ${currentZoom} (${description})`, 'info');
+        }
+        
+        console.log(`🔍 Zoom Level: ${currentZoom} (${description})`);
+    }
+};
+
+/**
+ * Show current zoom level message (can be called manually)
+ */
+GamePlayManager.prototype.showCurrentZoomLevel = function() {
+    if (!this.map) {
+        if (typeof showNotification === 'function') {
+            showNotification('Map not initialized', 'error');
+        }
+        return;
+    }
+    
+    const currentZoom = Math.round(this.map.getZoom());
+    const zoomDescriptions = {
+        12: 'District View',
+        13: 'District View', 
+        14: 'Neighborhood View',
+        15: 'Street View',
+        16: 'Street View',
+        17: 'Building View',
+        18: 'Building View'
+    };
+    
+    const description = zoomDescriptions[currentZoom] || 'Custom View';
+    const message = `Current Zoom Level: ${currentZoom} (${description})`;
+    
+    if (typeof showNotification === 'function') {
+        showNotification(message, 'info');
+    }
+    
+    console.log(`🔍 ${message}`);
+    return { zoom: currentZoom, description: description };
+};
+
 /**
  * GLOBAL DATA ENTRY FUNCTION - Simple and Reliable
  * Available immediately when gamePlayManager loads
@@ -715,6 +1088,18 @@ function openDataEntry() {
 
 // Make it globally available
 window.openDataEntry = openDataEntry;
+
+// Make zoom level function globally available
+window.showCurrentZoomLevel = function() {
+    if (window.gamePlayManager) {
+        return window.gamePlayManager.showCurrentZoomLevel();
+    } else {
+        console.error('GamePlayManager not initialized');
+        if (typeof showNotification === 'function') {
+            showNotification('GamePlayManager not initialized', 'error');
+        }
+    }
+};
 
 // Create global instance
 const gamePlayManager = new GamePlayManager();

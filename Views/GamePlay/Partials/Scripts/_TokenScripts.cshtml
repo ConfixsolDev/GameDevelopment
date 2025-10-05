@@ -2,10 +2,18 @@
 // Token Management Functions for GamePlay Arena
 
 // Global variables for token management
-let tokenPlacementManager = null;
-let selectedTokenForPlacement = null;
-let isTokenPlacementMode = false;
-let availableTokens = [];
+if (typeof tokenPlacementManager === 'undefined') {
+    var tokenPlacementManager = null;
+}
+if (typeof selectedTokenForPlacement === 'undefined') {
+    var selectedTokenForPlacement = null;
+}
+if (typeof isTokenPlacementMode === 'undefined') {
+    var isTokenPlacementMode = false;
+}
+if (typeof availableTokens === 'undefined') {
+    var availableTokens = [];
+}
 
 // Initialize token placement manager
 function initializeTokenManager() {

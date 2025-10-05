@@ -1,8 +1,265 @@
-/**
- * LabelManager - Handles text label creation and management on the map
- * Provides tools for adding labeled text markers for better map understanding
- */
 class LabelManager {
+    constructor(map) {
+        this.map = map;
+        this.layer = window.labelGroup || new L.FeatureGroup().addTo(this.map);
+        this.labelsById = new Map();
+        this.iconChoices = [
+            { id: 'none', html: '' },
+            { id: 'mountain', html: '⛰️' },
+            { id: 'peak', html: '🗻' },
+            { id: 'camp', html: '🏕️' },
+            { id: 'view', html: '📍' },
+            { id: 'flag', html: '🚩' },
+            { id: 'custom', html: '🔖' }
+        ];
+        this.defaultStyle = {
+            color: '#111',
+            bg: 'rgba(255,255,255,0.85)',
+            border: '1px solid rgba(0,0,0,0.25)',
+            fontSize: 13,
+            fontWeight: '600'
+        };
+        this._placementActive = false;
+        this._placementHandler = null;
+    }
+
+    async initialize() {
+        await this.loadLabels();
+        // Quick-add with Shift+L: adds label at map center
+        window.addEventListener('keydown', (e) => {
+            if ((e.key === 'l' || e.key === 'L') && e.shiftKey) {
+                const center = this.map.getCenter();
+                this.openAddLabelModal(center);
+            }
+        });
+        // Right-click add label disabled (labels are added via button flow only)
+        // Expose helpers
+        try { window.labelManager = this; } catch (_) {}
+    }
+
+    // Enter placement mode: user clicks map to pick location, then modal opens
+    startPlacement() {
+        if (this._placementActive) {
+            this.stopPlacement();
+        }
+        this._placementActive = true;
+        this.map.getContainer().style.cursor = 'crosshair';
+        const once = (e) => {
+            if (!this._placementActive) return;
+            this.stopPlacement();
+            this.openAddLabelModal(e.latlng);
+        };
+        this._placementHandler = once;
+        this.map.once('click', this._placementHandler);
+    }
+
+    stopPlacement() {
+        this._placementActive = false;
+        this.map.getContainer().style.cursor = '';
+        if (this._placementHandler) {
+            // 'once' listener auto-removed on fire; just clear reference
+            this._placementHandler = null;
+        }
+    }
+
+    async loadLabels() {
+        try {
+            const res = await fetch('/Map/GetLabels');
+            const json = await res.json();
+            if (!json.success) return;
+            for (const l of json.data) {
+                this.renderLabel(l);
+            }
+        } catch (e) {
+            console.warn('Failed to load labels', e);
+        }
+    }
+
+    renderLabel(l) {
+        const iconHtml = this.getIconHtml(l.icon) + this.getTextHtml(l.text, l);
+        const div = L.divIcon({
+            className: 'custom-map-label',
+            html: `<div class="label-pill" style="${this.inlineStyle(l)}">${iconHtml}</div>`,
+            iconSize: null
+        });
+        const marker = L.marker([parseFloat(l.latitude), parseFloat(l.longitude)], { icon: div, zIndexOffset: 1000 });
+        marker.addTo(this.layer);
+        marker.bindTooltip(l.description || l.text || '', { direction: 'top', opacity: 0.9 });
+        marker.on('dblclick', () => this.confirmDelete(l.id, marker));
+        this.labelsById.set(l.id, { data: l, marker });
+    }
+
+    inlineStyle(l) {
+        // Transparent container; text carries the color and halo for readability
+        const fontSize = (l.fontSize || this.defaultStyle.fontSize) + 'px';
+        const fontWeight = l.fontWeight || this.defaultStyle.fontWeight;
+        return `display:inline-flex;align-items:center;gap:6px;padding:2px 4px;background:transparent;border:none;border-radius:4px;font-size:${fontSize};font-weight:${fontWeight};`;
+    }
+
+    getIconHtml(iconId) {
+        if (!iconId || iconId === 'none') return '';
+        const found = this.iconChoices.find(i => i.id === iconId);
+        const html = (found ? found.html : '');
+        if (!html) return '';
+        return `<span class="label-icon" style="font-size:16px;line-height:1;">${html}</span>`;
+    }
+
+    getTextHtml(text, l) {
+        const color = l.color || this.defaultStyle.color;
+        const size = (l.fontSize || this.defaultStyle.fontSize) + 'px';
+        const weight = l.fontWeight || this.defaultStyle.fontWeight;
+        // Halo/shadow to stand out over imagery (no background)
+        const shadow = '0 0 3px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.7), 0 1px 2px rgba(0,0,0,0.9)';
+        return `<span class="label-text" style="color:${color} !important; font-size:${size}; font-weight:${weight}; text-shadow:${shadow};">${this.escape(text || '')}</span>`;
+    }
+
+    openAddLabelModal(latlng) {
+        const modalId = 'labelAddModal';
+        let modal = document.getElementById(modalId);
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = modalId;
+            modal.className = 'gameplay-modal';
+            modal.innerHTML = this.buildModalHtml();
+            document.body.appendChild(modal);
+            this.attachModalHandlers();
+        }
+        modal.style.display = 'flex';
+        modal.querySelector('#labelLat').value = latlng.lat.toFixed(6);
+        modal.querySelector('#labelLng').value = latlng.lng.toFixed(6);
+    }
+
+    buildModalHtml() {
+        const icons = this.iconChoices.map(i => `<option value="${i.id}">${i.id}</option>`).join('');
+        return `
+<div class="gameplay-modal-content" style="max-width:420px;">
+  <div class="gameplay-modal-header">
+    <h3><i class="fas fa-tag"></i> Add Map Label</h3>
+    <button class="gameplay-modal-close" id="labelCloseBtn">&times;</button>
+  </div>
+  <div class="gameplay-modal-body">
+    <div class="form-group"><label>Title</label><input id="labelText" class="form-control" placeholder="e.g., Snæfellsjökull"/></div>
+    <div class="form-group"><label>Icon (optional)</label><select id="labelIcon" class="form-control">${icons}</select></div>
+    <div class="form-group"><label>Color</label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input id="labelColor" type="color" value="#ff4444" style="width:44px;height:34px;padding:0;border:none;background:transparent;">
+        <input id="labelColorHex" class="form-control" style="flex:1;" value="#ff4444" placeholder="#RRGGBB" maxlength="9" />
+      </div>
+    </div>
+    <div class="form-row" style="display:flex; gap:8px;">
+      <div class="form-group" style="flex:1;"><label>Lat</label><input id="labelLat" class="form-control"/></div>
+      <div class="form-group" style="flex:1;"><label>Lng</label><input id="labelLng" class="form-control"/></div>
+    </div>
+    <div class="form-group"><label>Description</label><textarea id="labelDesc" class="form-control" rows="2" placeholder="Optional details"></textarea></div>
+    <div class="text-muted" style="font-size:12px;">Tip: Shift+L to add at map center. Double‑click a label to delete.</div>
+  </div>
+  <div class="gameplay-modal-footer">
+    <button class="gameplay-btn" id="labelCancelBtn">Cancel</button>
+    <button class="gameplay-btn gameplay-btn-primary" id="labelSaveBtn">Save</button>
+  </div>
+</div>`;
+    }
+
+    attachModalHandlers() {
+        const close = () => { const m = document.getElementById('labelAddModal'); if (m) m.style.display = 'none'; };
+        document.getElementById('labelCloseBtn').onclick = close;
+        document.getElementById('labelCancelBtn').onclick = close;
+        // Sync color picker and hex input both ways
+        const colorInput = document.getElementById('labelColor');
+        const colorHex = document.getElementById('labelColorHex');
+        if (colorInput && colorHex) {
+            colorInput.addEventListener('input', () => { colorHex.value = colorInput.value; });
+            colorHex.addEventListener('input', () => {
+                let v = colorHex.value.trim();
+                if (!v.startsWith('#')) v = '#' + v;
+                if (/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(v)) { colorInput.value = v; }
+            });
+        }
+
+        document.getElementById('labelSaveBtn').onclick = async () => {
+            const text = document.getElementById('labelText').value.trim();
+            const icon = document.getElementById('labelIcon').value;
+            const color = this.getSelectedColor();
+            const lat = parseFloat(document.getElementById('labelLat').value);
+            const lng = parseFloat(document.getElementById('labelLng').value);
+            const desc = document.getElementById('labelDesc').value.trim();
+            if (!text || !Number.isFinite(lat) || !Number.isFinite(lng)) { alert('Please provide title and valid coordinates.'); return; }
+            await this.saveLabel({ text, icon, color, lat, lng, desc });
+            close();
+        };
+    }
+
+    getSelectedColor() {
+        const colorInput = document.getElementById('labelColor');
+        const colorHex = document.getElementById('labelColorHex');
+        let v = (colorHex && colorHex.value) ? colorHex.value.trim() : (colorInput ? colorInput.value : '#ff4444');
+        if (!v) v = '#ff4444';
+        if (!v.startsWith('#')) v = '#' + v;
+        return v;
+    }
+
+    async saveLabel({ text, icon, color, lat, lng, desc }) {
+        try {
+            const payload = {
+                Text: text,
+                Latitude: lat,
+                Longitude: lng,
+                LabelType: 'point',
+                Color: color,
+                Icon: icon,
+                FontSize: 13,
+                FontWeight: '600',
+                Properties: null,
+                Description: desc
+            };
+            const res = await fetch('/Map/SaveLabel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const json = await res.json();
+            if (json && json.success) {
+                // render new label
+                this.renderLabel({
+                    id: (json.data && json.data.id) || crypto.randomUUID(),
+                    text, latitude: lat, longitude: lng, labelType: 'point', color, icon, fontSize: 13, fontWeight: '600', description: desc
+                });
+            } else {
+                alert('Failed to save label');
+            }
+        } catch (e) {
+            console.error('Save label failed', e);
+            alert('Error saving label');
+        }
+    }
+
+    async confirmDelete(id, marker) {
+        if (!confirm('Delete this label?')) return;
+        try {
+            const res = await fetch(`/Map/DeleteLabel/${id}`, { method: 'DELETE' });
+            const json = await res.json();
+            if (json && json.success) {
+                this.layer.removeLayer(marker);
+                this.labelsById.delete(id);
+            } else {
+                alert('Failed to delete label');
+            }
+        } catch (e) {
+            console.error('Delete failed', e);
+            alert('Error deleting label');
+        }
+    }
+
+    escape(s) {
+        return (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    }
+}
+
+/**
+ * LegacyLabelManager - legacy localStorage-based implementation (kept for reference)
+ * Not used by the current UI; renamed to avoid class name conflicts.
+ */
+class LegacyLabelManager {
     constructor(map, notificationCallback) {
         this.map = map;
         this.notificationCallback = notificationCallback || this.defaultNotification;

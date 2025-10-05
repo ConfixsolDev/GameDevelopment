@@ -127,6 +127,9 @@ builder.Services.AddScoped<ITokenAreaCoverageService, TokenAreaCoverageService>(
 builder.Services.AddScoped<IPatternMatchingService, PatternMatchingService>();
 builder.Services.AddScoped<PatternAnalysisEngine>();
 
+// Offline Map Services
+builder.Services.AddSingleton<IOfflineMapService, OfflineMapService>();
+
 // Simplified Pattern Matching Services
 
 // Unified Token Identification DAL
@@ -194,6 +197,8 @@ app.UseSession();
 app.UseRequestLocalization();
 
 // Endpoint Configuration
+app.MapControllers(); // Enable attribute routing
+
 app.MapControllerRoute(
     name: "areaRoute",
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
