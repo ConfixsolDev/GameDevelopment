@@ -52,20 +52,10 @@
     <!-- Font Awesome - Local -->
     <link href="~/assets/css/fontawesome.min.css" rel="stylesheet">
 
-    <!-- Map Libraries - Local versions -->
+    <!-- Map Libraries CSS ONLY - Scripts moved to bottom for faster page load -->
     <link href="~/map/css/styles.css" rel="stylesheet" />
     <link rel="stylesheet" href="~/map/css/leaflet.css" />
-    <script src="~/map/js/leaflet.js"></script>
-
-    <!-- Leaflet Draw - Local -->
     <link rel="stylesheet" href="~/map/css/leaflet.draw.css" />
-    <script src="~/map/js/leaflet.draw.js"></script>
-
-    <!-- Turf - Local -->
-    <script src="~/map/js/turf.min.js"></script>
-
-    <!-- Basemap providers - Local -->
-    <script src="~/map/js/leaflet-providers.js"></script>
 
     <!-- Game Play Styles -->
     <link href="~/css/GamePlay.css" rel="stylesheet" asp-append-version="true" />
@@ -101,6 +91,12 @@
     <script src="~/assets/js/jquery.min.js"></script>
     <script src="~/assets/js/bootstrap.bundle.min.js"></script>
 
+    <!-- Map Libraries - Moved from head for better performance -->
+    <script src="~/map/js/leaflet.js"></script>
+    <script defer src="~/map/js/leaflet.draw.js"></script>
+    <script defer src="~/map/js/turf.min.js"></script>
+    <script defer src="~/map/js/leaflet-providers.js"></script>
+
     <!-- Initialize Game Play Scripts -->
     <script>
         console.log('jQuery loaded successfully from local file');
@@ -108,10 +104,8 @@
 
         function initializeGamePlayScripts() {
         $(document).ready(function() {
-            // Hide loading overlay after page load
-            setTimeout(function() {
-                $('#loadingOverlay').fadeOut(1000);
-            }, 2000);
+            // Hide loading overlay immediately when ready
+            $('#loadingOverlay').fadeOut(300);
 
             // Initialize game state
             initializeGamePlay();

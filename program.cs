@@ -177,6 +177,9 @@ builder.Services.AddMvc(options =>
     options.ModelBinderProviders.Insert(0, new DateTimeModelBinderProvider());
 });
 
+// Response Caching for Map Tiles and Metadata
+builder.Services.AddResponseCaching();
+
 var app = builder.Build();
 
 // Initialize database with default data
@@ -214,6 +217,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+// Response Caching Middleware (must be before Authentication)
+app.UseResponseCaching();
 
 app.UseAuthentication();
 app.UseAuthorization();

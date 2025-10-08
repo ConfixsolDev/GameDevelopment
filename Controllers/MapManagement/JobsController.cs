@@ -388,6 +388,7 @@ namespace TechWebSol.Controllers.MapManagement
 		// ============= Consolidated MBTiles endpoints (from MbtilesController) =============
 
 		[HttpGet("/mbtiles/list")]
+		[ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new string[] { })]
 		public IActionResult ListMbTiles()
 		{
 			var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
@@ -433,6 +434,7 @@ namespace TechWebSol.Controllers.MapManagement
 		}
 
 		[HttpGet("/mbtiles/tile/{z}/{x}/{y}.png")]
+		[ResponseCache(Duration = 86400, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "file" })]
 		public async Task<IActionResult> GetMbTile(int z, int x, int y, [FromQuery] string file)
 		{
 			if (string.IsNullOrEmpty(file))
@@ -484,6 +486,7 @@ namespace TechWebSol.Controllers.MapManagement
 		}
 
 		[HttpGet("/mbtiles/metadata")]
+		[ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "file" })]
 		public async Task<IActionResult> GetMbTilesMetadata([FromQuery] string file)
 		{
 			if (string.IsNullOrEmpty(file))

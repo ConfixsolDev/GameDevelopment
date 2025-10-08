@@ -43,44 +43,64 @@ class GamePlayManager {
             // Initialize map
             await this.initializeMap();
             
-            // Initialize token manager
+            // Initialize token manager (needed for token placement)
             await this.initializeTokenManager();
             
-            // Initialize region manager
-            await this.initializeRegionManager();
-
-            // Initialize label manager (custom place labels)
-            await this.initializeLabelManager();
+            // DEFER region/label/suspected token managers (not critical for initial load)
+            // These will be initialized in background
             
-            // Initialize suspected token manager (fog of war)
-            await this.initializeSuspectedTokenManager();
-            
-            // Initialize token action mode manager
+            // Initialize token action mode manager (lightweight)
             await this.initializeTokenActionModeManager();
             
-            // Initialize attack visualization manager
+            // Initialize attack visualization manager (lightweight)
             await this.initializeAttackVisualizationManager();
             
-            // Load and restore placed tokens
-            await this.restorePlacedTokens();
-            
-            // Load attack orders after tokens are placed
-            await this.loadAttackOrdersAfterTokensPlaced();
-            
-            // Setup control handlers
+            // Setup control handlers (do this early!)
             this.setupControlHandlers();
             
             // Initialize basemap dropdown with saved state
             this.initializeBasemapControls();
             
-            // Preload critical modals in background
-            this.preloadCriticalModals();
-            
             this.initialized = true;
-            console.log('✅ Game Play Arena initialized successfully');
+            console.log('✅ Game Play Arena core initialized - loading data in background...');
+            
+            // DEFER heavy operations to background (non-blocking)
+            setTimeout(() => {
+                this.loadBackgroundData();
+            }, 100); // Small delay to let UI render first
             
         } catch (error) {
             console.error('❌ Error initializing GamePlay Arena:', error);
+        }
+    }
+
+    /**
+     * Load background data (deferred, non-blocking)
+     */
+    async loadBackgroundData() {
+        console.log('📦 Loading background data (tokens, regions, orders)...');
+        
+        try {
+            // Initialize heavy managers FIRST (in parallel)
+            await Promise.allSettled([
+                this.initializeRegionManager(),
+                this.initializeLabelManager(),
+                this.initializeSuspectedTokenManager()
+            ]);
+            
+            console.log('✅ Managers initialized in background');
+            
+            // Then load data (also in parallel)
+            await Promise.allSettled([
+                this.restorePlacedTokens(),
+                this.loadAttackOrdersAfterTokensPlaced(),
+                this.preloadCriticalModals()
+            ]);
+            
+            console.log('✅ Background data loaded');
+        } catch (error) {
+            console.error('⚠️ Error loading background data:', error);
+            // Don't fail the whole app, just log the error
         }
     }
 
@@ -117,46 +137,9 @@ class GamePlayManager {
         console.log('🗺️ Initializing map...');
         
         if (typeof L !== 'undefined') {
-            // Focused area: Arnarstapi, Iceland (exactly 100 km²) - moved a bit more right to reduce sea
-            const centerLat = 64.780;   // Moved north (up) to reduce sea
-            const centerLng = -23.720;  // Moved a bit more west (right) to reduce sea
-            
-            // Calculate rectangular bounds for 100km² that fits screen aspect ratio
-            // At this latitude, 1 degree ≈ 111.32 km
-            const kmPerDegreeLat = 111.32;
-            const kmPerDegreeLng = 111.32 * Math.cos(centerLat * Math.PI / 180);
-            
-            // Create a rectangular area that perfectly fits the screen
-            // Calculate screen dimensions and create rectangle to match exactly
-            const screenDimensions = this.getScreenDimensions();
-            const screenAspectRatio = screenDimensions.width / screenDimensions.height;
-            
-            // Calculate the area that will fit perfectly on screen
-            // We'll use the screen aspect ratio directly for perfect fitting
-            const aspectRatio = screenAspectRatio;
-            const totalAreaKm2 = 100; // Keep 100km² total area
-            
-            // Calculate dimensions: width * height = area, width/height = aspectRatio
-            // height = sqrt(area / aspectRatio), width = height * aspectRatio
-            const heightKm = Math.sqrt(totalAreaKm2 / aspectRatio);
-            const widthKm = heightKm * aspectRatio;
-            
-            const halfHeightKm = heightKm / 2;
-            const halfWidthKm = widthKm / 2;
-            
-            const halfSideLatDeg = halfHeightKm / kmPerDegreeLat;
-            const halfSideLngDeg = halfWidthKm / kmPerDegreeLng;
-            
-            const gameAreaBounds = L.latLngBounds(
-                L.latLng(centerLat - halfSideLatDeg, centerLng - halfSideLngDeg),
-                L.latLng(centerLat + halfSideLatDeg, centerLng + halfSideLngDeg)
-            );
-
+            // Initialize map WITHOUT fixed bounds - will be set when map is loaded
             this.map = L.map('gameMap', {
-                maxBounds: gameAreaBounds,
-                maxBoundsViscosity: 1.0, // Strict bounds - no panning outside
                 worldCopyJump: false,
-                // Use integer zoom levels to avoid fractional z tile requests (e.g., 12.5)
                 zoomSnap: 1,
                 zoomDelta: 1,
                 inertia: true,
@@ -165,29 +148,12 @@ class GamePlayManager {
                 zoomAnimation: false,
                 markerZoomAnimation: false,
                 fadeAnimation: false,
-                // Restrict zoom to levels that keep the view within bounds
-                minZoom: 12, // Higher min zoom to prevent seeing outside area
-                maxZoom: 18
+                minZoom: 3,
+                maxZoom: 22,
+                center: [0, 0], // Default center, will be updated
+                zoom: 3 // Default zoom, will be updated
             });
             this.map.zoomControl.setPosition('bottomright');
-            
-            // Add visual boundary overlay to show the restricted 100km² area
-            this.addGameAreaBoundary(gameAreaBounds);
-            
-            // Add zoom event listeners to enforce bounds
-            this.setupZoomRestrictions(gameAreaBounds);
-            
-            // Override zoom controls to prevent zooming out too far
-            this.overrideZoomControls(gameAreaBounds);
-            
-            // Set initial view to fit the game area perfectly to screen
-            this.map.fitBounds(gameAreaBounds, { 
-                padding: [0, 0], // No padding for perfect screen fit
-                maxZoom: 18 // Allow full zoom for perfect fitting
-            });
-            
-            // Add window resize handler to keep game area fitted to screen
-            this.setupResizeHandler();
             
             // Create layer groups
             window.regionGroup = new L.FeatureGroup().addTo(this.map);
@@ -198,54 +164,17 @@ class GamePlayManager {
             window.reconGroup = new L.FeatureGroup().addTo(this.map);
             window.tokenLayer = new L.FeatureGroup().addTo(this.map);
             
-            // Define base layers (Offline tiles from local mbtiles service)
-            const layers = {
-                "Offline": L.tileLayer('/tiles/{z}/{x}/{y}.png', {
-                    minZoom: 3,
-                    maxZoom: 22,           // allow overzoom; will cap via maxNativeZoom from metadata
-                    tileSize: 256,
-                    updateWhenIdle: true,
-                    updateWhenZooming: false,
-                    keepBuffer: 2,
-                    crossOrigin: true,
-                    detectRetina: true,
-                    attribution: 'Offline tiles'
-                })
-            };
+            // Store reference to current tile layer
+            this.currentTileLayer = null;
+            this.currentBounds = null;
             
-            // Add default layer (Offline)
-            layers.Offline.addTo(this.map);
-
-            // Enforce focus: fit strictly to Arnarstapi bounds and lock
-            try {
-                this.map.fitBounds(gameAreaBounds, { padding: [10, 10] });
-            } catch (_) { /* ignore */ }
-
-            // Calibrate zoom levels using mbtiles metadata (for maxNativeZoom overzoom beyond native tiles)
-            try {
-                const res = await fetch('/tiles/metadata');
-                if (res.ok) {
-                    const meta = await res.json();
-                    const nativeMax = (meta && Number.isFinite(meta.maxZoom)) ? meta.maxZoom : ((meta && Number.isFinite(meta.zoom)) ? Math.floor(meta.zoom) : 13);
-                    const nativeMin = (meta && Number.isFinite(meta.minZoom)) ? meta.minZoom : 3;
-                    // Apply native bounds so Leaflet overzooms smoothly beyond native tiles
-                    layers.Offline.options.maxNativeZoom = nativeMax;
-                    layers.Offline.options.minNativeZoom = nativeMin;
-                    // Allow some overzoom but cap to 22
-                    const targetMaxZoom = Math.min(nativeMax + 3, 22);
-                    this.map.setMaxZoom(targetMaxZoom);
-                    this.map.setMinZoom(nativeMin);
-                    layers.Offline.redraw();
-                }
-            } catch (_) { /* ignore */ }
-
-            // Do not expand beyond Arnarstapi: ignore broader mbtiles metadata for bounds
+            // No default layer added - will be loaded via map selector
             
             // Store map globally
             window.gameMap = this.map;
             window.gamePlayManager = this;
             
-            console.log('✅ Map initialized with Arnarstapi Iceland view and layer groups');
+            console.log('✅ Map initialized with dynamic bounds support and layer groups');
         } else {
             console.warn('⚠️ Leaflet not loaded, map initialization skipped');
         }
@@ -740,7 +669,7 @@ class GamePlayManager {
     }
 
     /**
-     * Load available MBTiles maps into selector
+     * Load available MBTiles maps into selector (optimized - no auto-load)
      */
     async loadMapSelector() {
         console.log('🗺️ Loading map selector...');
@@ -763,17 +692,23 @@ class GamePlayManager {
                 console.log(`📍 Received ${maps.length} maps from server:`, maps);
                 
                 if (maps.length > 0) {
-                    selector.innerHTML = '<option value="">Select Offline Map...</option>';
+                    selector.innerHTML = '<option value="">⚡ Select a map to start...</option>';
                     
                     maps.forEach(map => {
                         const option = document.createElement('option');
                         option.value = map.path;
                         option.textContent = `${map.name} (${(map.size / 1024 / 1024).toFixed(1)} MB)`;
                         selector.appendChild(option);
-                        console.log(`  ✓ Added map: ${map.name}`);
                     });
                     
-                    console.log(`✅ Loaded ${maps.length} maps into selector`);
+                    // Add event listener for map selection (only once)
+                    selector.addEventListener('change', async (e) => {
+                        if (e.target.value) {
+                            await window.switchGamePlayMap(e.target.value);
+                        }
+                    }, { once: false });
+                    
+                    console.log(`✅ Loaded ${maps.length} maps into selector (ready for user selection)`);
                 } else {
                     selector.innerHTML = '<option value="">No offline maps available</option>';
                     console.warn('⚠️ No maps available from server');
@@ -1182,95 +1117,242 @@ window.showCurrentZoomLevel = function() {
     }
 };
 
-// Map switching function
+// Map switching function with bounded logic (OPTIMIZED for performance)
 window.switchGamePlayMap = async function(mapPath) {
     if (!mapPath) return;
     
     console.log('🗺️ Switching to map:', mapPath);
     
+    // Show loading overlay
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.id = 'mapLoadingOverlay';
+    loadingOverlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center;';
+    loadingOverlay.innerHTML = `
+        <div style="text-align: center; color: #00ff88;">
+            <div class="spinner-border" style="width: 3rem; height: 3rem; border: 4px solid rgba(0,255,136,0.3); border-top-color: #00ff88;" role="status"></div>
+            <p style="margin-top: 20px; font-size: 18px;">🗺️ Loading Map...</p>
+        </div>
+    `;
+    document.body.appendChild(loadingOverlay);
+    
     try {
-        // Fetch map metadata
-        const response = await fetch(`/mbtiles/metadata?file=${encodeURIComponent(mapPath)}`);
+        // Fetch map metadata (with timeout for faster failure)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        
+        const response = await fetch(`/mbtiles/metadata?file=${encodeURIComponent(mapPath)}`, {
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
         if (!response.ok) {
-            alert('Failed to load map metadata');
-            return;
+            throw new Error(`Failed to load map metadata: ${response.statusText}`);
         }
         
         const data = await response.json();
         const metadata = data?.metadata || {};
         
-        // Parse bounds
-        let bounds = null;
+        console.log('📋 Map metadata loaded:', metadata);
+        
+        // Parse metadata with minimum zoom of 12
+        const minZoom = Math.max(12, parseInt(metadata.minzoom || 12));
+        const maxZoom = parseInt(metadata.maxzoom || 22);
+        
+        // Parse bounds (west, south, east, north) - CRITICAL for bounded behavior
+        let boundsObj = null;
         if (metadata.bounds && typeof metadata.bounds === 'string') {
+            try {
             const parts = metadata.bounds.split(',').map(parseFloat);
-            if (parts.length >= 4) {
-                bounds = L.latLngBounds(
-                    L.latLng(parts[1], parts[0]), // southwest
-                    L.latLng(parts[3], parts[2])  // northeast
-                );
+                if (parts.length === 4 && parts.every(p => !isNaN(p))) {
+                    // Create Leaflet bounds object (southwest, northeast)
+                    boundsObj = L.latLngBounds(
+                        L.latLng(parts[1], parts[0]), // southwest (south, west)
+                        L.latLng(parts[3], parts[2])  // northeast (north, east)
+                    );
+                    console.log('✅ Bounds parsed:', parts);
+                }
+            } catch (e) {
+                console.warn('Failed to parse bounds:', e);
             }
         }
         
         // Parse center
-        let center = [64.780, -23.720]; // Default
-        let zoom = 13;
+        let center = [0, 0];
+        let initialZoom = Math.max(minZoom, 12);
+        
         if (metadata.center && typeof metadata.center === 'string') {
+            try {
             const parts = metadata.center.split(',').map(parseFloat);
             if (parts.length >= 2) {
-                center = [parts[1], parts[0]]; // [lat, lng]
-                if (parts.length >= 3) {
-                    zoom = Math.max(12, Math.min(18, parseInt(parts[2])));
+                    center = [parts[1], parts[0]]; // [lat, lon]
+                    if (parts.length >= 3 && !isNaN(parts[2])) {
+                        initialZoom = Math.max(minZoom, Math.min(maxZoom, parseInt(parts[2])));
+                    }
                 }
+            } catch (e) {
+                console.warn('Failed to parse center:', e);
             }
+        } else if (boundsObj) {
+            // Use bounds center if no explicit center
+            center = boundsObj.getCenter();
         }
         
-        // Get zoom levels
-        const minZoom = parseInt(metadata.minzoom) || 3;
-        const maxZoom = parseInt(metadata.maxzoom) || 22;
-        
-        // Remove old tile layer
+        // Remove old tile layer and boundary
         window.gameMap.eachLayer(layer => {
             if (layer instanceof L.TileLayer) {
                 window.gameMap.removeLayer(layer);
             }
         });
         
-        // Add new tile layer
+        // Remove old game area boundary if exists
+        if (window.gamePlayManager.gameAreaBoundary) {
+            window.gameMap.removeLayer(window.gamePlayManager.gameAreaBoundary);
+            window.gamePlayManager.gameAreaBoundary = null;
+        }
+        
+        // Apply RELAXED bounds constraints to map (to prevent zoom disappearing)
+        if (boundsObj) {
+            // Expand bounds slightly to prevent edge issues during zoom
+            const expandedBounds = boundsObj.pad(0.1); // 10% padding
+            window.gameMap.setMaxBounds(expandedBounds);
+            window.gameMap.options.maxBoundsViscosity = 0.8; // FIXED: Less strict (was 1.0)
+            window.gamePlayManager.currentBounds = boundsObj;
+            
+            // Add visual boundary overlay
+            const boundaryOverlay = L.rectangle(boundsObj, {
+                color: '#00ff88',
+                weight: 3,
+                opacity: 0.7,
+                fillColor: 'transparent',
+                fillOpacity: 0,
+                dashArray: '10, 10',
+                className: 'game-area-boundary'
+            }).addTo(window.gameMap);
+            
+            window.gamePlayManager.gameAreaBoundary = boundaryOverlay;
+            console.log('🎯 Game area boundary added for selected map');
+        }
+        
+        // Update map zoom limits
+        window.gameMap.setMinZoom(minZoom);
+        window.gameMap.setMaxZoom(maxZoom);
+        
+        // Create new tile layer with BALANCED settings (performance + reliability)
         const tileUrl = `/mbtiles/tile/{z}/{x}/{y}.png?file=${encodeURIComponent(mapPath)}`;
         const newTileLayer = L.tileLayer(tileUrl, {
             minZoom: minZoom,
             maxZoom: maxZoom,
-            maxNativeZoom: maxZoom,
-            minNativeZoom: minZoom,
+            maxNativeZoom: maxZoom,  // Allow overzoom beyond native tiles
+            minNativeZoom: minZoom,  // Start fetching at min zoom
+            bounds: boundsObj,       // Only request tiles within bounds
+            noWrap: true,            // No wrapping around the world
+            keepBuffer: 2,           // FIXED: Keep buffer for smooth zooming (was 0)
+            updateWhenIdle: false,   // FIXED: Update during movement for better UX
+            updateWhenZooming: true, // FIXED: Update during zoom (was false)
             tileSize: 256,
-            updateWhenIdle: true,
-            updateWhenZooming: false,
-            keepBuffer: 2,
-            crossOrigin: true,
-            detectRetina: true,
-            attribution: 'MBTiles Offline Map'
+            attribution: metadata.name || 'MBTiles Offline Map',
+            // Performance optimizations
+            updateInterval: 100,     // Faster updates
+            errorTileUrl: '',        // Don't show error tiles
+            zoomOffset: 0,
+            zoomReverse: false
         });
         
         newTileLayer.addTo(window.gameMap);
+        window.gamePlayManager.currentTileLayer = newTileLayer;
         
-        // Update map view
-        if (bounds) {
-            window.gameMap.fitBounds(bounds, { padding: [20, 20] });
+        // Fit map to bounds (NON-BLOCKING with RAF for better performance)
+        if (boundsObj) {
+            requestAnimationFrame(() => {
+                // Invalidate size
+                window.gameMap.invalidateSize(false); // false = no animation for speed
+                
+                // Use fitBounds to ensure the dataset fills the container
+                window.gameMap.fitBounds(boundsObj, {
+                    padding: [0, 0],
+                    maxZoom: maxZoom,
+                    animate: false, // OPTIMIZED: No animation for faster load
+                    duration: 0
+                });
+                
+                // Set up event handlers for bounds enforcement (debounced)
+                setupBoundedMapEvents(boundsObj, maxZoom);
+                
+                console.log('✅ Map fitted to bounds');
+            });
         } else {
-            window.gameMap.setView(center, zoom);
+            // Fallback: use center and zoom
+            window.gameMap.setView(center, initialZoom, { animate: false });
         }
         
         console.log('✅ Map switched successfully');
         
+        // Show success notification
         if (typeof toastr !== 'undefined') {
-            toastr.success('Map loaded successfully', 'Map Changed');
+            toastr.success(`${metadata.name || 'Map'} loaded`, 'Ready');
         }
         
     } catch (error) {
-        console.error('Error switching map:', error);
+        console.error('❌ Error switching map:', error);
+        
+        if (typeof toastr !== 'undefined') {
+            toastr.error('Error loading map: ' + error.message, 'Error');
+        } else {
         alert('Error loading map: ' + error.message);
+        }
+    } finally {
+        // ALWAYS remove loading overlay
+        const overlay = document.getElementById('mapLoadingOverlay');
+        if (overlay) {
+            // Small delay to ensure map has rendered
+            setTimeout(() => overlay.remove(), 300);
+        }
     }
 };
+
+// Helper function to set up bounded map event handlers (DEBOUNCED for better performance)
+function setupBoundedMapEvents(boundsObj, maxZoom) {
+    // Remove previous handlers
+    window.gameMap.off('zoomend');
+    window.gameMap.off('moveend');
+    
+    let boundsCheckTimeout = null;
+    
+    // Debounced bounds check function
+    const checkBounds = () => {
+        if (!window.gameMap || !boundsObj) return;
+        
+        const currentCenter = window.gameMap.getCenter();
+        
+        // Only snap back if significantly outside bounds (not just a little bit)
+        if (!boundsObj.contains(currentCenter)) {
+            // Get nearest point within bounds
+            const bounds = boundsObj;
+            const lat = Math.max(bounds.getSouth(), Math.min(bounds.getNorth(), currentCenter.lat));
+            const lng = Math.max(bounds.getWest(), Math.min(bounds.getEast(), currentCenter.lng));
+            
+            // Only snap if we're more than a small threshold outside
+            const threshold = 0.001; // Small threshold to avoid unnecessary snapping
+            if (Math.abs(currentCenter.lat - lat) > threshold || Math.abs(currentCenter.lng - lng) > threshold) {
+                window.gameMap.panTo([lat, lng], { animate: true, duration: 0.25 });
+            }
+        }
+    };
+    
+    // Prevent zoom out beyond dataset visibility (debounced)
+    window.gameMap.on('zoomend', function() {
+        clearTimeout(boundsCheckTimeout);
+        boundsCheckTimeout = setTimeout(checkBounds, 100);
+    });
+    
+    // Prevent panning outside bounds (debounced)
+    window.gameMap.on('moveend', function() {
+        clearTimeout(boundsCheckTimeout);
+        boundsCheckTimeout = setTimeout(checkBounds, 100);
+    });
+    
+    console.log('🔒 Bounded map event handlers setup (debounced)');
+}
 
 // Create global instance
 const gamePlayManager = new GamePlayManager();
