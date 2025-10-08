@@ -12,5 +12,9 @@ namespace TechWebSol.Models.MapManagement
 		public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
 		public DateTime? CompletedUtc { get; set; }
 		public string? FileName { get; set; }
+		
+		// Terrain data properties for offline tactical analysis
+		public string? TerrainDataFileName { get; set; }
+		public string? TerrainDataError { get; set; }
 	}
 }

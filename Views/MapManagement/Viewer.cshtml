@@ -159,7 +159,7 @@
       <select id="file-selector">
         <option value="">Select an MBTiles file...</option>
       </select>
-      <a href="/Home/Downloads">Downloads</a>
+            <a href="/MapManagement/Downloads">Downloads</a>
       <a href="/">Home</a>
     </div>
   </header>
@@ -200,7 +200,7 @@
         
         files.forEach(file => {
           const option = document.createElement('option');
-          option.value = file.name;
+          option.value = file.path; // Use path (folder/map.mbtiles)
           option.textContent = `${file.name} (${(file.size / (1024*1024)).toFixed(2)} MB)`;
           selector.appendChild(option);
         });
@@ -231,7 +231,7 @@
 
       try {
         // Fetch metadata
-        const metaRes = await fetch(`/mbtiles/${encodeURIComponent(filename)}/metadata`);
+        const metaRes = await fetch(`/mbtiles/metadata?file=${encodeURIComponent(filename)}`);
         if (!metaRes.ok) throw new Error('Failed to load metadata');
         
         const metaData = await metaRes.json();
@@ -261,7 +261,7 @@
           map.removeLayer(currentLayer);
         }
 
-        currentLayer = L.tileLayer(`/mbtiles/${encodeURIComponent(filename)}/tile/{z}/{x}/{y}.png`, {
+        currentLayer = L.tileLayer(`/mbtiles/tile/{z}/{x}/{y}.png?file=${encodeURIComponent(filename)}`, {
           attribution: metadata.attribution || 'MBTiles Offline Map',
           minZoom: minZoom,
           maxZoom: maxZoom,

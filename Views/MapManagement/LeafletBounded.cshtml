@@ -223,7 +223,6 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
-            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
             crossorigin=""></script>
     
     <script>
@@ -411,7 +410,7 @@
             map.attributionControl.addAttribution('MBTiles Viewer');
 
             // Create tile layer with strict zoom constraints
-            const tileUrl = `/mbtiles/${encodeURIComponent(filename)}/tile/{z}/{x}/{y}.png`;
+            const tileUrl = `/mbtiles/tile/{z}/{x}/{y}.png?file=${encodeURIComponent(filename)}`;
             
             currentTileLayer = L.tileLayer(tileUrl, {
                 minZoom: minZoom,
@@ -563,7 +562,7 @@
 
             try {
                 // Fetch metadata
-                const metadataUrl = `/mbtiles/${encodeURIComponent(filename)}/metadata`;
+                const metadataUrl = `/mbtiles/metadata?file=${encodeURIComponent(filename)}`;
                 const response = await fetch(metadataUrl);
                 
                 if (!response.ok) {
@@ -613,7 +612,7 @@
                 
                 files.forEach(file => {
                     const option = document.createElement('option');
-                    option.value = file.name;
+                    option.value = file.path; // Use path (folder/map.mbtiles)
                     option.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
                     selector.appendChild(option);
                 });

@@ -70,12 +70,23 @@
             actions = `<a href=\"/get_file/${j.id}\" download>Download</a>`;
             // Add View button for MBTiles files
             if (j.format === 'mbtiles' && j.fileName) {
-              actions += ` <a href=\"/Home/Viewer?file=${encodeURIComponent(j.fileName)}\" target=\"_blank\">View Map</a>`;
+                  actions += ` <a href=\"/MapManagement/Viewer?file=${encodeURIComponent(j.fileName)}\" target=\"_blank\">View Map</a>`;
             }
           }
+          
+          // Add terrain status indicator
+          let terrainStatus = '';
+          if (j.format === 'mbtiles') {
+            if (j.terrainDataFileName) {
+              terrainStatus = '<br><small style="color:#28a745;">✓ Terrain data available</small>';
+            } else if (j.terrainDataError) {
+              terrainStatus = `<br><small style="color:#ff6600;" title="${j.terrainDataError}">⚠ Terrain data failed</small>`;
+            }
+          }
+          
           tr.innerHTML = `
             <td>${j.id}</td>
-            <td>${status}</td>
+            <td>${status}${terrainStatus}</td>
             <td>${j.progress} / ${j.total} (${pct}%)</td>
             <td>${j.format}</td>
             <td>${j.style}</td>

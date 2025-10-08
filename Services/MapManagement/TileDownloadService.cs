@@ -160,13 +160,31 @@ namespace TechWebSol.Services.MapManagement
             return ms.ToArray();
         }
 
-        public async Task<MbtilesFile?> CreateMbtilesAsync(List<(int z, int x, int y)> tiles, string jobId, string style, Action<int> onProgress, (double north, double south, double east, double west)? originalBounds = null)
+        public async Task<MbtilesFile?> CreateMbtilesAsync(List<(int z, int x, int y)> tiles, string jobId, string style, Action<int> onProgress, (double north, double south, double east, double west)? originalBounds = null, string? displayName = null)
         {
             var contentRoot = Directory.GetCurrentDirectory();
             var wwwRoot = Path.Combine(contentRoot, "wwwroot");
             Directory.CreateDirectory(wwwRoot);
-            var finalFileName = $"{jobId}-{DateTime.UtcNow:yyyyMMddHHmmssfff}.mbtiles";
-            var finalPath = Path.Combine(wwwRoot, finalFileName);
+            
+            // Build a friendly filename including a slug of the provided display name when available
+            string Slugify(string? text)
+            {
+                if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+                var s = new string(text.ToLowerInvariant().Select(ch => char.IsLetterOrDigit(ch) ? ch : '-').ToArray());
+                while (s.Contains("--")) s = s.Replace("--", "-");
+                return s.Trim('-');
+            }
+
+            // Create organized folder structure
+            var nameSlug = Slugify(displayName);
+            var folderName = !string.IsNullOrEmpty(nameSlug)
+                ? $"{nameSlug}-{DateTime.UtcNow:yyyyMMddHHmmssfff}"
+                : $"map-{DateTime.UtcNow:yyyyMMddHHmmssfff}";
+            var mapFolder = Path.Combine(wwwRoot, folderName);
+            Directory.CreateDirectory(mapFolder);
+
+            var finalFileName = "map.mbtiles";
+            var finalPath = Path.Combine(mapFolder, finalFileName);
             var stagingDir = Path.Combine(contentRoot, "App_Data", "mb_staging");
             
             // Ensure staging directory exists with proper error handling
@@ -295,7 +313,9 @@ namespace TechWebSol.Services.MapManagement
                         await meta.ExecuteNonQueryAsync();
                     }
 
-                    var mapName = $"Offline Map - {(style == "satellite" ? "Satellite" : "Street")}";
+                    var mapName = !string.IsNullOrWhiteSpace(displayName)
+                        ? displayName!
+                        : $"Offline Map - {(style == "satellite" ? "Satellite" : "Street")}";
                     var timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
                     
                     await InsertMetadata("name", mapName);
@@ -513,7 +533,8 @@ namespace TechWebSol.Services.MapManagement
             return new MbtilesFile
             {
                 Bytes = bytes,
-                FileName = finalFileName
+                // Use forward slashes for web paths (cross-platform compatibility)
+                FileName = $"{folderName}/{finalFileName}"
             };
         }
 

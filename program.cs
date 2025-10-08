@@ -134,11 +134,25 @@ builder.Services.AddSingleton<IOfflineMapService, OfflineMapService>();
 // Map Management Services (for JobsController)
 builder.Services.AddSingleton<TechWebSol.Services.MapManagement.JobStore>();
 builder.Services.AddHostedService<StartupCleanup>();
-builder.Services.AddHttpClient<TechWebSol.Services.MapManagement.TileService>(client =>
+builder.Services.AddHttpClient<TileService>(client =>
 {
-    client.DefaultRequestHeaders.Add("User-Agent", "OfflineMapDownloader/1.0");
-    client.Timeout = TimeSpan.FromMinutes(5);
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("TechWebSol.NET/1.0 (+mailto:you@example.com)");
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
 });
+
+// Register TerrainDownloadService with its own HttpClient for elevation/OSM data
+builder.Services.AddHttpClient<TerrainDownloadService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(120); // Longer timeout for terrain data
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("TechWebSol.NET/1.0 (+mailto:you@example.com)");
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
+});
+
 
 // Simplified Pattern Matching Services
 

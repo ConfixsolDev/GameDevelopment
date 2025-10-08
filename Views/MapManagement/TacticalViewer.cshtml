@@ -139,9 +139,10 @@
 </head>
 <body>
     <header>
-        <h1>⚔️ TACTICAL ROUTE PLANNER</h1>
+        <h1>⚔️ TACTICAL ROUTE PLANNER [OFFLINE MODE]</h1>
         <div>
             <select id="file-selector"><option value="">Select Map...</option></select>
+            <span id="terrain-status" style="color:#ff6600;font-size:11px;margin-right:12px;">No terrain data</span>
             <a href="/" style="color:#00ff00;padding:6px 12px;">Home</a>
         </div>
     </header>
@@ -194,22 +195,54 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         let map, waypoints = [], routeLine, markers = [], obstacleMarkers = [], geojsonLayer = null;
+        let currentTerrainDb = null; // Store terrain database filename
+        let currentJobId = null; // Store job ID for terrain database lookup
+
+        // Function to find and load terrain database for the current map
+        async function loadTerrainDatabase(mbtilesPath) {
+            try {
+                // Extract folder name from path: "folder-name/map.mbtiles" -> "folder-name"
+                const folderName = mbtilesPath.split('/')[0];
+                
+                // Find terrain database with matching folder
+                const terrainResponse = await fetch('/terrain/list');
+                const terrainFiles = await terrainResponse.json();
+                const terrainDb = terrainFiles.find(f => f.mapFolder === folderName);
+                
+                if (terrainDb) {
+                    currentTerrainDb = terrainDb.path; // Use full path: folder/terrain.db
+                    document.getElementById('terrain-status').textContent = '✓ Terrain data loaded';
+                    document.getElementById('terrain-status').style.color = '#00ff00';
+                    console.log('Loaded terrain database:', currentTerrainDb);
+                } else {
+                    currentTerrainDb = null;
+                    document.getElementById('terrain-status').textContent = '⚠ No terrain data (route analysis disabled)';
+                    document.getElementById('terrain-status').style.color = '#ff6600';
+                    console.warn('No terrain database found for folder:', folderName);
+                }
+            } catch (error) {
+                console.error('Failed to load terrain database:', error);
+                currentTerrainDb = null;
+                document.getElementById('terrain-status').textContent = '✗ Terrain data unavailable';
+                document.getElementById('terrain-status').style.color = '#ff0000';
+            }
+        }
 
         // Load MBTiles list and auto-select if ?file= is present
         fetch('/mbtiles/list').then(r => r.json()).then(files => {
             const sel = document.getElementById('file-selector');
             files.forEach(f => {
                 const opt = document.createElement('option');
-                opt.value = f.name;
-                opt.textContent = f.name;
+                opt.value = f.path; // Use path (folder/map.mbtiles) instead of just name
+                opt.textContent = f.name; // Display friendly folder name
                 sel.appendChild(opt);
             });
             const q = new URLSearchParams(location.search);
             const initial = q.get('file');
             if (initial) {
-                const match = files.find(x => x.name === initial);
+                const match = files.find(x => x.path === initial || x.name === initial);
                 if (match) {
-                    sel.value = initial;
+                    sel.value = match.path;
                     sel.dispatchEvent(new Event('change'));
                 }
             }
@@ -218,7 +251,11 @@
         // Load map with bounded logic
         document.getElementById('file-selector').addEventListener('change', e => {
             if (!e.target.value) return;
-            fetch(`/mbtiles/${encodeURIComponent(e.target.value)}/metadata`)
+            
+            // Load terrain database for this map
+            loadTerrainDatabase(e.target.value);
+            
+            fetch(`/mbtiles/metadata?file=${encodeURIComponent(e.target.value)}`)
                 .then(r => r.json())
                 .then(data => {
                     const md = data?.metadata || {};
@@ -286,7 +323,7 @@
                     });
 
                     // Create tile layer with strict zoom constraints
-                    const tileUrl = `/mbtiles/${encodeURIComponent(e.target.value)}/tile/{z}/{x}/{y}.png`;
+                    const tileUrl = `/mbtiles/tile/{z}/{x}/{y}.png?file=${encodeURIComponent(e.target.value)}`;
                     
                     const tiles = L.tileLayer(tileUrl, {
                         minZoom: minZoom,
@@ -437,8 +474,13 @@
                 return;
             }
 
+            if (!currentTerrainDb) {
+                alert('No terrain data available for this map. Route analysis requires terrain data to be downloaded with the map tiles.');
+                return;
+            }
+
             document.getElementById('loading').style.display = 'flex';
-            document.getElementById('loading-text').textContent = 'Analyzing terrain and obstacles...';
+            document.getElementById('loading-text').textContent = 'Analyzing terrain and obstacles (OFFLINE)...';
 
             try {
                 const weight = parseFloat(document.getElementById('vehicle-weight').value);
@@ -461,15 +503,22 @@
                     }
                 }
 
-                document.getElementById('loading-text').textContent = 'Fetching elevation data...';
+                document.getElementById('loading-text').textContent = 'Fetching elevation data (OFFLINE)...';
                 
-                // Get elevation for all points
-                const elevResponse = await fetch('https://api.open-elevation.com/api/v1/lookup', {
+                // Get elevation for all points from OFFLINE database
+                const elevResponse = await fetch('/api/v1/elevation/lookup', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Terrain-Database': currentTerrainDb
+                    },
                     body: JSON.stringify({ locations: allPoints })
                 });
                 const elevData = await elevResponse.json();
+                // Guard: ensure we always have an array of elevation results
+                const elevationResults = Array.isArray(elevData?.results)
+                  ? elevData.results
+                  : allPoints.map(p => ({ latitude: p.latitude, longitude: p.longitude, elevation: 0 }));
 
                 // Calculate total distance and max slope
                 let totalDist = 0;
@@ -482,9 +531,9 @@
                 }
 
                 // Analyze slopes between consecutive points (meters with lon scaled by cos(lat))
-                for (let i = 0; i < elevData.results.length - 1; i++) {
-                    const p1 = elevData.results[i];
-                    const p2 = elevData.results[i + 1];
+                for (let i = 0; i < elevationResults.length - 1; i++) {
+                    const p1 = elevationResults[i];
+                    const p2 = elevationResults[i + 1];
                     const elevDiff = Math.abs(p2.elevation - p1.elevation);
                     const latDiff = Math.abs(allPoints[i + 1].latitude - allPoints[i].latitude);
                     const lngDiff = Math.abs(allPoints[i + 1].longitude - allPoints[i].longitude);
@@ -503,40 +552,26 @@
                     }
                 }
 
-                document.getElementById('loading-text').textContent = 'Checking for obstacles...';
+                document.getElementById('loading-text').textContent = 'Checking for obstacles (OFFLINE)...';
 
-                // Check for water bodies and terrain using Overpass API
-                const bbox = `${Math.min(...allPoints.map(p => p.latitude))},${Math.min(...allPoints.map(p => p.longitude))},${Math.max(...allPoints.map(p => p.latitude))},${Math.max(...allPoints.map(p => p.longitude))}`;
+                // Check for water bodies and terrain using OFFLINE terrain database
+                const bboxArray = [
+                    Math.min(...allPoints.map(p => p.latitude)),  // south
+                    Math.min(...allPoints.map(p => p.longitude)), // west
+                    Math.max(...allPoints.map(p => p.latitude)),  // north
+                    Math.max(...allPoints.map(p => p.longitude))  // east
+                ];
                 
-                const overpassQuery = `
-                    [out:json][timeout:25][bbox:${bbox}];
-                    (
-                        way["natural"="water"];
-                        way["waterway"];
-                        way["natural"="wetland"];
-                        way["landuse"="forest"];
-                        way["natural"="wood"];
-                        way["natural"="scrub"];
-                        way["landuse"="military"];
-                        way["natural"="sand"];
-                        way["natural"="desert"];
-                        way["landuse"="residential"];
-                        way["landuse"="industrial"];
-                        way["highway"]["surface"~"unpaved|gravel|dirt|sand|grass"];
-                        way["natural"="cliff"];
-                        way["natural"="rock"];
-                        way["landuse"="quarry"];
-                        relation["natural"="water"];
-                    );
-                    out geom;
-                `;
-
-                const overpassResponse = await fetch('https://overpass-api.de/api/interpreter', {
+                const terrainResponse = await fetch('/api/terrain/features', {
                     method: 'POST',
-                    body: overpassQuery
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Terrain-Database': currentTerrainDb
+                    },
+                    body: JSON.stringify({ bbox: bboxArray })
                 });
-                const terrainData = await overpassResponse.json();
-                console.log('Overpass elements:', terrainData?.elements?.length || 0, 'bbox:', `${bbox}`);
+                const terrainData = await terrainResponse.json();
+                console.log('Offline terrain elements:', terrainData?.elements?.length || 0, 'bbox:', bboxArray);
 
                 // Optional: draw GeoJSON overlay
                 if (document.getElementById('show-geojson').checked) {
@@ -581,7 +616,7 @@
                 };
 
                 // Check if route intersects with obstacles (use sampled points along the path)
-                terrainData.elements.forEach(element => {
+                (terrainData?.elements || []).forEach(element => {
                     if (!element.geometry || !element.tags) return;
 
                     for (let i = 0; i < allPoints.length; i++) {
@@ -628,12 +663,16 @@
                 // Additional open-sea crossing detection using coastline distance + elevation ~0m
                 let seaCrossings = [];
                 try {
-                    const coastQuery = `
-                        [out:json][timeout:25][bbox:${bbox}];
-                        way["natural"="coastline"]; out geom;
-                    `;
-                    const coastResp = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: coastQuery });
-                    const coast = await coastResp.json();
+                    // Query coastline features from OFFLINE database
+                    const coastResponse = await fetch('/api/terrain/features', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'X-Terrain-Database': currentTerrainDb
+                        },
+                        body: JSON.stringify({ bbox: bboxArray, featureType: 'coastline' })
+                    });
+                    const coast = await coastResponse.json();
                     const coastlineNodes = [];
                     (coast.elements || []).forEach(e => {
                         if (!e.geometry) return;
@@ -652,7 +691,7 @@
 
                     for (let i = 0; i < allPoints.length; i++) {
                         const lat = allPoints[i].latitude, lon = allPoints[i].longitude;
-                        const elev = elevData.results[i]?.elevation ?? 0;
+                        const elev = elevationResults[i]?.elevation ?? 0;
                         if (elev <= 1) {
                             const dCoast = minDistToCoast(lat, lon);
                             if (dCoast > 300) {
@@ -666,7 +705,7 @@
                 if (seaCrossings.length === 0) {
                     let streak = 0;
                     for (let i = 0; i < allPoints.length; i++) {
-                        const elev = elevData.results[i]?.elevation ?? 0;
+                        const elev = elevationResults[i]?.elevation ?? 0;
                         if (elev <= 1) {
                             streak++;
                             if (streak >= 5) {
@@ -773,8 +812,8 @@
                 });
 
                 // Display results
-                const startElev = elevData.results[0].elevation;
-                const endElev = elevData.results[elevData.results.length - 1].elevation;
+                const startElev = elevationResults[0]?.elevation ?? 0;
+                const endElev = elevationResults[elevationResults.length - 1]?.elevation ?? 0;
                 const elevGain = Math.abs(endElev - startElev);
 
                 document.getElementById('results').style.display = 'block';
@@ -845,11 +884,12 @@
                     }
                     
                     obstacleHtml += `<div class="note">
-                        <strong style="color:#00ff00;">REAL DATA SOURCES:</strong><br>
-                        • Elevation: Open-Elevation API (SRTM 30m)<br>
-                        • Terrain/Obstacles: OpenStreetMap Overpass<br>
-                        • Route Analysis: Real-time simulation<br>
-                        • Detection Range: 60m from path samples (~100m apart)
+                        <strong style="color:#00ff00;">OFFLINE DATA SOURCES:</strong><br>
+                        • Elevation: Offline SRTM 90m (downloaded with map)<br>
+                        • Terrain/Obstacles: Offline OpenStreetMap data<br>
+                        • Route Analysis: Real-time simulation (offline)<br>
+                        • Detection Range: 60m from path samples (~100m apart)<br>
+                        • <strong style="color:#ffaa00;">✓ NO INTERNET REQUIRED</strong>
                     </div>`;
                     
                     document.getElementById('obstacles-content').innerHTML = obstacleHtml;

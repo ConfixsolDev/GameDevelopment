@@ -260,7 +260,7 @@
     <p>Browse and manage your offline map tiles</p>
     <div class="nav-links">
       <a href="/">Home</a>
-      <a href="/Home/Downloads">Downloads</a>
+            <a href="/MapManagement/Downloads">Downloads</a>
     </div>
   </header>
 
@@ -324,6 +324,10 @@
       const created = new Date(file.created).toLocaleDateString();
       const modified = new Date(file.modified).toLocaleDateString();
 
+      const terrainInfo = file.has_terrain 
+        ? `<div class="file-meta-item"><span>Terrain:</span><strong>✓ ${(file.terrain_size / (1024 * 1024)).toFixed(2)} MB</strong></div>`
+        : '';
+      
       card.innerHTML = `
         <h3>${file.name}</h3>
         <div class="file-meta">
@@ -331,6 +335,7 @@
             <span>Size:</span>
             <strong>${size} MB</strong>
           </div>
+          ${terrainInfo}
           <div class="file-meta-item">
             <span>Created:</span>
             <strong>${created}</strong>
@@ -341,9 +346,9 @@
           </div>
         </div>
         <div class="file-actions">
-              <a href="/Home/TacticalViewer?file=${encodeURIComponent(file.name)}" class="btn-view" target="_blank">View Map</a>
-          <a href="/${file.name}" class="btn-download" download>Download</a>
-          <button class="btn-info" onclick="showInfo('${encodeURIComponent(file.name)}')">Info</button>
+                  <a href="/MapManagement/TacticalViewer?file=${encodeURIComponent(file.path)}" class="btn-view" target="_blank">View Map</a>
+          <a href="/${file.path}" class="btn-download" download>Download</a>
+          <button class="btn-info" onclick="showInfo('${encodeURIComponent(file.path)}')">Info</button>
         </div>
       `;
 
@@ -359,7 +364,7 @@
       modal.classList.add('active');
 
       try {
-        const res = await fetch(`/mbtiles/${encodeURIComponent(filename)}/metadata`);
+        const res = await fetch(`/mbtiles/metadata?file=${encodeURIComponent(filename)}`);
         const data = await res.json();
         
         let html = '<table class="metadata-table">';
