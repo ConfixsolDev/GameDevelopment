@@ -498,35 +498,33 @@ class TokenPlacementManager {
     }
 
     /**
-     * End drag-to-move and open planning form directly
+     * End drag-to-move and save position directly (no popup)
      */
-    endDragToMove(token, marker, newPosition) {
+    async endDragToMove(token, marker, newPosition) {
         console.log('🎯 endDragToMove called for token:', token.name);
         console.log('🎯 Original position:', this.originalPosition);
         console.log('🎯 New position:', newPosition);
         
-        if (!this.dragPreview) {
-            console.log('🎯 No drag preview found, creating basic movement modal');
-            // Calculate distance even without drag preview
-            const distance = this.originalPosition ? this.originalPosition.distanceTo(newPosition) / 1000 : 0;
-            this.showConfirmMoveModal(token, distance);
-            return;
-        }
-        
-        // Remove route line
-        if (this.dragPreview.routeLine) {
+        // Remove route line if exists
+        if (this.dragPreview?.routeLine) {
             this.map.removeLayer(this.dragPreview.routeLine);
         }
         
         // Remove tooltip
         this.hideDragTooltip();
         
-        // Calculate final distance (only distance is calculated automatically)
-        const distance = this.originalPosition.distanceTo(newPosition) / 1000;
+        // Store preview marker reference for direct save
+        this.dragPreview = {
+            marker: marker,
+            token: token
+        };
+        
+        // Calculate final distance
+        const distance = this.originalPosition ? this.originalPosition.distanceTo(newPosition) / 1000 : 0;
         console.log('🎯 Calculated distance:', distance, 'km');
         
-        // Open planning form directly (no preview card)
-        this.showConfirmMoveModal(token, distance);
+        // Save directly without showing modal
+        await this.saveTokenPositionDirectly(token.id, newPosition);
     }
 
     /**
@@ -721,7 +719,7 @@ class TokenPlacementManager {
                                 <div class="data-tab-content active">
                                     <div class="tab-content-header">
                                         <h6><i class="fas fa-route"></i> Movement Planning</h6>
-                                        <p class="text-muted">Configure movement parameters and timing</p>
+                                        <p class="text-muted">Configure movement parameters and timing details for this token.</p>
                                     </div>
                                     
                                     <!-- Movement Mode - Full Width -->
@@ -786,9 +784,9 @@ class TokenPlacementManager {
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label for="plannedETA" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Planned ETA *</label>
-                                                <select class="form-control" id="plannedETA" required>
-                                                    <option value="">Select ETA</option>
+                                                <label for="plannedETA" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Planned ETA</label>
+                                                <select class="form-control" id="plannedETA">
+                                                    <option value="">Select ETA (Optional)</option>
                                                     <option value="1">0600 hours</option>
                                                     <option value="2">0800 hours</option>
                                                     <option value="3">1000 hours</option>
@@ -805,14 +803,14 @@ class TokenPlacementManager {
                                                     <option value="14">2400 hours</option>
                                                     <option value="15">0100 hours</option>
                                                 </select>
-                                                <small class="text-muted" style="font-size: 11px;">Estimated arrival time in military format (required)</small>
+                                                <small class="text-muted" style="font-size: 11px;">Estimated arrival time in military format</small>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label for="movementSpeed" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Movement Speed (km/h) *</label>
-                                                <select class="form-control" id="movementSpeed" required>
-                                                    <option value="">Select speed</option>
+                                                <label for="movementSpeed" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Movement Speed (km/h)</label>
+                                                <select class="form-control" id="movementSpeed">
+                                                    <option value="">Select speed (Optional)</option>
                                                     <option value="1">1 km/h</option>
                                                     <option value="2">2 km/h</option>
                                                     <option value="3">3 km/h</option>
@@ -826,7 +824,7 @@ class TokenPlacementManager {
                                                     <option value="30">30 km/h</option>
                                                     <option value="40">40 km/h</option>
                                                 </select>
-                                                <small class="text-muted" style="font-size: 11px;">Unit's movement speed (required)</small>
+                                                <small class="text-muted" style="font-size: 11px;">Unit's movement speed</small>
                                             </div>
                                         </div>
                                     </div>
@@ -835,9 +833,9 @@ class TokenPlacementManager {
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label for="engagementRule" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Engagement Rule *</label>
-                                                <select class="form-control" id="engagementRule" required>
-                                                    <option value="">Select engagement rule</option>
+                                                <label for="engagementRule" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Engagement Rule</label>
+                                                <select class="form-control" id="engagementRule">
+                                                    <option value="">Select engagement rule (Optional)</option>
                                                     <option value="avoid">Avoid Strongpoints</option>
                                                     <option value="engage">Engage If Encountered</option>
                                                     <option value="hold">Hold If Supply < 50%</option>
@@ -869,7 +867,7 @@ class TokenPlacementManager {
                                     <i class="fas fa-times"></i> Cancel
                                 </button>
                                 <button type="button" class="btn btn-primary" onclick="window.tokenPlacementManager.saveMoveOrder('${token.id}')">
-                                    <i class="fas fa-check"></i> Confirm Move
+                                    <i class="fas fa-save"></i> Save Planning Details
                                 </button>
                             </div>
                         </div>
@@ -1074,6 +1072,58 @@ class TokenPlacementManager {
     }
 
     /**
+     * Save token position directly without modal (for drag and drop)
+     */
+    async saveTokenPositionDirectly(tokenId, newPosition) {
+        console.log('🎯 Saving token position directly:', tokenId);
+        
+        try {
+            const response = await fetch('/GamePlay/MoveToken', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    TokenId: tokenId,
+                    Latitude: newPosition.lat,
+                    Longitude: newPosition.lng,
+                    MovementMode: null,
+                    StartTurn: null,
+                    StartOffset: null,
+                    PlannedETA: null,
+                    MovementSpeed: null,
+                    EngagementRule: null,
+                    SharedOrder: false,
+                    Notes: null
+                })
+            });
+            
+            const result = await response.json();
+            console.log('MoveToken response:', result);
+            
+            if (result.success) {
+                this.notificationCallback('Token position saved. Click on marker to add planning details.', 'success');
+                
+                // Update area coverage if any
+                if (result.areaCoverages && result.areaCoverages.length > 0) {
+                    this.updateAreaCoverages(tokenId, result.areaCoverages);
+                }
+                
+                // Draw the complete movement history for this token
+                await this.showCompleteTokenRoute(tokenId);
+                
+                // Clean up
+                this.dragPreview = null;
+                this.originalPosition = null;
+            } else {
+                this.notificationCallback('Failed to save position: ' + result.message, 'error');
+                console.error('MoveToken failed:', result);
+            }
+        } catch (error) {
+            console.error('Error saving token position:', error);
+            this.notificationCallback('Error saving position: ' + error.message, 'error');
+        }
+    }
+
+    /**
      * Save move order
      */
     async saveMoveOrder(tokenId) {
@@ -1085,23 +1135,19 @@ class TokenPlacementManager {
             return;
         }
         
-        // Validate required fields
+        // Get form values - all optional
         const plannedETA = document.getElementById('plannedETA').value;
         const movementSpeed = document.getElementById('movementSpeed').value;
         const engagementRule = document.getElementById('engagementRule').value;
         
         console.log('Form values:', { plannedETA, movementSpeed, engagementRule });
         
-        if (!plannedETA || !movementSpeed || !engagementRule) {
-            this.notificationCallback('Please select all required fields (marked with *)', 'error');
-            return;
-        }
-        
-        const movementMode = document.querySelector('input[name="movementMode"]:checked').value;
-        const startTurn = document.getElementById('startTurn').value;
-        const startOffset = document.getElementById('startOffset').value;
+        // All fields are now optional - user can just save position
+        const movementMode = document.querySelector('input[name="movementMode"]:checked')?.value || null;
+        const startTurn = document.getElementById('startTurn').value || null;
+        const startOffset = document.getElementById('startOffset').value || null;
         const sharedOrder = document.getElementById('sharedOrder').checked;
-        const notes = document.getElementById('moveNotes').value;
+        const notes = document.getElementById('moveNotes').value || null;
         
         console.log('All form values:', { 
             movementMode, startTurn, startOffset, sharedOrder, notes,
@@ -1130,14 +1176,14 @@ class TokenPlacementManager {
                     TokenId: tokenId,
                     Latitude: this.dragPreview.marker.getLatLng().lat,
                     Longitude: this.dragPreview.marker.getLatLng().lng,
-                    MovementMode: movementMode,
-                    StartTurn: parseInt(startTurn),
-                    StartOffset: parseFloat(startOffset),
-                    PlannedETA: parseFloat(plannedETA),
-                    MovementSpeed: parseFloat(movementSpeed),
-                    EngagementRule: engagementRule,
-                    SharedOrder: sharedOrder,
-                    Notes: notes
+                    MovementMode: movementMode || null,
+                    StartTurn: startTurn ? parseInt(startTurn) : null,
+                    StartOffset: startOffset ? parseFloat(startOffset) : null,
+                    PlannedETA: plannedETA ? parseFloat(plannedETA) : null,
+                    MovementSpeed: movementSpeed ? parseFloat(movementSpeed) : null,
+                    EngagementRule: engagementRule || null,
+                    SharedOrder: sharedOrder || false,
+                    Notes: notes || null
                 })
             });
             
@@ -1145,7 +1191,7 @@ class TokenPlacementManager {
             console.log('MoveToken response:', result);
             
             if (result.success) {
-                this.notificationCallback('Move order confirmed and saved successfully', 'success');
+                this.notificationCallback('Planning details saved successfully', 'success');
                 
                 // Add to scenario planning orders
                 if (window.scenarioPlanning) {
@@ -1168,8 +1214,8 @@ class TokenPlacementManager {
                     window.scenarioPlanning.updateOrdersDisplay();
                 }
                 
-                // Show route on map
-                this.showConfirmedRoute(tokenId);
+                // Show complete route on map
+                await this.showCompleteTokenRoute(tokenId);
                 
                 // Close modal
                 document.getElementById('confirmMoveModal').remove();
@@ -1185,36 +1231,84 @@ class TokenPlacementManager {
     }
 
     /**
+     * Show complete token route by loading all movement history
+     */
+    async showCompleteTokenRoute(tokenId) {
+        console.log('🎯 Loading complete route for token:', tokenId);
+        
+        try {
+            // Clear existing routes first
+            this.clearTokenRoutes(tokenId);
+            
+            // Fetch complete movement history from server
+            const response = await fetch(`/GamePlay/GetTokenMovementHistory?tokenId=${tokenId}`);
+            const result = await response.json();
+            
+            if (result.success && result.movementHistory && result.movementHistory.length > 1) {
+                console.log(`📍 Found ${result.movementHistory.length} movement points for complete route`);
+                
+                // Create route lines for each movement segment
+                const positions = result.movementHistory.map(m => [
+                    typeof m.latitude === 'string' ? parseFloat(m.latitude) : m.latitude,
+                    typeof m.longitude === 'string' ? parseFloat(m.longitude) : m.longitude
+                ]);
+                
+                // Create the complete route line
+                const routeLine = L.polyline(positions, {
+                    color: '#4299e1',
+                    weight: 3,
+                    opacity: 0.7,
+                    dashArray: '10, 10',
+                    smoothFactor: 1.0
+                }).addTo(this.map);
+                
+                // Store route for cleanup
+                const tokenData = this.placedTokens.get(tokenId);
+                if (tokenData) {
+                    if (!tokenData.routeLines) tokenData.routeLines = [];
+                    tokenData.routeLines.push(routeLine);
+                }
+                
+                console.log('🎯 Complete route line created with', positions.length, 'points');
+            } else {
+                console.log('No movement history found for complete route');
+            }
+        } catch (error) {
+            console.error('Error loading complete token route:', error);
+        }
+    }
+
+    /**
      * Show confirmed route on map
      */
     showConfirmedRoute(tokenId) {
         const tokenData = this.placedTokens.get(tokenId);
         if (!tokenData || !this.originalPosition) return;
         
+        // Clean up any existing route lines for this token first
+        if (tokenData.routeLines) {
+            tokenData.routeLines.forEach(line => {
+                if (this.map.hasLayer(line)) {
+                    this.map.removeLayer(line);
+                }
+            });
+            tokenData.routeLines = [];
+        }
+        
+        // Create a single continuous route line (matching refresh behavior)
         const routeLine = L.polyline([this.originalPosition, tokenData.marker.getLatLng()], {
             color: '#4299e1',
             weight: 3,
-            opacity: 0.8,
-            dashArray: '10, 5'
+            opacity: 0.7,
+            dashArray: '10, 10', // Match the refresh pattern
+            smoothFactor: 1.0
         }).addTo(this.map);
         
-        // Add enhanced waypoint marker at endpoint
-        const waypointMarker = this.createWaypointMarker(
-            { 
-                latitude: tokenData.marker.getLatLng().lat, 
-                longitude: tokenData.marker.getLatLng().lng,
-                createdDate: new Date()
-            }, 
-            1, 
-            []
-        );
-        waypointMarker.addTo(this.map);
-        
-        // Store route for cleanup
+        // Store route for cleanup (no waypoint markers for now to avoid interference)
         if (!tokenData.routeLines) tokenData.routeLines = [];
-        if (!tokenData.waypointMarkers) tokenData.waypointMarkers = [];
         tokenData.routeLines.push(routeLine);
-        tokenData.waypointMarkers.push(waypointMarker);
+        
+        console.log('🎯 Route line created from', this.originalPosition, 'to', tokenData.marker.getLatLng());
     }
 
     /**
@@ -1637,9 +1731,15 @@ class TokenPlacementManager {
         const currentMode = window.tokenActionModeManager?.getCurrentMode();
         
         switch (currentMode) {
-            case null: // No mode selected - show token details
+            case null: // No mode selected - show planning modal to add details
             case 'select':
-                this.showTokenDetails(token);
+                // Setup dragPreview with current marker info for saveMoveOrder to work
+                this.dragPreview = {
+                    marker: marker,
+                    token: token
+                };
+                this.originalPosition = marker.getLatLng();
+                this.showConfirmMoveModal(token);
                 break;
                 
             case 'attack':
@@ -1657,8 +1757,13 @@ class TokenPlacementManager {
                 break;
                 
             case 'move':
-                // Show token details and enable movement
-                this.showTokenDetails(token);
+                // Show planning modal to add movement details
+                this.dragPreview = {
+                    marker: marker,
+                    token: token
+                };
+                this.originalPosition = marker.getLatLng();
+                this.showConfirmMoveModal(token);
                 break;
                 
             case 'place':
@@ -1667,8 +1772,13 @@ class TokenPlacementManager {
                 break;
                 
             default:
-                // Fallback to showing details
-                this.showTokenDetails(token);
+                // Fallback to showing planning modal
+                this.dragPreview = {
+                    marker: marker,
+                    token: token
+                };
+                this.originalPosition = marker.getLatLng();
+                this.showConfirmMoveModal(token);
                 break;
         }
     }
