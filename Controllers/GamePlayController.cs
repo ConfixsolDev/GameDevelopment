@@ -172,55 +172,97 @@ namespace TechWebSol.Controllers
                        
                             _logger.LogInformation($"Creating result object for token {token.Id}");
 
-                            adjudicationResults.Add(new
-                            {
-                                tokenId = token.Id,
-                                tokenName = token.Name,
-                                unitType = unitType,
-                                forceType = token.ForceType,
-                                mobilityType = mobilityType,
-                                strength = militaryUnit?.StrengthPercentage ?? 100,
-                                supplyState = GetSupplyStateText(militaryUnit?.SupplyState ?? 100),
-                                combatPower = militaryUnit?.CombatPower ?? 0,
+                             // Get detailed unit composition
+                             var unitComposition = GetUnitComposition(militaryUnit);
+                             
+                             // Get terrain analysis
+                             var terrainAnalysis = await GetTerrainAnalysis(markers);
+                             
+                             // Calculate realistic time based on terrain and unit capabilities
+                             var realisticTimeEstimate = CalculateRealisticTimeEstimate(
+                                 totalDistance, mobilityType, militaryUnit, terrainAnalysis);
 
-                                movement = new
-                                {
-                                    totalDistance = Math.Round(totalDistance, 2),
-                                    waypointCount = markers.Count,
-                                    segments = segments
-                                },
+                             // Extract realistic time values safely
+                             var realisticHours = 0;
+                             var realisticMinutes = 0;
+                             var realisticTotalHours = 0.0;
+                             var effectiveSpeed = 0.0;
 
-                                mpAnalysis = new
-                                {
-                                    baseMovementPoints = baseMovementPoints,
-                                    totalMPRequired = totalMP,
-                                    mpUtilization = Math.Round(mpUtilization * 100, 1),
-                                    remainingMP = Math.Max(0, (int)(baseMovementPoints - totalMP))
-                                },
+                             try
+                             {
+                                 var dynEstimate = realisticTimeEstimate as dynamic;
+                                 if (dynEstimate != null)
+                                 {
+                                     realisticHours = (int)(dynEstimate.hours ?? 0);
+                                     realisticMinutes = (int)(dynEstimate.minutes ?? 0);
+                                     realisticTotalHours = (double)(dynEstimate.totalHours ?? 0.0);
+                                     effectiveSpeed = (double)(dynEstimate.effectiveSpeed ?? 0.0);
+                                 }
+                             }
+                             catch (Exception ex)
+                             {
+                                 _logger.LogWarning(ex, "Error extracting realistic time estimates");
+                             }
 
-                                feasibility = new
-                                {
-                                    isFeasible = isFeasible,
-                                    status = feasibilityStatus,
-                                    reason = GetFeasibilityReason(feasibilityStatus, totalMP, baseMovementPoints)
-                                },
+                             adjudicationResults.Add(new
+                             {
+                                 tokenId = token.Id,
+                                 tokenName = token.Name,
+                                 unitType = unitType,
+                                 forceType = token.ForceType,
+                                 mobilityType = mobilityType,
+                                 strength = militaryUnit?.StrengthPercentage ?? 100,
+                                 supplyState = GetSupplyStateText(militaryUnit?.SupplyState ?? 100),
+                                 combatPower = militaryUnit?.CombatPower ?? 0,
 
-                                timeEstimate = new
-                                {
-                                    hours = (int)estimatedHours,
-                                    minutes = (int)((estimatedHours - (int)estimatedHours) * 60),
-                                    totalHours = Math.Round(estimatedHours, 2)
-                                },
+                                 // Detailed Unit Composition
+                                 unitComposition = unitComposition,
 
-                                recommendations = recommendations,
+                                 movement = new
+                                 {
+                                     totalDistance = Math.Round(totalDistance, 2),
+                                     waypointCount = markers.Count,
+                                     segments = segments
+                                 },
 
-                                waypoints = markers.Select(m => new
-                                {
-                                    lat = m.latitude,
-                                    lng = m.longitude,
-                                    timestamp = m.CreatedDate
-                                }).ToList()
-                            });
+                                 mpAnalysis = new
+                                 {
+                                     baseMovementPoints = baseMovementPoints,
+                                     totalMPRequired = totalMP,
+                                     mpUtilization = Math.Round(mpUtilization * 100, 1),
+                                     remainingMP = Math.Max(0, (int)(baseMovementPoints - totalMP))
+                                 },
+
+                                 feasibility = new
+                                 {
+                                     isFeasible = isFeasible,
+                                     status = feasibilityStatus,
+                                     reason = GetFeasibilityReason(feasibilityStatus, totalMP, baseMovementPoints)
+                                 },
+
+                                 timeEstimate = new
+                                 {
+                                     hours = (int)estimatedHours,
+                                     minutes = (int)((estimatedHours - (int)estimatedHours) * 60),
+                                     totalHours = Math.Round(estimatedHours, 2),
+                                     realisticHours = realisticHours,
+                                     realisticMinutes = realisticMinutes,
+                                     realisticTotalHours = Math.Round(realisticTotalHours, 2),
+                                     effectiveSpeed = Math.Round(effectiveSpeed, 1)
+                                 },
+
+                                 // Enhanced Terrain Analysis
+                                 terrainAnalysis = terrainAnalysis,
+
+                                 recommendations = recommendations,
+
+                                 waypoints = markers.Select(m => new
+                                 {
+                                     lat = m.latitude,
+                                     lng = m.longitude,
+                                     timestamp = m.CreatedDate
+                                 }).ToList()
+                             });
 
                             _logger.LogInformation($"Successfully created result for token {token.Id}");
                         }
@@ -238,14 +280,20 @@ namespace TechWebSol.Controllers
                     }
                 }
 
-                var summary = new
+                 double totalTokens = adjudicationResults.Count;
+                 double feasibleCount = adjudicationResults.Count(r => (bool)((dynamic)r).feasibility.isFeasible);
+                 double blockedCount = adjudicationResults.Count(r => !(bool)((dynamic)r).feasibility.isFeasible);
+                 double totalDistance1 = adjudicationResults.Sum(r => (double)((dynamic)r).movement.totalDistance);
+                 double avgMPUtilization = adjudicationResults.Any() ?
+                         adjudicationResults.Average(r => (double)((dynamic)r).mpAnalysis.mpUtilization) : 0;
+
+                var summary = new 
                 {
-                    totalTokens = adjudicationResults.Count,
-                    feasibleCount = adjudicationResults.Count(r => ((dynamic)r).feasibility.isFeasible),
-                    blockedCount = adjudicationResults.Count(r => !((dynamic)r).feasibility.isFeasible),
-                    totalDistance = adjudicationResults.Sum(r => ((dynamic)r).movement.totalDistance),
-                    avgMPUtilization = adjudicationResults.Any() ?
-                        adjudicationResults.Average(r => ((dynamic)r).mpAnalysis.mpUtilization) : 0
+                    totalTokens,
+                    feasibleCount,
+                    blockedCount,
+                    totalDistance= totalDistance1,
+                    avgMPUtilization
                 };
 
                 return Json(new
@@ -421,9 +469,469 @@ namespace TechWebSol.Controllers
             return supplyState switch
             {
                 >= 100 => "Green",
-                >= 75 => "Amber",
+                >= 75 => "Amber", 
                 >= 50 => "Red",
                 _ => "Critical"
+            };
+        }
+
+        private object GetUnitComposition(MilitaryUnit militaryUnit)
+        {
+            if (militaryUnit == null)
+            {
+                return new
+                {
+                    personnel = 0,
+                    vehicles = 0,
+                    weapons = 0,
+                    details = "No unit data available"
+                };
+            }
+
+            return militaryUnit switch
+            {
+                InfantryBattalion infantry => new
+                {
+                    personnel = infantry.Strength,
+                    vehicles = 0, // Infantry typically on foot
+                    weapons = infantry.ATGMS + infantry.RocketLauncher + infantry.Mortars81mm + 
+                             infantry.Mortars120mm + infantry.GrenadeLaunchers + infantry.HMG_AGL + 
+                             infantry.MG_LMG + infantry.MANPADS,
+                    details = $"Infantry Battalion: {infantry.Companies} companies, " +
+                             $"{infantry.ATGMS} ATGMs, {infantry.Mortars120mm} 120mm mortars, " +
+                             $"{infantry.HMG_AGL} HMGs, {infantry.Drones} drones",
+                    companies = infantry.Companies,
+                    atgms = infantry.ATGMS,
+                    mortars = infantry.Mortars120mm,
+                    hmgs = infantry.HMG_AGL,
+                    drones = infantry.Drones
+                },
+                ArmouredRegiment armour => new
+                {
+                    personnel = armour.Strength,
+                    vehicles = armour.Tanks,
+                    weapons = armour.Tanks + armour.ATGMS + armour.Mortars120mm + armour.HMG,
+                    details = $"Armoured Regiment: {armour.Squadrons} squadrons, " +
+                             $"{armour.Tanks} tanks, {armour.ATGMS} ATGMs, " +
+                             $"{armour.HMG} HMGs, {armour.Drones} drones",
+                    squadrons = armour.Squadrons,
+                    tanks = armour.Tanks,
+                    atgms = armour.ATGMS,
+                    hmgs = armour.HMG,
+                    drones = armour.Drones
+                },
+                ArtilleryRegiment artillery => new
+                {
+                    personnel = artillery.Strength,
+                    vehicles = artillery.Guns,
+                    weapons = artillery.Guns + artillery.HMG,
+                    details = $"Artillery Regiment: {artillery.Batteries} batteries, " +
+                             $"{artillery.Guns} {artillery.GunCaliber} guns, " +
+                             $"range {artillery.GunRange}km, {artillery.Drones} drones",
+                    batteries = artillery.Batteries,
+                    guns = artillery.Guns,
+                    gunCaliber = artillery.GunCaliber,
+                    gunRange = artillery.GunRange,
+                    hmgs = artillery.HMG,
+                    drones = artillery.Drones
+                },
+                LogisticsUnit logistics => new
+                {
+                    personnel = logistics.Strength,
+                    vehicles = logistics.SupplyTrucks + logistics.FuelTrucks + logistics.WaterTrucks + 
+                              logistics.AmmunitionTrucks + logistics.MaintenanceVehicles + 
+                              logistics.RecoveryVehicles + logistics.MobileWorkshops,
+                    weapons = logistics.HMG + logistics.LMG,
+                    details = $"Logistics Unit: {logistics.Companies} companies, " +
+                             $"{logistics.SupplyTrucks} supply trucks, {logistics.FuelTrucks} fuel trucks, " +
+                             $"{logistics.AmmunitionTrucks} ammo trucks, {logistics.FuelCapacity}L fuel capacity",
+                    companies = logistics.Companies,
+                    supplyTrucks = logistics.SupplyTrucks,
+                    fuelTrucks = logistics.FuelTrucks,
+                    ammoTrucks = logistics.AmmunitionTrucks,
+                    fuelCapacity = logistics.FuelCapacity
+                },
+                CombatEngineeringCompany engineers => new
+                {
+                    personnel = engineers.Strength,
+                    vehicles = engineers.EngineerVehicles + engineers.BridgeLayingVehicles + 
+                              engineers.MineClearingVehicles + engineers.Bulldozers + 
+                              engineers.Excavators + engineers.Cranes,
+                    weapons = engineers.HMG + engineers.LMG + engineers.ATGMS,
+                    details = $"Combat Engineering Company: {engineers.Platoons} platoons, " +
+                             $"{engineers.EngineerVehicles} engineer vehicles, " +
+                             $"{engineers.BridgeLayingVehicles} bridge layers, " +
+                             $"{engineers.MineClearingVehicles} mine clearers",
+                    platoons = engineers.Platoons,
+                    engineerVehicles = engineers.EngineerVehicles,
+                    bridgeLayers = engineers.BridgeLayingVehicles,
+                    mineClearers = engineers.MineClearingVehicles,
+                    bulldozers = engineers.Bulldozers
+                },
+                _ => new
+                {
+                    personnel = militaryUnit.Strength,
+                    vehicles = 0,
+                    weapons = 0,
+                    details = $"Generic Unit: {militaryUnit.Name}"
+                }
+            };
+        }
+
+        private async Task<object> GetTerrainAnalysis(List<MapMarker> markers)
+        {
+            try
+            {
+                var startElevation = 0.0;
+                var endElevation = 0.0;
+                var maxSlope = 0.0;
+                var obstacles = new List<object>();
+                var elevations = new List<double>();
+
+                // Get real elevation data for all markers
+                if (markers.Count >= 2)
+                {
+                    try
+                    {
+                        // Get current terrain database from session or default
+                        var terrainDb = HttpContext.Session.GetString("CurrentTerrainDb") ?? "default/terrain.db";
+                        
+                        // Create elevation lookup request
+                        var elevationRequest = new
+                        {
+                            locations = markers.Select(m => new
+                            {
+                                latitude = double.Parse(m.latitude),
+                                longitude = double.Parse(m.longitude)
+                            }).ToList()
+                        };
+
+                        // Call elevation lookup API
+                        var elevationResponse = await CallElevationLookup(elevationRequest, terrainDb);
+                        
+                        if (elevationResponse != null && elevationResponse.success == true && elevationResponse.results != null)
+                        {
+                            var resultsList = elevationResponse.results as IEnumerable<dynamic>;
+                            if (resultsList != null)
+                            {
+                                elevations = resultsList.Select(r => (double)r.elevation).ToList();
+                            }
+                            
+                            if (elevations.Count > 0)
+                            {
+                                startElevation = elevations[0];
+                                endElevation = elevations[elevations.Count - 1];
+                                
+                                // Calculate max slope along route
+                                for (int i = 0; i < elevations.Count - 1; i++)
+                                {
+                                    var distance = CalculateDistance(
+                                        double.Parse(markers[i].latitude), double.Parse(markers[i].longitude),
+                                        double.Parse(markers[i + 1].latitude), double.Parse(markers[i + 1].longitude)
+                                    );
+                                    
+                                    if (distance > 0)
+                                    {
+                                        var elevationDiff = Math.Abs(elevations[i + 1] - elevations[i]);
+                                        var slope = Math.Atan(elevationDiff / (distance * 1000)) * 180 / Math.PI;
+                                        maxSlope = Math.Max(maxSlope, slope);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to get real elevation data, using fallback");
+                    }
+                }
+
+                // Get terrain features along the route
+                if (markers.Count >= 2)
+                {
+                    try
+                    {
+                        var terrainDb = HttpContext.Session.GetString("CurrentTerrainDb") ?? "default/terrain.db";
+                        
+                        // Calculate bounding box for the route
+                        var lats = markers.Select(m => double.Parse(m.latitude)).ToList();
+                        var lngs = markers.Select(m => double.Parse(m.longitude)).ToList();
+                        
+                        var bbox = new double[] {
+                            lngs.Min() - 0.01, // minLng
+                            lats.Min() - 0.01, // minLat  
+                            lngs.Max() + 0.01, // maxLng
+                            lats.Max() + 0.01  // maxLat
+                        };
+
+                        // Get terrain features
+                        var featuresResponse = await CallTerrainFeatures(bbox, terrainDb);
+                        
+                        if (featuresResponse != null && featuresResponse.success == true && featuresResponse.elements != null)
+                        {
+                            var elementsList = featuresResponse.elements as IEnumerable<dynamic>;
+                            if (elementsList != null)
+                            {
+                                // Analyze features for obstacles
+                                foreach (var element in elementsList)
+                                {
+                                    if (element.tags != null)
+                                    {
+                                        var tags = element.tags as Dictionary<string, string>;
+                                        if (tags != null)
+                                        {
+                                            // Check for water features
+                                            if (tags.ContainsKey("natural") && tags["natural"] == "water" ||
+                                                tags.ContainsKey("waterway") ||
+                                                tags.ContainsKey("water"))
+                                            {
+                                                obstacles.Add(new { 
+                                                    type = "water", 
+                                                    description = $"Water feature: {tags.GetValueOrDefault("name", "Unknown")} - requires bridge/boat" 
+                                                });
+                                            }
+                                            
+                                            // Check for steep terrain
+                                            if (tags.ContainsKey("natural") && 
+                                                (tags["natural"] == "cliff" || tags["natural"] == "ridge"))
+                                            {
+                                                obstacles.Add(new { 
+                                                    type = "steep_terrain", 
+                                                    description = $"Steep terrain: {tags.GetValueOrDefault("name", "Cliff/Ridge")} - difficult passage" 
+                                                });
+                                            }
+                                            
+                                            // Check for urban areas
+                                            if (tags.ContainsKey("place") && tags["place"] == "city" ||
+                                                tags.ContainsKey("landuse") && tags["landuse"] == "residential")
+                                            {
+                                                obstacles.Add(new { 
+                                                    type = "urban", 
+                                                    description = $"Urban area: {tags.GetValueOrDefault("name", "City/Residential")} - civilians present, maneuverable" 
+                                                });
+                                            }
+                                            
+                                            // Check for military zones
+                                            if (tags.ContainsKey("military") ||
+                                                tags.ContainsKey("landuse") && tags["landuse"] == "military")
+                                            {
+                                                obstacles.Add(new { 
+                                                    type = "military_zone", 
+                                                    description = $"Military zone: {tags.GetValueOrDefault("name", "Restricted Area")} - RESTRICTED ACCESS" 
+                                                });
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to get terrain features, using basic analysis");
+                    }
+                }
+
+                // Fallback to basic analysis if no real data available
+                if (elevations.Count == 0)
+                {
+                    startElevation = double.Parse(markers[0].latitude) * 100; // Basic fallback
+                    endElevation = double.Parse(markers[markers.Count - 1].latitude) * 100;
+                    
+                    // Basic slope calculation
+                    for (int i = 0; i < markers.Count - 1; i++)
+                    {
+                        var elevation1 = double.Parse(markers[i].latitude) * 100;
+                        var elevation2 = double.Parse(markers[i + 1].latitude) * 100;
+                        var distance = CalculateDistance(
+                            double.Parse(markers[i].latitude), double.Parse(markers[i].longitude),
+                            double.Parse(markers[i + 1].latitude), double.Parse(markers[i + 1].longitude)
+                        );
+                        
+                        if (distance > 0)
+                        {
+                            var slope = Math.Atan(Math.Abs(elevation2 - elevation1) / (distance * 1000)) * 180 / Math.PI;
+                            maxSlope = Math.Max(maxSlope, slope);
+                        }
+                    }
+                }
+
+                return new
+                {
+                    startElevation = Math.Round(startElevation, 1),
+                    endElevation = Math.Round(endElevation, 1),
+                    elevationGain = Math.Round(endElevation - startElevation, 1),
+                    maxSlope = Math.Round(maxSlope, 1),
+                    obstacles = obstacles.Distinct().ToList(),
+                    terrainType = maxSlope > 15 ? "Mountainous" : maxSlope > 5 ? "Hilly" : "Flat",
+                    difficulty = maxSlope > 20 ? "High" : maxSlope > 10 ? "Moderate" : "Low",
+                    dataSource = elevations.Count > 0 ? "Real elevation data" : "Basic fallback",
+                    elevationPoints = elevations.Count
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in terrain analysis");
+                return new
+                {
+                    startElevation = 0.0,
+                    endElevation = 0.0,
+                    elevationGain = 0.0,
+                    maxSlope = 0.0,
+                    obstacles = new List<object>(),
+                    terrainType = "Unknown",
+                    difficulty = "Unknown",
+                    dataSource = "Error",
+                    elevationPoints = 0,
+                    error = ex.Message
+                };
+            }
+        }
+
+        private async Task<dynamic> CallElevationLookup(object request, string terrainDb)
+        {
+            try
+            {
+                var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Add("X-Terrain-Database", terrainDb);
+                
+                var json = System.Text.Json.JsonSerializer.Serialize(request);
+                var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                
+                var response = await httpClient.PostAsync("/api/v1/elevation/lookup", content);
+                var responseJson = await response.Content.ReadAsStringAsync();
+                
+                return System.Text.Json.JsonSerializer.Deserialize<dynamic>(responseJson);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error calling elevation lookup API");
+                return new { success = false, error = ex.Message };
+            }
+        }
+
+        private async Task<dynamic> CallTerrainFeatures(double[] bbox, string terrainDb)
+        {
+            try
+            {
+                var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Add("X-Terrain-Database", terrainDb);
+                
+                var request = new { bbox = bbox };
+                var json = System.Text.Json.JsonSerializer.Serialize(request);
+                var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                
+                var response = await httpClient.PostAsync("/api/terrain/features", content);
+                var responseJson = await response.Content.ReadAsStringAsync();
+                
+                return System.Text.Json.JsonSerializer.Deserialize<dynamic>(responseJson);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error calling terrain features API");
+                return new { success = false, error = ex.Message };
+            }
+        }
+
+        private object CalculateRealisticTimeEstimate(double totalDistance, string mobilityType, 
+            MilitaryUnit militaryUnit, object terrainAnalysis)
+        {
+            try
+            {
+                // Get base speed based on unit type and mobility
+                double baseSpeed = GetRealisticBaseSpeed(mobilityType, militaryUnit);
+                
+                // Apply terrain modifiers
+                double terrainModifier = 1.0;
+                double maxSlope = 0.0;
+                var obstacles = new List<object>();
+                
+                try
+                {
+                    var terrain = terrainAnalysis as dynamic;
+                    if (terrain != null)
+                    {
+                        maxSlope = (double)(terrain.maxSlope ?? 0.0);
+                        obstacles = terrain.obstacles as List<object> ?? new List<object>();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error accessing terrain analysis data");
+                }
+                
+                if (maxSlope > 20)
+                    terrainModifier = 0.3; // Very steep terrain
+                else if (maxSlope > 15)
+                    terrainModifier = 0.5; // Steep terrain
+                else if (maxSlope > 10)
+                    terrainModifier = 0.7; // Moderate terrain
+                else if (maxSlope > 5)
+                    terrainModifier = 0.85; // Slight terrain
+
+                // Apply obstacle penalties
+                foreach (var obstacle in obstacles)
+                {
+                    try
+                    {
+                        var obs = obstacle as dynamic;
+                        if (obs != null)
+                        {
+                            string obsType = obs.type?.ToString() ?? "";
+                            if (obsType == "water")
+                                terrainModifier *= 0.1; // Major delay for water crossing
+                            else if (obsType == "steep_terrain")
+                                terrainModifier *= 0.6; // Significant delay for steep terrain
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Error processing obstacle data");
+                    }
+                }
+
+                var effectiveSpeed = baseSpeed * terrainModifier;
+                var totalHours = totalDistance / effectiveSpeed;
+
+                return new
+                {
+                    hours = (int)totalHours,
+                    minutes = (int)((totalHours - (int)totalHours) * 60),
+                    totalHours = totalHours,
+                    baseSpeed = baseSpeed,
+                    effectiveSpeed = Math.Round(effectiveSpeed, 1),
+                    terrainModifier = Math.Round(terrainModifier, 2)
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error calculating realistic time estimate");
+                return new
+                {
+                    hours = 0,
+                    minutes = 0,
+                    totalHours = 0.0,
+                    baseSpeed = 0.0,
+                    effectiveSpeed = 0.0,
+                    terrainModifier = 1.0,
+                    error = ex.Message
+                };
+            }
+        }
+
+        private double GetRealisticBaseSpeed(string mobilityType, MilitaryUnit militaryUnit)
+        {
+            if (militaryUnit == null)
+                return GetBaseSpeed(mobilityType);
+
+            return militaryUnit switch
+            {
+                InfantryBattalion infantry => (double)infantry.MarchingSpeedCrossCountry,
+                ArmouredRegiment armour => (double)armour.MarchingSpeedCrossCountry,
+                ArtilleryRegiment artillery => 15.0, // Artillery typically slower
+                LogisticsUnit logistics => (double)logistics.MarchingSpeedCrossCountry,
+                CombatEngineeringCompany engineers => (double)engineers.MarchingSpeedCrossCountry,
+                _ => GetBaseSpeed(mobilityType)
             };
         }
 
