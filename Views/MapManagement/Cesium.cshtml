@@ -1,0 +1,90 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cesium 3D Tiles</title>
+  <link href="https://unpkg.com/cesium/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
+  <style>
+    html, body, #cesiumContainer { height: 100%; margin: 0; padding: 0; }
+    #overlay { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); color: #fff; padding: 10px; border-radius: 8px; font-family: Segoe UI, Arial, sans-serif; }
+    #overlay input { width: 260px; }
+  </style>
+</head>
+
+<body>
+  <div id="cesiumContainer"></div>
+  <div id="overlay">
+    <div style="margin-bottom:6px; font-weight:bold;">Cesium 3D Tiles Loader</div>
+    <div style="margin-bottom:6px;">
+      <label>Ion Access Token:</label><br/>
+      <input id="ionToken" type="text" placeholder="Paste Cesium ion token (optional)" />
+    </div>
+    <div style="margin-bottom:6px;">
+      <label>Ion Asset ID:</label><br/>
+      <input id="ionAssetId" type="number" placeholder="e.g., 96188 (NYC)">
+    </div>
+    <div style="margin-bottom:6px;">— OR —</div>
+    <div style="margin-bottom:6px;">
+      <label>Tileset URL:</label><br/>
+      <input id="tilesetUrl" type="text" placeholder="https://example.com/tileset.json" />
+    </div>
+    <button id="loadBtn">Load 3D Tiles</button>
+    <div id="status" style="margin-top:6px; font-size:12px; color:#ddd;"></div>
+  </div>
+
+  <script src="https://unpkg.com/cesium/Build/Cesium/Cesium.js"></script>
+  <script>
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      timeline: false,
+      animation: false,
+      baseLayerPicker: true,
+      geocoder: false,
+      terrainProvider: Cesium.createWorldTerrain()
+    });
+
+    let currentTileset = null;
+    document.getElementById('loadBtn').addEventListener('click', async () => {
+      const statusEl = document.getElementById('status');
+      const token = document.getElementById('ionToken').value.trim();
+      const assetId = document.getElementById('ionAssetId').value.trim();
+      const url = document.getElementById('tilesetUrl').value.trim();
+
+      try {
+        statusEl.textContent = 'Loading tileset...';
+        if (currentTileset) {
+          viewer.scene.primitives.remove(currentTileset);
+          currentTileset = null;
+        }
+
+        if (token) {
+          Cesium.Ion.defaultAccessToken = token;
+        }
+
+        if (assetId) {
+          currentTileset = await Cesium.Cesium3DTileset.fromIonAssetId(parseInt(assetId, 10));
+        } else if (url) {
+          currentTileset = await Cesium.Cesium3DTileset.fromUrl(url);
+        } else {
+          statusEl.textContent = 'Provide either an Ion Asset ID (with optional token) or a tileset URL.';
+          return;
+        }
+
+        viewer.scene.primitives.add(currentTileset);
+        await currentTileset.readyPromise;
+        await viewer.zoomTo(currentTileset);
+        statusEl.textContent = 'Loaded.';
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = 'Failed to load tileset.';
+      }
+    });
+  </script>
+</body>
+
+</html>
+
