@@ -349,3 +349,7 @@ FodyWeavers.xsd
 /Models/Token.cs
 /App_Data/tiles/map.mbtiles
 /App_Data/tiles/map.mbtiles
+/tiles/satellite
+/wwwroot/7b6bd084fd1c4ae58a1fafdf3b61519b-20251008114300126.mbtiles
+/wwwroot/7b6bd084fd1c4ae58a1fafdf3b61519b-20251008114300126.mbtiles-shm
+/wwwroot/7b6bd084fd1c4ae58a1fafdf3b61519b-20251008114300126.mbtiles-wal
