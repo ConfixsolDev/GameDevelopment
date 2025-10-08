@@ -12,6 +12,7 @@ using TechWebSol.Data;
 using TechWebSol.Filters;
 using TechWebSol.Models;
 using TechWebSol.Services;
+using TechWebSol.Services.MapManagement;
 using TechWebSol.Services.TokenManagement;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -129,6 +130,15 @@ builder.Services.AddScoped<PatternAnalysisEngine>();
 
 // Offline Map Services
 builder.Services.AddSingleton<IOfflineMapService, OfflineMapService>();
+
+// Map Management Services (for JobsController)
+builder.Services.AddSingleton<TechWebSol.Services.MapManagement.JobStore>();
+builder.Services.AddHostedService<StartupCleanup>();
+builder.Services.AddHttpClient<TechWebSol.Services.MapManagement.TileService>(client =>
+{
+    client.DefaultRequestHeaders.Add("User-Agent", "OfflineMapDownloader/1.0");
+    client.Timeout = TimeSpan.FromMinutes(5);
+});
 
 // Simplified Pattern Matching Services
 
