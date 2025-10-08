@@ -41,6 +41,393 @@ namespace TechWebSol.Controllers
         }
 
         /// <summary>
+        /// Military Adjudication - Comprehensive analysis of all token movements
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> AdjudicateAllMovements()
+        {
+            try
+            {
+                // Get all placed tokens for the user's team
+                var tokens = await _context.Tokens
+                    .Include(t => t.TokenGroup)
+                    .Include(t => t.MapMarkers.OrderBy(m => m.CreatedDate))
+                    .Where(t => t.TeamId == user.TeamId && t.MapMarkers.Any())
+                    .ToListAsync();
+
+                // Get all military units for quick lookup (using all unit types)
+                var infantryUnits = await _context.InfantryBattalions
+                    .Where(mu => mu.TeamId == user.TeamId && mu.TokenId != null)
+                    .ToDictionaryAsync(mu => mu.TokenId.Value, mu => (MilitaryUnit)mu);
+
+                var armouredUnits = await _context.ArmouredRegiments
+                    .Where(mu => mu.TeamId == user.TeamId && mu.TokenId != null)
+                    .ToDictionaryAsync(mu => mu.TokenId.Value, mu => (MilitaryUnit)mu);
+
+                var artilleryUnits = await _context.ArtilleryRegiments
+                    .Where(mu => mu.TeamId == user.TeamId && mu.TokenId != null)
+                    .ToDictionaryAsync(mu => mu.TokenId.Value, mu => (MilitaryUnit)mu);
+
+                var logisticsUnits = await _context.LogisticsUnits
+                    .Where(mu => mu.TeamId == user.TeamId && mu.TokenId != null)
+                    .ToDictionaryAsync(mu => mu.TokenId.Value, mu => (MilitaryUnit)mu);
+
+                var engineeringUnits = await _context.CombatEngineeringCompanies
+                    .Where(mu => mu.TeamId == user.TeamId && mu.TokenId != null)
+                    .ToDictionaryAsync(mu => mu.TokenId.Value, mu => (MilitaryUnit)mu);
+
+                // Merge all units into one dictionary
+                var militaryUnits = new Dictionary<Guid, MilitaryUnit>();
+                foreach (var unit in infantryUnits) militaryUnits[unit.Key] = unit.Value;
+                foreach (var unit in armouredUnits) militaryUnits[unit.Key] = unit.Value;
+                foreach (var unit in artilleryUnits) militaryUnits[unit.Key] = unit.Value;
+                foreach (var unit in logisticsUnits) militaryUnits[unit.Key] = unit.Value;
+                foreach (var unit in engineeringUnits) militaryUnits[unit.Key] = unit.Value;
+
+                var adjudicationResults = new List<object>();
+
+                foreach (var token in tokens)
+                {
+                    try
+                    {
+                        _logger.LogInformation($"Processing token: {token.Id}");
+
+                        var markers = token.MapMarkers.OrderBy(m => m.CreatedDate).ToList();
+
+                        if (markers.Count < 2)
+                            continue; // Need at least 2 points for movement analysis
+
+                        // Calculate total distance
+                        double totalDistance = 0;
+                        var segments = new List<object>();
+
+                        try
+                        {
+                            _logger.LogInformation($"Calculating distances for {markers.Count} markers");
+
+                            for (int i = 0; i < markers.Count - 1; i++)
+                            {
+                                var start = markers[i];
+                                var end = markers[i + 1];
+
+                                var distance = CalculateDistance(
+                                    double.Parse(start.latitude), double.Parse(start.longitude),
+                                    double.Parse(end.latitude), double.Parse(end.longitude)
+                                );
+
+                                totalDistance += distance;
+
+                                // Determine terrain type and MP modifier
+                                var terrainType = DetermineTerrainType(start, end);
+                                var mpModifier = GetMPModifier(terrainType, GetMobilityType(token));
+                                var segmentMP = (int)Math.Round(distance * mpModifier);
+
+                                segments.Add(new
+                                {
+                                    segmentNumber = i + 1,
+                                    distance = Math.Round(distance, 2),
+                                    terrainType = terrainType,
+                                    mpModifier = mpModifier,
+                                    mpConsumption = segmentMP,
+                                    from = new { lat = double.Parse(start.latitude), lng = double.Parse(start.longitude) },
+                                    to = new { lat = double.Parse(end.latitude), lng = double.Parse(end.longitude) }
+                                });
+                            }
+
+                            _logger.LogInformation($"Getting unit data for token {token.Id}");
+
+                            militaryUnits.TryGetValue(token.Id, out var militaryUnit);
+                            var unitType = token.TokenGroup?.Name ?? "Infantry";
+                            var mobilityType = GetMobilityType(token);
+                            var baseMovementPoints = GetBaseMovementPoints(mobilityType);
+
+                            _logger.LogInformation($"Calculating MP consumption for token {token.Id}");
+
+                            var totalMP = (int)segments.Sum(s => (int)((dynamic)s).mpConsumption);
+                            var mpUtilization = (double)totalMP / baseMovementPoints;
+
+                            _logger.LogInformation($"Total MP: {totalMP}, MP Utilization: {mpUtilization}");
+
+                            _logger.LogInformation($"Determining feasibility for token {token.Id}");
+
+                            var isFeasible = totalMP <= (int)baseMovementPoints;
+                            var feasibilityStatus = DetermineFeasibilityStatus(mpUtilization, totalMP, baseMovementPoints);
+
+
+                            _logger.LogInformation($"Calculating time estimate for token {token.Id}");
+
+                            var baseSpeed = GetBaseSpeed(mobilityType);
+                            var estimatedHours = totalDistance / baseSpeed;
+
+                            _logger.LogInformation($"Generating recommendations for token {token.Id}");
+
+                            var recommendations = GenerateRecommendations(
+                                feasibilityStatus,
+                                mpUtilization,
+                                totalDistance,
+                                segments.Cast<dynamic>().ToList()
+                            );
+
+                            _logger.LogInformation($"Generated {recommendations.Count} recommendations");
+                       
+                            _logger.LogInformation($"Creating result object for token {token.Id}");
+
+                            adjudicationResults.Add(new
+                            {
+                                tokenId = token.Id,
+                                tokenName = token.Name,
+                                unitType = unitType,
+                                forceType = token.ForceType,
+                                mobilityType = mobilityType,
+                                strength = militaryUnit?.StrengthPercentage ?? 100,
+                                supplyState = GetSupplyStateText(militaryUnit?.SupplyState ?? 100),
+                                combatPower = militaryUnit?.CombatPower ?? 0,
+
+                                movement = new
+                                {
+                                    totalDistance = Math.Round(totalDistance, 2),
+                                    waypointCount = markers.Count,
+                                    segments = segments
+                                },
+
+                                mpAnalysis = new
+                                {
+                                    baseMovementPoints = baseMovementPoints,
+                                    totalMPRequired = totalMP,
+                                    mpUtilization = Math.Round(mpUtilization * 100, 1),
+                                    remainingMP = Math.Max(0, (int)(baseMovementPoints - totalMP))
+                                },
+
+                                feasibility = new
+                                {
+                                    isFeasible = isFeasible,
+                                    status = feasibilityStatus,
+                                    reason = GetFeasibilityReason(feasibilityStatus, totalMP, baseMovementPoints)
+                                },
+
+                                timeEstimate = new
+                                {
+                                    hours = (int)estimatedHours,
+                                    minutes = (int)((estimatedHours - (int)estimatedHours) * 60),
+                                    totalHours = Math.Round(estimatedHours, 2)
+                                },
+
+                                recommendations = recommendations,
+
+                                waypoints = markers.Select(m => new
+                                {
+                                    lat = m.latitude,
+                                    lng = m.longitude,
+                                    timestamp = m.CreatedDate
+                                }).ToList()
+                            });
+
+                            _logger.LogInformation($"Successfully created result for token {token.Id}");
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, $"Error creating result object for token {token.Id}: {ex.Message}");
+                            throw;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"Error processing token {token.Id}: {ex.Message}");
+                        // Continue with next token instead of failing completely
+                        continue;
+                    }
+                }
+
+                var summary = new
+                {
+                    totalTokens = adjudicationResults.Count,
+                    feasibleCount = adjudicationResults.Count(r => ((dynamic)r).feasibility.isFeasible),
+                    blockedCount = adjudicationResults.Count(r => !((dynamic)r).feasibility.isFeasible),
+                    totalDistance = adjudicationResults.Sum(r => ((dynamic)r).movement.totalDistance),
+                    avgMPUtilization = adjudicationResults.Any() ?
+                        adjudicationResults.Average(r => ((dynamic)r).mpAnalysis.mpUtilization) : 0
+                };
+
+                return Json(new
+                {
+                    success = true,
+                    summary = summary,
+                    results = adjudicationResults,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in military adjudication");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // Helper methods for military adjudication
+        private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
+        {
+            const double R = 6371; // Earth's radius in km
+            var dLat = (lat2 - lat1) * Math.PI / 180;
+            var dLon = (lon2 - lon1) * Math.PI / 180;
+            var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                    Math.Cos(lat1 * Math.PI / 180) * Math.Cos(lat2 * Math.PI / 180) *
+                    Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+            var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+            return R * c;
+        }
+
+        private string DetermineTerrainType(MapMarker start, MapMarker end)
+        {
+            // Simplified terrain determination - can be enhanced with actual terrain data
+            return "cross_country"; // Default
+        }
+
+        private string GetMobilityType(Token token)
+        {
+            var unitType = token.TokenGroup?.Name?.ToLower() ?? "";
+
+            if (unitType.Contains("armour") || unitType.Contains("tank") || unitType.Contains("mechanized"))
+                return "tracked";
+            if (unitType.Contains("artillery") || unitType.Contains("logistics"))
+                return "wheeled";
+
+            return "foot";
+        }
+
+        private double GetMPModifier(string terrainType, string mobilityType)
+        {
+            var modifiers = new Dictionary<string, Dictionary<string, double>>
+            {
+                ["road"] = new() { ["wheeled"] = 1.0, ["tracked"] = 1.0, ["foot"] = 1.5 },
+                ["cross_country"] = new() { ["wheeled"] = 2.0, ["tracked"] = 1.5, ["foot"] = 1.0 },
+                ["rough"] = new() { ["wheeled"] = 3.0, ["tracked"] = 2.0, ["foot"] = 1.5 },
+                ["forest"] = new() { ["wheeled"] = 4.0, ["tracked"] = 2.5, ["foot"] = 1.2 },
+                ["water"] = new() { ["wheeled"] = 999.0, ["tracked"] = 999.0, ["foot"] = 999.0 }
+            };
+
+            if (modifiers.ContainsKey(terrainType) && modifiers[terrainType].ContainsKey(mobilityType))
+                return modifiers[terrainType][mobilityType];
+
+            return 2.0; // Default modifier
+        }
+
+        private double GetBaseMovementPoints(string mobilityType)
+        {
+            return mobilityType switch
+            {
+                "foot" => 30.0,
+                "wheeled" => 40.0,
+                "tracked" => 35.0,
+                _ => 30.0
+            };
+        }
+
+        private double GetBaseSpeed(string mobilityType)
+        {
+            return mobilityType switch
+            {
+                "foot" => 5.0,      // 5 km/h
+                "wheeled" => 30.0,  // 30 km/h
+                "tracked" => 25.0,  // 25 km/h
+                _ => 5.0
+            };
+        }
+
+        private string DetermineFeasibilityStatus(double mpUtilization, int totalMP, double baseMP)
+        {
+            if (totalMP > baseMP)
+                return "insufficient_mp";
+            if (mpUtilization > 0.8)
+                return "high_consumption";
+            if (mpUtilization > 0.5)
+                return "moderate";
+
+            return "feasible";
+        }
+
+        private string GetFeasibilityReason(string status, int totalMP, double baseMP)
+        {
+            return status switch
+            {
+                "insufficient_mp" => $"Insufficient movement points ({totalMP}/{baseMP})",
+                "high_consumption" => $"High MP consumption ({totalMP}/{baseMP})",
+                "moderate" => $"Moderate MP usage ({totalMP}/{baseMP})",
+                "feasible" => $"Route is feasible ({totalMP}/{baseMP})",
+                _ => "Unknown status"
+            };
+        }
+
+        private List<object> GenerateRecommendations(string status, double mpUtilization, double totalDistance, List<dynamic> segments)
+        {
+            var recommendations = new List<object>();
+
+            if (status == "insufficient_mp")
+            {
+                recommendations.Add(new
+                {
+                    priority = "high",
+                    type = "movement",
+                    message = "Consider reducing route length or requesting additional movement points"
+                });
+            }
+
+            if (mpUtilization > 0.8)
+            {
+                recommendations.Add(new
+                {
+                    priority = "medium",
+                    type = "planning",
+                    message = "Plan for rest stops or supply points along the route"
+                });
+            }
+
+            if (totalDistance > 50)
+            {
+                recommendations.Add(new
+                {
+                    priority = "medium",
+                    type = "logistics",
+                    message = "Long distance movement - ensure adequate fuel and supplies"
+                });
+            }
+
+            // Check for difficult terrain segments
+            var difficultSegments = segments.Where(s => s.mpModifier >= 3.0).ToList();
+            if (difficultSegments.Any())
+            {
+                recommendations.Add(new
+                {
+                    priority = "medium",
+                    type = "terrain",
+                    message = $"Route contains {difficultSegments.Count} difficult terrain segment(s) - expect slower progress"
+                });
+            }
+
+            if (!recommendations.Any())
+            {
+                recommendations.Add(new
+                {
+                    priority = "low",
+                    type = "status",
+                    message = "Movement plan appears sound - proceed as planned"
+                });
+            }
+
+            return recommendations;
+        }
+
+        private string GetSupplyStateText(int supplyState)
+        {
+            return supplyState switch
+            {
+                >= 100 => "Green",
+                >= 75 => "Amber",
+                >= 50 => "Red",
+                _ => "Critical"
+            };
+        }
+
+        /// <summary>
         /// Get all placed tokens with their positions based on user's TeamId
         /// </summary>
         [HttpGet]
@@ -48,9 +435,9 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var placedTokensvar =  _context.Tokens
+                var placedTokensvar = _context.Tokens
                     .Where(t => t.MapMarkers.Any(m => m.IsActive))
-                    .Include(t => t.MapMarkers.OrderByDescending(x=>x.CreatedDate))
+                    .Include(t => t.MapMarkers.OrderByDescending(x => x.CreatedDate))
                     .Include(t => t.TokenGroup)
                     .Include(t => t.AreaCoverages)
                     .Select(t => new
@@ -100,12 +487,12 @@ namespace TechWebSol.Controllers
                     placedTokensvar = placedTokensvar.Where(t => t.isActive);
                 }
 
-                 var  placedTokens = await placedTokensvar.ToListAsync();
+                var placedTokens = await placedTokensvar.ToListAsync();
                 return Json(new
-                    {
-                        success = true,
-                        tokens = placedTokens
-                    });
+                {
+                    success = true,
+                    tokens = placedTokens
+                });
             }
             catch (Exception ex)
             {
@@ -218,16 +605,16 @@ namespace TechWebSol.Controllers
             try
             {
                 var result = await _tokenPlacementService.PlaceTokenOnMapAsync(
-                    request.TokenId, 
-                    request.Latitude, 
+                    request.TokenId,
+                    request.Latitude,
                     request.Longitude,
                     user.ApplicationUserId);
 
                 if (result.Success)
                 {
-                    return Json(new 
-                    { 
-                        success = true, 
+                    return Json(new
+                    {
+                        success = true,
                         message = result.Message,
                         token = new
                         {
@@ -274,16 +661,16 @@ namespace TechWebSol.Controllers
             try
             {
                 var result = await _tokenPlacementService.UpdateTokenPositionAsync(
-                    request.TokenId, 
-                    (decimal)request.Latitude, 
+                    request.TokenId,
+                    (decimal)request.Latitude,
                     (decimal)request.Longitude,
                     user.ApplicationUserId);
 
                 if (result.Success)
                 {
-                    return Json(new 
-                    { 
-                        success = true, 
+                    return Json(new
+                    {
+                        success = true,
                         message = result.Message,
                         areaCoverages = result.AreaCoverages?.Select(ac => new
                         {
@@ -322,8 +709,8 @@ namespace TechWebSol.Controllers
             {
                 // Update token position
                 var result = await _tokenPlacementService.UpdateTokenPositionAsync(
-                    request.TokenId, 
-                    request.Latitude, 
+                    request.TokenId,
+                    request.Latitude,
                     request.Longitude,
                     user.ApplicationUserId);
 
@@ -335,9 +722,9 @@ namespace TechWebSol.Controllers
                         await SaveMovementOrder(request, result.Token);
                     }
 
-                    return Json(new 
-                    { 
-                        success = true, 
+                    return Json(new
+                    {
+                        success = true,
                         message = result.Message,
                         token = new
                         {
@@ -439,9 +826,9 @@ namespace TechWebSol.Controllers
                     Status = "Planned",
                     Speed = request.MovementSpeed ?? 20,
                     Distance = CalculateDistance(deployment.Position, request.Latitude, request.Longitude),
-                    EstimatedArrival = request.PlannedETA.HasValue ? 
+                    EstimatedArrival = request.PlannedETA.HasValue ?
                         DateTime.UtcNow.AddHours((double)request.PlannedETA.Value) : null,
-                    StartTime = request.StartTurn.HasValue ? 
+                    StartTime = request.StartTurn.HasValue ?
                         DateTime.UtcNow.AddHours(request.StartTurn.Value * 24 + (double)(request.StartOffset ?? 0)) : null,
                     EngagementRule = request.EngagementRule ?? "Avoid Strongpoints",
                     Notes = request.Notes,
@@ -453,7 +840,7 @@ namespace TechWebSol.Controllers
                 _context.MovementOrders.Add(movementOrder);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Movement order saved for token {TokenId} with ETA {ETA}", 
+                _logger.LogInformation("Movement order saved for token {TokenId} with ETA {ETA}",
                     request.TokenId, request.PlannedETA);
             }
             catch (Exception ex)
@@ -511,9 +898,9 @@ namespace TechWebSol.Controllers
 
                 if (result.Success)
                 {
-                    return Json(new 
-                    { 
-                        success = true, 
+                    return Json(new
+                    {
+                        success = true,
                         message = result.Message
                     });
                 }
@@ -556,9 +943,10 @@ namespace TechWebSol.Controllers
                     })
                     .ToListAsync();
 
-                return Json(new { 
-                    success = true, 
-                    units = deployedUnits 
+                return Json(new
+                {
+                    success = true,
+                    units = deployedUnits
                 });
             }
             catch (Exception ex)
@@ -620,8 +1008,9 @@ namespace TechWebSol.Controllers
                     })
                     .ToListAsync();
 
-                return Json(new { 
-                    success = true, 
+                return Json(new
+                {
+                    success = true,
                     token = new
                     {
                         id = token.Id,
@@ -695,8 +1084,9 @@ namespace TechWebSol.Controllers
                     })
                     .ToListAsync();
 
-                return Json(new { 
-                    success = true, 
+                return Json(new
+                {
+                    success = true,
                     tokens = tokensWithHistory,
                     movementOrders = allMovementOrders,
                     totalMovements = tokensWithHistory.Sum(t => t.movementHistory.Count)
@@ -718,7 +1108,7 @@ namespace TechWebSol.Controllers
             try
             {
                 var result = await _tokenPlacementService.GetTokenPlacementInfoAsync(tokenId);
-                
+
                 if (result.Success && result.MapMarker != null)
                 {
                     // Parse the JSON location string
@@ -727,8 +1117,9 @@ namespace TechWebSol.Controllers
                         if (result.MapMarker != null)
                         {
                             var position = new { lat = result.MapMarker.latitude, lng = result.MapMarker.longitude };
-                            return Json(new { 
-                                success = true, 
+                            return Json(new
+                            {
+                                success = true,
                                 position = position,
                                 token = new
                                 {
@@ -744,9 +1135,9 @@ namespace TechWebSol.Controllers
                                     coverageType = ac.CoverageType,
                                     shapeType = ac.ShapeType,
                                     frontRadiusKm = ac.FrontRadiusKm,
-                            rearRadiusKm = ac.RearRadiusKm,
-                            sideRadiusKm = ac.SideRadiusKm,
-                            rotationDegrees = ac.RotationDegrees,
+                                    rearRadiusKm = ac.RearRadiusKm,
+                                    sideRadiusKm = ac.SideRadiusKm,
+                                    rotationDegrees = ac.RotationDegrees,
                                     areaKm2 = ac.AreaKm2
                                 })
                             });
@@ -803,7 +1194,7 @@ namespace TechWebSol.Controllers
         public Guid TokenId { get; set; }
         public decimal Latitude { get; set; }
         public decimal Longitude { get; set; }
-        
+
         // Enhanced movement planning fields
         public string? MovementMode { get; set; }
         public int? StartTurn { get; set; }

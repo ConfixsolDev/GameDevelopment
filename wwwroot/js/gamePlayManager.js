@@ -93,10 +93,16 @@ class GamePlayManager {
         // Load core components in parallel - much simpler now!
         const coreLoads = [
             this.lazyLoader.loadPartial('region-panel', '#regionPanelContainer', {
-                onLoaded: () => console.log('📍 Region panel loaded')
+                onLoaded: () => {
+                    console.log('📍 Region panel loaded');
+                    // Load map selector after region panel is loaded
+                    setTimeout(() => this.loadMapSelector(), 500);
+                }
             }),
             this.lazyLoader.loadPartial('overlay-controls', '#overlayControlsContainer', {
-                onLoaded: () => console.log('🎮 Overlay controls loaded')
+                onLoaded: () => {
+                    console.log('🎮 Overlay controls loaded');
+                }
             }),
         ];
         
@@ -691,11 +697,33 @@ class GamePlayManager {
             } else {
                 console.log('🔍 Place Token button found: NO');
             }
+            
+            // Adjudicate Move button handler
+            const adjudicateMoveBtn = document.getElementById('adjudicateMoveBtn');
+            if (adjudicateMoveBtn) {
+                console.log('🔍 Adjudicate Move button found: YES');
+                
+                adjudicateMoveBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    console.log('🖱️ Adjudicate Move button clicked!');
+                    
+                    // Call military adjudication function
+                    if (typeof runMilitaryAdjudication === 'function') {
+                        await runMilitaryAdjudication();
+                    } else {
+                        console.error('Military adjudication function not available');
+                    }
+                });
+                
+                console.log('✅ Adjudicate Move handler attached');
+            } else {
+                console.log('🔍 Adjudicate Move button found: NO');
+            }
         }, 500);
     }
 
     /**
-     * Initialize basemap controls
+     * Initialize basemap controls and map selector
      */
     initializeBasemapControls() {
         console.log('🗺️ Initializing basemap controls...');
@@ -705,7 +733,62 @@ class GamePlayManager {
             initializeBasemapDropdown();
         }
         
+        // Load map selector
+        this.loadMapSelector();
+        
         console.log('✅ Basemap controls initialized');
+    }
+
+    /**
+     * Load available MBTiles maps into selector
+     */
+    async loadMapSelector() {
+        console.log('🗺️ Loading map selector...');
+        
+        try {
+            const selector = document.getElementById('mapSelector');
+            
+            if (!selector) {
+                console.warn('⚠️ Map selector element not found - will retry later');
+                // Retry after a delay
+                setTimeout(() => this.loadMapSelector(), 1000);
+                return;
+            }
+            
+            console.log('📍 Map selector element found, fetching maps...');
+            
+            const response = await fetch('/mbtiles/list');
+            if (response.ok) {
+                const maps = await response.json();
+                console.log(`📍 Received ${maps.length} maps from server:`, maps);
+                
+                if (maps.length > 0) {
+                    selector.innerHTML = '<option value="">Select Offline Map...</option>';
+                    
+                    maps.forEach(map => {
+                        const option = document.createElement('option');
+                        option.value = map.path;
+                        option.textContent = `${map.name} (${(map.size / 1024 / 1024).toFixed(1)} MB)`;
+                        selector.appendChild(option);
+                        console.log(`  ✓ Added map: ${map.name}`);
+                    });
+                    
+                    console.log(`✅ Loaded ${maps.length} maps into selector`);
+                } else {
+                    selector.innerHTML = '<option value="">No offline maps available</option>';
+                    console.warn('⚠️ No maps available from server');
+                }
+            } else {
+                console.error('❌ Failed to fetch maps list, status:', response.status);
+                selector.innerHTML = '<option value="">Error loading maps</option>';
+            }
+        } catch (error) {
+            console.error('❌ Error loading map selector:', error);
+            const selector = document.getElementById('mapSelector');
+            if (selector) {
+                selector.innerHTML = '<option value="">Error loading maps</option>';
+            }
+        }
     }
 
     /**
@@ -1096,6 +1179,96 @@ window.showCurrentZoomLevel = function() {
         if (typeof showNotification === 'function') {
             showNotification('GamePlayManager not initialized', 'error');
         }
+    }
+};
+
+// Map switching function
+window.switchGamePlayMap = async function(mapPath) {
+    if (!mapPath) return;
+    
+    console.log('🗺️ Switching to map:', mapPath);
+    
+    try {
+        // Fetch map metadata
+        const response = await fetch(`/mbtiles/metadata?file=${encodeURIComponent(mapPath)}`);
+        if (!response.ok) {
+            alert('Failed to load map metadata');
+            return;
+        }
+        
+        const data = await response.json();
+        const metadata = data?.metadata || {};
+        
+        // Parse bounds
+        let bounds = null;
+        if (metadata.bounds && typeof metadata.bounds === 'string') {
+            const parts = metadata.bounds.split(',').map(parseFloat);
+            if (parts.length >= 4) {
+                bounds = L.latLngBounds(
+                    L.latLng(parts[1], parts[0]), // southwest
+                    L.latLng(parts[3], parts[2])  // northeast
+                );
+            }
+        }
+        
+        // Parse center
+        let center = [64.780, -23.720]; // Default
+        let zoom = 13;
+        if (metadata.center && typeof metadata.center === 'string') {
+            const parts = metadata.center.split(',').map(parseFloat);
+            if (parts.length >= 2) {
+                center = [parts[1], parts[0]]; // [lat, lng]
+                if (parts.length >= 3) {
+                    zoom = Math.max(12, Math.min(18, parseInt(parts[2])));
+                }
+            }
+        }
+        
+        // Get zoom levels
+        const minZoom = parseInt(metadata.minzoom) || 3;
+        const maxZoom = parseInt(metadata.maxzoom) || 22;
+        
+        // Remove old tile layer
+        window.gameMap.eachLayer(layer => {
+            if (layer instanceof L.TileLayer) {
+                window.gameMap.removeLayer(layer);
+            }
+        });
+        
+        // Add new tile layer
+        const tileUrl = `/mbtiles/tile/{z}/{x}/{y}.png?file=${encodeURIComponent(mapPath)}`;
+        const newTileLayer = L.tileLayer(tileUrl, {
+            minZoom: minZoom,
+            maxZoom: maxZoom,
+            maxNativeZoom: maxZoom,
+            minNativeZoom: minZoom,
+            tileSize: 256,
+            updateWhenIdle: true,
+            updateWhenZooming: false,
+            keepBuffer: 2,
+            crossOrigin: true,
+            detectRetina: true,
+            attribution: 'MBTiles Offline Map'
+        });
+        
+        newTileLayer.addTo(window.gameMap);
+        
+        // Update map view
+        if (bounds) {
+            window.gameMap.fitBounds(bounds, { padding: [20, 20] });
+        } else {
+            window.gameMap.setView(center, zoom);
+        }
+        
+        console.log('✅ Map switched successfully');
+        
+        if (typeof toastr !== 'undefined') {
+            toastr.success('Map loaded successfully', 'Map Changed');
+        }
+        
+    } catch (error) {
+        console.error('Error switching map:', error);
+        alert('Error loading map: ' + error.message);
     }
 };
 

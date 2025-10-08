@@ -11,7 +11,7 @@
   <link rel="shortcut icon" href="/favicon.ico">
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@15.6.1/dist/nouislider.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@15.6.1/dist/nouislider.min.css" />
     <link href="~/css/pop.css" rel="stylesheet" />
 </head>
 
@@ -21,8 +21,8 @@
     <div id="overlay">
       <h3>Offline Map Downloader</h3>
       <div style="margin-bottom: 12px;">
-                <a href="/MapManagement/MBTiles" style="color: #66c0ff; margin-right: 12px;">📦 Browse MBTiles</a>
-                <a href="/MapManagement/LeafletBounded" style="color: #66c0ff; margin-right: 12px;">🗺️ Leaflet Viewer</a>
+        <a href="/MapManagement/MBTiles" style="color: #66c0ff; margin-right: 12px;">📦 Browse MBTiles</a>
+        <a href="/MapManagement/LeafletBounded" style="color: #66c0ff; margin-right: 12px;">🗺️ Leaflet Viewer</a>
                 <a href="/MapManagement/Downloads" style="color: #66c0ff;">📥 Downloads</a>
       </div>
       <label for="address">Search Address or ZIP:</label>
@@ -42,13 +42,8 @@
         <option value="map">Map</option>
         <option value="satellite">Satellite</option>
       </select>
-      <label for="map-name">Map Name (optional):</label>
-      <input type="text" id="map-name" placeholder="e.g. San Francisco Downtown" />
       <div id="prediction" style="font-size: 13px; color: #555; min-height: 20px;"></div>
       <div id="area-info" style="font-size: 13px; color: #2b7de9; font-weight: bold; min-height: 20px; margin-top: 4px;"></div>
-      <div style="font-size: 11px; color: #28a745; margin-top: 8px; padding: 6px; background: rgba(40, 167, 69, 0.1); border-radius: 4px; border: 1px solid #28a745;">
-        <strong>✓ Offline Terrain Data:</strong> Elevation and obstacle data will be downloaded automatically for tactical route planning
-      </div>
       <canvas id="tile-preview" width="280" height="180"
         style="border-radius: 8px; margin-top: 10px; background: #f0f0f0;"></canvas>
        <div id="progress-wrap" style="display:none; margin-top:8px;">
@@ -167,7 +162,7 @@
       zoomRangeValue.textContent = `${values[0]} - ${values[1]}`;
     });
 
-      const updateTilePrediction = debounce(async function () {
+    const updateTilePrediction = debounce(async function () {
       const predictionEl = document.getElementById("prediction");
       const areaInfoEl = document.getElementById("area-info");
       if (!selectedBounds) {
@@ -198,24 +193,9 @@
         });
         const result = await res.json();
         if (result.error) {
-          const dlBtn = document.getElementById('download');
-          // Provide a clearer, action-oriented message for small area selections
-          if (typeof result.error === 'string' && result.error.toLowerCase().includes('too small')) {
-            // Try to extract the current km² value from the message if present
-            const kmMatch = result.error.match(/([0-9]+(?:\.[0-9]+)?)\s*km/i);
-            const currentKm2 = kmMatch ? kmMatch[1] : null;
-            predictionEl.textContent = currentKm2
-              ? `Selection too small: ${currentKm2} km². Minimum area is 75 km². Please enlarge the rectangle.`
-              : `Selection too small. Minimum area is 75 km². Please enlarge the rectangle.`;
-            predictionEl.style.color = "#b26b00"; // amber
-            areaInfoEl.textContent = "";
-            if (dlBtn) dlBtn.disabled = true;
-          } else {
-            // Generic server-side error
-            predictionEl.textContent = result.error;
-            predictionEl.style.color = "red";
-            areaInfoEl.textContent = "";
-          }
+          predictionEl.textContent = result.error;
+          predictionEl.style.color = "red";
+          areaInfoEl.textContent = "";
         } else {
           predictionEl.textContent = `Estimated tile count: ${result.tile_count}`;
           predictionEl.style.color = "#555";
@@ -225,9 +205,6 @@
             areaInfoEl.textContent = `Selected area: ${result.area_km2.toLocaleString()} km² (${result.area_mi2.toLocaleString()} mi²)`;
             areaInfoEl.style.color = "#2b7de9";
           }
-          // Enable download when selection is valid
-          const dlBtn = document.getElementById('download');
-          if (dlBtn) dlBtn.disabled = false;
         }
       } catch (err) {
         predictionEl.textContent = "Prediction failed.";
@@ -390,7 +367,7 @@
       const zoomLevels = [];
 
       for (let z = zmin; z <= zmax; z++) zoomLevels.push(z);
-        const data = {
+      const data = {
         bounds: {
           north: selectedBounds.getNorth(),
           south: selectedBounds.getSouth(),
@@ -399,8 +376,7 @@
         },
         zoom_levels: zoomLevels,
         format: format,
-          map_style: currentMapStyle,
-          name: (document.getElementById('map-name').value || '').trim()
+        map_style: currentMapStyle
       };
 
       try {
@@ -468,8 +444,7 @@
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
-                statusEl.textContent = "Download started. Terrain data also downloaded for offline route analysis!";
-                statusEl.style.color = '#28a745';
+                statusEl.textContent = "Download started.";
                 // Provide a manual link as backup; prefer static path for MBTiles
                 const link = document.getElementById('download-link');
                 if ((typeof format !== 'undefined') && format === 'mbtiles') {

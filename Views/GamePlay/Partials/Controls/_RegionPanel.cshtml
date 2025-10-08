@@ -7,9 +7,30 @@
 
     <div class="panel-body">
            
+            <!-- Map Selection -->
+            <div class="control-section">
+                <h6><i class="fas fa-map"></i> Offline Map Selection</h6>
+                <div class="control-row">
+                    <select id="mapSelector" class="overlay-btn" onchange="switchGamePlayMap(this.value)" style="width: 100%; padding: 8px; border: 1px solid #00ff00; background: #1a1a1a; color: #00ff00; border-radius: 4px;">
+                        <option value="">Loading maps...</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Military Adjudication -->
+            <div class="control-section">
+                <h6><i class="fas fa-chart-line"></i> Military Analysis</h6>
+                <div class="control-row">
+                    <button class="overlay-btn" onclick="runMilitaryAdjudication()" style="width: 100%; background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%); color: #000; font-weight: bold; border: 2px solid #00ff00; animation: pulse-btn 2s infinite;">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Adjudicate Movements</span>
+                    </button>
+                </div>
+            </div>
+
             <!-- Basemap Dropdown -->
             <div class="control-section">
-                <h6><i class="fas fa-globe"></i> Basemap</h6>
+                <h6><i class="fas fa-globe"></i> Basemap Style</h6>
                 <div class="control-row">
                     <select id="basemapDropdown" class="overlay-btn" onchange="changeBasemap(this.value)" style="width: 100%; padding: 8px; border: 1px solid #444; background: #2d3748; color: #e2e8f0; border-radius: 4px;">
                         <option value="Offline" selected>Offline Map</option>
@@ -84,6 +105,17 @@
                         <span>Clear Labels</span>
                     </button>
                 </div>
-            </div>
         </div>
+    </div>
 </aside>
+
+<style>
+    @@keyframes pulse-btn {
+        0%, 100% {
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+        }
+        50% {
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
+        }
+    }
+</style>

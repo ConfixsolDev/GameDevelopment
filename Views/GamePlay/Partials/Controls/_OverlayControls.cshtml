@@ -76,6 +76,25 @@
     </div>
 
     <div class="overlay-control-group">
+        <h6>Map Selection</h6>
+        <div class="control-row">
+            <select id="mapSelector" class="map-selector-dropdown" onchange="switchGamePlayMap(this.value)">
+                <option value="">Loading maps...</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="overlay-control-group">
+        <h6>Military Analysis</h6>
+        <div class="control-row">
+            <button class="overlay-btn overlay-btn-analysis" onclick="runMilitaryAdjudication()">
+                <i class="fas fa-chart-line"></i>
+                <span>Adjudicate Movements</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="overlay-control-group">
         <h6>View Controls</h6>
         <div class="control-row">
             <button class="overlay-btn" onclick="toggleFullscreen()">
@@ -89,3 +108,65 @@
         </div>
     </div>
 </div>
+
+<style>
+    .map-selector-dropdown {
+        width: 100%;
+        padding: 8px 12px;
+        background: #1a1a1a;
+        color: #00ff00;
+        border: 1px solid #00ff00;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .map-selector-dropdown:hover {
+        background: #2a2a2a;
+        border-color: #00ff00;
+    }
+    
+    .map-selector-dropdown:focus {
+        outline: none;
+        box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+    }
+    
+    .map-selector-dropdown option {
+        background: #1a1a1a;
+        color: #00ff00;
+        padding: 8px;
+    }
+    
+    .overlay-btn-analysis {
+        background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%) !important;
+        color: #000 !important;
+        font-weight: bold;
+        border: 2px solid #00ff00 !important;
+        animation: pulse-analysis 2s infinite;
+        box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+    }
+    
+    .overlay-btn-analysis:hover {
+        background: linear-gradient(135deg, #00ff00 0%, #00ff00 100%) !important;
+        box-shadow: 0 0 25px rgba(0, 255, 0, 0.7);
+        transform: scale(1.05);
+    }
+    
+    .overlay-btn-analysis i {
+        color: #000 !important;
+    }
+    
+    .overlay-btn-analysis span {
+        color: #000 !important;
+    }
+    
+    @@keyframes pulse-analysis {
+        0%, 100% {
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+        }
+        50% {
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.7);
+        }
+    }
+</style>
