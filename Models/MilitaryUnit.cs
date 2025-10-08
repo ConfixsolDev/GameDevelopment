@@ -453,4 +453,14 @@ namespace TechWebSol.Models
         public virtual ICollection<LogisticsUnit> LogisticsUnits { get; set; } = new List<LogisticsUnit>();
         public virtual ICollection<CombatEngineeringCompany> CombatEngineeringCompanies { get; set; } = new List<CombatEngineeringCompany>();
     }
+    public class AdjudicateDTO 
+    {
+        public double totalTokens { get; set; }
+        public double feasibleCount { get; set; }
+        public double blockedCount { get; set; }
+        public double totalDistance { get; set; }
+        public double avgMPUtilization { get; set; }
+    }
+
+        
 }

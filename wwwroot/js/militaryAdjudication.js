@@ -150,6 +150,30 @@ function showAdjudicationResultsModal(data) {
                     </div>
                 </div>
                 
+                <!-- Unit Composition -->
+                <div style="background: #1a1a1a; padding: 15px; border-radius: 6px; margin-bottom: 15px; border-left: 3px solid #00ff00;">
+                    <h5 style="color: #00ff00; font-size: 14px; margin-bottom: 10px;">
+                        <i class="fas fa-users"></i> Unit Composition
+                    </h5>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 18px; color: #00ff00; font-weight: bold;">${result.unitComposition.personnel}</div>
+                            <div style="font-size: 10px; color: #666;">Personnel</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 18px; color: #00ff00; font-weight: bold;">${result.unitComposition.vehicles}</div>
+                            <div style="font-size: 10px; color: #666;">Vehicles</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 18px; color: #00ff00; font-weight: bold;">${result.unitComposition.weapons}</div>
+                            <div style="font-size: 10px; color: #666;">Weapons</div>
+                        </div>
+                    </div>
+                    <div style="font-size: 12px; color: #ccc; font-style: italic;">
+                        ${result.unitComposition.details}
+                    </div>
+                </div>
+
                 <!-- Movement Analysis Grid -->
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 15px;">
                     <div style="background: #1a1a1a; padding: 12px; border-radius: 4px; text-align: center;">
@@ -167,6 +191,82 @@ function showAdjudicationResultsModal(data) {
                     <div style="background: #1a1a1a; padding: 12px; border-radius: 4px; text-align: center;">
                         <div style="font-size: 10px; color: #666; text-transform: uppercase; margin-bottom: 5px;">Est. Time</div>
                         <div style="font-size: 20px; color: #00ff00; font-weight: bold;">${result.timeEstimate.hours}h ${result.timeEstimate.minutes}m</div>
+                    </div>
+                </div>
+
+                <!-- Terrain Analysis -->
+                <div style="background: #1a1a1a; padding: 15px; border-radius: 6px; margin-bottom: 15px; border-left: 3px solid #ffaa00;">
+                    <h5 style="color: #ffaa00; font-size: 14px; margin-bottom: 10px;">
+                        <i class="fas fa-mountain"></i> Terrain Analysis
+                        <span style="font-size: 10px; color: ${result.terrainAnalysis.dataSource === 'Real elevation data' ? '#00ff00' : '#ffaa00'}; margin-left: 10px;">
+                            (${result.terrainAnalysis.dataSource})
+                        </span>
+                    </h5>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 16px; color: #ffaa00; font-weight: bold;">${result.terrainAnalysis.startElevation}m</div>
+                            <div style="font-size: 10px; color: #666;">Start Elevation</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 16px; color: #ffaa00; font-weight: bold;">${result.terrainAnalysis.endElevation}m</div>
+                            <div style="font-size: 10px; color: #666;">End Elevation</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 16px; color: #ffaa00; font-weight: bold;">${result.terrainAnalysis.maxSlope}°</div>
+                            <div style="font-size: 10px; color: #666;">Max Slope</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 16px; color: #ffaa00; font-weight: bold;">${result.terrainAnalysis.terrainType}</div>
+                            <div style="font-size: 10px; color: #666;">Terrain Type</div>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 14px; color: #ffaa00; font-weight: bold;">${result.terrainAnalysis.elevationGain}m</div>
+                            <div style="font-size: 10px; color: #666;">Elevation Gain</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 14px; color: #ffaa00; font-weight: bold;">${result.terrainAnalysis.difficulty}</div>
+                            <div style="font-size: 10px; color: #666;">Difficulty</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 14px; color: #ffaa00; font-weight: bold;">${result.terrainAnalysis.elevationPoints}</div>
+                            <div style="font-size: 10px; color: #666;">Data Points</div>
+                        </div>
+                    </div>
+                    ${result.terrainAnalysis.obstacles && result.terrainAnalysis.obstacles.length > 0 ? `
+                        <div style="margin-top: 10px;">
+                            <div style="font-size: 12px; color: #ff0000; font-weight: bold; margin-bottom: 5px;">Obstacles Detected:</div>
+                            ${result.terrainAnalysis.obstacles.map(obs => 
+                                `<div style="font-size: 11px; color: #ffaa00; margin: 2px 0;">• ${obs.description}</div>`
+                            ).join('')}
+                        </div>
+                    ` : ''}
+                    ${result.terrainAnalysis.error ? `
+                        <div style="margin-top: 10px; padding: 8px; background: #ff0000; border-radius: 4px;">
+                            <div style="font-size: 11px; color: #fff;">Error: ${result.terrainAnalysis.error}</div>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <!-- Enhanced Time Estimates -->
+                <div style="background: #1a1a1a; padding: 15px; border-radius: 6px; margin-bottom: 15px; border-left: 3px solid #4299e1;">
+                    <h5 style="color: #4299e1; font-size: 14px; margin-bottom: 10px;">
+                        <i class="fas fa-clock"></i> Time Analysis
+                    </h5>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 16px; color: #4299e1; font-weight: bold;">${result.timeEstimate.hours}h ${result.timeEstimate.minutes}m</div>
+                            <div style="font-size: 10px; color: #666;">Basic Estimate</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 16px; color: #4299e1; font-weight: bold;">${result.timeEstimate.realisticHours}h ${result.timeEstimate.realisticMinutes}m</div>
+                            <div style="font-size: 10px; color: #666;">Realistic Estimate</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 16px; color: #4299e1; font-weight: bold;">${result.timeEstimate.effectiveSpeed || 'N/A'} km/h</div>
+                            <div style="font-size: 10px; color: #666;">Effective Speed</div>
+                        </div>
                     </div>
                 </div>
                 
