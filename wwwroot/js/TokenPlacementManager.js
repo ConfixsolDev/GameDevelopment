@@ -2204,15 +2204,10 @@ class TokenPlacementManager {
         const currentMode = window.tokenActionModeManager?.getCurrentMode();
         
         switch (currentMode) {
-            case null: // No mode selected - show planning modal to add details
+            case null: // No mode selected - show token details
             case 'select':
-                // Setup dragPreview with current marker info for saveMoveOrder to work
-                this.dragPreview = {
-                    marker: marker,
-                    token: token
-                };
-                this.originalPosition = marker.getLatLng();
-                this.showConfirmMoveModal(token);
+                // Show token details modal instead of movement planning
+                this.showExistingTokenDetails(token);
                 break;
                 
             case 'attack':
@@ -2230,7 +2225,7 @@ class TokenPlacementManager {
                 break;
                 
             case 'move':
-                // Show planning modal to add movement details
+                // Show movement planning modal
                 this.dragPreview = {
                     marker: marker,
                     token: token
@@ -2245,13 +2240,8 @@ class TokenPlacementManager {
                 break;
                 
             default:
-                // Fallback to showing planning modal
-                this.dragPreview = {
-                    marker: marker,
-                    token: token
-                };
-                this.originalPosition = marker.getLatLng();
-                this.showConfirmMoveModal(token);
+                // Fallback to showing token details
+                this.showExistingTokenDetails(token);
                 break;
         }
     }
