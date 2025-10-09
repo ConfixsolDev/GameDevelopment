@@ -57,8 +57,10 @@ namespace TechWebSol.Controllers
 
                 // Get all military units for quick lookup (using all unit types)
                 var infantryUnits = await _context.InfantryBattalions
-                    .Where(mu => mu.TeamId == user.TeamId && mu.TokenId != null)
-                    .ToDictionaryAsync(mu => mu.TokenId.Value, mu => (MilitaryUnit)mu);
+       .Where(mu => mu.TeamId == user.TeamId && mu.TokenId != null)
+       .GroupBy(mu => mu.TokenId.Value)
+       .Select(g => g.First())
+       .ToDictionaryAsync(mu => mu.TokenId.Value, mu => (MilitaryUnit)mu);
 
                 var armouredUnits = await _context.ArmouredRegiments
                     .Where(mu => mu.TeamId == user.TeamId && mu.TokenId != null)
@@ -149,9 +151,31 @@ namespace TechWebSol.Controllers
                             _logger.LogInformation($"Total MP: {totalMP}, MP Utilization: {mpUtilization}");
 
                             _logger.LogInformation($"Determining feasibility for token {token.Id}");
+                            var terrainAnalysis = await GetTerrainAnalysis(markers, mobilityType, militaryUnit);
 
-                            var isFeasible = totalMP <= (int)baseMovementPoints;
-                            var feasibilityStatus = DetermineFeasibilityStatus(mpUtilization, totalMP, baseMovementPoints);
+                            // Get terrain blockage status
+                            var terrainAnalysisDynamic = terrainAnalysis as dynamic;
+                            var isRouteBlocked = false;
+                            var blockageReason = "";
+                            
+                            try
+                            {
+                                if (terrainAnalysisDynamic != null)
+                                {
+                                    isRouteBlocked = (bool)(terrainAnalysisDynamic.isRouteBlocked ?? false);
+                                    blockageReason = (string)(terrainAnalysisDynamic.blockageReason ?? "");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning(ex, "Error accessing terrain blockage status");
+                            }
+
+                            // Route is NOT feasible if terrain blocks it OR if MP is insufficient
+                            var isFeasible = !isRouteBlocked && totalMP <= (int)baseMovementPoints;
+                            var feasibilityStatus = isRouteBlocked 
+                                ? "terrain_blocked" 
+                                : DetermineFeasibilityStatus(mpUtilization, totalMP, baseMovementPoints);
 
 
                             _logger.LogInformation($"Calculating time estimate for token {token.Id}");
@@ -175,8 +199,7 @@ namespace TechWebSol.Controllers
                              // Get detailed unit composition
                              var unitComposition = GetUnitComposition(militaryUnit);
                              
-                             // Get terrain analysis
-                             var terrainAnalysis = await GetTerrainAnalysis(markers);
+                             // Get terrain analysis with mobility type and unit for proper passability checks
                              
                              // Calculate realistic time based on terrain and unit capabilities
                              var realisticTimeEstimate = CalculateRealisticTimeEstimate(
@@ -237,7 +260,11 @@ namespace TechWebSol.Controllers
                                  {
                                      isFeasible = isFeasible,
                                      status = feasibilityStatus,
-                                     reason = GetFeasibilityReason(feasibilityStatus, totalMP, baseMovementPoints)
+                                     reason = isRouteBlocked 
+                                         ? blockageReason 
+                                         : GetFeasibilityReason(feasibilityStatus, totalMP, baseMovementPoints),
+                                     isRouteBlocked = isRouteBlocked,
+                                     terrainBlocked = isRouteBlocked
                                  },
 
                                  timeEstimate = new
@@ -397,6 +424,7 @@ namespace TechWebSol.Controllers
         {
             return status switch
             {
+                "terrain_blocked" => "Route BLOCKED by impassable terrain obstacles",
                 "insufficient_mp" => $"Insufficient movement points ({totalMP}/{baseMP})",
                 "high_consumption" => $"High MP consumption ({totalMP}/{baseMP})",
                 "moderate" => $"Moderate MP usage ({totalMP}/{baseMP})",
@@ -408,6 +436,25 @@ namespace TechWebSol.Controllers
         private List<object> GenerateRecommendations(string status, double mpUtilization, double totalDistance, List<dynamic> segments)
         {
             var recommendations = new List<object>();
+
+            // Critical: Terrain blockage
+            if (status == "terrain_blocked")
+            {
+                recommendations.Add(new
+                {
+                    priority = "high",
+                    type = "terrain",
+                    message = "⛔ ROUTE IMPASSABLE - Terrain obstacles block movement. Select an alternate route avoiding water, cliffs, or steep terrain."
+                });
+                recommendations.Add(new
+                {
+                    priority = "high",
+                    type = "planning",
+                    message = "Consider engineering support (bridge-laying, road construction) or air/water transport alternatives"
+                });
+                // Return immediately - other recommendations are irrelevant if route is blocked
+                return recommendations;
+            }
 
             if (status == "insufficient_mp")
             {
@@ -578,7 +625,7 @@ namespace TechWebSol.Controllers
             };
         }
 
-        private async Task<object> GetTerrainAnalysis(List<MapMarker> markers)
+        private async Task<object> GetTerrainAnalysis(List<MapMarker> markers, string mobilityType = "tracked", MilitaryUnit militaryUnit = null)
         {
             try
             {
@@ -587,6 +634,36 @@ namespace TechWebSol.Controllers
                 var maxSlope = 0.0;
                 var obstacles = new List<object>();
                 var elevations = new List<double>();
+                
+                // Categorized obstacle counters (like TacticalViewer)
+                var obstacleCategories = new Dictionary<string, int>
+                {
+                    ["water"] = 0,
+                    ["cliff"] = 0,
+                    ["wetland"] = 0,
+                    ["steep"] = 0,
+                    ["forest"] = 0,
+                    ["urban"] = 0,
+                    ["desert"] = 0,
+                    ["military"] = 0
+                };
+
+                // Get vehicle weight for passability checks (default to 30 tons if not specified)
+                var vehicleWeight = 30.0; // Default for tracked vehicles
+                if (militaryUnit != null)
+                {
+                    // Estimate vehicle weight based on unit type
+                    if (militaryUnit is ArmouredRegiment armoured)
+                        vehicleWeight = 40.0; // Tanks are heavy
+                    else if (militaryUnit is ArtilleryRegiment)
+                        vehicleWeight = 25.0; // Artillery vehicles
+                    else if (militaryUnit is LogisticsUnit)
+                        vehicleWeight = 20.0; // Supply trucks
+                    else if (militaryUnit is InfantryBattalion)
+                        vehicleWeight = 15.0; // Light vehicles/foot
+                    else if (militaryUnit is CombatEngineeringCompany)
+                        vehicleWeight = 35.0; // Heavy engineer vehicles
+                }
 
                 // Get real elevation data for all markers
                 if (markers.Count >= 2)
@@ -622,7 +699,10 @@ namespace TechWebSol.Controllers
                                 startElevation = elevations[0];
                                 endElevation = elevations[elevations.Count - 1];
                                 
-                                // Calculate max slope along route
+                                // Calculate max slope along route and check for impassable slopes
+                                // Like TacticalViewer: Heavy vehicles struggle on slopes > 25°, trucks > 35°
+                                var slopeLimit = vehicleWeight > 20 ? 25.0 : 35.0;
+                                
                                 for (int i = 0; i < elevations.Count - 1; i++)
                                 {
                                     var distance = CalculateDistance(
@@ -635,6 +715,17 @@ namespace TechWebSol.Controllers
                                         var elevationDiff = Math.Abs(elevations[i + 1] - elevations[i]);
                                         var slope = Math.Atan(elevationDiff / (distance * 1000)) * 180 / Math.PI;
                                         maxSlope = Math.Max(maxSlope, slope);
+                                        
+                                        // Check if slope is impassable for this vehicle
+                                        if (slope > slopeLimit)
+                                        {
+                                            obstacleCategories["steep"]++;
+                                            obstacles.Add(new { 
+                                                type = "steep_terrain",
+                                                isImpassable = true,
+                                                description = $"⛰️ STEEP TERRAIN: {Math.Round(slope, 1)}° slope - IMPASSABLE for {vehicleWeight}T vehicle (limit: {slopeLimit}°)"
+                                            });
+                                        }
                                     }
                                 }
                             }
@@ -672,7 +763,7 @@ namespace TechWebSol.Controllers
                             var elementsList = featuresResponse.elements as IEnumerable<dynamic>;
                             if (elementsList != null)
                             {
-                                // Analyze features for obstacles
+                                // Analyze features for obstacles (like TacticalViewer)
                                 foreach (var element in elementsList)
                                 {
                                     if (element.tags != null)
@@ -680,44 +771,94 @@ namespace TechWebSol.Controllers
                                         var tags = element.tags as Dictionary<string, string>;
                                         if (tags != null)
                                         {
-                                            // Check for water features
+                                            // Check for water features - IMPASSABLE
                                             if (tags.ContainsKey("natural") && tags["natural"] == "water" ||
                                                 tags.ContainsKey("waterway") ||
                                                 tags.ContainsKey("water"))
                                             {
+                                                obstacleCategories["water"]++;
                                                 obstacles.Add(new { 
-                                                    type = "water", 
-                                                    description = $"Water feature: {tags.GetValueOrDefault("name", "Unknown")} - requires bridge/boat" 
+                                                    type = "water",
+                                                    isImpassable = true,
+                                                    description = $"🌊 WATER: {tags.GetValueOrDefault("name", "Water crossing")} - IMPASSABLE (requires bridge/boat)"
                                                 });
                                             }
                                             
-                                            // Check for steep terrain
+                                            // Check for cliffs/rock - IMPASSABLE
                                             if (tags.ContainsKey("natural") && 
-                                                (tags["natural"] == "cliff" || tags["natural"] == "ridge"))
+                                                (tags["natural"] == "cliff" || tags["natural"] == "rock"))
                                             {
+                                                obstacleCategories["cliff"]++;
                                                 obstacles.Add(new { 
-                                                    type = "steep_terrain", 
-                                                    description = $"Steep terrain: {tags.GetValueOrDefault("name", "Cliff/Ridge")} - difficult passage" 
+                                                    type = "cliff",
+                                                    isImpassable = true,
+                                                    description = $"🪨 CLIFF/ROCK: {tags.GetValueOrDefault("name", "Rock face")} - IMPASSABLE"
                                                 });
                                             }
                                             
-                                            // Check for urban areas
+                                            // Check for wetland - IMPASSABLE for heavy vehicles
+                                            if (tags.ContainsKey("natural") && tags["natural"] == "wetland")
+                                            {
+                                                obstacleCategories["wetland"]++;
+                                                var isImpassable = vehicleWeight > 30;
+                                                obstacles.Add(new { 
+                                                    type = "wetland",
+                                                    isImpassable = isImpassable,
+                                                    description = isImpassable 
+                                                        ? $"💧 WETLAND: Vehicle too heavy ({vehicleWeight}T) - IMPASSABLE"
+                                                        : $"💧 WETLAND: {tags.GetValueOrDefault("name", "Marshy area")} - DIFFICULT, reduce speed"
+                                                });
+                                            }
+                                            
+                                            // Check for desert/sand - DIFFICULT for heavy vehicles
+                                            if (tags.ContainsKey("natural") && 
+                                                (tags["natural"] == "sand" || tags["natural"] == "desert"))
+                                            {
+                                                obstacleCategories["desert"]++;
+                                                var isDifficult = vehicleWeight > 25;
+                                                obstacles.Add(new { 
+                                                    type = "desert",
+                                                    isImpassable = false,
+                                                    description = isDifficult
+                                                        ? $"🏜️ DESERT/SAND: Heavy vehicle ({vehicleWeight}T) may get stuck - DIFFICULT"
+                                                        : $"🏜️ DESERT/SAND: {tags.GetValueOrDefault("name", "Sandy area")} - PASSABLE with caution"
+                                                });
+                                            }
+                                            
+                                            // Check for forest - DIFFICULT for wide vehicles
+                                            if (tags.ContainsKey("natural") && 
+                                                (tags["natural"] == "wood" || tags["natural"] == "forest") ||
+                                                tags.ContainsKey("landuse") && tags["landuse"] == "forest")
+                                            {
+                                                obstacleCategories["forest"]++;
+                                                obstacles.Add(new { 
+                                                    type = "forest",
+                                                    isImpassable = false,
+                                                    description = $"🌲 FOREST: {tags.GetValueOrDefault("name", "Forested area")} - PASSABLE, watch for trees"
+                                                });
+                                            }
+                                            
+                                            // Check for urban areas - MANEUVERABLE but civilians present
                                             if (tags.ContainsKey("place") && tags["place"] == "city" ||
                                                 tags.ContainsKey("landuse") && tags["landuse"] == "residential")
                                             {
+                                                obstacleCategories["urban"]++;
                                                 obstacles.Add(new { 
-                                                    type = "urban", 
-                                                    description = $"Urban area: {tags.GetValueOrDefault("name", "City/Residential")} - civilians present, maneuverable" 
+                                                    type = "urban",
+                                                    isImpassable = false,
+                                                    description = $"🏘️ URBAN: {tags.GetValueOrDefault("name", "City/Residential")} - Civilians present, maneuverable"
                                                 });
                                             }
                                             
-                                            // Check for military zones
+                                            // Check for military zones - RESTRICTED
                                             if (tags.ContainsKey("military") ||
                                                 tags.ContainsKey("landuse") && tags["landuse"] == "military")
                                             {
+                                                obstacleCategories["military"]++;
                                                 obstacles.Add(new { 
-                                                    type = "military_zone", 
-                                                    description = $"Military zone: {tags.GetValueOrDefault("name", "Restricted Area")} - RESTRICTED ACCESS" 
+                                                    type = "military_zone",
+                                                    isImpassable = false,
+                                                    description = $"⚠️ MILITARY ZONE: {tags.GetValueOrDefault("name", "Restricted Area")} - RESTRICTED ACCESS"
                                                 });
                                             }
                                         }
@@ -756,6 +897,24 @@ namespace TechWebSol.Controllers
                     }
                 }
 
+                // Determine if route is BLOCKED by impassable obstacles (like TacticalViewer)
+                var waterBlocked = obstacleCategories["water"] > 0;
+                var cliffBlocked = obstacleCategories["cliff"] > 0;
+                var wetlandBlocked = obstacleCategories["wetland"] > 0 && vehicleWeight > 30;
+                var steepBlocked = obstacleCategories["steep"] > 0;
+                
+                var isRouteBlocked = waterBlocked || cliffBlocked || wetlandBlocked || steepBlocked;
+                var blockageReason = "";
+                
+                if (waterBlocked)
+                    blockageReason = $"Route BLOCKED by {obstacleCategories["water"]} water crossing(s) - requires bridge/boat";
+                else if (cliffBlocked)
+                    blockageReason = $"Route BLOCKED by {obstacleCategories["cliff"]} cliff(s)/rock face(s) - impassable terrain";
+                else if (wetlandBlocked)
+                    blockageReason = $"Route BLOCKED by wetland - vehicle too heavy ({vehicleWeight}T)";
+                else if (steepBlocked)
+                    blockageReason = $"Route BLOCKED by {obstacleCategories["steep"]} steep slope(s) - exceeds vehicle capability";
+
                 return new
                 {
                     startElevation = Math.Round(startElevation, 1),
@@ -763,10 +922,16 @@ namespace TechWebSol.Controllers
                     elevationGain = Math.Round(endElevation - startElevation, 1),
                     maxSlope = Math.Round(maxSlope, 1),
                     obstacles = obstacles.Distinct().ToList(),
+                    obstacleCategories = obstacleCategories,
                     terrainType = maxSlope > 15 ? "Mountainous" : maxSlope > 5 ? "Hilly" : "Flat",
                     difficulty = maxSlope > 20 ? "High" : maxSlope > 10 ? "Moderate" : "Low",
                     dataSource = elevations.Count > 0 ? "Real elevation data" : "Basic fallback",
-                    elevationPoints = elevations.Count
+                    elevationPoints = elevations.Count,
+                    vehicleWeight = vehicleWeight,
+                    // Movement possibility analysis (like TacticalViewer)
+                    isRouteBlocked = isRouteBlocked,
+                    blockageReason = blockageReason,
+                    movementPossible = !isRouteBlocked
                 };
             }
             catch (Exception ex)
@@ -779,10 +944,15 @@ namespace TechWebSol.Controllers
                     elevationGain = 0.0,
                     maxSlope = 0.0,
                     obstacles = new List<object>(),
+                    obstacleCategories = new Dictionary<string, int>(),
                     terrainType = "Unknown",
                     difficulty = "Unknown",
                     dataSource = "Error",
                     elevationPoints = 0,
+                    vehicleWeight = 0.0,
+                    isRouteBlocked = false,
+                    blockageReason = "",
+                    movementPossible = true,
                     error = ex.Message
                 };
             }

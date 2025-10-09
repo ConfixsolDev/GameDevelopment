@@ -75,6 +75,9 @@ function updateRouteVisualizations(results) {
             case 'insufficient_mp':
                 routeColor = '#ff0000'; // Red
                 break;
+            case 'terrain_blocked':
+                routeColor = '#ff0000'; // Red - Impassable
+                break;
         }
         
         // Draw route with color coding
@@ -195,13 +198,23 @@ function showAdjudicationResultsModal(data) {
                 </div>
 
                 <!-- Terrain Analysis -->
-                <div style="background: #1a1a1a; padding: 15px; border-radius: 6px; margin-bottom: 15px; border-left: 3px solid #ffaa00;">
-                    <h5 style="color: #ffaa00; font-size: 14px; margin-bottom: 10px;">
+                <div style="background: #1a1a1a; padding: 15px; border-radius: 6px; margin-bottom: 15px; border-left: 3px solid ${result.terrainAnalysis.isRouteBlocked ? '#ff0000' : '#ffaa00'};">
+                    <h5 style="color: ${result.terrainAnalysis.isRouteBlocked ? '#ff0000' : '#ffaa00'}; font-size: 14px; margin-bottom: 10px;">
                         <i class="fas fa-mountain"></i> Terrain Analysis
                         <span style="font-size: 10px; color: ${result.terrainAnalysis.dataSource === 'Real elevation data' ? '#00ff00' : '#ffaa00'}; margin-left: 10px;">
                             (${result.terrainAnalysis.dataSource})
                         </span>
                     </h5>
+                    ${result.terrainAnalysis.isRouteBlocked ? `
+                        <div style="padding: 10px; background: #ff0000; border-radius: 4px; margin-bottom: 12px; border: 2px solid #fff;">
+                            <div style="font-size: 14px; color: #fff; font-weight: bold; text-align: center;">
+                                ⛔ ROUTE BLOCKED - MOVEMENT IMPOSSIBLE
+                            </div>
+                            <div style="font-size: 12px; color: #fff; margin-top: 5px; text-align: center;">
+                                ${result.terrainAnalysis.blockageReason}
+                            </div>
+                        </div>
+                    ` : ''}
                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px;">
                         <div style="text-align: center;">
                             <div style="font-size: 16px; color: #ffaa00; font-weight: bold;">${result.terrainAnalysis.startElevation}m</div>
@@ -234,12 +247,18 @@ function showAdjudicationResultsModal(data) {
                             <div style="font-size: 10px; color: #666;">Data Points</div>
                         </div>
                     </div>
+                    <div style="margin-top: 10px; font-size: 11px; color: #666;">
+                        <strong>Vehicle Weight:</strong> ${result.terrainAnalysis.vehicleWeight}T
+                    </div>
                     ${result.terrainAnalysis.obstacles && result.terrainAnalysis.obstacles.length > 0 ? `
                         <div style="margin-top: 10px;">
                             <div style="font-size: 12px; color: #ff0000; font-weight: bold; margin-bottom: 5px;">Obstacles Detected:</div>
-                            ${result.terrainAnalysis.obstacles.map(obs => 
-                                `<div style="font-size: 11px; color: #ffaa00; margin: 2px 0;">• ${obs.description}</div>`
-                            ).join('')}
+                            ${result.terrainAnalysis.obstacles.map(obs => {
+                                const isImpassable = obs.isImpassable === true;
+                                const color = isImpassable ? '#ff0000' : '#ffaa00';
+                                const icon = isImpassable ? '⛔' : '⚠️';
+                                return `<div style="font-size: 11px; color: ${color}; margin: 2px 0; font-weight: ${isImpassable ? 'bold' : 'normal'};">${icon} ${obs.description}</div>`;
+                            }).join('')}
                         </div>
                     ` : ''}
                     ${result.terrainAnalysis.error ? `
@@ -395,6 +414,8 @@ function getStatusColor(status) {
             return '#ffaa00'; // Orange
         case 'insufficient_mp':
             return '#ff0000'; // Red
+        case 'terrain_blocked':
+            return '#ff0000'; // Red - Impassable
         default:
             return '#4299e1'; // Blue
     }
