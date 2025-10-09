@@ -140,14 +140,12 @@ class MilitarySymbolRenderer {
                         <div class="org-symbol">${orgSymbol}</div>
                     </div>
                     
-                    <!-- Unit Type Symbol in Center -->
+                    <!-- Unit Type Symbol in Center with Designation -->
                     <div class="unit-symbol-center">
                         <i class="fas ${unitIcon}"></i>
-                    </div>
-                    
-                    <!-- Unit Designation on Right -->
-                    <div class="unit-designation-right">
-                        <div class="unit-designation">${unitDesignation || 'N/A'}</div>
+                        <div class="unit-designation-right">
+                            <div class="unit-designation">${unitDesignation || 'N/A'}</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -156,9 +154,9 @@ class MilitarySymbolRenderer {
         return L.divIcon({
             html: html,
             className: 'military-marker professional',
-            iconSize: [90, 90],
-            iconAnchor: [45, 45],
-            popupAnchor: [0, -45]
+            iconSize: [100, 100],
+            iconAnchor: [50, 50],
+            popupAnchor: [0, -50]
         });
     }
 
