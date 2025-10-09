@@ -534,7 +534,12 @@ namespace TechWebSol.Controllers
                     AssetImagePath = imagePath,
                     FrontCoverageKm = model.FrontCoverageKm,
                     RearCoverageKm = model.RearCoverageKm,
-                    SideCoverageKm = model.SideCoverageKm
+                    SideCoverageKm = model.SideCoverageKm,
+                    // Military Unit Classification
+                    OrganizationLevel = model.OrganizationLevel,
+                    UnitType = model.UnitType,
+                    UnitDesignation = model.UnitDesignation,
+                    ForceType = model.ForceType
                 };
 
                 _context.Tokens.Add(token);
@@ -596,6 +601,11 @@ namespace TechWebSol.Controllers
                     FrontCoverageKm = token.FrontCoverageKm,
                     RearCoverageKm = token.RearCoverageKm,
                     SideCoverageKm = token.SideCoverageKm,
+                    // Military Unit Classification
+                    OrganizationLevel = token.OrganizationLevel,
+                    UnitType = token.UnitType,
+                    UnitDesignation = token.UnitDesignation,
+                    ForceType = token.ForceType,
                     AvailableTokenGroups = availableTokenGroups,
                     IsEdit = true
                 };

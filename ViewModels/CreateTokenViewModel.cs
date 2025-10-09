@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
+using TechWebSol.Constants;
 using TechWebSol.Models;
 
 namespace TechWebSol.ViewModels
@@ -18,8 +19,24 @@ namespace TechWebSol.ViewModels
         [Display(Name = "Token Group")]
         public Guid? TokenGroupId { get; set; }
 
-        [Display(Name = "Asset Image/Symbol")]
+        [Display(Name = "Asset Image/Symbol (DEPRECATED - Use icons instead)")]
         public IFormFile? AssetImage { get; set; }
+
+        // Military Unit Classification
+        [Display(Name = "Organization Level")]
+        public OrganizationLevel? OrganizationLevel { get; set; }
+
+        [Display(Name = "Unit Type")]
+        public UnitType? UnitType { get; set; }
+
+        [StringLength(50, ErrorMessage = "Unit designation cannot exceed 50 characters")]
+        [Display(Name = "Unit Designation")]
+        [Placeholder("e.g., 29, Alpha, 1st")]
+        public string? UnitDesignation { get; set; }
+
+        [Display(Name = "Force Type")]
+        [StringLength(100)]
+        public string? ForceType { get; set; }
 
         [Display(Name = "Front Coverage (km)")]
         [Range(0.1, 1000, ErrorMessage = "Front coverage must be between 0.1 and 1000 km")]
@@ -44,5 +61,14 @@ namespace TechWebSol.ViewModels
 
         // For form state
         public bool IsEdit { get; set; } = false;
+    }
+
+    public class PlaceholderAttribute : Attribute
+    {
+        public string Placeholder { get; }
+        public PlaceholderAttribute(string placeholder)
+        {
+            Placeholder = placeholder;
+        }
     }
 }

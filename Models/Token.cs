@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using TechWebSol.Constants;
 
 namespace TechWebSol.Models
 {
@@ -46,6 +47,23 @@ namespace TechWebSol.Models
 
         [Column(TypeName = "decimal(8,2)")]
         public decimal? SideCoverageKm { get; set; } // Side coverage distance in kilometers (optional)
+
+        // Military Unit Classification Properties
+        /// <summary>
+        /// Organization level/size of the unit (Squad, Platoon, Company, Battalion, Brigade, Division, Corps, Army)
+        /// </summary>
+        public OrganizationLevel? OrganizationLevel { get; set; }
+
+        /// <summary>
+        /// Functional type of the unit (Infantry, Armoured, Artillery, etc.)
+        /// </summary>
+        public UnitType? UnitType { get; set; }
+
+        /// <summary>
+        /// Unit designation number or identifier (e.g., "29", "Alpha", "1st")
+        /// </summary>
+        [MaxLength(50)]
+        public string? UnitDesignation { get; set; }
 
         // Position is tracked via MapMarkers (single active marker indicates current position)
 

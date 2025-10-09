@@ -1335,14 +1335,27 @@ class TokenPlacementManager {
     }
 
 	createTokenIcon(token) {
+        // Use military symbol renderer if token has military classification
+        if (token.organizationLevel && token.unitType && window.militarySymbolRenderer) {
+            console.log(`🎖️ Creating military symbol for ${token.name}`);
+            return window.militarySymbolRenderer.createMilitaryIcon(token);
+        }
+
+        // Fallback to legacy image/icon based tokens
+        console.log(`📷 Creating legacy icon for ${token.name}`);
+        
         // Determine border color based on force type
         let borderColor = '#00ff88'; // Default green
         if (token.forceType) {
             const forceTypeLower = token.forceType.toLowerCase();
-            if (forceTypeLower.includes('fox')) {
-                borderColor = '#ff0000'; // Red for Fox Land
-            } else if (forceTypeLower.includes('blue')) {
-                borderColor = '#0000ff'; // Blue for Blue Land
+            if (forceTypeLower.includes('fox') || forceTypeLower.includes('hostile') || forceTypeLower.includes('red')) {
+                borderColor = '#ff0000'; // Red for hostile
+            } else if (forceTypeLower.includes('blue') || forceTypeLower.includes('friendly')) {
+                borderColor = '#0000ff'; // Blue for friendly
+            } else if (forceTypeLower.includes('neutral') || forceTypeLower.includes('green')) {
+                borderColor = '#00AA00'; // Green for neutral
+            } else if (forceTypeLower.includes('unknown') || forceTypeLower.includes('yellow')) {
+                borderColor = '#FFAA00'; // Orange/Yellow for unknown
             }
         }
 

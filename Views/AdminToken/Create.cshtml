@@ -49,12 +49,103 @@
                                     <span asp-validation-for="TokenGroupId" class="text-danger"></span>
                                     <div class="form-text">Assign to a specific group for organization</div>
                                 </div>
+
+                                <!-- Military Unit Classification -->
+                                <div class="card mb-3 border-primary">
+                                    <div class="card-header bg-primary text-white">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-flag-checkered"></i> Military Unit Classification
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label asp-for="OrganizationLevel" class="form-label">Organization Level</label>
+                                                    <select asp-for="OrganizationLevel" class="form-control" id="organizationLevelSelect">
+                                                        <option value="">-- Select Level --</option>
+                                                        <option value="1">Squad (●)</option>
+                                                        <option value="2">Platoon (●●)</option>
+                                                        <option value="3">Company (●●●)</option>
+                                                        <option value="4">Battalion (╎)</option>
+                                                        <option value="5">Regiment (╎╎)</option>
+                                                        <option value="6">Brigade (✕)</option>
+                                                        <option value="7">Division (✕✕)</option>
+                                                        <option value="8">Corps (✕✕✕)</option>
+                                                        <option value="9">Army (✕✕✕✕)</option>
+                                                    </select>
+                                                    <span asp-validation-for="OrganizationLevel" class="text-danger"></span>
+                                                    <div class="form-text">Unit size/hierarchy</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label asp-for="UnitType" class="form-label">Unit Type</label>
+                                                    <select asp-for="UnitType" class="form-control" id="unitTypeSelect">
+                                                        <option value="">-- Select Type --</option>
+                                                        <option value="0">Infantry</option>
+                                                        <option value="1">Armoured</option>
+                                                        <option value="2">Mechanized</option>
+                                                        <option value="3">Artillery</option>
+                                                        <option value="4">Aviation</option>
+                                                        <option value="5">Air Defense</option>
+                                                        <option value="6">Engineers</option>
+                                                        <option value="7">Signals</option>
+                                                        <option value="8">Logistics</option>
+                                                        <option value="9">Medical</option>
+                                                        <option value="10">Reconnaissance</option>
+                                                        <option value="11">Special Forces</option>
+                                                        <option value="12">Airborne/Paratroop</option>
+                                                        <option value="13">Marines</option>
+                                                        <option value="14">Cavalry</option>
+                                                        <option value="15">Headquarters/Command</option>
+                                                        <option value="16">Intelligence</option>
+                                                        <option value="17">Military Police</option>
+                                                        <option value="18">CBRN</option>
+                                                        <option value="19">Maintenance</option>
+                                                        <option value="20">Cyber</option>
+                                                    </select>
+                                                    <span asp-validation-for="UnitType" class="text-danger"></span>
+                                                    <div class="form-text">Functional classification</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label asp-for="UnitDesignation" class="form-label">Unit Designation</label>
+                                                    <input asp-for="UnitDesignation" class="form-control" placeholder="e.g., 29, Alpha, 1st" id="unitDesignationInput" />
+                                                    <span asp-validation-for="UnitDesignation" class="text-danger"></span>
+                                                    <div class="form-text">Unit number/identifier</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label asp-for="ForceType" class="form-label">Force Type</label>
+                                            <select asp-for="ForceType" class="form-control">
+                                                <option value="">-- Select Force Type --</option>
+                                                <option value="Friendly">Friendly (Blue)</option>
+                                                <option value="Hostile">Hostile (Red)</option>
+                                                <option value="Neutral">Neutral (Green)</option>
+                                                <option value="Unknown">Unknown (Yellow)</option>
+                                            </select>
+                                            <span asp-validation-for="ForceType" class="text-danger"></span>
+                                            <div class="form-text">Force affiliation (affects icon color)</div>
+                                        </div>
+
+                                        <!-- Live Preview -->
+                                        <div class="alert alert-info" id="unitPreview" style="display:none;">
+                                            <h6><i class="fas fa-eye"></i> Unit Label Preview:</h6>
+                                            <div style="font-size: 18px; font-weight: bold;" id="previewLabel"></div>
+                                            <small class="text-muted">This is how the unit will appear on the map</small>
+                                        </div>
+                                    </div>
+                                </div>
                                 
                                 <div class="mb-3">
-                                    <label asp-for="AssetImage" class="form-label">Token Image/Symbol</label>
+                                    <label asp-for="AssetImage" class="form-label">Token Image/Symbol (DEPRECATED)</label>
                                     <input asp-for="AssetImage" class="form-control" type="file" accept="image/*" />
                                     <span asp-validation-for="AssetImage" class="text-danger"></span>
-                                    <div class="form-text">Upload image or symbol for the token (PNG, JPG, GIF)</div>
+                                    <div class="form-text"><strong>DEPRECATED:</strong> Upload image (optional - military symbols are now auto-generated from classification above)</div>
                                 </div>
                                 
                                 <div class="mb-3">
@@ -149,6 +240,45 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Live preview of military unit label
+        const orgLevelNames = {
+            '1': 'Sqd', '2': 'Plt', '3': 'Coy', '4': 'Bn', '5': 'Regt',
+            '6': 'Brig', '7': 'Div', '8': 'Corps', '9': 'Army'
+        };
+        
+        const unitTypeNames = {
+            '0': 'Inf', '1': 'Armoured', '2': 'Mech', '3': 'Arty', '4': 'Avn',
+            '5': 'ADA', '6': 'Eng', '7': 'Sig', '8': 'Log', '9': 'Med',
+            '10': 'Recce', '11': 'SF', '12': 'Airborne', '13': 'Marines', '14': 'Cav',
+            '15': 'HQ', '16': 'Intel', '17': 'MP', '18': 'CBRN', '19': 'Maint', '20': 'Cyber'
+        };
+        
+        function updatePreview() {
+            const orgLevel = $('#organizationLevelSelect').val();
+            const unitType = $('#unitTypeSelect').val();
+            const designation = $('#unitDesignationInput').val();
+            
+            if (orgLevel && unitType && designation) {
+                const label = `${orgLevelNames[orgLevel]} ${unitTypeNames[unitType]} ${designation}`;
+                $('#previewLabel').text(label);
+                $('#unitPreview').fadeIn();
+            } else {
+                $('#unitPreview').fadeOut();
+            }
+        }
+        
+        $(document).ready(function() {
+            $('#organizationLevelSelect, #unitTypeSelect, #unitDesignationInput').on('change input', updatePreview);
+            
+            // Reset form button
+            $('#resetFormBtn').click(function() {
+                $('form')[0].reset();
+                $('#unitPreview').hide();
+            });
+        });
+    </script>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
