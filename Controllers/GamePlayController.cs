@@ -964,6 +964,10 @@ namespace TechWebSol.Controllers
                         t.TeamId,
                         status = "placed",
                         forceType = t.ForceType,
+                        // Military Unit Classification
+                        organizationLevel = t.OrganizationLevel,
+                        unitType = t.UnitType,
+                        unitDesignation = t.UnitDesignation,
                         areaCoverages = t.AreaCoverages.Select(ac => new
                         {
                             id = ac.Id,

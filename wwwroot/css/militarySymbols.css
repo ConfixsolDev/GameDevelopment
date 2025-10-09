@@ -1,0 +1,236 @@
+/**
+ * Military Symbols CSS
+ * Styles for NATO-style military unit symbols on the map
+ */
+
+/* Military Token Marker Base */
+.military-token {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+/* Unit Symbol Container */
+.military-symbol {
+    position: relative;
+    background: #fff;
+    border: 3px solid #000;
+    border-radius: 8px;
+    padding: 8px 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    min-width: 60px;
+    text-align: center;
+    font-family: 'Arial', 'Helvetica', sans-serif;
+    font-weight: bold;
+}
+
+/* Force Type Color Coding */
+.force-friendly {
+    border-color: #0066FF !important;
+    background: #E6F0FF;
+}
+
+.force-hostile {
+    border-color: #FF0000 !important;
+    background: #FFE6E6;
+}
+
+.force-neutral {
+    border-color: #00AA00 !important;
+    background: #E6FFE6;
+}
+
+.force-unknown {
+    border-color: #FFAA00 !important;
+    background: #FFF6E6;
+}
+
+/* Organization Level Marker (top of symbol) */
+.org-level-marker {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 18px;
+    font-weight: bold;
+    color: #000;
+    text-shadow: 1px 1px 0px #fff, -1px -1px 0px #fff;
+    white-space: nowrap;
+    letter-spacing: -2px;
+}
+
+/* Unit Type Icon */
+.unit-type-icon {
+    font-size: 28px;
+    margin: 4px 0;
+    color: #000;
+}
+
+/* Unit Label (below symbol) */
+.unit-label {
+    position: absolute;
+    top: 100%;
+    margin-top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+}
+
+/* Hover Effects */
+.military-token:hover .military-symbol {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    transition: all 0.2s ease-in-out;
+}
+
+.military-token:hover .unit-label {
+    background: rgba(0, 0, 0, 0.95);
+    transform: translateX(-50%) scale(1.05);
+    transition: all 0.2s ease-in-out;
+}
+
+/* Selected State */
+.military-token.selected .military-symbol {
+    border-width: 4px;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(255, 215, 0, 1);
+    }
+}
+
+/* Size Variations by Organization Level */
+.military-symbol.size-squad,
+.military-symbol.size-platoon {
+    min-width: 50px;
+    padding: 6px 10px;
+}
+
+.military-symbol.size-company,
+.military-symbol.size-battalion {
+    min-width: 60px;
+    padding: 8px 12px;
+}
+
+.military-symbol.size-regiment,
+.military-symbol.size-brigade {
+    min-width: 70px;
+    padding: 10px 14px;
+}
+
+.military-symbol.size-division,
+.military-symbol.size-corps,
+.military-symbol.size-army {
+    min-width: 80px;
+    padding: 12px 16px;
+}
+
+/* Movement Path Styling */
+.movement-line {
+    stroke: #0066FF;
+    stroke-width: 3;
+    stroke-dasharray: 10, 5;
+    fill: none;
+    opacity: 0.7;
+}
+
+.movement-line.hostile {
+    stroke: #FF0000;
+}
+
+.movement-line.neutral {
+    stroke: #00AA00;
+}
+
+/* Coverage Area Styling */
+.coverage-area {
+    fill: rgba(0, 102, 255, 0.1);
+    stroke: #0066FF;
+    stroke-width: 2;
+    stroke-dasharray: 5, 5;
+}
+
+.coverage-area.hostile {
+    fill: rgba(255, 0, 0, 0.1);
+    stroke: #FF0000;
+}
+
+.coverage-area.neutral {
+    fill: rgba(0, 170, 0, 0.1);
+    stroke: #00AA00;
+}
+
+/* Leaflet Integration */
+.leaflet-marker-icon.military-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+/* Popup Styling for Military Tokens */
+.leaflet-popup-content .military-info {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+}
+
+.military-info .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.military-info .info-label {
+    font-weight: bold;
+    color: #666;
+}
+
+.military-info .info-value {
+    color: #000;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .military-symbol {
+        min-width: 50px;
+        padding: 6px 10px;
+    }
+    
+    .unit-type-icon {
+        font-size: 24px;
+    }
+    
+    .unit-label {
+        font-size: 10px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .military-token {
+        break-inside: avoid;
+    }
+    
+    .military-symbol {
+        border-color: #000 !important;
+        box-shadow: none;
+    }
+}
+
