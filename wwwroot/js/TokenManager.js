@@ -40,14 +40,15 @@ class TokenManager {
                 console.log('TokenPlacementManager initialized');
             }
 
-            // Load tokens from database
-            await this.loadTokensFromDatabase();
+            // Don't load tokens here - only load when needed (lazy loading)
+            // Map restoration will use GetPlacedTokens separately
+            // Token list modal will load all tokens when opened
 
             // Make functions globally available
             this.makeFunctionsGlobal();
 
             this.isInitialized = true;
-            console.log('TokenManager initialized successfully');
+            console.log('TokenManager initialized successfully (tokens will load on demand)');
         } catch (error) {
             console.error('Error initializing TokenManager:', error);
         }
@@ -81,10 +82,18 @@ class TokenManager {
     }
 
     /**
-     * Load tokens from database
+     * Load tokens from database (for token selection modal)
      */
     async loadTokensFromDatabase() {
+        // Prevent multiple simultaneous loads
+        if (this.isLoadingTokens) {
+            console.log('Tokens already loading, skipping...');
+            return this.tokens;
+        }
+
         try {
+            this.isLoadingTokens = true;
+            
             const response = await fetch('/GamePlay/GetTeamTokens');
             const result = await response.json();
 
@@ -96,18 +105,23 @@ class TokenManager {
                     marker: null
                 }));
 
-                // Load positions for placed tokens
-                for (const token of this.tokens) {
-                    try {
-                        const positionResponse = await fetch(`/GamePlay/GetTokenPosition?tokenId=${token.id}`);
-                        const positionResult = await positionResponse.json();
-                        
-                        if (positionResult.success) {
-                            token.position = positionResult.position;
+                // Get all placed tokens in ONE call to populate positions
+                const placedResponse = await fetch('/GamePlay/GetPlacedTokens');
+                const placedResult = await placedResponse.json();
+                
+                if (placedResult.success && placedResult.tokens) {
+                    // Create a map for quick lookup
+                    const placedTokensMap = new Map(
+                        placedResult.tokens.map(pt => [pt.id, pt])
+                    );
+                    
+                    // Update positions from placed tokens data
+                    for (const token of this.tokens) {
+                        const placedToken = placedTokensMap.get(token.id);
+                        if (placedToken && placedToken.position) {
+                            token.position = placedToken.position;
                             token.status = 'placed';
                         }
-                    } catch (error) {
-                        console.log(`No position found for token ${token.id}:`, error.message);
                     }
                 }
 
@@ -120,6 +134,8 @@ class TokenManager {
         } catch (error) {
             console.error('Error loading tokens from database:', error);
             return [];
+        } finally {
+            this.isLoadingTokens = false;
         }
     }
 
@@ -343,6 +359,9 @@ class TokenManager {
                     <div class="token-details-header">
                         <h3><i class="fas fa-map-marker-alt"></i> ${token.name || 'Unnamed Token'}</h3>
                         <div>
+                            <button class="btn btn-sm btn-success" onclick="window.tokenPlacementManager && window.tokenPlacementManager.openMovementPlanning && window.tokenPlacementManager.openMovementPlanning(${JSON.stringify(token).replace(/"/g, '&quot;')}, null)">
+                                <i class="fas fa-route"></i> Movement Planning
+                            </button>
                             <button class="btn btn-sm btn-primary" onclick="tokenManager.tokenPlacementManager && tokenManager.tokenPlacementManager.startMoveMode && tokenManager.tokenPlacementManager.startMoveMode('${token.id}')">
                                 <i class="fas fa-arrows-alt"></i> Move Token
                             </button>
@@ -599,9 +618,12 @@ class TokenManager {
     }
 
     /**
-     * Get all tokens
+     * Get all tokens (lazy load if not loaded yet)
      */
-    getTokens() {
+    async getTokens() {
+        if (this.tokens.length === 0 && !this.isLoadingTokens) {
+            await this.loadTokensFromDatabase();
+        }
         return this.tokens;
     }
 

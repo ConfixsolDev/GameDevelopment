@@ -100,15 +100,19 @@ class MilitarySymbolRenderer {
     }
 
     /**
-     * Create a Leaflet DivIcon with military symbol
+     * Create a Leaflet DivIcon with professional military symbol
      */
     createMilitaryIcon(tokenData) {
         const { organizationLevel, unitType, unitDesignation, forceType, name } = tokenData;
         
-        const orgSymbol = this.symbols.orgLevelSymbols[organizationLevel] || '';
-        const orgAbbr = this.symbols.orgLevelAbbr[organizationLevel] || '';
-        const unitIcon = this.symbols.unitTypeIcons[unitType] || 'fa-circle';
-        const unitName = this.symbols.unitTypeNames[unitType] || '';
+        // Convert string values to numbers if needed
+        const orgLevelNum = this.convertOrgLevelToNumber(organizationLevel);
+        const unitTypeNum = this.convertUnitTypeToNumber(unitType);
+        
+        const orgSymbol = this.symbols.orgLevelSymbols[orgLevelNum] || '';
+        const orgAbbr = this.symbols.orgLevelAbbr[orgLevelNum] || '';
+        const unitIcon = this.symbols.unitTypeIcons[unitTypeNum] || 'fa-circle';
+        const unitName = this.symbols.unitTypeNames[unitTypeNum] || '';
         
         // Determine force type CSS class
         const forceClass = this.getForceTypeCssClass(forceType);
@@ -119,23 +123,42 @@ class MilitarySymbolRenderer {
         // Size class based on organization level
         const sizeClass = this.getSizeClass(organizationLevel);
         
-        // Build HTML for the military symbol
+        // Get NATO-style frame based on organization level
+        const frameType = this.getNATOFrameType(organizationLevel);
+        
+        // Debug logging
+        console.log('🎖️ Creating military symbol with data:', {
+            orgSymbol, orgAbbr, unitIcon, unitName, unitDesignation, forceClass
+        });
+        
+        // Build HTML for the professional NATO-style military symbol
         const html = `
-            <div class="military-token">
-                <div class="military-symbol ${forceClass} ${sizeClass}">
-                    <div class="org-level-marker">${orgSymbol}</div>
-                    <i class="fas ${unitIcon} unit-type-icon"></i>
+            <div class="military-token nato-standard ${forceClass}">
+                <div class="nato-frame ${frameType}">
+                    <!-- Organization Level at Top -->
+                    <div class="org-level-top">
+                        <div class="org-symbol">${orgSymbol}</div>
+                    </div>
+                    
+                    <!-- Unit Type Symbol in Center -->
+                    <div class="unit-symbol-center">
+                        <i class="fas ${unitIcon}"></i>
+                    </div>
+                    
+                    <!-- Unit Designation on Right -->
+                    <div class="unit-designation-right">
+                        <div class="unit-designation">${unitDesignation || 'N/A'}</div>
+                    </div>
                 </div>
-                <div class="unit-label">${unitLabel}</div>
             </div>
         `;
 
         return L.divIcon({
             html: html,
-            className: 'military-marker',
-            iconSize: [80, 80],
-            iconAnchor: [40, 40],
-            popupAnchor: [0, -40]
+            className: 'military-marker professional',
+            iconSize: [90, 90],
+            iconAnchor: [45, 45],
+            popupAnchor: [0, -45]
         });
     }
 
@@ -186,6 +209,47 @@ class MilitarySymbolRenderer {
         if (orgLevel <= 4) return 'size-company';
         if (orgLevel <= 6) return 'size-brigade';
         return 'size-division';
+    }
+
+    /**
+     * Convert organization level string to number
+     */
+    convertOrgLevelToNumber(orgLevel) {
+        if (typeof orgLevel === 'number') return orgLevel;
+        
+        const levelMap = {
+            'Squad': 1, 'Platoon': 2, 'Company': 3, 'Battalion': 4, 'Regiment': 5,
+            'Brigade': 6, 'Division': 7, 'Corps': 8, 'Army': 9
+        };
+        
+        return levelMap[orgLevel] || 6; // Default to Brigade
+    }
+
+    /**
+     * Convert unit type string to number
+     */
+    convertUnitTypeToNumber(unitType) {
+        if (typeof unitType === 'number') return unitType;
+        
+        const typeMap = {
+            'Infantry': 0, 'Armoured': 1, 'Mechanized': 2, 'Artillery': 3, 'Aviation': 4,
+            'Air Defense': 5, 'Engineers': 6, 'Signals': 7, 'Logistics': 8, 'Medical': 9,
+            'Reconnaissance': 10, 'Special Forces': 11, 'Airborne': 12, 'Marines': 13,
+            'Cavalry': 14, 'Headquarters': 15, 'Intelligence': 16, 'Military Police': 17,
+            'CBRN': 18, 'Maintenance': 19, 'Cyber': 20
+        };
+        
+        return typeMap[unitType] || 0; // Default to Infantry
+    }
+
+    /**
+     * Get NATO-style frame type based on organization level
+     */
+    getNATOFrameType(orgLevel) {
+        if (orgLevel <= 2) return 'frame-squad';      // Small units - rectangle
+        if (orgLevel <= 4) return 'frame-company';    // Medium units - rectangle with notch
+        if (orgLevel <= 6) return 'frame-brigade';    // Large units - hexagon
+        return 'frame-division';                      // Very large units - octagon
     }
 
     /**

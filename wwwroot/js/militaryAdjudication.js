@@ -261,6 +261,22 @@ function showAdjudicationResultsModal(data) {
                             }).join('')}
                         </div>
                     ` : ''}
+                    ${result.terrainAnalysis.isRouteBlocked ? `
+                        <div style="margin-top: 10px; padding: 8px; background: #ff0000; border-radius: 4px;">
+                            <div style="font-size: 12px; color: #fff; font-weight: bold;">🚫 ROUTE BLOCKED</div>
+                            <div style="font-size: 11px; color: #fff;">${result.terrainAnalysis.blockageReason}</div>
+                        </div>
+                    ` : ''}
+                    ${result.terrainAnalysis.obstacleCategories ? `
+                        <div style="margin-top: 10px;">
+                            <div style="font-size: 11px; color: #666; margin-bottom: 5px;">Obstacle Summary:</div>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; font-size: 10px;">
+                                ${Object.entries(result.terrainAnalysis.obstacleCategories).map(([type, count]) => 
+                                    count > 0 ? `<div style="color: #ffaa00;">${type}: ${count}</div>` : ''
+                                ).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
                     ${result.terrainAnalysis.error ? `
                         <div style="margin-top: 10px; padding: 8px; background: #ff0000; border-radius: 4px;">
                             <div style="font-size: 11px; color: #fff;">Error: ${result.terrainAnalysis.error}</div>

@@ -8,7 +8,7 @@
     <div class="panel-body">
            
             <!-- Map Selection -->
-            <div class="control-section">
+            <div class="control-section" style="display:none;">
                 <h6><i class="fas fa-map"></i> Offline Map Selection</h6>
                 <div class="control-row">
                     <select id="mapSelector" class="overlay-btn" style="width: 100%; padding: 8px; border: 1px solid #00ff00; background: #1a1a1a; color: #00ff00; border-radius: 4px; font-size: 13px;">
@@ -20,14 +20,22 @@
                 </small>
             </div>
 
-            <!-- Military Adjudication -->
+            <!-- Region Settings -->
             <div class="control-section">
-                <h6><i class="fas fa-chart-line"></i> Military Analysis</h6>
+                <h6><i class="fas fa-cog"></i> Region Settings</h6>
                 <div class="control-row">
-                    <button class="overlay-btn" onclick="runMilitaryAdjudication()" style="width: 100%; background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%); color: #000; font-weight: bold; border: 2px solid #00ff00; animation: pulse-btn 2s infinite;">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Adjudicate Movements</span>
-                    </button>
+                    <label for="defaultZoomLevel" style="color: #00ff88; font-size: 12px; margin-bottom: 4px; display: block;">Default Zoom Level:</label>
+                    <select id="defaultZoomLevel" class="overlay-btn" onchange="updateDefaultZoomLevel(this.value)" style="width: 100%; padding: 8px; border: 1px solid #00ff00; background: #1a1a1a; color: #00ff00; border-radius: 4px; font-size: 13px;">
+                        <option value="12">12 - District View</option>
+                        <option value="13">13 - District View</option>
+                        <option value="14" selected>14 - Street View</option>
+                        <option value="15">15 - Street View</option>
+                        <option value="16">16 - Building View</option>
+                        <option value="17">17 - Building View</option>
+                        <option value="18">18 - Detail View</option>
+                        <option value="19">19 - Detail View</option>
+                        <option value="20">20 - Close Detail</option>
+                    </select>
                 </div>
             </div>
 
@@ -122,3 +130,188 @@
         }
     }
 </style>
+
+<script>
+/**
+ * Region Settings Manager
+ * Handles default zoom level and other region settings with localStorage persistence
+ */
+class RegionSettingsManager {
+    constructor() {
+        this.storageKey = 'ksagame_region_settings';
+        this.defaultSettings = {
+            defaultZoomLevel: 14,
+            basemapStyle: 'Offline',
+            showRegions: true,
+            showLabels: true
+        };
+        
+        this.settings = this.loadSettings();
+        this.initializeSettings();
+    }
+    
+    /**
+     * Load settings from localStorage
+     */
+    loadSettings() {
+        try {
+            const stored = localStorage.getItem(this.storageKey);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                console.log('🔧 Region settings loaded from storage:', parsed);
+                return { ...this.defaultSettings, ...parsed };
+            }
+        } catch (error) {
+            console.warn('⚠️ Failed to load region settings from storage:', error);
+        }
+        
+        console.log('🔧 Using default region settings:', this.defaultSettings);
+        return { ...this.defaultSettings };
+    }
+    
+    /**
+     * Save settings to localStorage
+     */
+    saveSettings() {
+        try {
+            localStorage.setItem(this.storageKey, JSON.stringify(this.settings));
+            console.log('💾 Region settings saved to storage:', this.settings);
+        } catch (error) {
+            console.error('❌ Failed to save region settings to storage:', error);
+        }
+    }
+    
+    /**
+     * Initialize settings UI
+     */
+    initializeSettings() {
+        // Set default zoom level dropdown
+        const zoomDropdown = document.getElementById('defaultZoomLevel');
+        if (zoomDropdown) {
+            zoomDropdown.value = this.settings.defaultZoomLevel;
+            console.log(`🔧 Default zoom level set to: ${this.settings.defaultZoomLevel}`);
+        }
+        
+        // Set basemap dropdown
+        const basemapDropdown = document.getElementById('basemapDropdown');
+        if (basemapDropdown) {
+            basemapDropdown.value = this.settings.basemapStyle;
+        }
+        
+        // Set layer visibility checkboxes
+        const regionsCheckbox = document.getElementById('chkShowRegions');
+        if (regionsCheckbox) {
+            regionsCheckbox.checked = this.settings.showRegions;
+        }
+        
+        const labelsCheckbox = document.getElementById('chkShowLabels');
+        if (labelsCheckbox) {
+            labelsCheckbox.checked = this.settings.showLabels;
+        }
+    }
+    
+    /**
+     * Update default zoom level
+     */
+    updateDefaultZoomLevel(zoomLevel) {
+        const level = parseInt(zoomLevel);
+        this.settings.defaultZoomLevel = level;
+        this.saveSettings();
+        
+        console.log(`🔧 Default zoom level updated to: ${level}`);
+        
+        // Show notification
+        if (typeof showNotification === 'function') {
+            showNotification(`Default zoom level set to ${level}`, 'success');
+        }
+        
+        // Update global variable for immediate use
+        if (window.gamePlayManager) {
+            window.gamePlayManager.defaultZoomLevel = level;
+        }
+    }
+    
+    /**
+     * Get current default zoom level
+     */
+    getDefaultZoomLevel() {
+        return this.settings.defaultZoomLevel;
+    }
+    
+    /**
+     * Update basemap style
+     */
+    updateBasemapStyle(style) {
+        this.settings.basemapStyle = style;
+        this.saveSettings();
+        console.log(`🔧 Basemap style updated to: ${style}`);
+    }
+    
+    /**
+     * Update layer visibility
+     */
+    updateLayerVisibility(layer, visible) {
+        if (layer === 'regions') {
+            this.settings.showRegions = visible;
+        } else if (layer === 'labels') {
+            this.settings.showLabels = visible;
+        }
+        this.saveSettings();
+        console.log(`🔧 Layer ${layer} visibility updated to: ${visible}`);
+    }
+    
+    /**
+     * Reset all settings to defaults
+     */
+    resetToDefaults() {
+        this.settings = { ...this.defaultSettings };
+        this.saveSettings();
+        this.initializeSettings();
+        console.log('🔧 Region settings reset to defaults');
+        
+        if (typeof showNotification === 'function') {
+            showNotification('Region settings reset to defaults', 'info');
+        }
+    }
+}
+
+// Global functions for HTML event handlers
+function updateDefaultZoomLevel(zoomLevel) {
+    if (window.regionSettingsManager) {
+        window.regionSettingsManager.updateDefaultZoomLevel(zoomLevel);
+    }
+}
+
+function changeBasemap(style) {
+    if (window.regionSettingsManager) {
+        window.regionSettingsManager.updateBasemapStyle(style);
+    }
+    
+    // Call existing basemap change function if it exists
+    if (typeof changeBasemap === 'function' && changeBasemap !== window.changeBasemap) {
+        changeBasemap(style);
+    }
+}
+
+function toggleLayer(layer) {
+    const checkbox = document.getElementById(`chkShow${layer.charAt(0).toUpperCase() + layer.slice(1)}`);
+    if (checkbox && window.regionSettingsManager) {
+        window.regionSettingsManager.updateLayerVisibility(layer, checkbox.checked);
+    }
+}
+
+// Initialize region settings manager when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    window.regionSettingsManager = new RegionSettingsManager();
+    console.log('🔧 Region Settings Manager initialized');
+});
+
+// Also initialize if DOM is already loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        window.regionSettingsManager = new RegionSettingsManager();
+    });
+} else {
+    window.regionSettingsManager = new RegionSettingsManager();
+}
+</script>

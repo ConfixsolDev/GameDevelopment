@@ -682,9 +682,12 @@ namespace TechWebSol.Controllers
                 token.FrontCoverageKm = model.FrontCoverageKm;
                 token.RearCoverageKm = model.RearCoverageKm;
                 token.SideCoverageKm = model.SideCoverageKm;
-                token.FrontCoverageKm = model.FrontCoverageKm;
-                token.RearCoverageKm = model.RearCoverageKm;
-                token.SideCoverageKm = model.SideCoverageKm;
+                
+                // Update military classification
+                token.OrganizationLevel = model.OrganizationLevel;
+                token.UnitType = model.UnitType;
+                token.UnitDesignation = model.UnitDesignation;
+                token.ForceType = model.ForceType;
 
                 // Update position if provided
                 var positionChanged = model.CurrentLatitude.HasValue && model.CurrentLongitude.HasValue;

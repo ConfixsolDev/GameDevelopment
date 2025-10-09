@@ -1335,14 +1335,22 @@ class TokenPlacementManager {
     }
 
 	createTokenIcon(token) {
-        // Use military symbol renderer if token has military classification
-        if (token.organizationLevel && token.unitType && window.militarySymbolRenderer) {
+        console.log(`🔍 Creating icon for token: ${token.name}`, {
+            hasMilitaryRenderer: !!window.militarySymbolRenderer,
+            organizationLevel: token.organizationLevel,
+            unitType: token.unitType,
+            unitDesignation: token.unitDesignation,
+            forceType: token.forceType
+        });
+
+        // Use military symbol renderer if available and token has any military data
+        if (window.militarySymbolRenderer) {
             console.log(`🎖️ Creating military symbol for ${token.name}`);
             return window.militarySymbolRenderer.createMilitaryIcon(token);
         }
 
         // Fallback to legacy image/icon based tokens
-        console.log(`📷 Creating legacy icon for ${token.name}`);
+        console.log(`📷 Creating legacy icon for ${token.name} - military renderer not available`);
         
         // Determine border color based on force type
         let borderColor = '#00ff88'; // Default green
@@ -1735,6 +1743,458 @@ class TokenPlacementManager {
             'Reconnaissance': '#9c88ff'
         };
         return colors[coverageType] || '#3388ff';
+    }
+
+    /**
+     * Show token context menu on right-click
+     */
+    showTokenContextMenu(e, tokenInfo) {
+        e.originalEvent.preventDefault();
+        e.originalEvent.stopPropagation();
+        
+        // Extract token data from tokenInfo
+        const token = tokenInfo.token || tokenInfo;
+        const marker = tokenInfo.marker;
+        
+        console.log('🎯 Showing context menu for token:', token);
+        
+        // Remove any existing context menu
+        const existingMenu = document.querySelector('.token-context-menu');
+        if (existingMenu) {
+            existingMenu.remove();
+        }
+        
+        // Create context menu
+        const menu = document.createElement('div');
+        menu.className = 'token-context-menu';
+        menu.style.cssText = `
+            position: fixed;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000;
+            min-width: 200px;
+            padding: 8px 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        `;
+        
+        // Menu items
+        const menuItems = [
+            {
+                icon: 'fas fa-route',
+                text: 'Movement Planning',
+                action: () => this.openMovementPlanning(token, marker)
+            },
+            {
+                icon: 'fas fa-info-circle',
+                text: 'Token Details',
+                action: () => this.showExistingTokenDetails(token)
+            },
+            {
+                icon: 'fas fa-edit',
+                text: 'Edit Token',
+                action: () => this.editToken(token)
+            },
+            {
+                icon: 'fas fa-trash',
+                text: 'Remove from Map',
+                action: () => this.removeTokenFromMap(token.id),
+                className: 'text-danger'
+            }
+        ];
+        
+        menuItems.forEach(item => {
+            const menuItem = document.createElement('div');
+            menuItem.className = `context-menu-item ${item.className || ''}`;
+            menuItem.style.cssText = `
+                padding: 8px 16px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                transition: background-color 0.2s;
+            `;
+            
+            menuItem.innerHTML = `
+                <i class="${item.icon}"></i>
+                <span>${item.text}</span>
+            `;
+            
+            menuItem.addEventListener('mouseenter', () => {
+                menuItem.style.backgroundColor = '#f5f5f5';
+            });
+            
+            menuItem.addEventListener('mouseleave', () => {
+                menuItem.style.backgroundColor = 'transparent';
+            });
+            
+            menuItem.addEventListener('click', () => {
+                item.action();
+                menu.remove();
+            });
+            
+            menu.appendChild(menuItem);
+        });
+        
+        // Position menu at cursor
+        menu.style.left = `${e.originalEvent.clientX}px`;
+        menu.style.top = `${e.originalEvent.clientY}px`;
+        
+        // Add to document
+        document.body.appendChild(menu);
+        
+        // Remove menu when clicking elsewhere
+        const removeMenu = (e) => {
+            if (!menu.contains(e.target)) {
+                menu.remove();
+                document.removeEventListener('click', removeMenu);
+            }
+        };
+        
+        setTimeout(() => {
+            document.addEventListener('click', removeMenu);
+        }, 100);
+    }
+
+    /**
+     * Open movement planning for token
+     */
+    openMovementPlanning(token, marker) {
+        console.log('🎯 Opening movement planning for token:', token);
+        
+        // Get current position from marker if available
+        let currentPosition = 'Not placed';
+        if (marker && marker.getLatLng) {
+            const latLng = marker.getLatLng();
+            currentPosition = `${latLng.lat.toFixed(6)}, ${latLng.lng.toFixed(6)}`;
+        } else if (token.position) {
+            currentPosition = `${token.position.lat.toFixed(6)}, ${token.position.lng.toFixed(6)}`;
+        }
+        
+        // Get token name safely
+        const tokenName = token.name || 'Unnamed Token';
+        
+        // Create movement planning modal with tabs
+        const modal = document.createElement('div');
+        modal.className = 'modal fade show';
+        modal.style.display = 'block';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        modal.innerHTML = `
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-route"></i> Token Management: ${tokenName}
+                        </h5>
+                        <button type="button" class="btn-close" onclick="this.closest('.modal').remove()"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Tab Navigation -->
+                        <ul class="nav nav-tabs" id="tokenManagementTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="token-info-tab" data-bs-toggle="tab" data-bs-target="#token-info" type="button" role="tab">
+                                    <i class="fas fa-info-circle"></i> Token Information
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="movement-planning-tab" data-bs-toggle="tab" data-bs-target="#movement-planning" type="button" role="tab">
+                                    <i class="fas fa-route"></i> Movement Planning
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <!-- Tab Content -->
+                        <div class="tab-content" id="tokenManagementTabContent">
+                            <!-- Token Information Tab -->
+                            <div class="tab-pane fade show active" id="token-info" role="tabpanel">
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <h6><i class="fas fa-map-marker-alt"></i> Position & Status</h6>
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <td><strong>Current Position:</strong></td>
+                                                <td><i class="fas fa-map-marker-alt text-primary"></i> ${currentPosition}</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Force Type:</strong></td>
+                                                <td><span class="badge bg-${this.getForceTypeColor(token.forceType)}">${token.forceType || 'Unknown'}</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Status:</strong></td>
+                                                <td><span class="badge bg-success">Active</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Token ID:</strong></td>
+                                                <td><code>${token.id || 'Unknown'}</code></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6><i class="fas fa-flag"></i> Military Classification</h6>
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <td><strong>Organization Level:</strong></td>
+                                                <td>${this.getOrgLevelName(token.organizationLevel)}</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Unit Type:</strong></td>
+                                                <td>${this.getUnitTypeName(token.unitType)}</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Unit Designation:</strong></td>
+                                                <td>${token.unitDesignation || 'Not specified'}</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Token Group:</strong></td>
+                                                <td>${token.tokenGroupName || 'No group'}</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <h6><i class="fas fa-chart-area"></i> Coverage Areas</h6>
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle"></i>
+                                            Coverage areas are displayed on the map when the token is selected.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Movement Planning Tab -->
+                            <div class="tab-pane fade" id="movement-planning" role="tabpanel">
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Movement Type</label>
+                                            <select class="form-control" id="movementType">
+                                                <option value="foot">Foot Movement</option>
+                                                <option value="vehicle">Vehicle Movement</option>
+                                                <option value="air">Air Movement</option>
+                                                <option value="naval">Naval Movement</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Speed</label>
+                                            <select class="form-control" id="movementSpeed">
+                                                <option value="slow">Slow (Cautious)</option>
+                                                <option value="normal" selected>Normal</option>
+                                                <option value="fast">Fast (Rushed)</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Estimated Duration</label>
+                                            <input type="text" class="form-control" id="estimatedDuration" placeholder="e.g., 2 hours, 30 minutes">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Priority Level</label>
+                                            <select class="form-control" id="priorityLevel">
+                                                <option value="low">Low Priority</option>
+                                                <option value="normal" selected>Normal Priority</option>
+                                                <option value="high">High Priority</option>
+                                                <option value="urgent">Urgent</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Weather Conditions</label>
+                                            <select class="form-control" id="weatherConditions">
+                                                <option value="clear">Clear</option>
+                                                <option value="cloudy">Cloudy</option>
+                                                <option value="rain">Rain</option>
+                                                <option value="storm">Storm</option>
+                                                <option value="snow">Snow</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Visibility</label>
+                                            <select class="form-control" id="visibility">
+                                                <option value="excellent">Excellent (>10km)</option>
+                                                <option value="good">Good (5-10km)</option>
+                                                <option value="moderate" selected>Moderate (1-5km)</option>
+                                                <option value="poor">Poor (<1km)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Route Description</label>
+                                    <textarea class="form-control" id="routeDescription" rows="3" placeholder="Describe the planned route, waypoints, and any special considerations..."></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Special Instructions</label>
+                                    <textarea class="form-control" id="specialInstructions" rows="2" placeholder="Any special orders, equipment, or considerations..."></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Equipment & Resources</label>
+                                    <textarea class="form-control" id="equipmentResources" rows="2" placeholder="Required equipment, vehicles, or special resources..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                        <button type="button" class="btn btn-info" onclick="window.tokenPlacementManager.showTokenDetails('${token.id}')">
+                            <i class="fas fa-eye"></i> View Details
+                        </button>
+                        <button type="button" class="btn btn-warning" onclick="window.location.href='/AdminToken/Edit/${token.id}'">
+                            <i class="fas fa-edit"></i> Edit Token
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="window.tokenPlacementManager.saveMovementPlan('${token.id}')">
+                            <i class="fas fa-save"></i> Save Movement Plan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+
+    /**
+     * Get force type color for badges
+     */
+    getForceTypeColor(forceType) {
+        const colors = {
+            'Friendly': 'primary',
+            'Hostile': 'danger', 
+            'Neutral': 'success',
+            'Unknown': 'warning'
+        };
+        return colors[forceType] || 'secondary';
+    }
+
+    /**
+     * Get organization level name
+     */
+    getOrgLevelName(orgLevel) {
+        const levels = {
+            1: 'Squad (8-13 personnel)',
+            2: 'Platoon (26-64 personnel)',
+            3: 'Company (80-250 personnel)',
+            4: 'Battalion (300-1,000 personnel)',
+            5: 'Regiment (1,000-3,000 personnel)',
+            6: 'Brigade (3,000-5,000 personnel)',
+            7: 'Division (10,000-25,000 personnel)',
+            8: 'Corps (20,000-45,000 personnel)',
+            9: 'Army (50,000+ personnel)'
+        };
+        return levels[orgLevel] || 'Unknown Level';
+    }
+
+    /**
+     * Get unit type name
+     */
+    getUnitTypeName(unitType) {
+        const types = {
+            0: 'Infantry',
+            1: 'Armoured',
+            2: 'Mechanized',
+            3: 'Artillery',
+            4: 'Aviation',
+            5: 'Air Defense',
+            6: 'Engineers',
+            7: 'Signals',
+            8: 'Logistics',
+            9: 'Medical',
+            10: 'Reconnaissance',
+            11: 'Special Forces',
+            12: 'Airborne/Paratroop',
+            13: 'Marines',
+            14: 'Cavalry',
+            15: 'Headquarters/Command',
+            16: 'Intelligence',
+            17: 'Military Police',
+            18: 'CBRN',
+            19: 'Maintenance',
+            20: 'Cyber'
+        };
+        return types[unitType] || 'Unknown Type';
+    }
+
+    /**
+     * Update area coverages for a token
+     */
+    updateAreaCoverages(tokenId, areaCoverages) {
+        console.log('🎯 Updating area coverages for token:', tokenId, areaCoverages);
+        
+        const tokenInfo = this.placedTokens.get(tokenId);
+        if (tokenInfo && tokenInfo.marker) {
+            // Store the area coverages
+            tokenInfo.coverageAreas = areaCoverages;
+            
+            // Recreate coverage areas on the map
+            const markerLatLng = tokenInfo.marker.getLatLng();
+            this.createCoverageAreas(null, markerLatLng, tokenInfo.token.forceType, tokenInfo.token, areaCoverages);
+        }
+    }
+
+    /**
+     * Save movement plan
+     */
+    saveMovementPlan(tokenId) {
+        const movementType = document.getElementById('movementType').value;
+        const movementSpeed = document.getElementById('movementSpeed').value;
+        const routeDescription = document.getElementById('routeDescription').value;
+        const estimatedDuration = document.getElementById('estimatedDuration').value;
+        const specialInstructions = document.getElementById('specialInstructions').value;
+        const priorityLevel = document.getElementById('priorityLevel').value;
+        const weatherConditions = document.getElementById('weatherConditions').value;
+        const visibility = document.getElementById('visibility').value;
+        const equipmentResources = document.getElementById('equipmentResources').value;
+        
+        const movementPlan = {
+            tokenId: tokenId,
+            movementType: movementType,
+            movementSpeed: movementSpeed,
+            routeDescription: routeDescription,
+            estimatedDuration: estimatedDuration,
+            specialInstructions: specialInstructions,
+            priorityLevel: priorityLevel,
+            weatherConditions: weatherConditions,
+            visibility: visibility,
+            equipmentResources: equipmentResources,
+            timestamp: new Date().toISOString()
+        };
+        
+        console.log('💾 Saving movement plan:', movementPlan);
+        
+        // Here you would typically save to backend
+        // For now, just show success message
+        if (this.notificationCallback) {
+            this.notificationCallback(`Movement plan saved for token ${tokenId}`, 'success');
+        }
+        
+        // Close modal
+        document.querySelector('.modal').remove();
+    }
+
+    /**
+     * Show existing token details using TokenManager
+     */
+    showExistingTokenDetails(token) {
+        console.log('📋 Showing existing token details for:', token);
+        try {
+            if (typeof tokenManager !== 'undefined' && tokenManager && typeof tokenManager.showTokenDetails === 'function') {
+                tokenManager.showTokenDetails(token);
+                return;
+            }
+            console.warn('tokenManager.showTokenDetails not available');
+        } catch (err) {
+            console.error('Error showing token details:', err);
+        }
+    }
+
+    /**
+     * Edit token
+     */
+    editToken(token) {
+        console.log('✏️ Editing token:', token.name);
+        // Redirect to edit page
+        window.location.href = `/AdminToken/Edit/${token.id}`;
     }
 
     /**

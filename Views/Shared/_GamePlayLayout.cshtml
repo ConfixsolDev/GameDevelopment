@@ -65,10 +65,16 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="gameplay-layout">
-    <!-- Loading Overlay -->
+    <!-- Loading Overlay (Initial page load) -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner"></div>
         <div class="loading-text">INITIALIZING WARGAME ARENA...</div>
+    </div>
+
+    <!-- Loading Spinner (AJAX requests) -->
+    <div class="loading-overlay" id="loading" style="display: none;">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">LOADING...</div>
     </div>
 
     <!-- Main Game Container -->
@@ -104,9 +110,8 @@
 
         function initializeGamePlayScripts() {
         $(document).ready(function() {
-            // Hide loading overlay immediately when ready
-            $('#loadingOverlay').fadeOut(300);
-
+            // Loading overlay will be hidden by GamePlayManager after initialization
+            
             // Initialize game state
             initializeGamePlay();
 

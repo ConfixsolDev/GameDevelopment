@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TechWebSol.Models.MapManagement;
 using TechWebSol.Services.MapManagement;
+using System.Collections.Concurrent;
 
 namespace TechWebSol.Controllers.MapManagement
 {
@@ -8,6 +9,11 @@ namespace TechWebSol.Controllers.MapManagement
 	[Route("")]
 	public class JobsController : ControllerBase
 	{
+		// Connection pool for MBTiles files to improve performance
+		private static readonly ConcurrentDictionary<string, string> _connectionStrings = new();
+		
+		// Semaphore to limit concurrent tile requests per file
+		private static readonly ConcurrentDictionary<string, SemaphoreSlim> _fileSemaphores = new();
 		private readonly JobStore _jobs;
 		private readonly TileService _tiles;
 		private readonly TerrainDownloadService _terrain;
@@ -447,42 +453,74 @@ namespace TechWebSol.Controllers.MapManagement
 			var normalizedFilename = file.Replace('/', Path.DirectorySeparatorChar);
 			var filePath = Path.Combine(wwwRoot, normalizedFilename);
 
-			if (!System.IO.File.Exists(filePath))
+		if (!System.IO.File.Exists(filePath))
+		{
+			return NotFound("MBTiles file not found");
+		}
+
+		// Get semaphore for this file to limit concurrent access
+		var semaphore = _fileSemaphores.GetOrAdd(filePath, _ => new SemaphoreSlim(10, 10)); // Max 10 concurrent requests per file
+		
+		await semaphore.WaitAsync();
+		try
+		{
+			// Use cached connection string for better performance
+			var cs = _connectionStrings.GetOrAdd(filePath, path =>
 			{
-				return NotFound("MBTiles file not found");
-			}
-
-			var cs = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
-			{
-				DataSource = filePath,
-				Mode = Microsoft.Data.Sqlite.SqliteOpenMode.ReadOnly,
-				Cache = Microsoft.Data.Sqlite.SqliteCacheMode.Shared
-			}.ToString();
-
-			try
-			{
-				await using var conn = new Microsoft.Data.Sqlite.SqliteConnection(cs);
-				await conn.OpenAsync();
-
-				var tmsY = (1 << z) - 1 - y;
-
-				await using var cmd = conn.CreateCommand();
-				cmd.CommandText = "SELECT tile_data FROM tiles WHERE zoom_level = @z AND tile_column = @x AND tile_row = @y";
-				cmd.Parameters.AddWithValue("@z", z);
-				cmd.Parameters.AddWithValue("@x", x);
-				cmd.Parameters.AddWithValue("@y", tmsY);
-
-				var result = await cmd.ExecuteScalarAsync();
-				if (result is byte[] tileData)
+				return new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
 				{
-					return File(tileData, "image/png");
-				}
-				return NotFound();
-			}
-			catch (Exception ex)
+					DataSource = path,
+					Mode = Microsoft.Data.Sqlite.SqliteOpenMode.ReadOnly,
+					Cache = Microsoft.Data.Sqlite.SqliteCacheMode.Shared,
+					Pooling = true
+				}.ToString();
+			});
+
+			// Simple retry mechanism for file lock issues
+			for (int attempt = 0; attempt < 3; attempt++)
 			{
-				return StatusCode(500, $"Error reading tile: {ex.Message}");
+				try
+				{
+					await using var conn = new Microsoft.Data.Sqlite.SqliteConnection(cs);
+					await conn.OpenAsync();
+
+					var tmsY = (1 << z) - 1 - y;
+
+					await using var cmd = conn.CreateCommand();
+					cmd.CommandText = "SELECT tile_data FROM tiles WHERE zoom_level = @z AND tile_column = @x AND tile_row = @y";
+					cmd.Parameters.AddWithValue("@z", z);
+					cmd.Parameters.AddWithValue("@x", x);
+					cmd.Parameters.AddWithValue("@y", tmsY);
+
+					var result = await cmd.ExecuteScalarAsync();
+					if (result is byte[] tileData)
+					{
+						return File(tileData, "image/png");
+					}
+					return NotFound();
+				}
+				catch (System.IO.IOException ex) when (ex.Message.Contains("being used by another process") && attempt < 2)
+				{
+					// Wait before retry (exponential backoff)
+					await Task.Delay(50 * (attempt + 1));
+					continue;
+				}
+				catch (Exception ex)
+				{
+					if (attempt == 2) // Last attempt
+					{
+						return StatusCode(500, $"Error reading tile after 3 attempts: {ex.Message}");
+					}
+					await Task.Delay(50 * (attempt + 1));
+				}
 			}
+			
+			return StatusCode(500, "Failed to read tile after multiple attempts");
+		}
+		finally
+		{
+			semaphore.Release();
+		}
 		}
 
 		[HttpGet("/mbtiles/metadata")]
@@ -499,46 +537,79 @@ namespace TechWebSol.Controllers.MapManagement
 			var normalizedFilename = file.Replace('/', Path.DirectorySeparatorChar);
 			var filePath = Path.Combine(wwwRoot, normalizedFilename);
 
-			if (!System.IO.File.Exists(filePath))
-			{
-				return NotFound("MBTiles file not found");
-			}
+		if (!System.IO.File.Exists(filePath))
+		{
+			return NotFound("MBTiles file not found");
+		}
 
-			var cs = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
+		// Get semaphore for this file to limit concurrent access
+		var semaphore = _fileSemaphores.GetOrAdd(filePath, _ => new SemaphoreSlim(5, 5)); // Max 5 concurrent metadata requests per file
+		
+		await semaphore.WaitAsync();
+		try
+		{
+			// Use cached connection string for better performance
+			var cs = _connectionStrings.GetOrAdd(filePath, path =>
 			{
-				DataSource = filePath,
-				Mode = Microsoft.Data.Sqlite.SqliteOpenMode.ReadOnly
-			}.ToString();
-
-			try
-			{
-				await using var conn = new Microsoft.Data.Sqlite.SqliteConnection(cs);
-				await conn.OpenAsync();
-
-				var metadata = new Dictionary<string, string>();
-				await using (var cmd = conn.CreateCommand())
+				return new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
 				{
-					cmd.CommandText = "SELECT name, value FROM metadata";
-					await using var reader = await cmd.ExecuteReaderAsync();
-					while (await reader.ReadAsync())
+					DataSource = path,
+					Mode = Microsoft.Data.Sqlite.SqliteOpenMode.ReadOnly,
+					Cache = Microsoft.Data.Sqlite.SqliteCacheMode.Shared,
+					Pooling = true
+				}.ToString();
+			});
+
+			// Simple retry mechanism for file lock issues
+			for (int attempt = 0; attempt < 3; attempt++)
+			{
+				try
+				{
+					await using var conn = new Microsoft.Data.Sqlite.SqliteConnection(cs);
+					await conn.OpenAsync();
+
+					var metadata = new Dictionary<string, string>();
+					await using (var cmd = conn.CreateCommand())
 					{
-						metadata[reader.GetString(0)] = reader.GetString(1);
+						cmd.CommandText = "SELECT name, value FROM metadata";
+						await using var reader = await cmd.ExecuteReaderAsync();
+						while (await reader.ReadAsync())
+						{
+							metadata[reader.GetString(0)] = reader.GetString(1);
+						}
 					}
-				}
 
-				long tileCount = 0;
-				await using (var cmd = conn.CreateCommand())
+					long tileCount = 0;
+					await using (var cmd = conn.CreateCommand())
+					{
+						cmd.CommandText = "SELECT COUNT(*) FROM tiles";
+						tileCount = (long)(await cmd.ExecuteScalarAsync() ?? 0L);
+					}
+
+					return new JsonResult(new { metadata, tile_count = tileCount });
+				}
+				catch (System.IO.IOException ex) when (ex.Message.Contains("being used by another process") && attempt < 2)
 				{
-					cmd.CommandText = "SELECT COUNT(*) FROM tiles";
-					tileCount = (long)(await cmd.ExecuteScalarAsync() ?? 0L);
+					// Wait before retry (exponential backoff)
+					await Task.Delay(50 * (attempt + 1));
+					continue;
 				}
-
-				return new JsonResult(new { metadata, tile_count = tileCount });
+				catch (Exception ex)
+				{
+					if (attempt == 2) // Last attempt
+					{
+						return StatusCode(500, new { error = $"Error reading metadata after 3 attempts: {ex.Message}" });
+					}
+					await Task.Delay(50 * (attempt + 1));
+				}
 			}
-			catch (Exception ex)
-			{
-				return StatusCode(500, new { error = ex.Message });
-			}
+			
+			return StatusCode(500, new { error = "Failed to read metadata after multiple attempts" });
+		}
+		finally
+		{
+			semaphore.Release();
+		}
 		}
 
 		// ============= Consolidated Terrain offline endpoints (from TerrainController) =============
