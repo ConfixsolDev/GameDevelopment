@@ -25,7 +25,7 @@
     filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6));
 }
 
-/* NATO Frame Container */
+/* NATO Frame Container - Default Rectangle Shape */
 .nato-frame {
     position: relative;
     background: linear-gradient(145deg, #ffffff, #f0f0f0);
@@ -50,11 +50,13 @@
 
 /* Organization Level (Top) */
 .org-level-top {
-    grid-column: 1 / -1;
     grid-row: 1;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: transparent;
+    border: none;
+    box-shadow: none;
     min-height: 14px;
 }
 
@@ -95,6 +97,9 @@
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
     padding: 2px 1px !important;
     text-align: center !important;
     min-height: 18px !important;
@@ -128,17 +133,18 @@
     background: linear-gradient(145deg, #e6f3ff, #cce7ff);
 }
 
-.military-token.nato-standard.force-friendly .org-level-top,
-.military-token.nato-standard.force-friendly .unit-designation-right {
-}
-
+/* Hostile/Red tokens use diamond shape (NATO standard) */
 .military-token.nato-standard.force-hostile .nato-frame {
+    border-color: #cc0000;
+    background: linear-gradient(145deg, #ffe6e6, #ffcccc);
+    border-radius: 0 !important;
+    transform: rotate(45deg);
+    width: 60px;
+    height: 60px;
 }
 
-.military-token.nato-standard.force-hostile .org-level-top,
-.military-token.nato-standard.force-hostile .unit-designation-right {
-    background: linear-gradient(145deg, #ffcccc, #ff9999);
-    border-color: #cc0000;
+.military-token.nato-standard.force-hostile .nato-frame > * {
+    transform: rotate(-45deg);
 }
 
 .military-token.nato-standard.force-neutral .nato-frame {
@@ -146,21 +152,9 @@
     background: linear-gradient(145deg, #e6ffe6, #ccffcc);
 }
 
-.military-token.nato-standard.force-neutral .org-level-top,
-.military-token.nato-standard.force-neutral .unit-designation-right {
-    background: linear-gradient(145deg, #ccffcc, #99ff99);
-    border-color: #00cc00;
-}
-
 .military-token.nato-standard.force-unknown .nato-frame {
     border-color: #cccc00;
     background: linear-gradient(145deg, #ffffe6, #ffffcc);
-}
-
-.military-token.nato-standard.force-unknown .org-level-top,
-.military-token.nato-standard.force-unknown .unit-designation-right {
-    background: linear-gradient(145deg, #ffffcc, #ffff99);
-    border-color: #cccc00;
 }
 
 /* Professional Military Token */
@@ -248,7 +242,6 @@
 
 .force-hostile {
     border-color: #FF0000 !important;
-    background: #FFE6E6;
 }
 
 .force-neutral {
