@@ -33,29 +33,29 @@ class MilitarySymbolRenderer {
                 6: 'Brig', 7: 'Div', 8: 'Corps', 9: 'Army'
             },
             
-            // Unit Type Icons (Font Awesome classes)
+            // Unit Type Icons (NATO Standard Symbols)
             unitTypeIcons: {
-                0: 'fa-person-rifle',      // Infantry
-                1: 'fa-shield',            // Armoured
-                2: 'fa-truck-pickup',      // Mechanized
-                3: 'fa-bullseye',          // Artillery
-                4: 'fa-helicopter',        // Aviation
-                5: 'fa-shield-halved',     // Air Defense
-                6: 'fa-hammer',            // Engineers
-                7: 'fa-satellite-dish',    // Signals
-                8: 'fa-boxes-stacked',     // Logistics
-                9: 'fa-staff-snake',       // Medical
-                10: 'fa-binoculars',       // Reconnaissance
-                11: 'fa-user-secret',      // Special Forces
-                12: 'fa-parachute-box',    // Airborne
-                13: 'fa-anchor',           // Marines
-                14: 'fa-horse-head',       // Cavalry
-                15: 'fa-flag',             // HQ/Command
-                16: 'fa-eye',              // Intelligence
-                17: 'fa-shield-halved',    // Military Police
-                18: 'fa-radiation',        // CBRN
-                19: 'fa-wrench',           // Maintenance
-                20: 'fa-laptop-code'       // Cyber
+                0: 'nato-infantry',        // Infantry - Crossed swords (X pattern)
+                1: 'nato-armour',          // Armoured - Track/oval shape
+                2: 'nato-mechanized',       // Mechanized - Truck symbol
+                3: 'nato-artillery',        // Artillery - Circle/dot
+                4: 'nato-aviation',         // Aviation - Helicopter
+                5: 'nato-airdefense',       // Air Defense - Umbrella arc
+                6: 'nato-engineer',         // Engineers - Bridge/E symbol
+                7: 'nato-signals',          // Signals - Lightning bolt
+                8: 'nato-logistics',        // Logistics - Boxes
+                9: 'nato-medical',          // Medical - Cross
+                10: 'nato-reconnaissance',  // Reconnaissance - Quatrefoil with diagonal line
+                11: 'nato-specialforces',   // Special Forces - Special symbol
+                12: 'nato-airborne',        // Airborne - Parachute
+                13: 'nato-marines',         // Marines - Anchor
+                14: 'nato-cavalry',         // Cavalry - Horse head
+                15: 'nato-hq',              // HQ/Command - Flag
+                16: 'nato-intelligence',    // Intelligence - Eye
+                17: 'nato-militarypolice',  // Military Police - Shield
+                18: 'nato-cbrn',            // CBRN - Radiation symbol
+                19: 'nato-maintenance',     // Maintenance - Wrench
+                20: 'nato-cyber'            // Cyber - Computer
             },
             
             // Unit Type Short Names
@@ -105,30 +105,25 @@ class MilitarySymbolRenderer {
     createMilitaryIcon(tokenData) {
         const { organizationLevel, unitType, unitDesignation, forceType, name } = tokenData;
         
-        // Convert string values to numbers if needed
+        // Convert string values to numbers if needed for organization level
         const orgLevelNum = this.convertOrgLevelToNumber(organizationLevel);
-        const unitTypeNum = this.convertUnitTypeToNumber(unitType);
         
         const orgSymbol = this.symbols.orgLevelSymbols[orgLevelNum] || '';
         const orgAbbr = this.symbols.orgLevelAbbr[orgLevelNum] || '';
-        const unitIcon = this.symbols.unitTypeIcons[unitTypeNum] || 'fa-circle';
-        const unitName = this.symbols.unitTypeNames[unitTypeNum] || '';
         
         // Determine force type CSS class
         const forceClass = this.getForceTypeCssClass(forceType);
-        
-        // Create unit label (e.g., "Brig Armoured 29")
-        const unitLabel = `${orgAbbr} ${unitName} ${unitDesignation || ''}`.trim();
-        
-        // Size class based on organization level
-        const sizeClass = this.getSizeClass(organizationLevel);
         
         // Get NATO-style frame based on organization level
         const frameType = this.getNATOFrameType(organizationLevel);
         
         // Debug logging
         console.log('🎖️ Creating military symbol with data:', {
-            orgSymbol, orgAbbr, unitIcon, unitName, unitDesignation, forceClass
+            originalData: { organizationLevel, unitType, unitDesignation, forceType, name },
+            orgLevelNum,
+            orgSymbol,
+            orgAbbr,
+            forceClass
         });
         
         // Build HTML for the professional NATO-style military symbol
@@ -142,7 +137,7 @@ class MilitarySymbolRenderer {
                     
                     <!-- Unit Type Symbol in Center with Designation -->
                     <div class="unit-symbol-center">
-                        <i class="fas ${unitIcon}"></i>
+                        <div class="unit-symbol ${unitType || 'Infantry'}"></div>
                         <div class="unit-designation-right">
                             <div class="unit-designation">${unitDesignation || 'N/A'}</div>
                         </div>

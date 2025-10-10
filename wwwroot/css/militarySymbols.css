@@ -58,7 +58,7 @@
 }
 
 .org-symbol {
-    font-size: 12px;
+    font-size: 15px;
     color: #000;
     font-weight: bold;
     line-height: 1;
@@ -77,16 +77,283 @@
     position: relative;
 }
 
-.unit-symbol-center i {
-    font-size: 20px;
+/* Unit Type Symbols - Simple CSS Classes */
+.unit-symbol {
+    width: 32px;
+    height: 32px;
+    position: relative;
+    display: inline-block;
+    font-weight: bold;
+    font-size: 18px;
     color: #000;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    line-height: 32px;
+}
+
+/* Hide any Font Awesome icons in military tokens */
+.military-token .unit-symbol-center i.fas,
+.military-token .unit-symbol-center i.fa {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* Infantry - Crossed swords (X pattern) */
+.unit-symbol.Infantry {
+    font-size: 20px;
+    font-weight: 900;
+}
+.unit-symbol.Infantry::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(45deg, transparent 45%, #000 45%, #000 55%, transparent 55%),
+                linear-gradient(-45deg, transparent 45%, #000 45%, #000 55%, transparent 55%);
+}
+
+/* Armoured - Track/oval shape */
+.unit-symbol.Armoured {
+    font-size: 20px;
+    font-weight: 900;
+}
+.unit-symbol.Armoured::before {
+    content: '';
+    position: absolute;
+    top: 40%;
+    left: 40%;
+    width: 20px;
+    height: 20px;
+    transform: translate(-50%, -50%);
+    border: 2px solid #000;
+    border-radius: 50%;
+    background: transparent;
+    z-index: 1;
+    display: block !important;
+}
+
+/* Artillery - Circle/dot */
+.unit-symbol.Artillery {
+    font-size: 20px;
+    font-weight: 900;
+}
+.unit-symbol.Artillery::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    transform: translate(-50%, -50%);
+    border: 2px solid #000;
+    border-radius: 50%;
+    background: #000;
+}
+
+/* Engineers - Bridge/E symbol */
+.unit-symbol.Engineers {
+    font-size: 20px;
+    font-weight: 900;
+}
+.unit-symbol.Engineers::before {
+    content: 'E';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(90deg);
+    font-family: Arial, sans-serif;
+}
+
+/* Signals - Lightning bolt */
+.unit-symbol.Signals {
+    font-size: 20px;
+    font-weight: 900;
+}
+.unit-symbol.Signals::before {
+    content: '⚡';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Medical - Cross */
+.unit-symbol.Medical {
+    font-size: 20px;
+    font-weight: 900;
+}
+.unit-symbol.Medical::before {
+    content: '✚';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Reconnaissance - Quatrefoil with diagonal line */
+.unit-symbol.Reconnaissance::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    transform: translate(-50%, -50%);
+    border: 2px solid #000;
+    border-radius: 50% 50% 50% 50%;
+    background: linear-gradient(45deg, transparent 45%, #000 45%, #000 55%, transparent 55%);
+}
+
+/* Air Defense - Umbrella arc */
+.unit-symbol.AirDefense::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    transform: translate(-50%, -50%);
+    border: 2px solid #000;
+    border-bottom: none;
+    border-radius: 50% 50% 0 0;
+}
+
+/* Aviation - Helicopter */
+.unit-symbol.Aviation::before {
+    content: '🚁';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Logistics - Boxes */
+.unit-symbol.Logistics::before {
+    content: '📦';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Special Forces - Special symbol */
+.unit-symbol.SpecialForces::before {
+    content: '⚔️';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Airborne - Parachute */
+.unit-symbol.AirborneParatroop::before {
+    content: '🪂';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Marines - Anchor */
+.unit-symbol.Marines::before {
+    content: '⚓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Cavalry - Horse head */
+.unit-symbol.Cavalry::before {
+    content: '🐎';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Headquarters Command - Flag */
+.unit-symbol.HeadquartersCommand::before {
+    content: '🏁';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Intelligence - Eye */
+.unit-symbol.Intelligence::before {
+    content: '👁️';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Military Police - Shield */
+.unit-symbol.MilitaryPolice::before {
+    content: '🛡️';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* CBRN - Radiation symbol */
+.unit-symbol.CBRN::before {
+    content: '☢️';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Maintenance - Wrench */
+.unit-symbol.Maintenance::before {
+    content: '🔧';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Cyber - Computer */
+.unit-symbol.Cyber::before {
+    content: '💻';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Mechanized - Truck symbol */
+.unit-symbol.Mechanized::before {
+    content: '🚛';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
 }
 
 /* Unit Designation (Right) - Now nested inside unit symbol center */
 .unit-designation-right {
     position: absolute !important;
-    top: 50% !important;
+    top: 40% !important;
     transform: translateY(-50%) !important;
     display: flex !important;
     align-items: center !important;
@@ -94,7 +361,7 @@
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
-    padding-left: 25px;
+    padding-left: 30px;
 }
 
 .unit-designation-right .unit-designation {
