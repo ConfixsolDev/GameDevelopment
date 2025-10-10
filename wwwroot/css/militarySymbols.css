@@ -48,38 +48,32 @@
 
 /* Organization Level (Top) */
 .org-level-top {
-    grid-row: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    box-shadow: none;
     min-height: 14px;
+    text-align: center;
+}
+
+.force-hostile .org-level-top {
+    text-align: left !important;
+    padding-left:5px;
 }
 
 .org-symbol {
     font-size: 12px;
     color: #000;
-    text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.8);
     font-weight: bold;
     line-height: 1;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* Unit Type Symbol (Center) */
 .unit-symbol-center {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    display: flex;
-    align-items: center;
     justify-content: center;
-    background: linear-gradient(145deg, #f8f8f8, #e0e0e0);
-    border-radius: 10px;
+    /*background: linear-gradient(145deg, #f8f8f8, #e0e0e0);*/
     padding: 4px;
-    border: 2px solid #666;
+/*    border: 2px solid #666;
     box-shadow: 
         inset 0 1px 3px rgba(255, 255, 255, 0.9),
-        inset 0 -1px 3px rgba(0, 0, 0, 0.1);
+        inset 0 -1px 3px rgba(0, 0, 0, 0.1);*/
     position: relative;
 }
 
@@ -100,7 +94,7 @@
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
-    padding-left: 46px;
+    padding-left: 25px;
 }
 
 .unit-designation-right .unit-designation {
@@ -108,7 +102,6 @@
     color: #000 !important;
     font-weight: bold !important;
     vertical-align: middle !important;
-    margin-left: 17px !important;
 }
 
 /* Force Type Color Variations */
