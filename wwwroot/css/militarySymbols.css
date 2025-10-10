@@ -46,6 +46,7 @@
     overflow: visible;
 }
 
+
 /* Organization Level (Top) */
 .org-level-top {
     min-height: 14px;
@@ -53,8 +54,7 @@
 }
 
 .force-hostile .org-level-top {
-    text-align: left !important;
-    padding-left:5px;
+    justify-content: center;
 }
 
 .org-symbol {
@@ -65,16 +65,27 @@
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+.force-hostile .org-symbol {
+    margin-left:10px
+}
+
 /* Unit Type Symbol (Center) */
 .unit-symbol-center {
+    align-items: center;
     justify-content: center;
-    /*background: linear-gradient(145deg, #f8f8f8, #e0e0e0);*/
-    padding: 4px;
-/*    border: 2px solid #666;
-    box-shadow: 
-        inset 0 1px 3px rgba(255, 255, 255, 0.9),
-        inset 0 -1px 3px rgba(0, 0, 0, 0.1);*/
     position: relative;
+    margin: 1px;
+}
+
+.unit-symbol {
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, #f8f8f8, #e0e0e0);
+    border: 2px solid #666;
+    border-radius: 8px;
+    box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.9), inset 0 -1px 3px rgba(0, 0, 0, 0.1);
+    position: relative;
+    margin: 1px;
 }
 
 /* Unit Type Symbols - Simple CSS Classes */
@@ -364,12 +375,13 @@
     padding-left: 30px;
 }
 
-.unit-designation-right .unit-designation {
-    font-size: 12px !important;
-    color: #000 !important;
-    font-weight: bold !important;
-    vertical-align: middle !important;
-}
+    .unit-designation-right .unit-designation {
+        font-size: 12px !important;
+        color: #000 !important;
+        font-weight: bold !important;
+        vertical-align: middle !important;
+        margin-left: 4px;
+    }
 
 /* Force Type Color Variations */
 .military-token.nato-standard.force-friendly .nato-frame {
@@ -381,15 +393,40 @@
 .military-token.nato-standard.force-hostile .nato-frame {
     border-color: #cc0000;
     background: linear-gradient(145deg, #ffe6e6, #ffcccc);
-    border-radius: 0 !important;
+    border-radius: 6px !important;
     transform: rotate(45deg);
     width: 60px;
     height: 60px;
     overflow: visible;
 }
 
+/* Hostile Content Frame - Only for hostile tokens */
+.hostile-content-frame {
+    display: inline-block;
+}
+
+/* Keep inner content rotation-free for hostile tokens */
 .military-token.nato-standard.force-hostile .nato-frame > * {
     transform: rotate(-45deg);
+    padding: 2px;
+}
+
+/* Fine-tune positioning for diamond shape */
+.military-token.nato-standard.force-hostile .org-level-top {
+    margin-top: -3px;
+    padding-top: 0px;
+}
+
+.military-token.nato-standard.force-hostile .unit-symbol-center {
+    margin: 0;
+    padding: 0px;
+}
+
+.military-token.nato-standard.force-hostile .unit-designation-right {
+    padding-right: 1px;
+    padding-left: 2px;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
 }
 
 .military-token.nato-standard.force-neutral .nato-frame {
@@ -724,6 +761,11 @@
     box-shadow: 
         0 4px 8px rgba(255, 0, 0, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.force-hostile .unit-designation {
+    margin-left: 35px !important;
+    margin-bottom: 10px !important;
 }
 
 .force-neutral .military-symbol {

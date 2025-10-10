@@ -130,18 +130,20 @@ class MilitarySymbolRenderer {
         const html = `
             <div class="military-token nato-standard ${forceClass}">
                 <div class="nato-frame ${frameType}">
-                    <!-- Organization Level at Top -->
-                    <div class="org-level-top">
-                        <div class="org-symbol">${orgSymbol}</div>
-                    </div>
-                    
-                    <!-- Unit Type Symbol in Center with Designation -->
-                    <div class="unit-symbol-center">
-                        <div class="unit-symbol ${unitType || 'Infantry'}"></div>
-                        <div class="unit-designation-right">
-                            <div class="unit-designation">${unitDesignation || 'N/A'}</div>
+                    ${forceClass === 'force-hostile' ? '<div class="hostile-content-frame">' : ''}
+                        <!-- Organization Level at Top -->
+                        <div class="org-level-top">
+                            <div class="org-symbol">${orgSymbol}</div>
                         </div>
-                    </div>
+                        
+                        <!-- Unit Type Symbol in Center with Designation -->
+                        <div class="unit-symbol-center">
+                            <div class="unit-symbol ${unitType || 'Infantry'}"></div>
+                            <div class="unit-designation-right">
+                                <div class="unit-designation">${unitDesignation || 'N/A'}</div>
+                            </div>
+                        </div>
+                    ${forceClass === 'force-hostile' ? '</div>' : ''}
                 </div>
             </div>
         `;
