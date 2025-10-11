@@ -307,16 +307,34 @@ function loadTabContent(tabName) {
     };
     
     const actionName = actionMap[tabName] || `Load${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Form`;
+    const url = `/AttackPlanning/${actionName}`;
     
-    fetch(`/AttackPlanning/${actionName}`)
-        .then(response => response.text())
+    console.log(`📥 Loading tab content: ${tabName} from ${url}`);
+    
+    fetch(url)
+        .then(response => {
+            console.log(`📡 Response status: ${response.status} for ${tabName}`);
+            return response.text();
+        })
         .then(html => {
+            console.log(`✅ Received HTML (${html.length} chars) for ${tabName}`);
+            console.log('First 200 chars:', html.substring(0, 200));
             tabContent.innerHTML = html;
-            console.log(`Loaded ${tabName} tab content`);
+            console.log(`✅ Content inserted into tab-${tabName}`);
+            
+            // Initialize form if it has an init function
+            if (typeof window[`initialize${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Form`] === 'function') {
+                console.log(`🔧 Initializing ${tabName} form`);
+                window[`initialize${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Form`]();
+            }
         })
         .catch(error => {
-            console.error(`Error loading ${tabName} tab:`, error);
-            tabContent.innerHTML = '<div class="error">Failed to load tab content</div>';
+            console.error(`❌ Error loading ${tabName} tab:`, error);
+            tabContent.innerHTML = `<div class="error" style="color: #ff4444; padding: 20px; text-align: center;">
+                <i class="fas fa-exclamation-triangle"></i><br>
+                Failed to load tab content<br>
+                <small>${error.message}</small>
+            </div>`;
         });
 }
 

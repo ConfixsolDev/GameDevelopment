@@ -50,7 +50,10 @@ class AttackVisualizationManager {
             console.log('🎯 Loading attack orders from database...');
             
             const response = await fetch('/AttackPlanning/GetAllAttackOrders');
+            console.log('📡 Response status:', response.status);
+            
             const result = await response.json();
+            console.log('📦 Response data:', result);
             
             if (result.success && result.attackOrders) {
                 console.log(`🎯 Found ${result.attackOrders.length} attack orders in database`);
@@ -428,14 +431,22 @@ class AttackVisualizationManager {
             return null;
         }
         
-        // Create polyline with solid red color (not dotted)
-        const attackLine = L.polyline(curvedPath, {
-            color: '#ff4444',
-            weight: 4,
-            opacity: 0.9,
-            className: 'attack-line-solid',
-            dashArray: null  // Ensure solid line
-        });
+        // Create attack line with NATO styling
+        // Get attack type from attack order if available
+        const attackType = attackLineData.attackOrder?.intent?.natoAttackType || 'attack-main';
+        let attackLine;
+        if (window.attackSymbolRenderer) {
+            attackLine = window.attackSymbolRenderer.createAttackLine(curvedPath, attackType);
+        } else {
+            // Fallback to original implementation
+            attackLine = L.polyline(curvedPath, {
+                color: '#ff4444',
+                weight: 4,
+                opacity: 0.9,
+                className: 'attack-line-solid',
+                dashArray: null
+            });
+        }
         
         // Add click event to show attack summary
         attackLine.on('click', (e) => {
@@ -457,8 +468,8 @@ class AttackVisualizationManager {
             });
         });
         
-        // Add attack arrow marker at the end
-        const arrowMarker = this.createAttackArrow(targetPos, attackerPos);
+        // Add attack arrow marker at the end with NATO styling
+        const arrowMarker = this.createAttackArrow(targetPos, attackerPos, attackType);
         
         // Add to map
         this.attackLineGroup.addLayer(attackLine);
@@ -493,13 +504,17 @@ class AttackVisualizationManager {
         return targetPosition;
     }
 
-    createAttackArrow(targetPos, attackerPos) {
-        // Calculate arrow direction
+    createAttackArrow(targetPos, attackerPos, attackType = 'attack', options = {}) {
+        // Use the new AttackSymbolRenderer if available
+        if (window.attackSymbolRenderer) {
+            return window.attackSymbolRenderer.createAttackArrow(targetPos, attackerPos, attackType, options);
+        }
+        
+        // Fallback to original implementation
         const dx = targetPos.lng - attackerPos.lng;
         const dy = targetPos.lat - attackerPos.lat;
         const angle = Math.atan2(dy, dx) * 180 / Math.PI;
         
-        // Create arrow icon
         const arrowIcon = L.divIcon({
             html: `<div class="attack-arrow" style="transform: rotate(${angle}deg);">
                 <i class="fas fa-arrow-right"></i>
@@ -509,9 +524,7 @@ class AttackVisualizationManager {
             iconAnchor: [10, 10]
         });
         
-        // Position arrow slightly before the target
         const arrowPos = this.calculateArrowPosition(targetPos, attackerPos);
-        
         const arrowMarker = L.marker(arrowPos, { icon: arrowIcon });
         
         return arrowMarker;

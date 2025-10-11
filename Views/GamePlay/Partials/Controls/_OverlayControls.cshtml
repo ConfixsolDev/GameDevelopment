@@ -31,6 +31,61 @@
             </div>
         </div>
 
+        <!-- Defense Planning Section -->
+        <div class="defense-planning-section">
+            <h6 class="section-subtitle">Defense Planning</h6>
+            <div class="control-row">
+                <button class="overlay-btn defense-btn" id="btnKillZonePrimary" onclick="startKillZoneDrawing('primary')">
+                    <i class="fas fa-crosshairs"></i>
+                    <span>Primary Kill Zone</span>
+                </button>
+                <button class="overlay-btn defense-btn" id="btnKillZoneSecondary" onclick="startKillZoneDrawing('secondary')">
+                    <i class="fas fa-bullseye"></i>
+                    <span>Secondary Kill Zone</span>
+                </button>
+            </div>
+            <div class="control-row">
+                <button class="overlay-btn defense-btn" id="btnKillZoneEngagement" onclick="startKillZoneDrawing('engagement')">
+                    <i class="fas fa-target"></i>
+                    <span>Engagement Area</span>
+                </button>
+                <button class="overlay-btn defense-btn" id="btnMinefield" onclick="startMinefieldDrawing('mixed')">
+                    <i class="fas fa-bomb"></i>
+                    <span>Minefield</span>
+                </button>
+            </div>
+            <div class="control-row">
+                <button class="overlay-btn defense-btn" id="btnObstacle" onclick="startObstacleDrawing('wire')">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Obstacle</span>
+                </button>
+                <button class="overlay-btn defense-btn" id="btnDefensivePosition" onclick="placeDefensivePosition('foxhole')">
+                    <i class="fas fa-circle"></i>
+                    <span>Defensive Position</span>
+                </button>
+            </div>
+            <div class="control-row">
+                <button class="overlay-btn defense-btn" id="btnWithdrawalRoute" onclick="startWithdrawalRouteDrawing('primary')">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Withdrawal Route</span>
+                </button>
+                <button class="overlay-btn defense-btn" id="btnDefensiveLine" onclick="startDefensiveLineDrawing('feba')">
+                    <i class="fas fa-minus"></i>
+                    <span>Defensive Line</span>
+                </button>
+            </div>
+            <div class="control-row">
+                <button class="overlay-btn" onclick="cancelDefenseDrawing()">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel Drawing</span>
+                </button>
+                <button class="overlay-btn" onclick="clearAllDefenseElements()">
+                    <i class="fas fa-trash"></i>
+                    <span>Clear All</span>
+                </button>
+            </div>
+        </div>
+
         <!-- Management Tools Section -->
         <div class="management-tools-section">
             <h6 class="section-subtitle">Token Actions</h6>

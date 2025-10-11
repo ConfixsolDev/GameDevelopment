@@ -1,0 +1,368 @@
+/**
+ * NATO Attack Symbols CSS
+ * Styles for NATO-standard attack symbols and indicators
+ */
+
+/* Base Attack Symbol Styles */
+.nato-attack-symbol {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    transition: all 0.3s ease;
+}
+
+.attack-symbol-inner {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.attack-symbol-shadow {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+    z-index: 1;
+    filter: blur(1px);
+}
+
+/* Attack Marker Container */
+.nato-attack-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+/* Attack Line Styles */
+.nato-attack-line {
+    transition: all 0.3s ease;
+}
+
+.nato-attack-line:hover {
+    filter: brightness(1.2);
+    stroke-width: 6 !important;
+}
+
+/* Basic Attack Symbol */
+.nato-attack-basic {
+    color: #ff4444;
+    font-size: 24px;
+}
+
+.nato-attack-basic:hover {
+    transform: scale(1.1) !important;
+    color: #ff6666;
+}
+
+/* Attack Direction Symbol */
+.nato-attack-direction {
+    color: #ff4444;
+    font-size: 28px;
+}
+
+.nato-attack-direction:hover {
+    transform: scale(1.1) !important;
+    color: #ff6666;
+}
+
+/* Heavy Attack Symbol */
+.nato-attack-heavy {
+    color: #cc0000;
+    font-size: 32px;
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9);
+}
+
+.nato-attack-heavy:hover {
+    transform: scale(1.1) !important;
+    color: #ff0000;
+}
+
+/* Main Attack Symbol */
+.nato-attack-main {
+    color: #ff4444;
+    font-size: 30px;
+    animation: pulse-attack 2s infinite;
+}
+
+@keyframes pulse-attack {
+    0% { opacity: 0.8; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+    100% { opacity: 0.8; transform: scale(1); }
+}
+
+/* Supporting Attack Symbol */
+.nato-attack-supporting {
+    color: #ff8844;
+    font-size: 24px;
+    opacity: 0.8;
+}
+
+.nato-attack-supporting:hover {
+    transform: scale(1.1) !important;
+    opacity: 1;
+}
+
+/* Feint Attack Symbol */
+.nato-attack-feint {
+    color: #ffaa44;
+    font-size: 22px;
+    opacity: 0.7;
+    animation: flicker 3s infinite;
+}
+
+@keyframes flicker {
+    0%, 100% { opacity: 0.7; }
+    25% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+    75% { opacity: 0.5; }
+}
+
+.nato-attack-feint:hover {
+    transform: scale(1.1) !important;
+    opacity: 0.9;
+}
+
+/* Frontal Attack Symbol */
+.nato-attack-frontal {
+    color: #ff4444;
+    font-size: 26px;
+}
+
+.nato-attack-frontal:hover {
+    transform: scale(1.1) !important;
+    color: #ff6666;
+}
+
+/* Flanking Attack Symbol */
+.nato-attack-flanking {
+    color: #ff4444;
+    font-size: 26px;
+    animation: rotate-slow 4s linear infinite;
+}
+
+@keyframes rotate-slow {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.nato-attack-flanking:hover {
+    transform: scale(1.1) !important;
+    animation-duration: 2s;
+}
+
+/* Envelopment Attack Symbol */
+.nato-attack-envelopment {
+    color: #ff4444;
+    font-size: 28px;
+    animation: rotate-fast 2s linear infinite;
+}
+
+@keyframes rotate-fast {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.nato-attack-envelopment:hover {
+    transform: scale(1.1) !important;
+    animation-duration: 1s;
+}
+
+/* Ambush Attack Symbol */
+.nato-attack-ambush {
+    color: #ff6600;
+    font-size: 24px;
+    animation: flash 1.5s infinite;
+}
+
+@keyframes flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.nato-attack-ambush:hover {
+    transform: scale(1.1) !important;
+    animation-duration: 0.8s;
+}
+
+/* Raid Attack Symbol */
+.nato-attack-raid {
+    color: #ff4444;
+    font-size: 26px;
+    animation: strike 2s infinite;
+}
+
+@keyframes strike {
+    0% { transform: scale(1) rotate(0deg); }
+    25% { transform: scale(1.1) rotate(-5deg); }
+    50% { transform: scale(1.2) rotate(0deg); }
+    75% { transform: scale(1.1) rotate(5deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+
+.nato-attack-raid:hover {
+    transform: scale(1.2) !important;
+    animation-duration: 1s;
+}
+
+/* Penetration Attack Symbol */
+.nato-attack-penetration {
+    color: #ff4444;
+    font-size: 28px;
+    animation: thrust 1.8s infinite;
+}
+
+@keyframes thrust {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(3px); }
+    100% { transform: translateX(0); }
+}
+
+.nato-attack-penetration:hover {
+    transform: scale(1.1) !important;
+    animation-duration: 1s;
+}
+
+/* Direction Indicator Styles */
+.nato-direction-indicator {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.direction-symbol {
+    position: relative;
+    z-index: 2;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.direction-line {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 2px;
+    background: currentColor;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    opacity: 0.7;
+}
+
+/* Attack Line Specific Styles */
+.nato-attack-line.attack-main {
+    stroke: #ff4444;
+    stroke-width: 4;
+    stroke-dasharray: none;
+}
+
+/* NATO Attack Type Lines */
+.nato-attack-line.frontal {
+    stroke: #ff4444;
+    stroke-width: 4;
+    stroke-dasharray: none;
+}
+
+.nato-attack-line.flanking {
+    stroke: #ff4444;
+    stroke-width: 4;
+    stroke-dasharray: none;
+}
+
+.nato-attack-line.envelopment {
+    stroke: #ff4444;
+    stroke-width: 5;
+    stroke-dasharray: none;
+    opacity: 0.8;
+}
+
+.nato-attack-line.penetration {
+    stroke: #ff4444;
+    stroke-width: 4;
+    stroke-dasharray: none;
+}
+
+.nato-attack-line.raid {
+    stroke: #ff4444;
+    stroke-width: 3;
+    stroke-dasharray: 10, 5;
+    opacity: 0.8;
+}
+
+.nato-attack-line.ambush {
+    stroke: #ff6600;
+    stroke-width: 3;
+    stroke-dasharray: 15, 5;
+    opacity: 0.8;
+}
+
+/* Legacy Attack Types */
+.nato-attack-line.attack-supporting {
+    stroke: #ff8844;
+    stroke-width: 3;
+    stroke-dasharray: 5, 5;
+    opacity: 0.7;
+}
+
+.nato-attack-line.attack-feint {
+    stroke: #ffaa44;
+    stroke-width: 2;
+    stroke-dasharray: 10, 10;
+    opacity: 0.6;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .nato-attack-symbol {
+        font-size: 20px;
+    }
+    
+    .nato-attack-heavy {
+        font-size: 24px;
+    }
+    
+    .nato-attack-main {
+        font-size: 22px;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .nato-attack-symbol {
+        text-shadow: 3px 3px 6px rgba(0, 0, 0, 1);
+        filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5));
+    }
+    
+    .attack-symbol-shadow {
+        background: rgba(0, 0, 0, 0.5);
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .nato-attack-symbol,
+    .nato-attack-line,
+    .nato-direction-indicator {
+        animation: none !important;
+        transition: none !important;
+    }
+    
+    .nato-attack-flanking,
+    .nato-attack-envelopment {
+        animation: none !important;
+    }
+}

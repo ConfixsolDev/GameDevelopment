@@ -372,8 +372,10 @@ namespace TechWebSol.Controllers
                     success = true,
                     preview = new
                     {
-                        attackType = order.Intent?.AttackType,
-                        maneuverForm = order.Intent?.ManeuverForm,
+                        attackPreparation = order.Intent?.AttackPreparation,
+                        natoAttackType = order.Intent?.NatoAttackType,
+                        attackIntensity = order.Intent?.AttackIntensity,
+                        coordinationType = order.Intent?.CoordinationType,
                         startTurn = order.Timing?.StartTurn,
                         duration = order.Timing?.DurationTurns,
                         confidence = order.FogOfWar?.DetectionConfidence
@@ -390,10 +392,14 @@ namespace TechWebSol.Controllers
 
         private void UpdateIntentFromData(AttackIntent intent, Dictionary<string, object> data)
         {
-            if (data.ContainsKey("AttackType"))
-                intent.AttackType = data["AttackType"]?.ToString();
-            if (data.ContainsKey("ManeuverForm"))
-                intent.ManeuverForm = data["ManeuverForm"]?.ToString();
+            if (data.ContainsKey("AttackPreparation"))
+                intent.AttackPreparation = data["AttackPreparation"]?.ToString();
+            if (data.ContainsKey("NatoAttackType"))
+                intent.NatoAttackType = data["NatoAttackType"]?.ToString();
+            if (data.ContainsKey("AttackIntensity"))
+                intent.AttackIntensity = data["AttackIntensity"]?.ToString();
+            if (data.ContainsKey("CoordinationType"))
+                intent.CoordinationType = data["CoordinationType"]?.ToString();
             if (data.ContainsKey("DesiredEffect"))
                 intent.DesiredEffect = data["DesiredEffect"]?.ToString();
             if (data.ContainsKey("Notes"))

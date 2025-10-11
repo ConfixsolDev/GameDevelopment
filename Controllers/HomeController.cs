@@ -18,6 +18,26 @@ namespace TechWebSol.Controllers
             return View();
         }
 
+        public IActionResult Simulation()
+        {
+            return View();
+        }
+
+        public IActionResult TerrainAnalysis()
+        {
+            return View();
+        }
+
+        public IActionResult AiAnalysis()
+        {
+            return View();
+        }
+
+        public IActionResult NatoCompliance()
+        {
+            return View();
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

@@ -106,7 +106,7 @@ class GamePlayManager {
      * Load background data (deferred, non-blocking)
      */
     async loadBackgroundData() {
-        console.log('📦 Loading background data (tokens, regions, orders)...');
+        console.log('📦 Loading background data (tokens, regions, orders, defense elements)...');
         
         try {
             // Initialize heavy managers FIRST (in parallel)
@@ -122,6 +122,7 @@ class GamePlayManager {
             await Promise.allSettled([
                 this.restorePlacedTokens(),
                 this.loadAttackOrdersAfterTokensPlaced(),
+                this.loadDefenseElements(),
                 this.preloadCriticalModals()
             ]);
             
@@ -129,6 +130,29 @@ class GamePlayManager {
         } catch (error) {
             console.error('⚠️ Error loading background data:', error);
             // Don't fail the whole app, just log the error
+        }
+    }
+    
+    /**
+     * Load defense elements from database
+     */
+    async loadDefenseElements() {
+        console.log('🛡️ Loading defense elements...');
+        
+        try {
+            if (window.defensePlanningManager && typeof window.defensePlanningManager.loadDefenseElements === 'function') {
+                const result = await window.defensePlanningManager.loadDefenseElements();
+                
+                if (result.success) {
+                    console.log(`✅ Loaded ${result.count} defense elements`);
+                } else {
+                    console.warn('⚠️ Failed to load defense elements:', result.message);
+                }
+            } else {
+                console.warn('⚠️ Defense planning manager not available or loadDefenseElements not defined');
+            }
+        } catch (error) {
+            console.error('❌ Error loading defense elements:', error);
         }
     }
 
@@ -345,6 +369,9 @@ class GamePlayManager {
         } else {
             console.warn('⚠️ Token action mode manager not available');
         }
+        
+        // Initialize defense planning manager
+        await this.initializeDefensePlanningManager();
     }
 
     /**
@@ -366,6 +393,22 @@ class GamePlayManager {
         } else {
             console.warn('⚠️ Attack visualization manager not available');
             console.log('🔍 Available window objects:', Object.keys(window).filter(key => key.includes('attack') || key.includes('Attack')));
+        }
+    }
+
+    /**
+     * Initialize defense planning manager
+     */
+    async initializeDefensePlanningManager() {
+        console.log('🛡️ Initializing defense planning manager...');
+        
+        if (typeof DefensePlanningManager !== 'undefined') {
+            // Initialize with map
+            window.defensePlanningManager = new DefensePlanningManager(this.map);
+            
+            console.log('✅ Defense planning manager initialized');
+        } else {
+            console.warn('⚠️ Defense planning manager not available');
         }
     }
     

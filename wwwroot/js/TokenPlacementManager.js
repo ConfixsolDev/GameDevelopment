@@ -3028,7 +3028,7 @@ class TokenPlacementManager {
                 return;
             }
 
-            // Gather form data
+            // Gather form data including NATO attack intent
             const attackData = {
                 attackerId: this.currentAttackerToken.id,
                 targetId: this.currentTargetToken.id,
@@ -3039,7 +3039,16 @@ class TokenPlacementManager {
                 expectedStartTurn: parseInt(document.getElementById('attackStartTurn').value),
                 durationTurns: parseInt(document.getElementById('attackDuration').value),
                 executionMode: document.getElementById('attackExecutionMode').value,
-                notes: `Attack planned from ${this.currentAttackerToken.name} to ${this.currentTargetToken.name}`
+                notes: `Attack planned from ${this.currentAttackerToken.name} to ${this.currentTargetToken.name}`,
+                // NATO Attack Intent Data
+                intent: {
+                    attackPreparation: document.getElementById('AttackPreparation')?.value || 'Deliberate',
+                    natoAttackType: document.getElementById('NatoAttackType')?.value || 'frontal',
+                    attackIntensity: document.getElementById('AttackIntensity')?.value || 'standard',
+                    coordinationType: document.getElementById('CoordinationType')?.value || 'independent',
+                    desiredEffect: document.getElementById('DesiredEffect')?.value || 'Destroy',
+                    notes: document.getElementById('Notes')?.value || ''
+                }
             };
 
             // Call plan attack API

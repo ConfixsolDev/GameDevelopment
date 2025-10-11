@@ -1,0 +1,1148 @@
+@{
+    ViewData["Title"] = "Terrain Analysis";
+}
+
+<div class="terrain-analysis-container">
+    <div class="terrain-header">
+        <h1>NATO Terrain Analysis Dashboard</h1>
+        <p>Comprehensive terrain classification and impact analysis for military operations</p>
+    </div>
+
+    <div class="terrain-controls">
+        <div class="control-panel">
+            <h3>Terrain Analysis Controls</h3>
+            
+            <div class="control-group">
+                <label for="terrainType">Terrain Type:</label>
+                <select id="terrainType" class="form-control">
+                    <option value="open">Open Terrain</option>
+                    <option value="urban">Urban</option>
+                    <option value="forest">Forest</option>
+                    <option value="hills">Hills</option>
+                    <option value="swamp">Swamp/Marsh</option>
+                    <option value="desert">Desert</option>
+                    <option value="mountain">Mountain</option>
+                    <option value="water">Water Obstacle</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="elevation">Elevation (meters):</label>
+                <input type="number" id="elevation" class="form-control" value="0" min="0" max="5000" />
+            </div>
+            
+            <div class="control-group">
+                <label for="slope">Slope:</label>
+                <select id="slope" class="form-control">
+                    <option value="flat">Flat</option>
+                    <option value="gentle">Gentle</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="steep">Steep</option>
+                    <option value="very_steep">Very Steep</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="vegetation">Vegetation:</label>
+                <select id="vegetation" class="form-control">
+                    <option value="none">None</option>
+                    <option value="sparse">Sparse</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="dense">Dense</option>
+                    <option value="very_dense">Very Dense</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="drainage">Drainage:</label>
+                <select id="drainage" class="form-control">
+                    <option value="excellent">Excellent</option>
+                    <option value="good" selected>Good</option>
+                    <option value="fair">Fair</option>
+                    <option value="poor">Poor</option>
+                    <option value="very_poor">Very Poor</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="soil">Soil Type:</label>
+                <select id="soil" class="form-control">
+                    <option value="firm" selected>Firm</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="soft">Soft</option>
+                    <option value="muddy">Muddy</option>
+                    <option value="quicksand">Quicksand</option>
+                </select>
+            </div>
+            
+            <div class="control-buttons">
+                <button id="btnAnalyzeTerrain" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Analyze Terrain
+                </button>
+                <button id="btnClearAnalysis" class="btn btn-secondary">
+                    <i class="fas fa-trash"></i> Clear Analysis
+                </button>
+            </div>
+        </div>
+        
+        <div class="unit-analysis-panel">
+            <h3>Unit Impact Analysis</h3>
+            
+            <div class="control-group">
+                <label for="unitType">Unit Type:</label>
+                <select id="unitType" class="form-control">
+                    <option value="Infantry">Infantry</option>
+                    <option value="Armoured">Armoured</option>
+                    <option value="Artillery">Artillery</option>
+                    <option value="Engineers">Engineers</option>
+                    <option value="Signals">Signals</option>
+                    <option value="Medical">Medical</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="organizationLevel">Organization Level:</label>
+                <select id="organizationLevel" class="form-control">
+                    <option value="Squad">Squad</option>
+                    <option value="Platoon">Platoon</option>
+                    <option value="Company" selected>Company</option>
+                    <option value="Battalion">Battalion</option>
+                    <option value="Brigade">Brigade</option>
+                    <option value="Division">Division</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="unitStrength">Unit Strength:</label>
+                <input type="number" id="unitStrength" class="form-control" value="100" min="1" max="1000" />
+            </div>
+            
+            <div class="control-buttons">
+                <button id="btnAnalyzeUnitImpact" class="btn btn-info">
+                    <i class="fas fa-calculator"></i> Analyze Unit Impact
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="terrain-results" id="terrainResults" style="display: none;">
+        <div class="results-header">
+            <h3>Terrain Analysis Results</h3>
+            <div class="results-controls">
+                <button id="btnExportTerrainData" class="btn btn-success">
+                    <i class="fas fa-download"></i> Export Data
+                </button>
+                <button id="btnGenerateReport" class="btn btn-info">
+                    <i class="fas fa-file-alt"></i> Generate Report
+                </button>
+            </div>
+        </div>
+        
+        <div class="results-content">
+            <div class="terrain-classification" id="terrainClassification">
+                <!-- Terrain classification will be loaded here -->
+            </div>
+            
+            <div class="impact-analysis" id="impactAnalysis">
+                <!-- Impact analysis will be loaded here -->
+            </div>
+            
+            <div class="tactical-assessment" id="tacticalAssessment">
+                <!-- Tactical assessment will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="terrain-comparison" id="terrainComparison" style="display: none;">
+        <h3>Terrain Comparison</h3>
+        <div class="comparison-content" id="comparisonContent">
+            <!-- Terrain comparison will be loaded here -->
+        </div>
+    </div>
+
+    <div class="terrain-history">
+        <h3>Analysis History</h3>
+        <div class="history-list" id="historyList">
+            <!-- Analysis history will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- Terrain Report Modal -->
+<div class="modal fade" id="terrainReportModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">NATO Terrain Analysis Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="terrainReportContent">
+                    <!-- Terrain report content will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btnExportReport">Export Report</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.terrain-analysis-container {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.terrain-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.terrain-header h1 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.terrain-header p {
+    color: #7f8c8d;
+    font-size: 1.1em;
+}
+
+.terrain-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.control-panel, .unit-analysis-panel {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.control-panel h3, .unit-analysis-panel h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 10px;
+}
+
+.control-group {
+    margin-bottom: 15px;
+}
+
+.control-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.control-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.control-buttons .btn {
+    flex: 1;
+}
+
+.terrain-results {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    margin-bottom: 30px;
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.results-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.results-content {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+}
+
+.terrain-classification, .impact-analysis, .tactical-assessment {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+}
+
+.terrain-classification h4, .impact-analysis h4, .tactical-assessment h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 10px;
+}
+
+.classification-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.classification-item {
+    background: white;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+}
+
+.classification-item h5 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.classification-value {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #3498db;
+}
+
+.impact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.impact-item {
+    background: white;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+    text-align: center;
+}
+
+.impact-item h5 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.impact-value {
+    font-size: 1.5em;
+    font-weight: 600;
+    color: #e74c3c;
+}
+
+.impact-value.favorable {
+    color: #27ae60;
+}
+
+.impact-value.neutral {
+    color: #f39c12;
+}
+
+.tactical-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px;
+}
+
+.tactical-item {
+    background: white;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+}
+
+.tactical-item h5 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.tactical-list {
+    list-style: none;
+    padding: 0;
+}
+
+.tactical-list li {
+    padding: 5px 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.tactical-list li:last-child {
+    border-bottom: none;
+}
+
+.tactical-list li::before {
+    content: "•";
+    color: #3498db;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.terrain-comparison {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    margin-bottom: 30px;
+}
+
+.comparison-content {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.comparison-item {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+}
+
+.comparison-item h5 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.terrain-history {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.history-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.history-item {
+    background: white;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.history-info {
+    flex: 1;
+}
+
+.history-name {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.history-details {
+    font-size: 0.9em;
+    color: #7f8c8d;
+}
+
+.history-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+}
+
+.btn-info {
+    background: #17a2b8;
+    color: white;
+}
+
+.btn-info:hover {
+    background: #138496;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #218838;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-dialog {
+    background: white;
+    border-radius: 8px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-lg {
+    max-width: 1000px;
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    color: #7f8c8d;
+}
+
+.btn-close:hover {
+    color: #2c3e50;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-footer {
+    padding: 20px;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.report-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+}
+
+.report-section h4 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.report-content {
+    color: #495057;
+    line-height: 1.6;
+}
+
+.report-list {
+    list-style: none;
+    padding: 0;
+}
+
+.report-list li {
+    padding: 5px 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.report-list li:last-child {
+    border-bottom: none;
+}
+
+@@media (max-width: 768px) {
+    .terrain-controls {
+        grid-template-columns: 1fr;
+    }
+    
+    .classification-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .impact-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .tactical-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .comparison-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .control-buttons {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+// Terrain Analysis Manager
+class TerrainAnalysisManager {
+    constructor() {
+        this.analysisHistory = [];
+        this.currentAnalysis = null;
+        
+        this.initializeEventListeners();
+        this.loadAnalysisHistory();
+    }
+
+    initializeEventListeners() {
+        // Analysis buttons
+        document.getElementById('btnAnalyzeTerrain').addEventListener('click', () => this.analyzeTerrain());
+        document.getElementById('btnClearAnalysis').addEventListener('click', () => this.clearAnalysis());
+        document.getElementById('btnAnalyzeUnitImpact').addEventListener('click', () => this.analyzeUnitImpact());
+        
+        // Results buttons
+        document.getElementById('btnExportTerrainData').addEventListener('click', () => this.exportTerrainData());
+        document.getElementById('btnGenerateReport').addEventListener('click', () => this.generateReport());
+        document.getElementById('btnExportReport').addEventListener('click', () => this.exportReport());
+    }
+
+    analyzeTerrain() {
+        try {
+            const terrainData = this.getTerrainData();
+            
+            console.log('🗺️ Analyzing terrain:', terrainData);
+            
+            // Check if terrain engine is available
+            if (!window.natoTerrainEngine) {
+                alert('Terrain engine not available. Please ensure the system is properly loaded.');
+                return;
+            }
+            
+            // Classify terrain
+            const classification = window.natoTerrainEngine.classifyTerrain([0, 0], terrainData);
+            
+            this.currentAnalysis = {
+                terrainData: terrainData,
+                classification: classification,
+                timestamp: new Date().toISOString()
+            };
+            
+            this.displayTerrainAnalysis(classification);
+            this.addToHistory(classification);
+            
+            console.log('✅ Terrain analysis complete:', classification);
+        } catch (error) {
+            console.error('❌ Error analyzing terrain:', error);
+            alert('Failed to analyze terrain: ' + error.message);
+        }
+    }
+
+    analyzeUnitImpact() {
+        try {
+            if (!this.currentAnalysis) {
+                alert('Please analyze terrain first.');
+                return;
+            }
+            
+            const unitData = this.getUnitData();
+            
+            console.log('⚔️ Analyzing unit impact:', unitData);
+            
+            // Calculate unit impact
+            const unitImpact = {
+                unitType: unitData.unitType,
+                organizationLevel: unitData.organizationLevel,
+                strength: unitData.strength,
+                movementImpact: window.natoTerrainEngine.getMovementImpact(unitData.unitType, this.currentAnalysis.classification.terrainType),
+                terrainClassification: this.currentAnalysis.classification
+            };
+            
+            this.displayUnitImpact(unitImpact);
+            
+            console.log('✅ Unit impact analysis complete:', unitImpact);
+        } catch (error) {
+            console.error('❌ Error analyzing unit impact:', error);
+            alert('Failed to analyze unit impact: ' + error.message);
+        }
+    }
+
+    getTerrainData() {
+        return {
+            type: document.getElementById('terrainType').value,
+            elevation: parseInt(document.getElementById('elevation').value),
+            slope: document.getElementById('slope').value,
+            vegetation: document.getElementById('vegetation').value,
+            drainage: document.getElementById('drainage').value,
+            soil: document.getElementById('soil').value
+        };
+    }
+
+    getUnitData() {
+        return {
+            unitType: document.getElementById('unitType').value,
+            organizationLevel: document.getElementById('organizationLevel').value,
+            strength: parseInt(document.getElementById('unitStrength').value)
+        };
+    }
+
+    displayTerrainAnalysis(classification) {
+        const resultsElement = document.getElementById('terrainResults');
+        resultsElement.style.display = 'block';
+        
+        // Display terrain classification
+        this.displayTerrainClassification(classification);
+        
+        // Display impact analysis
+        this.displayImpactAnalysis(classification);
+        
+        // Display tactical assessment
+        this.displayTacticalAssessment(classification);
+    }
+
+    displayTerrainClassification(classification) {
+        const element = document.getElementById('terrainClassification');
+        
+        element.innerHTML = `
+            <h4>Terrain Classification</h4>
+            <div class="classification-grid">
+                <div class="classification-item">
+                    <h5>Terrain Type</h5>
+                    <div class="classification-value">${classification.name}</div>
+                    <small>${classification.description}</small>
+                </div>
+                <div class="classification-item">
+                    <h5>NATO Code</h5>
+                    <div class="classification-value">${classification.natoCode}</div>
+                    <small>Classification: ${classification.classification}</small>
+                </div>
+                <div class="classification-item">
+                    <h5>Elevation</h5>
+                    <div class="classification-value">${classification.elevation}m</div>
+                    <small>Slope: ${classification.slope}</small>
+                </div>
+                <div class="classification-item">
+                    <h5>Vegetation</h5>
+                    <div class="classification-value">${classification.vegetation}</div>
+                    <small>Drainage: ${classification.drainage}</small>
+                </div>
+                <div class="classification-item">
+                    <h5>Soil Type</h5>
+                    <div class="classification-value">${classification.soil}</div>
+                    <small>Combined Factor: ${classification.factors.combined.toFixed(2)}</small>
+                </div>
+            </div>
+        `;
+    }
+
+    displayImpactAnalysis(classification) {
+        const element = document.getElementById('impactAnalysis');
+        
+        element.innerHTML = `
+            <h4>Impact Analysis</h4>
+            <div class="impact-grid">
+                <div class="impact-item">
+                    <h5>Attack</h5>
+                    <div class="impact-value ${classification.impactCoefficients.attack > 1.0 ? 'favorable' : classification.impactCoefficients.attack < 0.8 ? 'unfavorable' : 'neutral'}">
+                        ${classification.impactCoefficients.attack.toFixed(2)}
+                    </div>
+                </div>
+                <div class="impact-item">
+                    <h5>Defense</h5>
+                    <div class="impact-value ${classification.impactCoefficients.defense > 1.0 ? 'favorable' : classification.impactCoefficients.defense < 0.8 ? 'unfavorable' : 'neutral'}">
+                        ${classification.impactCoefficients.defense.toFixed(2)}
+                    </div>
+                </div>
+                <div class="impact-item">
+                    <h5>Movement</h5>
+                    <div class="impact-value ${classification.impactCoefficients.movement > 1.0 ? 'favorable' : classification.impactCoefficients.movement < 0.8 ? 'unfavorable' : 'neutral'}">
+                        ${classification.impactCoefficients.movement.toFixed(2)}
+                    </div>
+                </div>
+                <div class="impact-item">
+                    <h5>Observation</h5>
+                    <div class="impact-value ${classification.impactCoefficients.observation > 1.0 ? 'favorable' : classification.impactCoefficients.observation < 0.8 ? 'unfavorable' : 'neutral'}">
+                        ${classification.impactCoefficients.observation.toFixed(2)}
+                    </div>
+                </div>
+                <div class="impact-item">
+                    <h5>Fields of Fire</h5>
+                    <div class="impact-value ${classification.impactCoefficients.fieldsOfFire > 1.0 ? 'favorable' : classification.impactCoefficients.fieldsOfFire < 0.8 ? 'unfavorable' : 'neutral'}">
+                        ${classification.impactCoefficients.fieldsOfFire.toFixed(2)}
+                    </div>
+                </div>
+                <div class="impact-item">
+                    <h5>Cover</h5>
+                    <div class="impact-value ${classification.impactCoefficients.cover > 1.0 ? 'favorable' : classification.impactCoefficients.cover < 0.8 ? 'unfavorable' : 'neutral'}">
+                        ${classification.impactCoefficients.cover.toFixed(2)}
+                    </div>
+                </div>
+                <div class="impact-item">
+                    <h5>Concealment</h5>
+                    <div class="impact-value ${classification.impactCoefficients.concealment > 1.0 ? 'favorable' : classification.impactCoefficients.concealment < 0.8 ? 'unfavorable' : 'neutral'}">
+                        ${classification.impactCoefficients.concealment.toFixed(2)}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    displayTacticalAssessment(classification) {
+        const element = document.getElementById('tacticalAssessment');
+        
+        element.innerHTML = `
+            <h4>Tactical Assessment</h4>
+            <div class="tactical-grid">
+                <div class="tactical-item">
+                    <h5>Advantages</h5>
+                    <ul class="tactical-list">
+                        ${classification.tacticalAssessment.advantages.map(adv => `<li>${adv}</li>`).join('')}
+                    </ul>
+                </div>
+                <div class="tactical-item">
+                    <h5>Disadvantages</h5>
+                    <ul class="tactical-list">
+                        ${classification.tacticalAssessment.disadvantages.map(dis => `<li>${dis}</li>`).join('')}
+                    </ul>
+                </div>
+                <div class="tactical-item">
+                    <h5>Recommendations</h5>
+                    <ul class="tactical-list">
+                        ${classification.tacticalAssessment.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                    </ul>
+                </div>
+                <div class="tactical-item">
+                    <h5>Tactical Value</h5>
+                    <div class="classification-value">${classification.tacticalAssessment.tacticalValue}</div>
+                    <small>Based on NATO terrain analysis standards</small>
+                </div>
+            </div>
+        `;
+    }
+
+    displayUnitImpact(unitImpact) {
+        const element = document.getElementById('impactAnalysis');
+        
+        element.innerHTML += `
+            <div class="unit-impact-section">
+                <h4>Unit Impact Analysis</h4>
+                <div class="classification-grid">
+                    <div class="classification-item">
+                        <h5>Unit Type</h5>
+                        <div class="classification-value">${unitImpact.unitType}</div>
+                        <small>${unitImpact.organizationLevel}</small>
+                    </div>
+                    <div class="classification-item">
+                        <h5>Movement Impact</h5>
+                        <div class="impact-value ${unitImpact.movementImpact > 1.0 ? 'favorable' : unitImpact.movementImpact < 0.8 ? 'unfavorable' : 'neutral'}">
+                            ${unitImpact.movementImpact.toFixed(2)}
+                        </div>
+                        <small>Terrain: ${unitImpact.terrainClassification.terrainType}</small>
+                    </div>
+                    <div class="classification-item">
+                        <h5>Unit Strength</h5>
+                        <div class="classification-value">${unitImpact.strength}</div>
+                        <small>Base strength value</small>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    clearAnalysis() {
+        document.getElementById('terrainResults').style.display = 'none';
+        this.currentAnalysis = null;
+        console.log('🗺️ Terrain analysis cleared');
+    }
+
+    addToHistory(classification) {
+        const historyItem = {
+            id: Date.now(),
+            name: `${classification.name} Analysis`,
+            description: `Terrain: ${classification.terrainType} • Elevation: ${classification.elevation}m • Slope: ${classification.slope}`,
+            classification: classification,
+            timestamp: new Date().toISOString()
+        };
+        
+        this.analysisHistory.unshift(historyItem);
+        this.displayAnalysisHistory();
+        
+        // Keep only last 50 analyses
+        if (this.analysisHistory.length > 50) {
+            this.analysisHistory = this.analysisHistory.slice(0, 50);
+        }
+    }
+
+    displayAnalysisHistory() {
+        const list = document.getElementById('historyList');
+        list.innerHTML = '';
+        
+        this.analysisHistory.forEach(item => {
+            const element = document.createElement('div');
+            element.className = 'history-item';
+            element.innerHTML = `
+                <div class="history-info">
+                    <div class="history-name">${item.name}</div>
+                    <div class="history-details">${item.description}</div>
+                </div>
+                <div class="history-actions">
+                    <button class="btn btn-sm btn-info" onclick="terrainAnalysisManager.viewAnalysis('${item.id}')">
+                        <i class="fas fa-eye"></i> View
+                    </button>
+                    <button class="btn btn-sm btn-success" onclick="terrainAnalysisManager.exportAnalysis('${item.id}')">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            `;
+            list.appendChild(element);
+        });
+    }
+
+    viewAnalysis(analysisId) {
+        const analysis = this.analysisHistory.find(item => item.id == analysisId);
+        if (analysis) {
+            this.currentAnalysis = analysis;
+            this.displayTerrainAnalysis(analysis.classification);
+            console.log('👁️ Viewing analysis:', analysis);
+        }
+    }
+
+    exportAnalysis(analysisId) {
+        const analysis = this.analysisHistory.find(item => item.id == analysisId);
+        if (analysis) {
+            const data = JSON.stringify(analysis, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `terrain_analysis_${analysisId}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            console.log('📤 Analysis exported:', analysis);
+        }
+    }
+
+    exportTerrainData() {
+        if (!this.currentAnalysis) {
+            alert('No analysis to export.');
+            return;
+        }
+        
+        const data = JSON.stringify(this.currentAnalysis, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `terrain_analysis_${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        console.log('📤 Terrain data exported');
+    }
+
+    generateReport() {
+        if (!this.currentAnalysis) {
+            alert('No analysis to report.');
+            return;
+        }
+        
+        const modal = document.getElementById('terrainReportModal');
+        const content = document.getElementById('terrainReportContent');
+        
+        content.innerHTML = `
+            <div class="report-section">
+                <h4>Executive Summary</h4>
+                <div class="report-content">
+                    <p><strong>Terrain Type:</strong> ${this.currentAnalysis.classification.name}</p>
+                    <p><strong>NATO Code:</strong> ${this.currentAnalysis.classification.natoCode}</p>
+                    <p><strong>Classification:</strong> ${this.currentAnalysis.classification.classification}</p>
+                    <p><strong>Tactical Value:</strong> ${this.currentAnalysis.classification.tacticalAssessment.tacticalValue}</p>
+                </div>
+            </div>
+            
+            <div class="report-section">
+                <h4>Terrain Characteristics</h4>
+                <div class="report-content">
+                    <p><strong>Description:</strong> ${this.currentAnalysis.classification.description}</p>
+                    <p><strong>Elevation:</strong> ${this.currentAnalysis.classification.elevation}m</p>
+                    <p><strong>Slope:</strong> ${this.currentAnalysis.classification.slope}</p>
+                    <p><strong>Vegetation:</strong> ${this.currentAnalysis.classification.vegetation}</p>
+                    <p><strong>Drainage:</strong> ${this.currentAnalysis.classification.drainage}</p>
+                    <p><strong>Soil:</strong> ${this.currentAnalysis.classification.soil}</p>
+                </div>
+            </div>
+            
+            <div class="report-section">
+                <h4>Impact Coefficients</h4>
+                <div class="report-content">
+                    <ul class="report-list">
+                        <li><strong>Attack:</strong> ${this.currentAnalysis.classification.impactCoefficients.attack.toFixed(2)}</li>
+                        <li><strong>Defense:</strong> ${this.currentAnalysis.classification.impactCoefficients.defense.toFixed(2)}</li>
+                        <li><strong>Movement:</strong> ${this.currentAnalysis.classification.impactCoefficients.movement.toFixed(2)}</li>
+                        <li><strong>Observation:</strong> ${this.currentAnalysis.classification.impactCoefficients.observation.toFixed(2)}</li>
+                        <li><strong>Fields of Fire:</strong> ${this.currentAnalysis.classification.impactCoefficients.fieldsOfFire.toFixed(2)}</li>
+                        <li><strong>Cover:</strong> ${this.currentAnalysis.classification.impactCoefficients.cover.toFixed(2)}</li>
+                        <li><strong>Concealment:</strong> ${this.currentAnalysis.classification.impactCoefficients.concealment.toFixed(2)}</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="report-section">
+                <h4>Tactical Assessment</h4>
+                <div class="report-content">
+                    <h5>Advantages</h5>
+                    <ul class="report-list">
+                        ${this.currentAnalysis.classification.tacticalAssessment.advantages.map(adv => `<li>${adv}</li>`).join('')}
+                    </ul>
+                    
+                    <h5>Disadvantages</h5>
+                    <ul class="report-list">
+                        ${this.currentAnalysis.classification.tacticalAssessment.disadvantages.map(dis => `<li>${dis}</li>`).join('')}
+                    </ul>
+                    
+                    <h5>Recommendations</h5>
+                    <ul class="report-list">
+                        ${this.currentAnalysis.classification.tacticalAssessment.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="report-section">
+                <h4>NATO Compliance</h4>
+                <div class="report-content">
+                    <p><strong>Standards:</strong> NATO ATP-3-90.4 (Terrain Analysis)</p>
+                    <p><strong>Compliance:</strong> ${this.currentAnalysis.classification.natoCompliance ? 'Compliant' : 'Non-compliant'}</p>
+                    <p><strong>Generated:</strong> ${new Date(this.currentAnalysis.timestamp).toLocaleString()}</p>
+                </div>
+            </div>
+        `;
+        
+        modal.style.display = 'flex';
+    }
+
+    exportReport() {
+        if (!this.currentAnalysis) {
+            alert('No analysis to export.');
+            return;
+        }
+        
+        const reportData = {
+            reportType: 'NATO Terrain Analysis Report',
+            classification: 'UNCLASSIFIED',
+            timestamp: new Date().toISOString(),
+            analysis: this.currentAnalysis,
+            natoStandards: {
+                reference: 'NATO ATP-3-90.4',
+                compliance: this.currentAnalysis.classification.natoCompliance
+            }
+        };
+        
+        const data = JSON.stringify(reportData, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `nato_terrain_report_${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        console.log('📤 Terrain report exported');
+    }
+
+    loadAnalysisHistory() {
+        try {
+            const stored = localStorage.getItem('terrain_analysis_history');
+            if (stored) {
+                this.analysisHistory = JSON.parse(stored);
+                this.displayAnalysisHistory();
+                console.log(`🗺️ Loaded ${this.analysisHistory.length} terrain analyses from history`);
+            }
+        } catch (error) {
+            console.warn('Failed to load analysis history:', error);
+        }
+    }
+
+    saveAnalysisHistory() {
+        try {
+            localStorage.setItem('terrain_analysis_history', JSON.stringify(this.analysisHistory));
+            console.log('🗺️ Analysis history saved');
+        } catch (error) {
+            console.warn('Failed to save analysis history:', error);
+        }
+    }
+}
+
+// Initialize terrain analysis manager
+const terrainAnalysisManager = new TerrainAnalysisManager();
+console.log('🗺️ Terrain Analysis Manager initialized');
+
+// Save history when page unloads
+window.addEventListener('beforeunload', () => {
+    terrainAnalysisManager.saveAnalysisHistory();
+});
+</script>

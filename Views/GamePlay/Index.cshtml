@@ -77,6 +77,8 @@
 <link rel="stylesheet" href="~/lib/leaflet/css/leaflet.draw.css" />
 <link rel="stylesheet" href="~/css/regionControls.css" />
 <link rel="stylesheet" href="~/css/militarySymbols.css" />
+<link rel="stylesheet" href="~/css/attackSymbols.css" />
+<link rel="stylesheet" href="~/css/defenseSymbols.css" />
 
 <!-- Core Scripts -->
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
@@ -91,6 +93,19 @@
 <script src="~/js/tileServerConfig.js"></script>
 <script src="~/js/lazy-loader.js"></script>
 <script src="~/js/MilitarySymbolRenderer.js"></script>
+<script src="~/js/AttackSymbolRenderer.js"></script>
+<script src="~/js/DefenseSymbolRenderer.js"></script>
+<script src="~/js/DefensePlanningManager.js"></script>
+<script src="~/js/NatoEffectivenessEngine.js"></script>
+<script src="~/js/CombatSimulationEngine.js"></script>
+<script src="~/js/SimulationResultsManager.js"></script>
+<script src="~/js/NatoTerrainEngine.js"></script>
+<script src="~/js/TerrainIntegrationService.js"></script>
+<script src="~/js/NatoAiAnalysisEngine.js"></script>
+<script src="~/js/AiIntegrationService.js"></script>
+<script src="~/js/HlaIntegrationAdapter.js"></script>
+<script src="~/js/InteroperabilityService.js"></script>
+<script src="~/js/NatoSystemIntegrator.js"></script>
 <script src="~/js/TokenManager.js"></script>
 <script src="~/js/TokenPlacementManager.js"></script>
 <script src="~/js/suspectedTokenManager.js"></script>
@@ -102,4 +117,82 @@
 <script src="~/js/mapControls.js"></script>
 <script src="~/js/scenarioPlanning.js"></script>
 <script src="~/js/militaryAdjudication.js"></script>
+
+<!-- Defense Planning Functions -->
+<script>
+// Global defense planning functions
+function startKillZoneDrawing(type) {
+    if (window.defensePlanningManager) {
+        window.defensePlanningManager.startKillZoneDrawing(type);
+        console.log(`🛡️ Started drawing ${type} kill zone`);
+    } else {
+        console.error('Defense planning manager not available');
+    }
+}
+
+function startMinefieldDrawing(type) {
+    if (window.defensePlanningManager) {
+        window.defensePlanningManager.startMinefieldDrawing(type);
+        console.log(`🛡️ Started drawing ${type} minefield`);
+    } else {
+        console.error('Defense planning manager not available');
+    }
+}
+
+function startObstacleDrawing(type) {
+    if (window.defensePlanningManager) {
+        window.defensePlanningManager.startObstacleDrawing(type);
+        console.log(`🛡️ Started drawing ${type} obstacle`);
+    } else {
+        console.error('Defense planning manager not available');
+    }
+}
+
+function placeDefensivePosition(type) {
+    if (window.defensePlanningManager) {
+        window.defensePlanningManager.placeDefensivePosition(type);
+        console.log(`🛡️ Started placing ${type} defensive position`);
+    } else {
+        console.error('Defense planning manager not available');
+    }
+}
+
+function startWithdrawalRouteDrawing(type) {
+    if (window.defensePlanningManager) {
+        window.defensePlanningManager.startWithdrawalRouteDrawing(type);
+        console.log(`🛡️ Started drawing ${type} withdrawal route`);
+    } else {
+        console.error('Defense planning manager not available');
+    }
+}
+
+function startDefensiveLineDrawing(type) {
+    if (window.defensePlanningManager) {
+        window.defensePlanningManager.startDefensiveLineDrawing(type);
+        console.log(`🛡️ Started drawing ${type} defensive line`);
+    } else {
+        console.error('Defense planning manager not available');
+    }
+}
+
+function cancelDefenseDrawing() {
+    if (window.defensePlanningManager) {
+        window.defensePlanningManager.cancelDrawing();
+        console.log('🛡️ Cancelled defense drawing');
+    } else {
+        console.error('Defense planning manager not available');
+    }
+}
+
+function clearAllDefenseElements() {
+    if (window.defensePlanningManager) {
+        if (confirm('Are you sure you want to clear all defense elements?')) {
+            window.defensePlanningManager.clearAll();
+            console.log('🛡️ Cleared all defense elements');
+        }
+    } else {
+        console.error('Defense planning manager not available');
+    }
+}
+</script>
 

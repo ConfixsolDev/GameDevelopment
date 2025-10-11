@@ -1,0 +1,394 @@
+/**
+ * Defense Symbols CSS
+ * Styles for NATO-style defense symbols on the map
+ */
+
+/* Kill Zones */
+.defense-killzone {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.defense-killzone:hover {
+    opacity: 0.8;
+    filter: drop-shadow(0 0 10px rgba(204, 0, 0, 0.6));
+}
+
+.killzone-primary {
+    fill-opacity: 0.3;
+    stroke-width: 3;
+}
+
+.killzone-secondary {
+    fill-opacity: 0.2;
+    stroke-width: 2;
+}
+
+.killzone-engagement {
+    fill-opacity: 0.15;
+    stroke-width: 2;
+}
+
+/* Minefields */
+.defense-minefield {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.defense-minefield:hover {
+    opacity: 0.9;
+    filter: drop-shadow(0 0 8px rgba(204, 0, 0, 0.5));
+}
+
+/* Minefield Fill Patterns */
+.fill-pattern-diagonal-lines {
+    background-image: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(204, 0, 0, 0.3) 10px,
+        rgba(204, 0, 0, 0.3) 12px
+    );
+}
+
+.fill-pattern-cross-hatch {
+    background-image: 
+        repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(153, 0, 0, 0.3) 8px, rgba(153, 0, 0, 0.3) 10px),
+        repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(153, 0, 0, 0.3) 8px, rgba(153, 0, 0, 0.3) 10px);
+}
+
+.fill-pattern-dense-cross-hatch {
+    background-image: 
+        repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(102, 0, 0, 0.4) 5px, rgba(102, 0, 0, 0.4) 7px),
+        repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(102, 0, 0, 0.4) 5px, rgba(102, 0, 0, 0.4) 7px);
+}
+
+/* NATO Minefield Markers (APP-6 Standard - Circle with dot in center) */
+.nato-minefield-marker-icon {
+    background: transparent !important;
+    border: none !important;
+}
+
+.nato-minefield-marker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.minefield-circle {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border-style: solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.9);
+    position: relative;
+}
+
+.minefield-dot {
+    width: 40%;
+    height: 40%;
+    border-radius: 50%;
+    position: absolute;
+}
+
+.nato-minefield-marker:hover .minefield-circle {
+    transform: scale(1.2);
+    box-shadow: 0 0 8px rgba(204, 0, 0, 0.6);
+}
+
+/* Different minefield types */
+.minefield-antipersonnel .minefield-circle {
+    border-color: #cc0000;
+}
+
+.minefield-antitank .minefield-circle {
+    border-color: #990000;
+}
+
+.minefield-mixed .minefield-circle {
+    border-color: #660000;
+}
+
+.minefield-symbol {
+    text-align: center;
+    font-family: Arial, sans-serif;
+}
+
+/* Obstacles */
+.defense-obstacle {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.defense-obstacle:hover {
+    opacity: 0.8;
+    stroke-width: 5;
+}
+
+.obstacle-wire {
+    stroke-dasharray: 15, 5, 5, 5;
+}
+
+.obstacle-abatis {
+    stroke-dasharray: 10, 10;
+}
+
+.obstacle-trench {
+    stroke-dasharray: 20, 5;
+}
+
+.obstacle-tankditch {
+    stroke-dasharray: 25, 5;
+}
+
+/* Defensive Positions */
+.defense-position-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+.defense-position {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+.position-symbol {
+    text-align: center;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.defense-position:hover {
+    transform: scale(1.2);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
+    transition: all 0.2s ease;
+}
+
+/* Withdrawal Routes */
+.defense-withdrawal {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.defense-withdrawal:hover {
+    opacity: 0.9;
+    stroke-width: 6;
+}
+
+.withdrawal-primary {
+    stroke-dasharray: 15, 10;
+    animation: dash-flow 30s linear infinite;
+}
+
+.withdrawal-alternate {
+    stroke-dasharray: 10, 10;
+    animation: dash-flow 25s linear infinite;
+}
+
+.withdrawal-emergency {
+    stroke-dasharray: 5, 5;
+    animation: dash-flow-fast 15s linear infinite;
+}
+
+@keyframes dash-flow {
+    to {
+        stroke-dashoffset: -1000;
+    }
+}
+
+@keyframes dash-flow-fast {
+    to {
+        stroke-dashoffset: -1000;
+    }
+}
+
+/* Withdrawal Arrow Markers */
+.withdrawal-arrow-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+.withdrawal-arrow {
+    font-size: 24px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Defensive Lines */
+.defense-line {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.defense-line:hover {
+    opacity: 0.9;
+    stroke-width: 7;
+}
+
+.line-feba {
+    stroke-width: 5;
+}
+
+.line-mainline {
+    stroke-width: 4;
+}
+
+.line-secondary {
+    stroke-width: 3;
+    stroke-dasharray: 20, 10;
+}
+
+/* Defense Labels */
+.defense-label-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+.defense-label {
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    text-align: center;
+    font-family: Arial, sans-serif;
+    white-space: nowrap;
+}
+
+.defense-symbol {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.defense-name {
+    font-size: 11px;
+    font-weight: normal;
+    opacity: 0.9;
+}
+
+/* Selected State */
+.defense-selected {
+    stroke-width: 4 !important;
+    stroke: #ffaa00 !important;
+    filter: drop-shadow(0 0 15px rgba(255, 170, 0, 0.8));
+    animation: defense-pulse 1.5s infinite;
+}
+
+@keyframes defense-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Team Visibility */
+.defense-element-hidden {
+    display: none;
+}
+
+.defense-element-friendly {
+    opacity: 1;
+}
+
+.defense-element-enemy {
+    opacity: 0.5;
+    filter: grayscale(50%);
+}
+
+/* Strength Indicators */
+.defense-strength-indicator {
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    background: rgba(0, 0, 0, 0.9);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: bold;
+    border: 1px solid #fff;
+}
+
+.defense-strength-low {
+    background: rgba(204, 0, 0, 0.9);
+}
+
+.defense-strength-medium {
+    background: rgba(255, 170, 0, 0.9);
+}
+
+.defense-strength-high {
+    background: rgba(0, 170, 0, 0.9);
+}
+
+/* Popup Styling for Defense Elements */
+.defense-popup {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+}
+
+.defense-popup .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.defense-popup .info-label {
+    font-weight: bold;
+    color: #666;
+}
+
+.defense-popup .info-value {
+    color: #000;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .defense-label {
+        font-size: 10px;
+        padding: 3px 6px;
+    }
+    
+    .defense-symbol {
+        font-size: 14px;
+    }
+    
+    .minefield-marker {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .defense-killzone,
+    .defense-minefield,
+    .defense-obstacle,
+    .defense-withdrawal,
+    .defense-line {
+        stroke: #000 !important;
+        fill: none !important;
+    }
+    
+    .defense-label {
+        background: #fff !important;
+        color: #000 !important;
+        border: 1px solid #000 !important;
+    }
+}
+

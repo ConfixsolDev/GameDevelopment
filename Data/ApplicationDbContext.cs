@@ -71,6 +71,9 @@ namespace TechWebSol.Data
         public DbSet<Models.AttackPlanning.AttackLogistics> AttackLogistics { get; set; }
         public DbSet<Models.AttackPlanning.RulesOfEngagement> RulesOfEngagements { get; set; }
         
+        // Defense Planning Models
+        public DbSet<DefenseElement> DefenseElements { get; set; }
+        
         // Phase 01 Models
         public DbSet<TerrainType> TerrainTypes { get; set; }
         public DbSet<RoutesDraft> RoutesDrafts { get; set; }
@@ -394,6 +397,43 @@ namespace TechWebSol.Data
                 entity.HasIndex(e => e.TargetTokenId);
             });
 
+            // Configure Defense Element entities
+            modelBuilder.Entity<DefenseElement>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ElementId).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Category).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Type).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Coordinates).IsRequired().HasColumnType("nvarchar(max)");
+                entity.Property(e => e.Visibility).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Metadata).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.Notes).HasMaxLength(500);
+
+                // Configure relationships
+                entity.HasOne(e => e.Token)
+                    .WithMany()
+                    .HasForeignKey(e => e.TokenId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(e => e.Team)
+                    .WithMany()
+                    .HasForeignKey(e => e.TeamId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(e => e.GameSession)
+                    .WithMany()
+                    .HasForeignKey(e => e.GameSessionId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                // Indexes for performance
+                entity.HasIndex(e => e.ElementId);
+                entity.HasIndex(e => e.Category);
+                entity.HasIndex(e => e.TokenId);
+                entity.HasIndex(e => e.GameSessionId);
+                entity.HasIndex(e => e.Status);
+            });
+
             // Configure Map Data entities
             modelBuilder.Entity<MapRegion>(entity =>
             {
@@ -452,20 +492,9 @@ namespace TechWebSol.Data
                     .OnDelete(DeleteBehavior.SetNull);
             });
 
-            modelBuilder.Entity<UnitDeployment>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.UnitType).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.UnitName).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.ForceType).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.Position).IsRequired().HasColumnType("nvarchar(max)");
-
-                entity.HasOne(e => e.Scenario)
-                    .WithMany(e => e.UnitDeployments)
-                    .HasForeignKey(e => e.ScenarioId)
-                    .OnDelete(DeleteBehavior.Cascade);
-            });
-
+            // Configure WarGameSimulation entities (UnitDeployment, MovementOrder, Battle, etc.)
+            // Note: Full UnitDeployment configuration is at end of OnModelCreating
+            
             modelBuilder.Entity<MovementOrder>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -498,6 +527,9 @@ namespace TechWebSol.Data
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Role).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Position).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.ProtectionType).HasMaxLength(50);
+                entity.Property(e => e.Equipment).HasColumnType("nvarchar(max)");
 
                 entity.HasOne(e => e.Battle)
                     .WithMany(e => e.Participants)
@@ -588,12 +620,24 @@ namespace TechWebSol.Data
                     .OnDelete(DeleteBehavior.SetNull);
             });
 
+            // Configure UnitDeployment entity (complete configuration)
             modelBuilder.Entity<UnitDeployment>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                
+                // Required properties
+                entity.Property(e => e.UnitType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.UnitName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.ForceType).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Position).IsRequired().HasColumnType("nvarchar(max)");
+                
+                // Optional properties
+                entity.Property(e => e.Formation).HasMaxLength(50);
+                entity.Property(e => e.Status).HasMaxLength(20);
                 entity.Property(e => e.CurrentTerrain).HasMaxLength(32);
                 entity.Property(e => e.SupplyState).HasMaxLength(8);
+                
+                // Decimal precision properties
                 entity.Property(e => e.CombatPowerIndex).HasPrecision(18, 2);
                 entity.Property(e => e.EffectiveCombatPower_RO).HasPrecision(18, 2);
                 entity.Property(e => e.StrengthPercentage).HasPrecision(18, 2);
@@ -602,6 +646,7 @@ namespace TechWebSol.Data
                 entity.Property(e => e.Morale).HasPrecision(18, 2);
                 entity.Property(e => e.Fatigue).HasPrecision(18, 2);
 
+                // Foreign key relationship
                 entity.HasOne(e => e.Scenario)
                     .WithMany(e => e.UnitDeployments)
                     .HasForeignKey(e => e.ScenarioId)
