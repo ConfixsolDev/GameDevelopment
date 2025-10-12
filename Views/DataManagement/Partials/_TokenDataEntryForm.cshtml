@@ -17,9 +17,9 @@
                         <!-- Edit Existing Brigade Data -->
                         <div class="brigade-header-section">
                             <div class="brigade-name-display">
-                                <h5>@Model.ExistingBrigade.Name Information</h5>
-                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="editBrigadeName()">
-                                    <i class="fas fa-edit"></i> Edit Name
+                                <h5>Brigade @Model.ExistingBrigade.BrigadeCode Information</h5>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="editBrigadeCode()">
+                                    <i class="fas fa-edit"></i> Edit Code
                                 </button>
                             </div>
                         </div>
@@ -50,7 +50,7 @@
                             <div id="infantry-data" class="data-tab-content active">
                                 <div class="tab-content-header">
                                     <h6><i class="fas fa-user-shield"></i> Infantry Battalions</h6>
-                                    <p class="text-muted">Manage infantry battalions for @Model.ExistingBrigade.Name</p>
+                                    <p class="text-muted">Manage infantry battalions for Brigade @Model.ExistingBrigade.BrigadeCode</p>
                                 </div>
                                 
                                 <!-- Existing Infantry Battalions List -->
@@ -92,7 +92,7 @@
                             <div id="armoured-data" class="data-tab-content">
                                 <div class="tab-content-header">
                                     <h6><i class="fas fa-shield-alt"></i> Armoured Regiments</h6>
-                                    <p class="text-muted">Manage armoured regiments for @Model.ExistingBrigade.Name</p>
+                                    <p class="text-muted">Manage armoured regiments for Brigade @Model.ExistingBrigade.BrigadeCode</p>
                                 </div>
                                 
                                 <div id="armouredRegimentsList" class="units-list">
@@ -132,7 +132,7 @@
                             <div id="artillery-data" class="data-tab-content">
                                 <div class="tab-content-header">
                                     <h6><i class="fas fa-crosshairs"></i> Artillery Regiments</h6>
-                                    <p class="text-muted">Manage artillery regiments for @Model.ExistingBrigade.Name</p>
+                                    <p class="text-muted">Manage artillery regiments for Brigade @Model.ExistingBrigade.BrigadeCode</p>
                                 </div>
                                 
                                 <div id="artilleryRegimentsList" class="units-list">
@@ -172,7 +172,7 @@
                             <div id="logistics-data" class="data-tab-content">
                                 <div class="tab-content-header">
                                     <h6><i class="fas fa-truck"></i> Logistics Units</h6>
-                                    <p class="text-muted">Manage logistics units for @Model.ExistingBrigade.Name</p>
+                                    <p class="text-muted">Manage logistics units for Brigade @Model.ExistingBrigade.BrigadeCode</p>
                                 </div>
                                 
                                 <div id="logisticsUnitsList" class="units-list">
@@ -208,7 +208,7 @@
                             <div id="engineering-data" class="data-tab-content">
                                 <div class="tab-content-header">
                                     <h6><i class="fas fa-hard-hat"></i> Combat Engineering Companies</h6>
-                                    <p class="text-muted">Manage combat engineering companies for @Model.ExistingBrigade.Name</p>
+                                    <p class="text-muted">Manage combat engineering companies for Brigade @Model.ExistingBrigade.BrigadeCode</p>
                                 </div>
                                 
                                 <div id="engineeringCompaniesList" class="units-list">
@@ -244,7 +244,7 @@
                             <div id="recon-data" class="data-tab-content">
                                 <div class="tab-content-header">
                                     <h6><i class="fas fa-binoculars"></i> Reconnaissance</h6>
-                                    <p class="text-muted">Manage reconnaissance for @Model.ExistingBrigade.Name</p>
+                                    <p class="text-muted">Manage reconnaissance for Brigade @Model.ExistingBrigade.BrigadeCode</p>
                                 </div>
                                 
                                 <div id="reconnaissanceList" class="units-list">
@@ -296,7 +296,7 @@
                                 <option value="">-- Select a Brigade --</option>
                                 @foreach (var brigade in Model.AvailableBrigades)
                                 {
-                                    <option value="@brigade.Id">@brigade.Name</option>
+                                    <option value="@brigade.Id">Brigade @brigade.BrigadeCode</option>
                                 }
                             </select>
                         </div>
@@ -745,25 +745,25 @@ function createNewBrigadeData(tokenId) {
     });
 }
 
-// Edit brigade name
-function editBrigadeName() {
-    const currentName = document.querySelector('.brigade-name-display h5').textContent.replace(' Information', '');
-    const newName = prompt('Enter new brigade name:', currentName);
+// Edit brigade code
+function editBrigadeCode() {
+    const currentCode = document.querySelector('.brigade-name-display h5').textContent.replace('Brigade ', '').replace(' Information', '');
+    const newCode = prompt('Enter new brigade code:', currentCode);
     
-    if (newName && newName.trim() !== '' && newName !== currentName) {
-        console.log('✏️ Updating brigade name from', currentName, 'to', newName);
+    if (newCode && newCode.trim() !== '' && newCode !== currentCode) {
+        console.log('✏️ Updating brigade code from', currentCode, 'to', newCode);
         
         // Update the display
-        document.querySelector('.brigade-name-display h5').textContent = newName + ' Information';
+        document.querySelector('.brigade-name-display h5').textContent = 'Brigade ' + newCode + ' Information';
         
         // Update all references in tab content
         document.querySelectorAll('.tab-content-header .text-muted').forEach(element => {
-            element.textContent = element.textContent.replace(currentName, newName);
+            element.textContent = element.textContent.replace('Brigade ' + currentCode, 'Brigade ' + newCode);
         });
         
-        // Here you would typically make an AJAX call to save the new name
+        // Here you would typically make an AJAX call to save the new code
         // For now, just show a success message
-        alert('Brigade name updated successfully!');
+        alert('Brigade code updated successfully!');
     }
 }
 

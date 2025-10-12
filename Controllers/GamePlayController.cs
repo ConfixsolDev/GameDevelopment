@@ -1857,7 +1857,7 @@ namespace TechWebSol.Controllers
                 // Get tokens for this team
                 var tokens = await _context.Tokens
                     .Include(t => t.TokenGroup)
-                    .Where(t => t.IsActive)
+                    .Where(t => t.IsActive && t.TeamId == team.Id)
                     .OrderBy(t => t.Name)
                     .ToListAsync();
 

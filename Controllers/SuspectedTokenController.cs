@@ -14,16 +14,19 @@ namespace TechWebSol.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IUserSessionService _userSessionService;
         private readonly ILogger<SuspectedTokenController> _logger;
+        private readonly ISuspectedTokenMatchingService _matchingService;
         private readonly ApplicationUserVM user;
 
         public SuspectedTokenController(
             ApplicationDbContext context,
             IUserSessionService userSessionService,
-            ILogger<SuspectedTokenController> logger)
+            ILogger<SuspectedTokenController> logger,
+            ISuspectedTokenMatchingService matchingService)
         {
             _context = context;
             _userSessionService = userSessionService;
             _logger = logger;
+            _matchingService = matchingService;
             user = userSessionService.GetCurrentUser();
         }
 
@@ -60,7 +63,10 @@ namespace TechWebSol.Controllers
                         teamId = st.TeamId,
                         createdBy = st.CreatedBy,
                         createdDate = st.CreatedDate,
-                        isrMissionsCount = st.ISRMissions != null ? st.ISRMissions.Count : 0
+                        isrMissionsCount = st.ISRMissions != null ? st.ISRMissions.Count : 0,
+                        realTokenId = st.RealTokenId,
+                        positionAccuracyMeters = st.PositionAccuracyMeters,
+                        matchingConfidence = st.MatchingConfidence
                     })
                     .ToListAsync();
 
@@ -111,6 +117,30 @@ namespace TechWebSol.Controllers
                     IsActive = true
                 };
 
+                // 🔥 AUTO-MATCH TO REAL TOKEN
+                if (user.TeamId.HasValue && user.TeamId.Value != Guid.Empty)
+                {
+                    var (realTokenId, distance, matchConfidence) = await _matchingService.FindMatchingRealTokenAsync(
+                        request.Latitude,
+                        request.Longitude,
+                        request.Name,
+                        request.SuspectedType,
+                        team.ForceType ?? "Unknown",
+                        user.TeamId.Value  // Pass placer's team ID to EXCLUDE same team tokens
+                    );
+
+                    if (realTokenId.HasValue)
+                    {
+                        suspectedToken.RealTokenId = realTokenId;
+                        suspectedToken.PositionAccuracyMeters = distance;
+                        suspectedToken.MatchingConfidence = matchConfidence;
+                        
+                        _logger.LogInformation(
+                            "Suspected token auto-matched to real token {RealTokenId} with {Confidence}% confidence, {Distance}m away",
+                            realTokenId, matchConfidence, distance);
+                    }
+                }
+
                 _context.SuspectedTokens.Add(suspectedToken);
                 await _context.SaveChangesAsync();
 
@@ -131,7 +161,10 @@ namespace TechWebSol.Controllers
                         source = suspectedToken.Source,
                         confidence = suspectedToken.Confidence,
                         status = suspectedToken.Status,
-                        markerStyle = suspectedToken.MarkerStyle
+                        markerStyle = suspectedToken.MarkerStyle,
+                        realTokenId = suspectedToken.RealTokenId,
+                        positionAccuracyMeters = suspectedToken.PositionAccuracyMeters,
+                        matchingConfidence = suspectedToken.MatchingConfidence
                     }
                 });
             }
@@ -158,13 +191,92 @@ namespace TechWebSol.Controllers
                     return Json(new { success = false, message = "Suspected token not found" });
                 }
 
-                if (request.Latitude.HasValue) suspectedToken.Latitude = request.Latitude.Value;
-                if (request.Longitude.HasValue) suspectedToken.Longitude = request.Longitude.Value;
-                if (!string.IsNullOrEmpty(request.Name)) suspectedToken.Name = request.Name;
-                if (request.Confidence.HasValue) suspectedToken.Confidence = request.Confidence.Value;
-                if (!string.IsNullOrEmpty(request.Status)) suspectedToken.Status = request.Status;
-                if (!string.IsNullOrEmpty(request.Notes)) suspectedToken.Notes = request.Notes;
-                if (!string.IsNullOrEmpty(request.SuspectedType)) suspectedToken.SuspectedType = request.SuspectedType;
+                // Track if key fields changed (requiring re-matching)
+                bool needsReMatching = false;
+                decimal newLat = suspectedToken.Latitude;
+                decimal newLng = suspectedToken.Longitude;
+                string? newName = suspectedToken.Name;
+                string? newType = suspectedToken.SuspectedType;
+
+                // Update fields
+                if (request.Latitude.HasValue)
+                {
+                    newLat = request.Latitude.Value;
+                    suspectedToken.Latitude = request.Latitude.Value;
+                    needsReMatching = true;
+                }
+
+                if (request.Longitude.HasValue)
+                {
+                    newLng = request.Longitude.Value;
+                    suspectedToken.Longitude = request.Longitude.Value;
+                    needsReMatching = true;
+                }
+
+                if (!string.IsNullOrEmpty(request.Name))
+                {
+                    newName = request.Name;
+                    suspectedToken.Name = request.Name;
+                    needsReMatching = true; // Name change might affect designation matching
+                }
+
+                if (!string.IsNullOrEmpty(request.SuspectedType))
+                {
+                    newType = request.SuspectedType;
+                    suspectedToken.SuspectedType = request.SuspectedType;
+                    needsReMatching = true; // Type change affects matching
+                }
+
+                if (request.Confidence.HasValue)
+                    suspectedToken.Confidence = request.Confidence.Value;
+
+                if (!string.IsNullOrEmpty(request.Status))
+                    suspectedToken.Status = request.Status;
+
+                if (!string.IsNullOrEmpty(request.Notes))
+                    suspectedToken.Notes = request.Notes;
+
+                // 🔥 RE-MATCH TO REAL TOKEN IF KEY FIELDS CHANGED
+                if (needsReMatching && user.TeamId.HasValue)
+                {
+                    _logger.LogInformation("Re-matching suspected token {TokenId} due to updates", request.TokenId);
+
+                    var team = await _context.Teams.FirstOrDefaultAsync(t => t.Id == user.TeamId);
+                    if (team != null)
+                    {
+                        var (realTokenId, distance, matchConfidence) = await _matchingService.FindMatchingRealTokenAsync(
+                            newLat,
+                            newLng,
+                            newName,
+                            newType,
+                            team.ForceType ?? "Unknown",
+                            user.TeamId.Value  // Pass placer's team ID to EXCLUDE same team tokens
+                        );
+
+                        if (realTokenId.HasValue)
+                        {
+                            // Check if match changed
+                            if (suspectedToken.RealTokenId != realTokenId)
+                            {
+                                _logger.LogInformation(
+                                    "Suspected token {TokenId} re-matched from {OldToken} to {NewToken} with {Confidence}% confidence",
+                                    request.TokenId, suspectedToken.RealTokenId, realTokenId, matchConfidence);
+                            }
+
+                            suspectedToken.RealTokenId = realTokenId;
+                            suspectedToken.PositionAccuracyMeters = distance;
+                            suspectedToken.MatchingConfidence = matchConfidence;
+                        }
+                        else
+                        {
+                            // No match found - clear previous match
+                            _logger.LogWarning("No matching real token found after update for {TokenId}", request.TokenId);
+                            suspectedToken.RealTokenId = null;
+                            suspectedToken.PositionAccuracyMeters = null;
+                            suspectedToken.MatchingConfidence = null;
+                        }
+                    }
+                }
 
                 suspectedToken.LastConfirmedAt = DateTime.Now;
                 suspectedToken.UpdatedBy = user.ApplicationUserId;
@@ -175,7 +287,10 @@ namespace TechWebSol.Controllers
                 return Json(new
                 {
                     success = true,
-                    message = "Suspected token updated successfully"
+                    message = "Suspected token updated successfully",
+                    realTokenMatched = suspectedToken.RealTokenId.HasValue,
+                    matchingConfidence = suspectedToken.MatchingConfidence,
+                    realTokenId = suspectedToken.RealTokenId
                 });
             }
             catch (Exception ex)
@@ -217,6 +332,80 @@ namespace TechWebSol.Controllers
             {
                 _logger.LogError(ex, "Error removing suspected token {TokenId}", request.TokenId);
                 return Json(new { success = false, message = "Error removing suspected token" });
+            }
+        }
+
+        /// <summary>
+        /// Re-match all suspected tokens to real tokens (useful for existing data)
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> RematchAllSuspectedTokens()
+        {
+            try
+            {
+                if (!user.TeamId.HasValue)
+                {
+                    return Json(new { success = false, message = "User team not found" });
+                }
+
+                var suspectedTokens = await _context.SuspectedTokens
+                    .Where(st => st.TeamId == user.TeamId && st.IsActive)
+                    .ToListAsync();
+
+                var team = await _context.Teams.FirstOrDefaultAsync(t => t.Id == user.TeamId);
+                if (team == null)
+                {
+                    return Json(new { success = false, message = "Team not found" });
+                }
+
+                int matchedCount = 0;
+                int unmatchedCount = 0;
+
+                foreach (var suspectedToken in suspectedTokens)
+                {
+                    var (realTokenId, distance, matchConfidence) = await _matchingService.FindMatchingRealTokenAsync(
+                        suspectedToken.Latitude,
+                        suspectedToken.Longitude,
+                        suspectedToken.Name,
+                        suspectedToken.SuspectedType,
+                        team.ForceType ?? "Unknown",
+                        user.TeamId.Value  // Pass placer's team ID to EXCLUDE same team tokens
+                    );
+
+                    if (realTokenId.HasValue)
+                    {
+                        suspectedToken.RealTokenId = realTokenId;
+                        suspectedToken.PositionAccuracyMeters = distance;
+                        suspectedToken.MatchingConfidence = matchConfidence;
+                        matchedCount++;
+
+                        _logger.LogInformation(
+                            "Re-matched suspected token {TokenId} ({Name}) to real token {RealTokenId} with {Confidence}% confidence",
+                            suspectedToken.Id, suspectedToken.Name, realTokenId, matchConfidence);
+                    }
+                    else
+                    {
+                        unmatchedCount++;
+                        _logger.LogWarning("Could not find match for suspected token {TokenId} ({Name})", 
+                            suspectedToken.Id, suspectedToken.Name);
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Json(new
+                {
+                    success = true,
+                    message = $"Re-matching complete: {matchedCount} matched, {unmatchedCount} unmatched",
+                    matchedCount = matchedCount,
+                    unmatchedCount = unmatchedCount,
+                    totalProcessed = suspectedTokens.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error re-matching suspected tokens");
+                return Json(new { success = false, message = "Error during re-matching: " + ex.Message });
             }
         }
 

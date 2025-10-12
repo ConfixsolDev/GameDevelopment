@@ -18,15 +18,20 @@ namespace TechWebSol.Controllers
         private readonly ApplicationDbContext _context;
         private readonly ILogger<AttackPlanningController> _logger;
         private readonly IUserSessionService _userSessionService;
+        private readonly IComprehensiveCombatSimulationService _simulationService;
         private readonly ApplicationUserVM user;
 
-        public AttackPlanningController(ApplicationDbContext context, ILogger<AttackPlanningController> logger,
-            IUserSessionService userSessionService
+        public AttackPlanningController(
+            ApplicationDbContext context, 
+            ILogger<AttackPlanningController> logger,
+            IUserSessionService userSessionService,
+            IComprehensiveCombatSimulationService simulationService
             )
         {
             user = userSessionService.GetCurrentUser();
             _context = context;
             _logger = logger;
+            _simulationService = simulationService;
         }
         /// <summary>
         /// Main attack planning dashboard
@@ -480,6 +485,480 @@ namespace TechWebSol.Controllers
                 roe.Notes = data["Notes"]?.ToString();
         }
         #endregion
+
+        /// <summary>
+        /// Get attack order selection modal as partial view
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetAttackOrderSelectionModal()
+        {
+            try
+            {
+                var attackOrders = await _context.EnhancedAttackOrders
+                    .Where(ao => ao.IsActive && ao.TeamId == user.TeamId)
+                    .OrderByDescending(ao => ao.CreatedDate)
+                    .ToListAsync();
+
+                var ordersWithDetails = new List<AttackOrderSelectionViewModel>();
+
+                foreach (var order in attackOrders)
+                {
+                    var attackerToken = await _context.Tokens
+                        .Where(t => t.Id == order.AttackerTokenId)
+                        .Select(t => new { t.Name, t.UnitDesignation })
+                        .FirstOrDefaultAsync();
+
+                    var realTargetToken = await _context.Tokens
+                        .Where(t => t.Id == order.TargetTokenId)
+                        .Select(t => new { t.Name, t.UnitDesignation })
+                        .FirstOrDefaultAsync();
+
+                    var suspectedTargetToken = await _context.SuspectedTokens
+                        .Where(st => st.Id == order.TargetTokenId)
+                        .Select(st => new { st.Name, st.RealTokenId })
+                        .FirstOrDefaultAsync();
+
+                    bool isSuspectedToken = suspectedTargetToken != null;
+                    string targetName = realTargetToken?.Name ?? suspectedTargetToken?.Name ?? "Unknown";
+
+                    ordersWithDetails.Add(new AttackOrderSelectionViewModel
+                    {
+                        Id = order.Id,
+                        AttackerTokenId = order.AttackerTokenId,
+                        TargetTokenId = order.TargetTokenId,
+                        AttackerTokenName = attackerToken?.Name ?? attackerToken?.UnitDesignation ?? "Unknown",
+                        TargetTokenName = targetName,
+                        IsSuspectedToken = isSuspectedToken,
+                        Status = order.Status,
+                        CompletionPercentage = order.CompletionPercentage,
+                        LastUpdated = order.LastUpdated
+                    });
+                }
+
+                return PartialView("Partials/_AttackOrderSelectionModal", ordersWithDetails);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching attack orders");
+                return Content($"<div class='alert alert-danger'>Error: {ex.Message}</div>");
+            }
+        }
+
+        /// <summary>
+        /// Get all available attack orders for simulation (summary only) - JSON API
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetAvailableAttackOrders()
+        {
+            try
+            {
+                var attackOrders = await _context.EnhancedAttackOrders
+                    .Where(ao => ao.IsActive && ao.TeamId == user.TeamId)
+                    .OrderByDescending(ao => ao.CreatedDate)
+                    .ToListAsync();
+
+                var ordersWithDetails = new List<object>();
+
+                foreach (var order in attackOrders)
+                {
+                    // Get attacker token details
+                    var attackerToken = await _context.Tokens
+                        .Where(t => t.Id == order.AttackerTokenId)
+                        .Select(t => new { t.Name, t.UnitDesignation })
+                        .FirstOrDefaultAsync();
+
+                    // Check if target is a suspected token or real token
+                    var realTargetToken = await _context.Tokens
+                        .Where(t => t.Id == order.TargetTokenId)
+                        .Select(t => new { t.Name, t.UnitDesignation })
+                        .FirstOrDefaultAsync();
+
+                    var suspectedTargetToken = await _context.SuspectedTokens
+                        .Where(st => st.Id == order.TargetTokenId)
+                        .Select(st => new { st.Name, st.RealTokenId })
+                        .FirstOrDefaultAsync();
+
+                    bool isSuspectedToken = suspectedTargetToken != null;
+                    string targetName = realTargetToken?.Name ?? suspectedTargetToken?.Name ?? "Unknown";
+
+                    ordersWithDetails.Add(new
+                    {
+                        id = order.Id,
+                        attackerTokenId = order.AttackerTokenId,
+                        targetTokenId = order.TargetTokenId,
+                        attackerTokenName = attackerToken?.Name ?? attackerToken?.UnitDesignation ?? "Unknown",
+                        targetTokenName = targetName,
+                        isSuspectedToken = isSuspectedToken,
+                        status = order.Status,
+                        completionPercentage = order.CompletionPercentage,
+                        lastUpdated = order.LastUpdated
+                    });
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    attackOrders = ordersWithDetails
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching attack orders");
+                return Json(new { success = false, message = "Error fetching attack orders: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Get comprehensive attack and defense data for simulation
+        /// Returns ALL information about attacker, defender, and battlefield in a single call
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetComprehensiveAttackDefenseData(string attackOrderId)
+        {
+            try
+            {
+                if (!Guid.TryParse(attackOrderId, out var orderGuid))
+                {
+                    return Json(new { success = false, message = "Invalid attack order ID" });
+                }
+
+                // Get attack order
+                var attackOrder = await _context.EnhancedAttackOrders
+                    .FirstOrDefaultAsync(ao => ao.Id == orderGuid && ao.IsActive);
+
+                if (attackOrder == null)
+                {
+                    return Json(new { success = false, message = "Attack order not found" });
+                }
+
+                // ===== ATTACKER DATA =====
+                var attackerToken = await _context.Tokens
+                    .Include(t => t.MapMarkers.Where(m => m.IsActive))
+                    .FirstOrDefaultAsync(t => t.Id == attackOrder.AttackerTokenId);
+
+                var attackerDeployment = await _context.UnitDeployments
+                    .FirstOrDefaultAsync(d => d.TokenId == attackOrder.AttackerTokenId);
+
+                var attackerLocation = attackerToken?.MapMarkers?.FirstOrDefault();
+
+                // ===== DEFENDER DATA =====
+                // Check if target is suspected token or real token
+                var suspectedTarget = await _context.SuspectedTokens
+                    .Include(st => st.RealToken)
+                        .ThenInclude(t => t.MapMarkers.Where(m => m.IsActive))
+                    .FirstOrDefaultAsync(st => st.Id == attackOrder.TargetTokenId);
+
+                Token? defenderToken = null;
+                MapMarker? defenderLocation = null;
+                bool isSuspectedToken = false;
+                decimal detectionConfidence = 100m;
+
+                if (suspectedTarget != null)
+                {
+                    // Target is suspected token - resolve to real token
+                    isSuspectedToken = true;
+                    detectionConfidence = suspectedTarget.Confidence;
+                    
+                    if (suspectedTarget.RealTokenId.HasValue)
+                    {
+                        defenderToken = suspectedTarget.RealToken;
+                    }
+                    
+                    // Use suspected location
+                    defenderLocation = new MapMarker
+                    {
+                        latitude = suspectedTarget.Latitude.ToString(),
+                        longitude = suspectedTarget.Longitude.ToString(),
+                        Position = $"{{\"lat\":{suspectedTarget.Latitude},\"lng\":{suspectedTarget.Longitude}}}"
+                    };
+                }
+                else
+                {
+                    // Target is real token
+                    defenderToken = await _context.Tokens
+                        .Include(t => t.MapMarkers.Where(m => m.IsActive))
+                        .FirstOrDefaultAsync(t => t.Id == attackOrder.TargetTokenId);
+                    
+                    defenderLocation = defenderToken?.MapMarkers?.FirstOrDefault();
+                }
+
+                var defenderDeployment = defenderToken != null 
+                    ? await _context.UnitDeployments.FirstOrDefaultAsync(d => d.TokenId == defenderToken.Id)
+                    : null;
+
+                // ===== DEFENSE ELEMENTS =====
+                // Get all defense elements in the area (unified model with Category field)
+                var allDefenseElements = defenderToken != null
+                    ? await _context.DefenseElements
+                        .Where(de => de.IsActive && de.TeamId == defenderToken.TeamId && de.Status == "active")
+                        .ToListAsync()
+                    : new List<DefenseElement>();
+
+                var defenseElements = new
+                {
+                    killZones = allDefenseElements
+                        .Where(de => de.Category.ToLower() == "killzone")
+                        .Select(de => new
+                        {
+                            id = de.Id,
+                            elementId = de.ElementId,
+                            type = de.Type,
+                            strength = de.Strength,
+                            effectiveness = de.Effectiveness,
+                            coordinates = de.Coordinates,
+                            metadata = de.Metadata,
+                            notes = de.Notes
+                        })
+                        .ToList(),
+
+                    minefields = allDefenseElements
+                        .Where(de => de.Category.ToLower() == "minefield")
+                        .Select(de => new
+                        {
+                            id = de.Id,
+                            elementId = de.ElementId,
+                            type = de.Type,
+                            strength = de.Strength,
+                            effectiveness = de.Effectiveness,
+                            coordinates = de.Coordinates,
+                            metadata = de.Metadata,
+                            notes = de.Notes
+                        })
+                        .ToList(),
+
+                    obstacles = allDefenseElements
+                        .Where(de => de.Category.ToLower() == "obstacle")
+                        .Select(de => new
+                        {
+                            id = de.Id,
+                            elementId = de.ElementId,
+                            type = de.Type,
+                            strength = de.Strength,
+                            effectiveness = de.Effectiveness,
+                            coordinates = de.Coordinates,
+                            metadata = de.Metadata,
+                            notes = de.Notes
+                        })
+                        .ToList(),
+
+                    defensivePositions = allDefenseElements
+                        .Where(de => de.Category.ToLower() == "position")
+                        .Select(de => new
+                        {
+                            id = de.Id,
+                            elementId = de.ElementId,
+                            type = de.Type,
+                            strength = de.Strength,
+                            effectiveness = de.Effectiveness,
+                            coordinates = de.Coordinates,
+                            metadata = de.Metadata,
+                            notes = de.Notes
+                        })
+                        .ToList()
+                };
+
+                // ===== RETURN COMPREHENSIVE DATA =====
+                return Json(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        // Attack Order
+                        attackOrder = new
+                        {
+                            id = attackOrder.Id,
+                            status = attackOrder.Status,
+                            intentJson = attackOrder.IntentJson,
+                            firesJson = attackOrder.FiresJson,
+                            movementJson = attackOrder.MovementJson,
+                            timingJson = attackOrder.TimingJson,
+                            fogOfWarJson = attackOrder.FogOfWarJson,
+                            logisticsJson = attackOrder.LogisticsJson,
+                            roeJson = attackOrder.ROEJson
+                        },
+
+                        // Attacker
+                        attacker = new
+                        {
+                            tokenId = attackerToken?.Id,
+                            name = attackerToken?.Name,
+                            unitDesignation = attackerToken?.UnitDesignation,
+                            unitType = attackerToken?.UnitType,
+                            forceType = attackerToken?.ForceType,
+                            organizationLevel = attackerToken?.OrganizationLevel,
+                            location = attackerLocation != null ? new
+                            {
+                                latitude = attackerLocation.latitude,
+                                longitude = attackerLocation.longitude,
+                                position = attackerLocation.Position
+                            } : null,
+                            deployment = attackerDeployment != null ? new
+                            {
+                                currentStrength = attackerDeployment.CurrentStrength,
+                                maxStrength = attackerDeployment.MaxStrength,
+                                morale = attackerDeployment.Morale,
+                                fatigue = attackerDeployment.Fatigue,
+                                supplyState = attackerDeployment.SupplyState,
+                                combatPower = attackerDeployment.CombatPower,
+                                effectiveCombatPower = attackerDeployment.EffectiveCombatPower,
+                                currentTerrain = attackerDeployment.CurrentTerrain,
+                                formation = attackerDeployment.Formation,
+                                status = attackerDeployment.Status
+                            } : null
+                        },
+
+                        // Defender
+                        defender = new
+                        {
+                            tokenId = defenderToken?.Id,
+                            name = defenderToken?.Name,
+                            unitDesignation = defenderToken?.UnitDesignation,
+                            unitType = defenderToken?.UnitType,
+                            forceType = defenderToken?.ForceType,
+                            organizationLevel = defenderToken?.OrganizationLevel,
+                            isSuspectedToken = isSuspectedToken,
+                            detectionConfidence = detectionConfidence,
+                            location = defenderLocation != null ? new
+                            {
+                                latitude = defenderLocation.latitude,
+                                longitude = defenderLocation.longitude,
+                                position = defenderLocation.Position
+                            } : null,
+                            deployment = defenderDeployment != null ? new
+                            {
+                                currentStrength = defenderDeployment.CurrentStrength,
+                                maxStrength = defenderDeployment.MaxStrength,
+                                morale = defenderDeployment.Morale,
+                                fatigue = defenderDeployment.Fatigue,
+                                supplyState = defenderDeployment.SupplyState,
+                                combatPower = defenderDeployment.CombatPower,
+                                effectiveCombatPower = defenderDeployment.EffectiveCombatPower,
+                                currentTerrain = defenderDeployment.CurrentTerrain,
+                                formation = defenderDeployment.Formation,
+                                status = defenderDeployment.Status
+                            } : null
+                        },
+
+                        // Defense Elements
+                        defenseElements = defenseElements
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching comprehensive attack/defense data");
+                return Json(new { success = false, message = "Error: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Run comprehensive attack and defense simulation with suspected token resolution
+        /// Returns partial view for modal display
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> RunComprehensiveSimulation(string attackOrderId)
+        {
+            try
+            {
+                if (!Guid.TryParse(attackOrderId, out var orderGuid))
+                {
+                    return Content("<div class='alert alert-danger'>Invalid attack order ID</div>");
+                }
+
+                var attackOrder = await _context.EnhancedAttackOrders
+                    .FirstOrDefaultAsync(ao => ao.Id == orderGuid);
+
+                if (attackOrder == null)
+                {
+                    return Content("<div class='alert alert-danger'>Attack order not found</div>");
+                }
+
+                _logger.LogInformation("Running simulation for attack order {OrderId}", orderGuid);
+
+                var result = await _simulationService.SimulateAttackDefenseAsync(attackOrder.AttackerTokenId, attackOrder.TargetTokenId);
+
+                if (!result.Success)
+                {
+                    return Content($"<div class='alert alert-danger'>{result.Message}</div>");
+                }
+
+                // Map to ViewModel
+                var viewModel = new CombatSimulationResultsViewModel
+                {
+                    AttackerTokenName = result.AttackerTokenName,
+                    DefenderTokenName = result.DefenderTokenName,
+                    WasSuspectedToken = result.WasSuspectedToken,
+                    DetectionConfidence = result.DetectionConfidence,
+                    SimulationTime = result.SimulationTime,
+                    AttackPhases = result.AttackPhases.Select(p => new AttackPhaseViewModel
+                    {
+                        PhaseName = p.PhaseName,
+                        PhaseType = p.PhaseType,
+                        Location = p.Location,
+                        DelayMinutes = p.DelayMinutes,
+                        CasualtiesAttacker = p.CasualtiesAttacker,
+                        CasualtiesDefender = p.CasualtiesDefender,
+                        Notes = p.Notes
+                    }).ToList(),
+                    DefensePhases = result.DefensePhases.Select(p => new DefensePhaseViewModel
+                    {
+                        PhaseName = p.PhaseName,
+                        PhaseType = p.PhaseType,
+                        TimeToStayMinutes = p.TimeToStayMinutes,
+                        MovementDelayMinutes = p.MovementDelayMinutes,
+                        CounterAttackDelayMinutes = p.CounterAttackDelayMinutes,
+                        CasualtiesDefender = p.CasualtiesDefender,
+                        CasualtiesAttacker = p.CasualtiesAttacker,
+                        Notes = p.Notes
+                    }).ToList(),
+                    AttackSummary = new AttackSummaryViewModel
+                    {
+                        EngagementKillZoneSummary = result.AttackSummary.EngagementKillZoneSummary,
+                        DefensePositionsSummary = result.AttackSummary.DefensePositionsSummary,
+                        TotalDelayMinutes = result.AttackSummary.TotalDelayMinutes,
+                        TotalAttackerCasualties = result.AttackSummary.TotalAttackerCasualties,
+                        TotalDefenderCasualties = result.AttackSummary.TotalDefenderCasualties
+                    },
+                    DefenseSummary = new DefenseSummaryViewModel
+                    {
+                        TimeToStaySummary = result.DefenseSummary.TimeToStaySummary,
+                        CounterPenetrationMovementSummary = result.DefenseSummary.CounterPenetrationMovementSummary,
+                        CounterAttackSummary = result.DefenseSummary.CounterAttackSummary,
+                        TotalTimeMinutes = result.DefenseSummary.TotalTimeMinutes,
+                        TotalDefenderCasualties = result.DefenseSummary.TotalDefenderCasualties,
+                        TotalAttackerCasualties = result.DefenseSummary.TotalAttackerCasualties
+                    }
+                };
+
+                return PartialView("Partials/_SimulationResultsModal", viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error running comprehensive simulation");
+                return Content($"<div class='alert alert-danger'>Simulation failed: {ex.Message}</div>");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Request model for running simulation
+    /// </summary>
+    public class RunSimulationRequest
+    {
+        /// <summary>
+        /// Optional: Use an existing EnhancedAttackOrder
+        /// </summary>
+        public string? AttackOrderId { get; set; }
+        
+        /// <summary>
+        /// Manual selection: Attacker token ID
+        /// </summary>
+        public string? AttackerTokenId { get; set; }
+        
+        /// <summary>
+        /// Manual selection: Target token ID (can be real token or suspected token)
+        /// </summary>
+        public string? TargetTokenId { get; set; }
     }
 
     /// <summary>

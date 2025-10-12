@@ -339,11 +339,21 @@ class TokenActionModeManager {
         const targetToken = this.findTokenAtLocation(latlng);
         
         if (targetToken) {
+            // Store target token globally for combat simulation
+            this.selectedTarget = targetToken;
+            window.selectedTargetToken = targetToken;
+            
+            // Store attacker too if not already set
+            if (this.selectedAttacker) {
+                this.attackerToken = this.selectedAttacker;
+                window.selectedAttackerToken = this.selectedAttacker;
+            }
+            
             // Found target token - create attack arrow and open data entry
             this.createAttackArrow(this.attackerToken, targetToken);
             this.openAttackDataEntry(this.attackerToken, targetToken);
             
-            // Reset mode
+            // Reset mode (but keep selections for combat simulation)
             this.resetAttackMode();
         } else {
             // No target token found - show message

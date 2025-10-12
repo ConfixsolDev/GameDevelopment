@@ -166,6 +166,8 @@ builder.Services.AddScoped<SupplyService>();
 builder.Services.AddScoped<IDetectionService, DetectionService>();
 builder.Services.AddScoped<IAttackPreviewService, AttackPreviewService>();
 builder.Services.AddScoped<IOrderPersistenceService, OrderPersistenceService>();
+builder.Services.AddScoped<ISuspectedTokenMatchingService, SuspectedTokenMatchingService>();
+builder.Services.AddScoped<IComprehensiveCombatSimulationService, ComprehensiveCombatSimulationService>();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();

@@ -418,15 +418,6 @@ namespace TechWebSol.Models
     public class Brigade : BaseEntity
     {
         [Required]
-        [MaxLength(100)]
-        [DisplayName("Brigade Name")]
-        public string Name { get; set; }
-
-        [MaxLength(500)]
-        [DisplayName("Description")]
-        public string Description { get; set; }
-
-        [Required]
         [MaxLength(50)]
         [DisplayName("Brigade Code")]
         public string BrigadeCode { get; set; }

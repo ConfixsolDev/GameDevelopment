@@ -5,7 +5,7 @@
 <div id="unitsDataEntryModal" class="gameplay-modal" style="display: none;">
     <div class="gameplay-modal-content large-modal">
         <div class="gameplay-modal-header">
-            <h3><i class="fas fa-users"></i> Add Units to Brigade: @Model.Brigade.Name (@Model.Token.Name)</h3>
+            <h3><i class="fas fa-users"></i> Add Units to Brigade: @Model.Brigade.BrigadeCode (@Model.Token.Name)</h3>
             <button class="gameplay-modal-close" onclick="closeUnitsDataEntryModal()">&times;</button>
         </div>
         <div class="gameplay-modal-body">
@@ -29,9 +29,8 @@
                         </div>
                     }
                     <div class="brigade-details">
-                        <h4>@Model.Brigade.Name</h4>
+                        <h4>Brigade @Model.Brigade.BrigadeCode</h4>
                         <p class="text-muted">@Model.Token.Name • @Model.Brigade.ForceType Force</p>
-                        <span class="badge badge-primary">@Model.Brigade.BrigadeCode</span>
                     </div>
                 </div>
                 <div class="alert alert-info">
