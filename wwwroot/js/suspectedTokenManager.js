@@ -63,13 +63,23 @@ class SuspectedTokenManager {
             fillOpacity = 0.2;
         }
 
-        // Create icon with question mark
+        // Determine CSS class based on placerSide
+        let sideClass = '';
+        if (tokenData.placerSide) {
+            const sideLower = tokenData.placerSide.toLowerCase();
+            if (sideLower === 'blue' || sideLower.includes('blue')) {
+                sideClass = 'suspected-token-blue';
+            } else if (sideLower === 'red' || sideLower.includes('red') || sideLower === 'fox' || sideLower.includes('fox')) {
+                sideClass = 'suspected-token-red';
+            }
+        }
+        
+        console.log(`🎯 Suspected token: ${tokenData.name}, placerSide: ${tokenData.placerSide}, class: ${sideClass}`);
+
+        // Create icon with token name
         const iconHtml = `
-            <div class="suspected-token-marker" style="border-color: ${markerColor};">
-                <i class="fas fa-question"></i>
-                <div class="confidence-indicator" style="background-color: ${markerColor}; opacity: ${fillOpacity};">
-                    ${Math.round(tokenData.confidence)}%
-                </div>
+            <div class="suspected-token-marker ${sideClass}">
+                <div class="token-name-label">${tokenData.name}</div>
             </div>
         `;
 

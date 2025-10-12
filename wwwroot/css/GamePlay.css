@@ -622,8 +622,6 @@
 .suspected-token-marker {
     width: 45px;
     height: 45px;
-    background: rgba(255, 165, 0, 0.3);
-    border: 3px dashed #ffa500;
     border-radius: 4px;
     display: flex;
     align-items: center;
@@ -643,6 +641,59 @@
     font-size: 20px;
     color: #ffa500;
     margin-bottom: 2px;
+}
+
+.token-name-label {
+    font-size: 11px;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+    max-width: 40px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+    .suspected-token-marker.suspected-token-blue {
+        background: rgb(239 60 6 / 30%);
+        border: 3px dashed #ff2914eb;
+        border-color: #ff5200;
+    }
+
+        .suspected-token-marker.suspected-token-blue i {
+            background: rgb(239 60 6 / 30%);
+            border: 3px dashed #ff2914eb;
+            border-color: #ff5200;
+        }
+
+.suspected-token-marker.suspected-token-blue .token-name-label {
+    /* Customize: token name color for blue side */
+    /* color: #yourcolor; */
+}
+
+.suspected-token-marker.suspected-token-blue:hover {
+    /* Customize: hover state */
+}
+
+/* Red side suspected tokens (placed by Red force) */
+.suspected-token-marker.suspected-token-red {
+    background: rgb(6 60 239 / 30%);
+    border: 3px dashed #4e5cedeb;
+    border-color: #2566ef;
+}
+
+.suspected-token-marker.suspected-token-red i {
+    color: #0052ff;
+}
+
+.suspected-token-marker.suspected-token-red .token-name-label {
+    color: #0052ff;
+}
+
+.suspected-token-marker.suspected-token-red:hover {
+    background: rgb(6 60 239 / 50%);
+    transform: scale(1.15);
 }
 
 .confidence-indicator {

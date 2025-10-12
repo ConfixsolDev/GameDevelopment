@@ -431,12 +431,19 @@ class AttackVisualizationManager {
             return null;
         }
         
-        // Create attack line with NATO styling
+        // Create attack line with NATO styling (includes integrated arrowhead)
         // Get attack type from attack order if available
         const attackType = attackLineData.attackOrder?.intent?.natoAttackType || 'attack-main';
         let attackLine;
         if (window.attackSymbolRenderer) {
-            attackLine = window.attackSymbolRenderer.createAttackLine(curvedPath, attackType);
+            // Pass attacker and target info for symbol and color determination
+            attackLine = window.attackSymbolRenderer.createAttackLine(curvedPath, attackType, {
+                attackerName: attacker.name,
+                attackerSymbol: attacker.name,
+                attackerToken: attacker,  // Full attacker token data
+                targetToken: target,      // Full target token data (has placerSide)
+                placerSide: target.placerSide || attacker.placerSide  // Use target's placerSide first
+            });
         } else {
             // Fallback to original implementation
             attackLine = L.polyline(curvedPath, {
@@ -449,36 +456,41 @@ class AttackVisualizationManager {
         }
         
         // Add click event to show attack summary
+        if (attackLine.on) {
         attackLine.on('click', (e) => {
             this.showAttackSummary(attackLineData);
         });
         
-        // Add hover effects
-        attackLine.on('mouseover', (e) => {
-            attackLine.setStyle({
-                weight: 6,
-                opacity: 1
+            // Add hover effects (brighten the current arrow color)
+            const originalColor = attackLine.arrowheadPolygon ? 
+                attackLine.arrowheadPolygon.options.fillColor : '#ff4444';
+            const hoverColor = this.brightenColor(originalColor);
+            
+            attackLine.on('mouseover', (e) => {
+                if (attackLine.setStyle) {
+                    attackLine.setStyle({
+                        weight: 5,
+                        opacity: 1,
+                        color: hoverColor
+                    });
+                }
             });
-        });
-        
-        attackLine.on('mouseout', (e) => {
-            attackLine.setStyle({
-                weight: 4,
-                opacity: 0.9
+            
+            attackLine.on('mouseout', (e) => {
+                if (attackLine.setStyle) {
+                    attackLine.setStyle({
+                        weight: 3,
+                        opacity: 0.9,
+                        color: originalColor
+                    });
+                }
             });
-        });
-        
-        // Add attack arrow marker at the end with NATO styling
-        const arrowMarker = this.createAttackArrow(targetPos, attackerPos, attackType);
+        }
         
         // Add to map
         this.attackLineGroup.addLayer(attackLine);
-        if (arrowMarker) {
-            this.attackLineGroup.addLayer(arrowMarker);
-            attackLineData.arrowMarker = arrowMarker;
-        }
         
-        // Store line reference
+        // Store line reference (arrowhead is now part of attackLine)
         attackLineData.line = attackLine;
         
         // Set up token movement tracking
@@ -510,22 +522,38 @@ class AttackVisualizationManager {
             return window.attackSymbolRenderer.createAttackArrow(targetPos, attackerPos, attackType, options);
         }
         
-        // Fallback to original implementation
+        // Fallback to original implementation with symbol number
         const dx = targetPos.lng - attackerPos.lng;
         const dy = targetPos.lat - attackerPos.lat;
         const angle = Math.atan2(dy, dx) * 180 / Math.PI;
         
+        // Extract symbol number for fallback
+        const attackerName = options.attackerName || options.attackerSymbol || '';
+        const symbolMatch = attackerName.match(/(\d{1,3})$/);
+        const symbolNumber = symbolMatch ? symbolMatch[1] : attackerName.substring(0, 3).toUpperCase();
+        
         const arrowIcon = L.divIcon({
-            html: `<div class="attack-arrow" style="transform: rotate(${angle}deg);">
-                <i class="fas fa-arrow-right"></i>
+            html: `<div class="attack-arrow-fallback" style="transform: rotate(${angle}deg);">
+                <svg width="60" height="50" viewBox="0 0 60 50">
+                    <path d="M 5,25 L 45,5 L 45,18 L 55,18 L 55,32 L 45,32 L 45,45 Z" 
+                          fill="#ff4444" stroke="#000" stroke-width="2"/>
+                    <text x="25" y="30" text-anchor="middle" dominant-baseline="middle" 
+                          fill="#FFF" font-size="14" font-weight="bold">${symbolNumber}</text>
+                </svg>
             </div>`,
             className: 'attack-arrow-marker',
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
+            iconSize: [60, 50],
+            iconAnchor: [5, 25]  // Anchor at left side
         });
         
-        const arrowPos = this.calculateArrowPosition(targetPos, attackerPos);
-        const arrowMarker = L.marker(arrowPos, { icon: arrowIcon });
+        // Position arrowhead near the ATTACKER (at the start)
+        const ratio = 0.05;
+        const arrowheadPos = L.latLng(
+            attackerPos.lat + dy * ratio,
+            attackerPos.lng + dx * ratio
+        );
+        
+        const arrowMarker = L.marker(arrowheadPos, { icon: arrowIcon });
         
         return arrowMarker;
     }
@@ -658,15 +686,57 @@ class AttackVisualizationManager {
                     // Create new curved path
                     const newCurvedPath = this.createCurvedPath(newAttackerPos, newTargetPos);
                     
-                    // Update the line
-                    attackLineData.line.setLatLngs(newCurvedPath);
+                    // Since arrowhead is integrated, we need to recreate the entire attack line
+                    // Remove old line
+                    this.attackLineGroup.removeLayer(attackLineData.line);
                     
-                    // Update arrow position
-                    if (attackLineData.arrowMarker) {
-                        attackLineData.arrowMarker.setLatLng(newTargetPos);
+                    // Create new line with integrated arrowhead
+                    const attackType = attackLineData.attackOrder?.intent?.natoAttackType || 'attack-main';
+                    const newAttackLine = window.attackSymbolRenderer.createAttackLine(newCurvedPath, attackType, {
+                        attackerName: attackLineData.attacker.name,
+                        attackerSymbol: attackLineData.attacker.name,
+                        attackerToken: attackLineData.attacker,
+                        targetToken: attackLineData.target,
+                        placerSide: attackLineData.target.placerSide || attackLineData.attacker.placerSide
+                    });
+                    
+                    // Add event handlers to new line
+                    if (newAttackLine.on) {
+                        newAttackLine.on('click', (e) => {
+                            this.showAttackSummary(attackLineData);
+                        });
+                        
+                        // Add hover effects with proper color
+                        const originalColor = newAttackLine.arrowheadPolygon ? 
+                            newAttackLine.arrowheadPolygon.options.fillColor : '#ff4444';
+                        const hoverColor = this.brightenColor(originalColor);
+                        
+                        newAttackLine.on('mouseover', (e) => {
+                            if (newAttackLine.setStyle) {
+                                newAttackLine.setStyle({
+                                    weight: 5,
+                                    opacity: 1,
+                                    color: hoverColor
+                                });
+                            }
+                        });
+                        
+                        newAttackLine.on('mouseout', (e) => {
+                            if (newAttackLine.setStyle) {
+                                newAttackLine.setStyle({
+                                    weight: 3,
+                                    opacity: 0.9,
+                                    color: originalColor
+                                });
+                            }
+                        });
                     }
                     
-                    // Update stored positions
+                    // Add new line to map
+                    this.attackLineGroup.addLayer(newAttackLine);
+                    
+                    // Update stored references
+                    attackLineData.line = newAttackLine;
                     attackLineData.attackerPos = newAttackerPos;
                     attackLineData.targetPos = newTargetPos;
                     
@@ -779,12 +849,10 @@ class AttackVisualizationManager {
         // Remove from database first
         await this.deleteAttackOrderFromDatabase(attackId);
         
-        // Remove from map
-        this.attackLineGroup.eachLayer((layer) => {
-            if (layer === attackLineData.line || layer === attackLineData.arrowMarker) {
-                this.attackLineGroup.removeLayer(layer);
-            }
-        });
+        // Remove from map (arrowhead is part of the line now)
+        if (attackLineData.line) {
+            this.attackLineGroup.removeLayer(attackLineData.line);
+        }
         
         // Remove from storage
         this.attackLines.delete(attackId);
@@ -895,6 +963,32 @@ class AttackVisualizationManager {
         
         console.log(`🎯 Found ${tokenAttacks.length} attacks for token:`, tokenId);
         return tokenAttacks;
+    }
+
+    /**
+     * Brighten a hex color for hover effect
+     * @param {string} hexColor - Hex color code (e.g., '#ff4444')
+     * @returns {string} Brightened hex color
+     */
+    brightenColor(hexColor) {
+        // Remove # if present
+        let color = hexColor.replace('#', '');
+        
+        // Parse RGB
+        let r = parseInt(color.substr(0, 2), 16);
+        let g = parseInt(color.substr(2, 2), 16);
+        let b = parseInt(color.substr(4, 2), 16);
+        
+        // Brighten by adding 40 to each component (max 255)
+        r = Math.min(255, r + 40);
+        g = Math.min(255, g + 40);
+        b = Math.min(255, b + 40);
+        
+        // Convert back to hex
+        return '#' + 
+            r.toString(16).padStart(2, '0') + 
+            g.toString(16).padStart(2, '0') + 
+            b.toString(16).padStart(2, '0');
     }
 }
 

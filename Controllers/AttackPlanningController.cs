@@ -1,8 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
-using TechWebSol.Models.AttackPlanning;
-using TechWebSol.Data;
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using TechWebSol.Data;
+using TechWebSol.Models;
+using TechWebSol.Models.AttackPlanning;
+using TechWebSol.Services;
+using TechWebSol.Services.TokenManagement;
+using TechWebSol.ViewModels;
 
 namespace TechWebSol.Controllers
 {
@@ -13,9 +17,14 @@ namespace TechWebSol.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<AttackPlanningController> _logger;
+        private readonly IUserSessionService _userSessionService;
+        private readonly ApplicationUserVM user;
 
-        public AttackPlanningController(ApplicationDbContext context, ILogger<AttackPlanningController> logger)
+        public AttackPlanningController(ApplicationDbContext context, ILogger<AttackPlanningController> logger,
+            IUserSessionService userSessionService
+            )
         {
+            user = userSessionService.GetCurrentUser();
             _context = context;
             _logger = logger;
         }
@@ -166,8 +175,8 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var attackOrders = await _context.EnhancedAttackOrders
-                    .Where(o => o.AttackerTokenId != Guid.Empty && o.TargetTokenId != Guid.Empty)
+                var attackorderlist =  _context.EnhancedAttackOrders
+                    .Where(o => o.AttackerTokenId != Guid.Empty && o.TargetTokenId != Guid.Empty )
                     .Select(o => new
                     {
                         Id = o.Id,
@@ -181,10 +190,16 @@ namespace TechWebSol.Controllers
                         LogisticsJson = o.LogisticsJson,
                         ROEJson = o.ROEJson,
                         CreatedDate = o.CreatedDate,
-                        UpdatedDate = o.UpdatedDate
+                        UpdatedDate = o.UpdatedDate,
+                        TeamId = o.TeamId
                     })
-                    .ToListAsync();
+                    .AsQueryable();
 
+                if (user.TeamId != Guid.Empty)
+                {
+                    attackorderlist = attackorderlist.Where(x => x.TeamId == user.TeamId).AsQueryable();
+                }
+                var attackOrders = await attackorderlist.ToListAsync();
                 return Json(new { success = true, attackOrders });
             }
             catch (Exception ex)

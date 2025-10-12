@@ -352,11 +352,124 @@
     }
 }
 
+/* NATO Arrowhead Marker - Double Arrow with Symbol Number */
+.nato-attack-arrowhead-marker {
+    background: transparent !important;
+    border: none !important;
+    pointer-events: none;
+}
+
+.nato-attack-arrowhead {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.6));
+    transition: all 0.3s ease;
+}
+
+.nato-attack-arrowhead:hover {
+    filter: drop-shadow(3px 3px 6px rgba(0, 0, 0, 0.8));
+    transform: scale(1.1) !important;
+}
+
+.nato-attack-arrowhead svg {
+    overflow: visible;
+}
+
+.nato-attack-arrowhead path {
+    transition: all 0.3s ease;
+}
+
+.nato-attack-arrowhead:hover path {
+    stroke-width: 3;
+}
+
+.nato-attack-arrowhead text {
+    font-family: 'Arial', 'Helvetica', sans-serif;
+    font-weight: bold;
+    text-rendering: geometricPrecision;
+    pointer-events: none;
+}
+
+/* Attack Arrow Fallback Style */
+.attack-arrow-fallback {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.6));
+}
+
+.attack-arrow-fallback svg {
+    overflow: visible;
+}
+
+/* Animation for arrowheads */
+.nato-attack-arrowhead-marker.animated {
+    animation: arrow-pulse 2s infinite;
+}
+
+@keyframes arrow-pulse {
+    0% { 
+        opacity: 0.9;
+        transform: scale(1);
+    }
+    50% { 
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    100% { 
+        opacity: 0.9;
+        transform: scale(1);
+    }
+}
+
+/* Make arrowheads more visible on hover */
+.leaflet-marker-icon.nato-attack-arrowhead-marker:hover {
+    z-index: 10000 !important;
+}
+
+/* Integrated Arrowhead Polygon */
+.nato-attack-arrowhead-polygon {
+    transition: all 0.3s ease;
+}
+
+.nato-attack-arrowhead-polygon:hover {
+    stroke-width: 3;
+    fill-opacity: 1 !important;
+}
+
+/* Attack Label (Symbol Number in Arrowhead) */
+.nato-attack-label-marker {
+    background: transparent !important;
+    border: none !important;
+    pointer-events: none;
+}
+
+.nato-attack-label {
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: bold;
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+    text-shadow: 
+        -1px -1px 0 #000,  
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 3px #000;
+    line-height: 20px;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
     .nato-attack-symbol,
     .nato-attack-line,
-    .nato-direction-indicator {
+    .nato-direction-indicator,
+    .nato-attack-arrowhead {
         animation: none !important;
         transition: none !important;
     }
