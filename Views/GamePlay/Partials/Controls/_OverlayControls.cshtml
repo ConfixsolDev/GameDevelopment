@@ -35,43 +35,61 @@
         <div class="defense-planning-section">
             <h6 class="section-subtitle">Defense Planning</h6>
             <div class="control-row">
-                <button class="overlay-btn defense-btn" id="btnKillZonePrimary" onclick="startKillZoneDrawing('primary')">
+                <button class="overlay-btn defense-btn" id="btnKillZonePrimary" onclick="startKillZoneDrawing('primary')" title="Primary Kill Zone">
                     <i class="fas fa-crosshairs"></i>
-                    <span>Primary Kill Zone</span>
+                    <span>Primary Kill</span>
                 </button>
-                <button class="overlay-btn defense-btn" id="btnKillZoneSecondary" onclick="startKillZoneDrawing('secondary')">
+                <button class="overlay-btn defense-btn" id="btnKillZoneSecondary" onclick="startKillZoneDrawing('secondary')" title="Secondary Kill Zone">
                     <i class="fas fa-bullseye"></i>
-                    <span>Secondary Kill Zone</span>
+                    <span>Secondary Kill</span>
+                </button>
+                <button class="overlay-btn defense-btn" id="btnKillZoneEngagement" onclick="startKillZoneDrawing('engagement')" title="Engagement Area">
+                    <i class="fas fa-target"></i>
+                    <span>Engagement</span>
                 </button>
             </div>
             <div class="control-row">
-                <button class="overlay-btn defense-btn" id="btnKillZoneEngagement" onclick="startKillZoneDrawing('engagement')">
-                    <i class="fas fa-target"></i>
-                    <span>Engagement Area</span>
-                </button>
-                <button class="overlay-btn defense-btn" id="btnMinefield" onclick="startMinefieldDrawing('mixed')">
+                <button class="overlay-btn defense-btn" id="btnMinefield" onclick="startMinefieldDrawing('mixed')" title="Minefield">
                     <i class="fas fa-bomb"></i>
                     <span>Minefield</span>
                 </button>
-            </div>
-            <div class="control-row">
-                <button class="overlay-btn defense-btn" id="btnObstacle" onclick="startObstacleDrawing('wire')">
+                <button class="overlay-btn defense-btn" id="btnObstacle" onclick="startObstacleDrawing('wire')" title="Obstacle">
                     <i class="fas fa-shield-alt"></i>
                     <span>Obstacle</span>
                 </button>
-                <button class="overlay-btn defense-btn" id="btnDefensivePosition" onclick="placeDefensivePosition('foxhole')">
+                <button class="overlay-btn defense-btn" id="btnDefensivePosition" onclick="placeDefensivePosition('foxhole')" title="Defensive Position">
                     <i class="fas fa-circle"></i>
-                    <span>Defensive Position</span>
+                    <span>Position</span>
                 </button>
             </div>
             <div class="control-row">
-                <button class="overlay-btn defense-btn" id="btnWithdrawalRoute" onclick="startWithdrawalRouteDrawing('primary')">
+                <button class="overlay-btn defense-btn" id="btnWithdrawalRoute" onclick="startWithdrawalRouteDrawing('primary')" title="Withdrawal Route">
                     <i class="fas fa-arrow-left"></i>
-                    <span>Withdrawal Route</span>
+                    <span>Withdrawal</span>
                 </button>
-                <button class="overlay-btn defense-btn" id="btnDefensiveLine" onclick="startDefensiveLineDrawing('feba')">
+                <button class="overlay-btn defense-btn" id="btnDefensiveLine" onclick="startDefensiveLineDrawing('feba')" title="Defensive Line">
                     <i class="fas fa-minus"></i>
-                    <span>Defensive Line</span>
+                    <span>Defense Line</span>
+                </button>
+                <button class="overlay-btn defense-btn" id="btnDefenseZonePrimary" onclick="createDefenseZone('primary')" title="Primary Defense Zone">
+                    <i class="fas fa-shield"></i>
+                    <span>Primary Zone</span>
+                </button>
+            </div>
+            <div class="control-row">
+                <button class="overlay-btn defense-btn" id="btnDefenseZoneSecondary" onclick="createDefenseZone('secondary')" title="Secondary Defense Zone">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Secondary Zone</span>
+                </button>
+                <button class="overlay-btn defense-btn" id="btnDefenseZoneSupport" onclick="createDefenseZone('support')" title="Support Defense Zone">
+                    <i class="fas fa-shield-virus"></i>
+                    <span>Support Zone</span>
+                </button>
+            </div>
+            <div class="control-row">
+                <button class="overlay-btn" id="btnCancelDefenseZoneDrawing" onclick="cancelDefenseZoneDrawing()" style="display: none;">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel Drawing</span>
                 </button>
             </div>
             <div class="control-row">

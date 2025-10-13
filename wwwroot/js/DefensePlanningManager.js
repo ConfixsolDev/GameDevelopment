@@ -20,6 +20,7 @@ class DefensePlanningManager {
         this.positionLayer = L.layerGroup().addTo(this.map);
         this.withdrawalLayer = L.layerGroup().addTo(this.map);
         this.defensiveLineLayer = L.layerGroup().addTo(this.map);
+        this.defenseZoneLayer = L.layerGroup().addTo(this.map); // New defense zone layer
         
         this.renderer = window.defenseSymbolRenderer;
         
@@ -83,6 +84,7 @@ class DefensePlanningManager {
         this.positionLayer.clearLayers();
         this.withdrawalLayer.clearLayers();
         this.defensiveLineLayer.clearLayers();
+        this.defenseZoneLayer.clearLayers();
     }
     
     /**
@@ -112,6 +114,9 @@ class DefensePlanningManager {
                 if (element.markers) {
                     element.markers.forEach(marker => this.minefieldLayer.addLayer(marker));
                 }
+                if (element.centerIcon) {
+                    this.minefieldLayer.addLayer(element.centerIcon);
+                }
             } else if (dbElement.category === 'obstacle') {
                 element = this.renderer.createObstacle(coordinates, dbElement.type);
                 if (element.line) {
@@ -127,6 +132,18 @@ class DefensePlanningManager {
                 if (element.line) {
                     this.defensiveLineLayer.addLayer(element.line);
                 }
+            } else if (dbElement.category === 'defensezone') {
+                // New defense zone implementation
+                element = this.renderer.createDefenseZone(coordinates, dbElement.type, {
+                    tokenId: dbElement.tokenId,
+                    tokenName: dbElement.tokenName || 'Defense Zone'
+                });
+                
+                // Add the entire defense zone group to the layer
+                this.defenseZoneLayer.addLayer(element);
+                
+                // Add click event to the group
+                element.on('click', () => this.showDefenseElementDetails(dbElement.elementId));
             }
             
             // Store element locally
@@ -742,6 +759,68 @@ class DefensePlanningManager {
             }
         });
         console.log(`📥 Imported ${elements.length} defense elements`);
+    }
+    
+    /**
+     * Create a new defense zone
+     * @param {Array} coordinates - Array of [lat, lng] coordinates defining the zone boundary
+     * @param {string} type - Defense zone type ('primary', 'secondary', 'support')
+     * @param {Object} options - Additional options (tokenId, tokenName, etc.)
+     * @returns {Object} Created defense zone element
+     */
+    createDefenseZone(coordinates, type = 'primary', options = {}) {
+        try {
+            console.log(`🛡️ Creating defense zone: ${type} with ${coordinates.length} points`);
+            
+            // Generate unique element ID
+            const elementId = options.elementId || this.generateElementId();
+            
+            // Create defense zone using renderer
+            const defenseZoneGroup = this.renderer.createDefenseZone(coordinates, type, {
+                elementId: elementId,
+                tokenId: options.tokenId,
+                tokenName: options.tokenName || 'Defense Zone'
+            });
+            
+            // Add to appropriate layer
+            this.defenseZoneLayer.addLayer(defenseZoneGroup);
+            
+            // Store element data
+            const defenseElementData = {
+                id: elementId,
+                category: 'defensezone',
+                type: type,
+                coordinates: coordinates,
+                element: defenseZoneGroup,
+                tokenId: options.tokenId,
+                tokenName: options.tokenName || 'Defense Zone',
+                strength: options.strength || 100,
+                effectiveness: options.effectiveness || 1.0,
+                visibility: options.visibility || 'friendly',
+                status: 'active',
+                notes: options.notes || ''
+            };
+            
+            this.defenseElements.set(elementId, defenseElementData);
+            
+            // Add click handler
+            defenseZoneGroup.on('click', () => this.showDefenseElementDetails(elementId));
+            
+            console.log(`✅ Defense zone created: ${elementId}`);
+            
+            return defenseElementData;
+        } catch (error) {
+            console.error('❌ Error creating defense zone:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Generate unique element ID
+     * @returns {string} Unique element ID
+     */
+    generateElementId() {
+        return 'defensezone_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
 }
 

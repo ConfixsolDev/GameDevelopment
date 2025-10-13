@@ -15,6 +15,12 @@ class GamePlayManager {
             'simulation-panel', 'unit-deployment-modal', 'movement-plan-modal',
             'movement-modal', 'battle-modal', 'objective-modal', 'settings-modal'
         ];
+        
+        // Simple notification callback
+        this.notificationCallback = (message, type) => {
+            console.log(`[${type.toUpperCase()}] ${message}`);
+            // You can enhance this to show actual notifications if needed
+        };
     }
 
     /**
@@ -54,6 +60,9 @@ class GamePlayManager {
             
             // Initialize attack visualization manager (lightweight)
             await this.initializeAttackVisualizationManager();
+            
+            // Initialize defense planning manager (lightweight)
+            await this.initializeDefensePlanningManager();
             
             // Setup control handlers (do this early!)
             this.setupControlHandlers();
@@ -407,10 +416,344 @@ class GamePlayManager {
             window.defensePlanningManager = new DefensePlanningManager(this.map);
             
             console.log('✅ Defense planning manager initialized');
+            
+            // Add test function to global scope for easy testing
+            window.createTestDefenseZone = this.createTestDefenseZone.bind(this);
+            
+            // Add defense zone creation functions to global scope
+            window.createDefenseZone = this.startDefenseZoneDrawing.bind(this);
+            
+            console.log('✅ Defense zone functions added to global scope');
         } else {
             console.warn('⚠️ Defense planning manager not available');
         }
     }
+    
+    /**
+     * Create a test defense zone for demonstration
+     */
+    createTestDefenseZone(type = 'primary') {
+        if (!window.defensePlanningManager) {
+            console.error('❌ Defense planning manager not available');
+            return;
+        }
+        
+        if (!this.map) {
+            console.error('❌ Map not available');
+            return;
+        }
+        
+        // Get current map center
+        const center = this.map.getCenter();
+        const zoom = this.map.getZoom();
+        
+        // Calculate zone size based on zoom level
+        const baseSize = 0.01; // Base size in degrees
+        const zoomFactor = Math.pow(0.5, zoom - 10); // Smaller zones at higher zoom
+        const zoneSize = baseSize * zoomFactor;
+        
+        // Create oval coordinates around center
+        const coordinates = [
+            [center.lat + zoneSize, center.lng], // Top
+            [center.lat, center.lng + zoneSize * 1.5], // Right
+            [center.lat - zoneSize, center.lng], // Bottom
+            [center.lat, center.lng - zoneSize * 1.5] // Left
+        ];
+        
+        console.log(`🛡️ Creating test defense zone: ${type} at center:`, center);
+        
+        try {
+            const defenseZone = window.defensePlanningManager.createDefenseZone(coordinates, type, {
+                tokenName: `Test ${type.charAt(0).toUpperCase() + type.slice(1)} Defense Zone`,
+                notes: `Test defense zone created at ${new Date().toLocaleTimeString()}`
+            });
+            
+            console.log('✅ Test defense zone created:', defenseZone);
+            return defenseZone;
+        } catch (error) {
+            console.error('❌ Error creating test defense zone:', error);
+        }
+    }
+    
+    /**
+     * Start defense zone drawing mode
+     */
+    startDefenseZoneDrawing(type = 'primary') {
+        if (!window.defensePlanningManager) {
+            console.error('❌ Defense planning manager not available');
+            alert('Defense planning manager not available. Please refresh the page.');
+            return;
+        }
+        
+        if (!this.map) {
+            console.error('❌ Map not available');
+            return;
+        }
+        
+        console.log(`🛡️ Starting defense zone drawing mode: ${type}`);
+        
+        // Set drawing mode
+        this.defenseZoneDrawingMode = type;
+        this.defenseZoneDrawingPoints = [];
+        this.tempDefenseZoneLayer = L.layerGroup().addTo(this.map);
+        
+        // Change cursor to indicate drawing mode
+        this.map.getContainer().style.cursor = 'crosshair';
+        
+        // Add click handler for map
+        this.map.off('click', this.defenseZoneClickHandler);
+        this.defenseZoneClickHandler = (e) => this.handleDefenseZoneClick(e);
+        this.map.on('click', this.defenseZoneClickHandler);
+        
+        // Show instruction
+        this.showDefenseZoneInstructions(type);
+        
+        // Update button states
+        this.updateDefenseZoneButtonStates(type, true);
+    }
+    
+    /**
+     * Handle map click during defense zone drawing
+     */
+    handleDefenseZoneClick(e) {
+        if (!this.defenseZoneDrawingMode) return;
+        
+        const point = [e.latlng.lat, e.latlng.lng];
+        this.defenseZoneDrawingPoints.push(point);
+        
+        // Add visual feedback for clicked point
+        const marker = L.circleMarker(e.latlng, {
+            radius: 4,
+            color: '#0066cc',
+            fillColor: '#0066cc',
+            fillOpacity: 0.8,
+            weight: 2
+        }).addTo(this.tempDefenseZoneLayer);
+        
+        console.log(`🛡️ Defense zone point ${this.defenseZoneDrawingPoints.length}:`, point);
+        
+        // If we have enough points, create the defense zone
+        if (this.defenseZoneDrawingPoints.length >= 3) {
+            this.createDefenseZoneFromPoints();
+        } else {
+            // Show progress
+            this.showDefenseZoneProgress();
+        }
+    }
+    
+    /**
+     * Create defense zone from collected points
+     */
+    createDefenseZoneFromPoints() {
+        if (this.defenseZoneDrawingPoints.length < 3) {
+            console.error('❌ Not enough points for defense zone');
+            return;
+        }
+        
+        try {
+            const defenseZone = window.defensePlanningManager.createDefenseZone(
+                this.defenseZoneDrawingPoints, 
+                this.defenseZoneDrawingMode, 
+                {
+                    tokenName: `${this.defenseZoneDrawingMode.charAt(0).toUpperCase() + this.defenseZoneDrawingMode.slice(1)} Defense Zone`,
+                    notes: `Defense zone created at ${new Date().toLocaleTimeString()}`
+                }
+            );
+            
+            console.log('✅ Defense zone created:', defenseZone);
+            
+            // Clean up drawing mode
+            this.finishDefenseZoneDrawing();
+            
+            // Show success notification
+            if (this.notificationCallback) {
+                this.notificationCallback(`Defense zone created: ${this.defenseZoneDrawingMode}`, 'success');
+            }
+            
+            return defenseZone;
+        } catch (error) {
+            console.error('❌ Error creating defense zone:', error);
+            if (this.notificationCallback) {
+                this.notificationCallback('Error creating defense zone', 'error');
+            }
+        }
+    }
+    
+    /**
+     * Finish defense zone drawing mode
+     */
+    finishDefenseZoneDrawing() {
+        // Remove click handler
+        this.map.off('click', this.defenseZoneClickHandler);
+        
+        // Clear temporary layer
+        if (this.tempDefenseZoneLayer) {
+            this.map.removeLayer(this.tempDefenseZoneLayer);
+            this.tempDefenseZoneLayer = null;
+        }
+        
+        // Reset cursor
+        this.map.getContainer().style.cursor = '';
+        
+        // Clear drawing state
+        this.defenseZoneDrawingMode = null;
+        this.defenseZoneDrawingPoints = [];
+        
+        // Update button states
+        this.updateDefenseZoneButtonStates(null, false);
+        
+        // Hide instructions
+        this.hideDefenseZoneInstructions();
+        
+        console.log('🛡️ Defense zone drawing mode finished');
+    }
+    
+    /**
+     * Show defense zone drawing instructions
+     */
+    showDefenseZoneInstructions(type) {
+        const instructionDiv = document.createElement('div');
+        instructionDiv.id = 'defenseZoneInstructions';
+        instructionDiv.innerHTML = `
+            <div style="
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 102, 204, 0.95);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 6px;
+                border: 2px solid rgba(255, 255, 255, 0.8);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+                font-family: Arial, sans-serif;
+                font-size: 14px;
+                font-weight: bold;
+                z-index: 10000;
+                text-align: center;
+            ">
+                🛡️ Click on the map to create a ${type} defense zone<br>
+                <small style="opacity: 0.9;">Click at least 3 points to define the zone boundary</small>
+            </div>
+        `;
+        document.body.appendChild(instructionDiv);
+    }
+    
+    /**
+     * Hide defense zone instructions
+     */
+    hideDefenseZoneInstructions() {
+        const instructions = document.getElementById('defenseZoneInstructions');
+        if (instructions) {
+            instructions.remove();
+        }
+    }
+    
+    /**
+     * Show defense zone drawing progress
+     */
+    showDefenseZoneProgress() {
+        const instructions = document.getElementById('defenseZoneInstructions');
+        if (instructions) {
+            const pointsNeeded = Math.max(0, 3 - this.defenseZoneDrawingPoints.length);
+            instructions.querySelector('small').textContent = 
+                `Click ${pointsNeeded} more point${pointsNeeded !== 1 ? 's' : ''} to complete the zone`;
+        }
+    }
+    
+    /**
+     * Update defense zone button states
+     */
+    updateDefenseZoneButtonStates(activeType, isDrawing) {
+        const buttons = [
+            'btnDefenseZonePrimary',
+            'btnDefenseZoneSecondary', 
+            'btnDefenseZoneSupport'
+        ];
+        
+        // Update main buttons
+        buttons.forEach(buttonId => {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                if (isDrawing) {
+                    const buttonType = buttonId.replace('btnDefenseZone', '').toLowerCase();
+                    if (buttonType === activeType) {
+                        button.classList.add('active');
+                        button.disabled = true;
+                    } else {
+                        button.disabled = true;
+                    }
+                } else {
+                    button.classList.remove('active');
+                    button.disabled = false;
+                }
+            }
+        });
+        
+        // Show/hide cancel button
+        const cancelButton = document.getElementById('btnCancelDefenseZoneDrawing');
+        if (cancelButton) {
+            cancelButton.style.display = isDrawing ? 'block' : 'none';
+        }
+    }
+    
+    /**
+     * Create a defense zone (called by UI buttons) - DEPRECATED, use startDefenseZoneDrawing instead
+     */
+    createDefenseZone(type = 'primary') {
+        if (!window.defensePlanningManager) {
+            console.error('❌ Defense planning manager not available');
+            alert('Defense planning manager not available. Please refresh the page.');
+            return;
+        }
+        
+        if (!this.map) {
+            console.error('❌ Map not available');
+            return;
+        }
+        
+        // Get current map center
+        const center = this.map.getCenter();
+        const zoom = this.map.getZoom();
+        
+        // Calculate zone size based on zoom level
+        const baseSize = 0.008; // Base size in degrees
+        const zoomFactor = Math.pow(0.6, zoom - 12); // Smaller zones at higher zoom
+        const zoneSize = baseSize * zoomFactor;
+        
+        // Create oval coordinates around center
+        const coordinates = [
+            [center.lat + zoneSize, center.lng], // Top
+            [center.lat, center.lng + zoneSize * 1.3], // Right
+            [center.lat - zoneSize, center.lng], // Bottom
+            [center.lat, center.lng - zoneSize * 1.3] // Left
+        ];
+        
+        console.log(`🛡️ Creating defense zone: ${type} at center:`, center);
+        
+        try {
+            const defenseZone = window.defensePlanningManager.createDefenseZone(coordinates, type, {
+                tokenName: `${type.charAt(0).toUpperCase() + type.slice(1)} Defense Zone`,
+                notes: `Defense zone created at ${new Date().toLocaleTimeString()}`
+            });
+            
+            console.log('✅ Defense zone created:', defenseZone);
+            
+            // Show success notification
+            if (this.notificationCallback) {
+                this.notificationCallback(`Defense zone created: ${type}`, 'success');
+            }
+            
+            return defenseZone;
+        } catch (error) {
+            console.error('❌ Error creating defense zone:', error);
+            if (this.notificationCallback) {
+                this.notificationCallback('Error creating defense zone', 'error');
+            }
+        }
+    }
+    
+    // Note: clearAllDefenseZones method removed - use clearAllDefenseElements() instead
     
     /**
      * Load attack orders after tokens are placed
@@ -1534,6 +1877,7 @@ function setupBoundedMapEvents(boundsObj, maxZoom) {
 
 // Create global instance
 const gamePlayManager = new GamePlayManager();
+window.gamePlayManager = gamePlayManager; // Make it globally available
 
 // Auto-initialize when DOM is ready
 $(document).ready(function() {
@@ -1625,6 +1969,26 @@ async function loadUnitStatusPanel() {
 
 // Legacy function compatibility
 window.planMovement = window.openMovementPlanning;
+
+// Defense Zone Functions - Global scope fallback
+window.createDefenseZone = function(type = 'primary') {
+    if (window.gamePlayManager && window.gamePlayManager.startDefenseZoneDrawing) {
+        return window.gamePlayManager.startDefenseZoneDrawing(type);
+    } else {
+        console.error('❌ GamePlayManager not available');
+        alert('GamePlay system not available. Please refresh the page.');
+    }
+};
+
+// Note: clearAllDefenseZones removed - use clearAllDefenseElements() instead
+
+window.cancelDefenseZoneDrawing = function() {
+    if (window.gamePlayManager && window.gamePlayManager.finishDefenseZoneDrawing) {
+        window.gamePlayManager.finishDefenseZoneDrawing();
+    }
+};
+
+console.log('✅ Defense zone functions loaded globally');
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {

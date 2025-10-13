@@ -262,10 +262,7 @@ class AttackSymbolRenderer {
                 lineGroup.arrowheadPolygon = arrowhead.polygon;
             }
             
-            if (arrowhead.label) {
-                lineGroup.addLayer(arrowhead.label);
-                lineGroup.arrowheadLabel = arrowhead.label;
-            }
+            // Don't add label here - we'll add it to the main line instead
         }
         
         // 2. Create parallel lines extending FROM arrowhead TO target
@@ -281,6 +278,41 @@ class AttackSymbolRenderer {
             
             lineGroup.line1 = line1;
             lineGroup.line2 = line2;
+            
+            // 3. Add attack number label ON the main attack line (midpoint of full path)
+            const fullPathMidpoint = Math.floor(path.length / 2);
+            const labelPos = path[fullPathMidpoint];
+            
+            // Use sequential attack number if provided, otherwise fallback to unit symbol
+            let labelText = '';
+            if (options.attackNumber) {
+                labelText = options.attackNumber.toString();
+                console.log('🎯 Creating attack label with sequential number:', labelText);
+            } else {
+                const attackerSymbol = options.attackerSymbol || options.attackerName || '';
+                labelText = this.extractSymbolNumber(attackerSymbol);
+                console.log('🎯 Creating attack label with unit symbol:', labelText);
+            }
+            
+            console.log('🎯 Label position:', labelPos);
+            console.log('🎯 Full path length:', path.length, 'Midpoint index:', fullPathMidpoint);
+            
+            const labelIcon = L.divIcon({
+                html: `<div class="nato-attack-label">${labelText}</div>`,
+                className: 'nato-attack-label-marker',
+                iconSize: [30, 20],
+                iconAnchor: [15, 10]
+            });
+            
+            const labelMarker = L.marker(labelPos, {
+                icon: labelIcon,
+                zIndexOffset: 2000
+            });
+            
+            lineGroup.addLayer(labelMarker);
+            lineGroup.arrowheadLabel = labelMarker;
+            
+            console.log('✅ Attack label added to line group:', labelText, 'at position:', labelPos);
         }
         
         // Make the group respond to events
@@ -371,31 +403,9 @@ class AttackSymbolRenderer {
             className: 'nato-attack-arrowhead-polygon'
         });
         
-        // Add symbol label in the center of arrowhead
-        const attackerSymbol = options.attackerSymbol || options.attackerName || '';
-        const symbolNumber = this.extractSymbolNumber(attackerSymbol);
-        
-        // Calculate center position for label
-        const labelPos = L.latLng(
-            (startPoint.lat + endPoint.lat) / 2,
-            (startPoint.lng + endPoint.lng) / 2
-        );
-        
-        const labelIcon = L.divIcon({
-            html: `<div class="nato-attack-label">${symbolNumber}</div>`,
-            className: 'nato-attack-label-marker',
-            iconSize: [30, 20],
-            iconAnchor: [15, 10]
-        });
-        
-        const labelMarker = L.marker(labelPos, {
-            icon: labelIcon,
-            zIndexOffset: 2000
-        });
-        
         return {
             polygon: arrowheadPolygon,
-            label: labelMarker
+            label: null
         };
     }
 

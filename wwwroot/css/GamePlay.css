@@ -142,6 +142,219 @@
     box-shadow: 0 4px 8px rgba(255, 68, 68, 0.3);
 }
 
+/* ========================================
+   NATO ATTACK ARROW STYLES (Enhanced)
+   ======================================== */
+
+/* NATO Attack Arrowhead Polygon */
+.nato-attack-arrowhead-polygon {
+    transition: all 0.2s ease-in-out;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+/* Gradient variant for more tactical appearance */
+.nato-attack-arrowhead-polygon-gradient {
+    /* Gradient will be applied via inline style based on team color */
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+}
+
+/* NATO Attack Label (Sequential Numbers) */
+.nato-attack-label-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+.nato-attack-label {
+    background: rgba(0, 0, 0, 0.85);
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+    font-family: 'Arial', 'Helvetica', sans-serif;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    text-align: center;
+    line-height: 1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+    min-width: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.5px;
+}
+
+/* Attack label hover effect */
+.nato-attack-label-marker:hover .nato-attack-label {
+    background: rgba(0, 0, 0, 0.95);
+    border-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.8);
+    transform: scale(1.1);
+    transition: all 0.2s ease-in-out;
+}
+
+/* NATO Attack Line Styles */
+.nato-attack-line {
+    transition: all 0.2s ease-in-out;
+}
+
+.nato-attack-line:hover {
+    cursor: pointer;
+}
+
+/* Arrow polygon hover state */
+.leaflet-interactive.nato-attack-arrowhead-polygon:hover {
+    fill-opacity: 1 !important;
+    stroke-width: 3px !important;
+    filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.6));
+    cursor: pointer;
+}
+
+/* Arrow polygon active/click state */
+.leaflet-interactive.nato-attack-arrowhead-polygon:active {
+    fill-opacity: 0.95 !important;
+    stroke-width: 2px !important;
+}
+
+/* ========================================
+   DEFENSE ZONE STYLES
+   ======================================== */
+
+/* Defense Zone Shape */
+.defense-zone-shape {
+    transition: all 0.2s ease-in-out;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.defense-zone-shape:hover {
+    fill-opacity: 0.4 !important;
+    stroke-width: 4px !important;
+    filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.5));
+    cursor: pointer;
+}
+
+/* Defense Zone Parallel Lines */
+.defense-zone-parallel-line {
+    transition: all 0.2s ease-in-out;
+}
+
+.defense-zone-parallel-line:hover {
+    stroke-width: 3px !important;
+    opacity: 1 !important;
+}
+
+/* Defense Zone Token */
+.defense-zone-token-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+.defense-zone-token {
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.defense-zone-token:hover {
+    transform: scale(1.1);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.defense-zone-token:active {
+    transform: scale(0.95);
+}
+
+/* Defense Zone Group Hover Effect */
+.leaflet-interactive.defense-zone-shape:hover {
+    fill-opacity: 0.4 !important;
+    stroke-width: 4px !important;
+}
+
+/* Defense Zone Info Panel (for future use) */
+.defense-zone-info-panel {
+    background: rgba(0, 102, 204, 0.95);
+    color: white;
+    padding: 12px;
+    border-radius: 6px;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    font-family: 'Arial', 'Helvetica', sans-serif;
+    font-size: 14px;
+    max-width: 250px;
+}
+
+.defense-zone-info-panel h4 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.defense-zone-info-panel p {
+    margin: 4px 0;
+    font-size: 12px;
+}
+
+/* ========================================
+   MINEFIELD ICON STYLES
+   ======================================== */
+
+/* Minefield Icon Marker Container */
+.minefield-icon-marker-container {
+    background: transparent !important;
+    border: none !important;
+}
+
+/* Minefield Icon Marker */
+.minefield-icon-marker {
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.minefield-icon-marker:hover {
+    transform: scale(1.2);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.7) !important;
+    border-width: 3px !important;
+}
+
+.minefield-icon-marker:active {
+    transform: scale(0.95);
+}
+
+/* Different minefield types */
+.minefield-icon-marker[data-type="antipersonnel"] {
+    border-color: #cc0000 !important;
+}
+
+.minefield-icon-marker[data-type="antitank"] {
+    border-color: #990000 !important;
+}
+
+.minefield-icon-marker[data-type="mixed"] {
+    border-color: #660000 !important;
+}
+
+/* Minefield Info Panel */
+.minefield-info-panel {
+    background: rgba(204, 0, 0, 0.95);
+    color: white;
+    padding: 12px;
+    border-radius: 6px;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    font-family: 'Arial', 'Helvetica', sans-serif;
+    font-size: 14px;
+    max-width: 250px;
+}
+
+.minefield-info-panel h4 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.minefield-info-panel p {
+    margin: 4px 0;
+    font-size: 12px;
+}
+
 /* Attack panel modal styling */
 #attackPanelModal .gameplay-modal-content {
     background: var(--gameplay-darker);
