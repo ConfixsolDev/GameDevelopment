@@ -1474,56 +1474,11 @@ namespace TechWebSol.Controllers
                     await _context.SaveChangesAsync();
                 }
 
-                // Get or create unit deployment
-                var deployment = await _context.UnitDeployments
-                    .FirstOrDefaultAsync(d => d.TokenId == request.TokenId && d.ScenarioId == scenario.Id);
-
-                if (deployment == null)
-                {
-                    deployment = new UnitDeployment
-                    {
-                        Id = Guid.NewGuid(),
-                        ScenarioId = scenario.Id,
-                        TokenId = request.TokenId,
-                        UnitType = token.TokenGroup?.Name ?? "Unit",
-                        UnitName = token.Name,
-                        ForceType = "Blue", // Default, should be determined by team
-                        Position = $"{{\"lat\": {request.Latitude}, \"lng\": {request.Longitude}}}",
-                        TeamId = user.TeamId,
-                        CreatedBy = user.FullName,
-                        IsActive = true
-                    };
-                    _context.UnitDeployments.Add(deployment);
-                    await _context.SaveChangesAsync();
-                }
-
-                // Create movement order
-                var movementOrder = new MovementOrder
-                {
-                    Id = Guid.NewGuid(),
-                    UnitDeploymentId = deployment.Id,
-                    StartPosition = deployment.Position, // Current position
-                    EndPosition = $"{{\"lat\": {request.Latitude}, \"lng\": {request.Longitude}}}",
-                    MovementType = request.MovementMode ?? "Normal",
-                    Status = "Planned",
-                    Speed = request.MovementSpeed ?? 20,
-                    Distance = CalculateDistance(deployment.Position, request.Latitude, request.Longitude),
-                    EstimatedArrival = request.PlannedETA.HasValue ?
-                        DateTime.UtcNow.AddHours((double)request.PlannedETA.Value) : null,
-                    StartTime = request.StartTurn.HasValue ?
-                        DateTime.UtcNow.AddHours(request.StartTurn.Value * 24 + (double)(request.StartOffset ?? 0)) : null,
-                    EngagementRule = request.EngagementRule ?? "Avoid Strongpoints",
-                    Notes = request.Notes,
-                    TeamId = user.TeamId,
-                    CreatedBy = user.FullName,
-                    IsActive = true
-                };
-
-                _context.MovementOrders.Add(movementOrder);
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation("Movement order saved for token {TokenId} with ETA {ETA}",
-                    request.TokenId, request.PlannedETA);
+                // UnitDeployment removed - using Brigade system now
+                // Movement orders no longer require UnitDeployment
+                // Skip movement order creation - deprecated system
+                _logger.LogInformation("Movement order skipped for token {TokenId} - UnitDeployment system removed",
+                    request.TokenId);
             }
             catch (Exception ex)
             {

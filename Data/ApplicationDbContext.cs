@@ -86,7 +86,7 @@ namespace TechWebSol.Data
 
         // War Game Simulation DbSets
         public DbSet<WarGameScenario> WarGameScenarios { get; set; }
-        public DbSet<UnitDeployment> UnitDeployments { get; set; }
+        //public DbSet<UnitDeployment> UnitDeployments { get; set; }
         public DbSet<MovementOrder> MovementOrders { get; set; }
         public DbSet<Battle> Battles { get; set; }
         public DbSet<BattleParticipant> BattleParticipants { get; set; }

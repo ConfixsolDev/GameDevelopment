@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 using TechWebSol.Data;
 using TechWebSol.Models;
-using System.Text.Json;
 
 namespace TechWebSol.Services
 {
@@ -16,6 +16,8 @@ namespace TechWebSol.Services
         private readonly IDetectionService _detectionService;
         private readonly CombatService _combatService;
         private readonly IMovementService _movementService;
+        private readonly IWeaponEffectivenessService _weaponEffectiveness;
+        private readonly IUnitCombatCalculatorService _unitCombatCalculator;
         private readonly ILogger<ComprehensiveCombatSimulationService> _logger;
 
         public ComprehensiveCombatSimulationService(
@@ -23,17 +25,88 @@ namespace TechWebSol.Services
             IDetectionService detectionService,
             CombatService combatService,
             IMovementService movementService,
+            IWeaponEffectivenessService weaponEffectiveness,
+            IUnitCombatCalculatorService unitCombatCalculator,
             ILogger<ComprehensiveCombatSimulationService> logger)
         {
             _context = context;
             _detectionService = detectionService;
             _combatService = combatService;
             _movementService = movementService;
+            _weaponEffectiveness = weaponEffectiveness;
+            _unitCombatCalculator = unitCombatCalculator;
             _logger = logger;
         }
 
         /// <summary>
-        /// Comprehensive attack and defense simulation
+        /// Check if victory conditions are met
+        /// </summary>
+        private (bool IsDecisive, string Outcome, string Reason) CheckVictoryConditions(
+            int attackerCasualties, 
+            int defenderCasualties, 
+            int totalTimeMinutes,
+            int combatRound)
+        {
+            // Defender Routed - Attacker Victory
+            if (defenderCasualties >= 40)
+            {
+                return (true, "Attacker Victory", $"Defender routed ({defenderCasualties}% casualties)");
+            }
+
+            // Defender Combat Ineffective - Attacker Victory
+            if (defenderCasualties >= 30)
+            {
+                return (true, "Attacker Victory", $"Defender combat ineffective ({defenderCasualties}% casualties)");
+            }
+
+            // Attacker Repelled - Defender Victory
+            if (attackerCasualties >= 35)
+            {
+                return (true, "Defender Victory", $"Attacker forced to withdraw ({attackerCasualties}% casualties)");
+            }
+
+            // Attacker Stalled - Defender Victory
+            if (attackerCasualties >= 25 && combatRound > 2)
+            {
+                return (true, "Defender Victory", $"Attacker unable to achieve breakthrough ({attackerCasualties}% casualties after {combatRound} rounds)");
+            }
+
+            // Time Limit Exceeded (24 hours) - Defender Victory
+            if (totalTimeMinutes >= 1440) // 24 hours
+            {
+                if (defenderCasualties < attackerCasualties)
+                {
+                    return (true, "Defender Victory", $"Time limit exceeded - Defender held position (Att: {attackerCasualties}%, Def: {defenderCasualties}%)");
+                }
+                else
+                {
+                    return (true, "Stalemate", $"Time limit exceeded - Inconclusive (Att: {attackerCasualties}%, Def: {defenderCasualties}%)");
+                }
+            }
+
+            // Maximum Combat Rounds (10) - Extended engagement
+            if (combatRound >= 10)
+            {
+                if (attackerCasualties > defenderCasualties + 5)
+                {
+                    return (true, "Defender Victory", $"Attacker exhausted after {combatRound} rounds (Att: {attackerCasualties}%, Def: {defenderCasualties}%)");
+                }
+                else if (defenderCasualties > attackerCasualties + 5)
+                {
+                    return (true, "Attacker Victory", $"Defender exhausted after {combatRound} rounds (Att: {attackerCasualties}%, Def: {defenderCasualties}%)");
+                }
+                else
+                {
+                    return (true, "Stalemate", $"Inconclusive after {combatRound} rounds (Att: {attackerCasualties}%, Def: {defenderCasualties}%)");
+                }
+            }
+
+            // Continue fighting
+            return (false, string.Empty, string.Empty);
+        }
+
+        /// <summary>
+        /// Comprehensive attack and defense simulation with iterative combat resolution
         /// </summary>
         public async Task<ComprehensiveSimulationResult> SimulateAttackDefenseAsync(Guid attackerTokenId, Guid targetTokenId)
         {
@@ -47,14 +120,6 @@ namespace TechWebSol.Services
                 // ========================================
                 // STEP 1: Resolve Suspected Token to Real Token
                 // ========================================
-                var (realDefenderToken, suspectedToken, detectionConfidence) = await ResolveSuspectedTokenAsync(targetTokenId);
-
-                if (realDefenderToken == null)
-                {
-                    result.Success = false;
-                    result.Message = "Target token not found or could not be resolved";
-                    return result;
-                }
 
                 // Get attacker token
                 var attackerToken = await _context.Tokens
@@ -68,37 +133,172 @@ namespace TechWebSol.Services
                     return result;
                 }
 
-                // Get deployments
-                var attackerDeployment = await _context.UnitDeployments
-                    .FirstOrDefaultAsync(d => d.TokenId == attackerTokenId);
+                var realDefenderToken = await _context.Tokens
+                    .Include(t => t.MapMarkers.Where(m => m.IsActive))
+                    .FirstOrDefaultAsync(t => t.Id == targetTokenId);
 
-                var defenderDeployment = await _context.UnitDeployments
-                    .FirstOrDefaultAsync(d => d.TokenId == realDefenderToken.Id);
+                // Get Brigades (contains all weapon data)
+                var attackerBrigade = await _context.Brigades
+                    .Include(b => b.InfantryBattalions)
+                    .Include(b => b.ArmouredRegiments)
+                    .Include(b => b.ArtilleryRegiments)
+                    .Include(b => b.CombatEngineeringCompanies)
+                    .FirstOrDefaultAsync(b => b.TokenId == attackerTokenId);
+
+                attackerBrigade.InfantryBattalions = await _context.InfantryBattalions
+                    .Where(i => i.TokenId == targetTokenId &&  i.IsActive)
+                    .OrderByDescending(i => i.CreatedDate)
+                    .ToListAsync();
+
+                attackerBrigade.ArmouredRegiments = await _context.ArmouredRegiments
+                         .Where(i => i.TokenId == targetTokenId && i.IsActive)
+                    .ToListAsync();
+
+                attackerBrigade.ArtilleryRegiments = await _context.ArtilleryRegiments
+                         .Where(i => i.TokenId == targetTokenId && i.IsActive)
+                    .ToListAsync();
+
+                attackerBrigade.CombatEngineeringCompanies = await _context.CombatEngineeringCompanies
+                  .Where(i => i.TokenId == targetTokenId && i.IsActive)
+                  .OrderByDescending(i => i.CreatedDate)
+                  .ToListAsync();
+
+                // Get Brigades (contains all weapon data)
+                var defenderBrigade = await _context.Brigades
+                    .Include(b => b.InfantryBattalions)
+                    .Include(b => b.ArmouredRegiments)
+                    .Include(b => b.ArtilleryRegiments)
+                    .Include(b => b.CombatEngineeringCompanies)
+                    .FirstOrDefaultAsync(b => b.TokenId == realDefenderToken.Id);
+
+                defenderBrigade.InfantryBattalions = await _context.InfantryBattalions
+                    .Where(i => i.TokenId == realDefenderToken.Id && i.IsActive)
+                    .OrderByDescending(i => i.CreatedDate)
+                    .ToListAsync();
+
+                defenderBrigade.ArmouredRegiments = await _context.ArmouredRegiments
+                         .Where(i => i.TokenId == realDefenderToken.Id && i.IsActive)
+                    .ToListAsync();
+
+                defenderBrigade.ArtilleryRegiments = await _context.ArtilleryRegiments
+                         .Where(i => i.TokenId == realDefenderToken.Id && i.IsActive)
+                    .ToListAsync();
+
+                defenderBrigade.CombatEngineeringCompanies = await _context.CombatEngineeringCompanies
+                  .Where(i => i.TokenId == realDefenderToken.Id && i.IsActive)
+                  .OrderByDescending(i => i.CreatedDate)
+                  .ToListAsync();
+
+
+                _logger.LogInformation("🎯 SIMULATION START: Attacker={AttackerName} (Brigade={AttackerBrigade}), Defender={DefenderName} (Brigade={DefenderBrigade})", 
+                    attackerToken.Name, 
+                    attackerBrigade?.Id, 
+                    realDefenderToken.Name, 
+                    defenderBrigade?.Id);
 
                 // Store token information
                 result.AttackerTokenName = attackerToken.Name;
                 result.DefenderTokenName = realDefenderToken.Name;
-                result.DetectionConfidence = detectionConfidence;
-                result.WasSuspectedToken = suspectedToken != null;
+                result.DetectionConfidence = 100;
 
                 // ========================================
-                // STEP 2: ATTACK SIMULATION
+                // ITERATIVE COMBAT RESOLUTION LOOP
+                // Fight until decisive victory or time limit
                 // ========================================
-                result.AttackPhases = await SimulateAttackPhasesAsync(
-                    attackerToken,
-                    realDefenderToken,
-                    attackerDeployment,
-                    defenderDeployment,
-                    detectionConfidence);
+                
+                int cumulativeAttackerCasualties = 0;
+                int cumulativeDefenderCasualties = 0;
+                int totalEngagementTime = 0;
+                int combatRound = 0;
 
-                // ========================================
-                // STEP 3: DEFENSE SIMULATION
-                // ========================================
-                result.DefensePhases = await SimulateDefensePhasesAsync(
-                    realDefenderToken,
-                    attackerToken,
-                    defenderDeployment,
-                    attackerDeployment);
+                // Track remaining strength for each round (starts at 100%)
+                int attackerRemainingStrength = 100;
+                int defenderRemainingStrength = 100;
+
+                _logger.LogInformation("🔄 ITERATIVE COMBAT ENGINE START - Fighting until objectives achieved or forces exhausted");
+
+                while (true)
+                {
+                    combatRound++;
+                    _logger.LogInformation("⚔️ === COMBAT ROUND {Round} === Attacker: {AttStr}%, Defender: {DefStr}%", 
+                        combatRound, attackerRemainingStrength, defenderRemainingStrength);
+
+                    // ========================================
+                    // ATTACK SIMULATION FOR THIS ROUND
+                    // ========================================
+                    var attackPhases = await SimulateAttackPhasesAsync(
+                        attackerToken,
+                        realDefenderToken,
+                        attackerBrigade,
+                        defenderBrigade,
+                        100);
+
+                    // ========================================
+                    // DEFENSE SIMULATION FOR THIS ROUND
+                    // ========================================
+                    var defensePhases = await SimulateDefensePhasesAsync(
+                        realDefenderToken,
+                        attackerToken,
+                        defenderBrigade,
+                        attackerBrigade);
+
+                    // Calculate casualties for this round
+                    int roundAttackerCasualties = attackPhases.Sum(p => p.CasualtiesAttacker);
+                    int roundDefenderCasualties = attackPhases.Sum(p => p.CasualtiesDefender) + 
+                                                 defensePhases.Sum(p => p.CasualtiesDefender);
+
+                    // Add round casualties to cumulative total
+                    cumulativeAttackerCasualties += roundAttackerCasualties;
+                    cumulativeDefenderCasualties += roundDefenderCasualties;
+
+                    // Update remaining strength (apply casualties to remaining force)
+                    attackerRemainingStrength = Math.Max(0, attackerRemainingStrength - roundAttackerCasualties);
+                    defenderRemainingStrength = Math.Max(0, defenderRemainingStrength - roundDefenderCasualties);
+
+                    // Calculate time for this round
+                    int roundTime = attackPhases.Sum(p => p.DelayMinutes) + 
+                                   defensePhases.Sum(p => p.TimeToStayMinutes + p.MovementDelayMinutes + p.CounterAttackDelayMinutes);
+                    totalEngagementTime += roundTime;
+
+                    // Add phases to result with round marker
+                    result.AttackPhases.Add(new AttackPhaseResult
+                    {
+                        PhaseName = $"=== ROUND {combatRound} ===",
+                        PhaseType = "Marker",
+                        Notes = $"Cumulative - Attacker: {cumulativeAttackerCasualties}%, Defender: {cumulativeDefenderCasualties}%"
+                    });
+                    result.AttackPhases.AddRange(attackPhases);
+                    result.DefensePhases.AddRange(defensePhases);
+
+                    _logger.LogInformation("📊 Round {Round} Results: Att casualties {AttRound}% (cumulative {AttTotal}%), Def casualties {DefRound}% (cumulative {DefTotal}%), Time: {Time}min (total {TotalTime}min)", 
+                        combatRound, roundAttackerCasualties, cumulativeAttackerCasualties, 
+                        roundDefenderCasualties, cumulativeDefenderCasualties, 
+                        roundTime, totalEngagementTime);
+
+                    // ========================================
+                    // CHECK VICTORY CONDITIONS
+                    // ========================================
+                    var (isDecisive, outcome, reason) = CheckVictoryConditions(
+                        cumulativeAttackerCasualties, 
+                        cumulativeDefenderCasualties, 
+                        totalEngagementTime,
+                        combatRound);
+
+                    if (isDecisive)
+                    {
+                        result.VictoryOutcome = outcome;
+                        result.VictoryReason = reason;
+                        result.TotalCombatRounds = combatRound;
+                        result.TotalEngagementTimeMinutes = totalEngagementTime;
+                        result.FinalAttackerCasualtiesPercent = cumulativeAttackerCasualties;
+                        result.FinalDefenderCasualtiesPercent = cumulativeDefenderCasualties;
+
+                        _logger.LogInformation("🏆 DECISIVE OUTCOME: {Outcome} - {Reason}", outcome, reason);
+                        break; // Exit combat loop
+                    }
+
+                    _logger.LogInformation("⚔️ Combat continues - No decisive outcome yet");
+                }
 
                 // ========================================
                 // STEP 4: Generate Summary
@@ -106,8 +306,13 @@ namespace TechWebSol.Services
                 result.AttackSummary = GenerateAttackSummary(result.AttackPhases);
                 result.DefenseSummary = GenerateDefenseSummary(result.DefensePhases);
 
+                // Update summaries with cumulative totals
+                result.AttackSummary.TotalAttackerCasualties = cumulativeAttackerCasualties;
+                result.AttackSummary.TotalDefenderCasualties = cumulativeDefenderCasualties;
+                result.AttackSummary.TotalDelayMinutes = totalEngagementTime;
+
                 result.Success = true;
-                result.Message = "Simulation completed successfully";
+                result.Message = $"Simulation completed: {result.VictoryOutcome}";
 
                 return result;
             }
@@ -123,42 +328,13 @@ namespace TechWebSol.Services
         }
 
         /// <summary>
-        /// Resolve suspected token to real token
-        /// </summary>
-        private async Task<(Token? RealToken, SuspectedToken? SuspectedToken, double DetectionConfidence)> ResolveSuspectedTokenAsync(Guid targetTokenId)
-        {
-            // Check if target is a suspected token
-            var suspectedToken = await _context.SuspectedTokens
-                .Include(st => st.RealToken)
-                    .ThenInclude(t => t.MapMarkers.Where(m => m.IsActive))
-                .FirstOrDefaultAsync(st => st.Id == targetTokenId && st.RealTokenId != null);
-
-            if (suspectedToken != null && suspectedToken.RealToken != null)
-            {
-                // Target is suspected token - resolve to real token
-                var confidence = (double)(suspectedToken.MatchingConfidence ?? 50) / 100.0;
-                _logger.LogInformation("Resolved suspected token {SuspectedId} to real token {RealId} with {Confidence}% confidence",
-                    targetTokenId, suspectedToken.RealTokenId, suspectedToken.MatchingConfidence);
-                
-                return (suspectedToken.RealToken, suspectedToken, confidence);
-            }
-
-            // Target is already a real token
-            var realToken = await _context.Tokens
-                .Include(t => t.MapMarkers.Where(m => m.IsActive))
-                .FirstOrDefaultAsync(t => t.Id == targetTokenId);
-
-            return (realToken, null, 1.0); // 100% confidence for known token
-        }
-
-        /// <summary>
         /// Simulate attack phases through engagement zones and defense locations
         /// </summary>
         private async Task<List<AttackPhaseResult>> SimulateAttackPhasesAsync(
             Token attacker,
             Token defender,
-            UnitDeployment? attackerDeployment,
-            UnitDeployment? defenderDeployment,
+            Brigade? attackerBrigade,
+            Brigade? defenderBrigade,
             double detectionConfidence)
         {
             var phases = new List<AttackPhaseResult>();
@@ -183,6 +359,35 @@ namespace TechWebSol.Services
             var defenderLng = double.Parse(defenderMarker.longitude);
 
             // ========================================
+            // PHASE 0: Pre-Attack Preparation (2-3 hours)
+            // ========================================
+            var prepPhase = new AttackPhaseResult
+            {
+                PhaseName = "Pre-Attack Preparation",
+                PhaseType = "Preparation"
+            };
+
+            // Artillery preparation, reconnaissance, briefings, assembly
+            int prepDelay = 60; // Base 60 min for hasty attack
+            prepDelay += 30; // Reconnaissance
+            prepDelay += 20; // Final briefings
+            prepDelay += 30; // Assembly into attack formation
+            
+            // Add artillery prep time if attacker has artillery/fires
+            var attackerArtillery = attackerBrigade?.ArtilleryRegiments?.Count ?? 0;
+            if (attackerArtillery > 0) // Has artillery support
+            {
+                prepDelay += 60; // 1 hour artillery prep
+            }
+            
+            prepPhase.DelayMinutes = prepDelay;
+            prepPhase.CasualtiesAttacker = 0;
+            prepPhase.CasualtiesDefender = 0; // Minimal casualties from prep fires
+            prepPhase.Notes = $"Artillery prep, reconnaissance, assembly: {prepDelay} min";
+
+            phases.Add(prepPhase);
+
+            // ========================================
             // PHASE 1: Movement to Contact (Approach)
             // ========================================
             var approachPhase = new AttackPhaseResult
@@ -192,11 +397,29 @@ namespace TechWebSol.Services
             };
 
             var distanceKm = CalculateDistance(attackerLat, attackerLng, defenderLat, defenderLng);
-            var movementSpeed = attackerDeployment?.MovementPointsPerTurn ?? 30; // km/turn
-            approachPhase.DelayMinutes = (int)((distanceKm / movementSpeed) * 30); // 30 min per turn
+            var movementSpeed = 30; // km/turn (standard brigade road march speed)
+            
+            // Tactical movement is 50% slower than road march
+            var tacticalSpeed = movementSpeed * 0.5;
+            
+            // Base movement time in tactical formation
+            int baseMovementTime = (int)((distanceKm / tacticalSpeed) * 60); // 60 min per turn (tactical)
+            
+            // Apply terrain penalties (default: open terrain)
+            var terrainMultiplier = GetTerrainMovementMultiplier("open");
+            baseMovementTime = (int)(baseMovementTime * terrainMultiplier);
+            
+            // Apply weather/visibility delays
+            baseMovementTime = (int)(baseMovementTime * 1.2); // Assume limited visibility adds 20%
+            
+            // Add security halts and regrouping
+            int securityHalts = Math.Max(1, (int)(distanceKm / 5)); // 1 halt per 5km
+            baseMovementTime += securityHalts * 15; // 15 min per halt
+            
+            approachPhase.DelayMinutes = baseMovementTime;
             approachPhase.CasualtiesAttacker = 0; // No casualties during approach
             approachPhase.CasualtiesDefender = 0;
-            approachPhase.Notes = $"Movement distance: {distanceKm:F2} km at {movementSpeed} km/turn";
+            approachPhase.Notes = $"Tactical movement: {distanceKm:F2} km, Terrain: open, Halts: {securityHalts}";
 
             phases.Add(approachPhase);
 
@@ -210,8 +433,8 @@ namespace TechWebSol.Services
                 foreach (var killZone in killZones)
                 {
                     var killZonePhase = await SimulateKillZoneEngagementAsync(
-                        attackerDeployment,
-                        defenderDeployment,
+                        attackerBrigade,
+                        defenderBrigade,
                         killZone,
                         detectionConfidence);
                     
@@ -234,8 +457,8 @@ namespace TechWebSol.Services
                 foreach (var minefield in minefields)
                 {
                     var minefieldPhase = await SimulateMinefieldEngagementAsync(
-                        attackerDeployment,
-                        defenderDeployment,
+                        attackerBrigade,
+                        defenderBrigade,
                         minefield,
                         detectionConfidence);
                     
@@ -253,8 +476,8 @@ namespace TechWebSol.Services
                 foreach (var obstacle in obstacles)
                 {
                     var obstaclePhase = await SimulateObstacleEngagementAsync(
-                        attackerDeployment,
-                        defenderDeployment,
+                        attackerBrigade,
+                        defenderBrigade,
                         obstacle,
                         detectionConfidence);
                     
@@ -272,8 +495,8 @@ namespace TechWebSol.Services
                 foreach (var position in defensePositions)
                 {
                     var positionPhase = await SimulateDefensePositionAssaultAsync(
-                        attackerDeployment,
-                        defenderDeployment,
+                        attackerBrigade,
+                        defenderBrigade,
                         position,
                         detectionConfidence);
                     
@@ -284,9 +507,9 @@ namespace TechWebSol.Services
             {
                 // No prepared positions - direct assault
                 var directAssaultPhase = await SimulateDirectAssaultAsync(
-                    attackerDeployment,
-                    defenderDeployment,
-                    detectionConfidence);
+                    attackerBrigade,
+                    defenderBrigade,
+                    100);
                 
                 phases.Add(directAssaultPhase);
             }
@@ -300,8 +523,8 @@ namespace TechWebSol.Services
         private async Task<List<DefensePhaseResult>> SimulateDefensePhasesAsync(
             Token defender,
             Token attacker,
-            UnitDeployment? defenderDeployment,
-            UnitDeployment? attackerDeployment)
+            Brigade? defenderBrigade,
+            Brigade? attackerBrigade)
         {
             var phases = new List<DefensePhaseResult>();
 
@@ -314,8 +537,9 @@ namespace TechWebSol.Services
                 PhaseType = "Defense"
             };
 
-            var defenseStrength = defenderDeployment?.GetEffectiveCombatPower() ?? 1.0;
-            var attackStrength = attackerDeployment?.GetEffectiveCombatPower() ?? 1.0;
+            // Calculate REAL strength ratio from brigade composition
+            var defenseStrength = CalculateBrigadeCombatPower(defenderBrigade);
+            var attackStrength = CalculateBrigadeCombatPower(attackerBrigade);
             var ratio = defenseStrength / attackStrength;
 
             // Time to stay based on strength ratio
@@ -350,9 +574,9 @@ namespace TechWebSol.Services
 
             // Assume counter-penetration position is 2-5km away
             var repositionDistance = 3.0; // km
-            var defenseSpeed = defenderDeployment?.MovementPointsPerTurn ?? 25;
+            var defenseSpeed = 25; // Standard brigade speed
             repositionPhase.MovementDelayMinutes = (int)((repositionDistance / defenseSpeed) * 30);
-            repositionPhase.CasualtiesDefender = (int)(defenseStrength * 0.02); // 2% casualties during movement
+            repositionPhase.CasualtiesDefender = 0; // Minimal casualties during tactical movement
             repositionPhase.CasualtiesAttacker = 0;
             repositionPhase.Notes = $"Tactical repositioning: {repositionDistance:F1} km";
 
@@ -362,8 +586,8 @@ namespace TechWebSol.Services
             // PHASE 3: Counter-Attack
             // ========================================
             var counterAttackPhase = await SimulateCounterAttackAsync(
-                defenderDeployment,
-                attackerDeployment);
+                defenderBrigade,
+                attackerBrigade);
 
             phases.Add(counterAttackPhase);
 
@@ -374,8 +598,8 @@ namespace TechWebSol.Services
         /// Simulate engagement through a kill zone
         /// </summary>
         private async Task<AttackPhaseResult> SimulateKillZoneEngagementAsync(
-            UnitDeployment? attacker,
-            UnitDeployment? defender,
+            Brigade? attackerBrigade,
+            Brigade? defenderBrigade,
             DefenseElement killZone,
             double detectionConfidence)
         {
@@ -389,8 +613,10 @@ namespace TechWebSol.Services
             var killZoneEffectiveness = killZone.Effectiveness * (killZone.Strength / 100.0);
             
             // Get morale and fatigue from deployment
-            var attackerMorale = attacker?.Morale ?? 100;
-            var attackerFatigue = attacker?.Fatigue ?? 0;
+            // Brigade model doesn't store morale/fatigue - use standard combat-ready values
+            // TODO: Add morale/fatigue tracking at Brigade or Token level for future enhancements
+            var attackerMorale = 100;  // 100 = fully motivated, combat-ready troops
+            var attackerFatigue = 0;   // 0 = fully rested troops
             
             // Casualties calculation
             var baseAttackerCasualties = 5.0 + (killZoneEffectiveness * 10.0); // 5-15%
@@ -418,12 +644,22 @@ namespace TechWebSol.Services
             phase.CasualtiesDefender = (int)(baseDefenderCasualties);
             
             // Delay calculation (time to suppress/bypass kill zone)
-            var baseDelay = 15 + (killZoneEffectiveness * 30); // 15-45 minutes
+            // Includes: reconnaissance (15min), suppression fire (20-40min), movement through zone (30-120min), reorganization (15-30min)
+            var baseDelay = 30 + (killZoneEffectiveness * 180); // 30-210 minutes
+            baseDelay += 20; // Add suppression fire time
+            baseDelay += 15; // Add reorganization after kill zone
+            baseDelay += 10; // Add command decision time
             
             // Fatigue increases delay
             if (attackerFatigue > 60)
             {
-                baseDelay *= 1.2; // 20% slower when fatigued
+                baseDelay *= 1.3; // 30% slower when fatigued
+            }
+            
+            // Poor detection increases caution/delay
+            if (detectionConfidence < 0.5)
+            {
+                baseDelay *= 1.2; // 20% slower with poor intelligence
             }
 
             phase.DelayMinutes = (int)baseDelay;
@@ -437,8 +673,8 @@ namespace TechWebSol.Services
         /// Simulate engagement through a minefield
         /// </summary>
         private async Task<AttackPhaseResult> SimulateMinefieldEngagementAsync(
-            UnitDeployment? attacker,
-            UnitDeployment? defender,
+            Brigade? attackerBrigade,
+            Brigade? defenderBrigade,
             DefenseElement minefield,
             double detectionConfidence)
         {
@@ -452,8 +688,10 @@ namespace TechWebSol.Services
             var minefieldEffectiveness = minefield.Effectiveness * (minefield.Strength / 100.0);
             
             // Get morale and fatigue from deployment
-            var attackerMorale = attacker?.Morale ?? 100;
-            var attackerFatigue = attacker?.Fatigue ?? 0;
+            // Brigade model doesn't store morale/fatigue - use standard combat-ready values
+            // TODO: Add morale/fatigue tracking at Brigade or Token level for future enhancements
+            var attackerMorale = 100;  // 100 = fully motivated, combat-ready troops
+            var attackerFatigue = 0;   // 0 = fully rested troops
             
             // Casualties calculation - minefields cause casualties and delay
             var baseAttackerCasualties = 8.0 + (minefieldEffectiveness * 12.0); // 8-20% casualties
@@ -467,7 +705,8 @@ namespace TechWebSol.Services
             }
 
             // Engineers can reduce casualties
-            if (attacker != null && attacker.UnitType.ToLower().Contains("engineer"))
+            var hasEngineers = attackerBrigade?.CombatEngineeringCompanies?.Any() ?? false;
+            if (hasEngineers)
             {
                 baseAttackerCasualties *= 0.5; // Engineers reduce casualties by 50%
                 phase.Notes += "Engineer support reduced minefield casualties. ";
@@ -477,18 +716,32 @@ namespace TechWebSol.Services
             phase.CasualtiesDefender = (int)(baseDefenderCasualties);
             
             // Delay calculation (time to breach/clear minefield)
-            var baseDelay = 30 + (minefieldEffectiveness * 60); // 30-90 minutes
+            // Includes: probing/detection (20-30min), marking lanes (15-20min), breaching (60-180min), passage of lines (20-30min)
+            var baseDelay = 60 + (minefieldEffectiveness * 180); // 60-240 minutes
+            baseDelay += 25; // Add probing and marking time
+            baseDelay += 20; // Add passage of lines coordination
+            baseDelay += 10; // Add resupply time after breaching
             
-            // Engineers speed up breaching
-            if (attacker != null && attacker.UnitType.ToLower().Contains("engineer"))
+            // Engineers speed up breaching significantly
+            if (hasEngineers)
             {
-                baseDelay *= 0.6; // Engineers reduce time by 40%
+                baseDelay *= 0.5; // Engineers reduce time by 50%
+            }
+            else
+            {
+                baseDelay *= 1.4; // Without engineers, much slower and more cautious
             }
             
             // Fatigue increases delay
             if (attackerFatigue > 60)
             {
-                baseDelay *= 1.3; // 30% slower when fatigued
+                baseDelay *= 1.4; // 40% slower when fatigued (dangerous work)
+            }
+            
+            // Poor detection = slower, more cautious
+            if (detectionConfidence < 0.5)
+            {
+                baseDelay *= 1.3; // 30% slower with poor intelligence
             }
 
             phase.DelayMinutes = (int)baseDelay;
@@ -505,8 +758,8 @@ namespace TechWebSol.Services
         /// Simulate engagement through obstacles
         /// </summary>
         private async Task<AttackPhaseResult> SimulateObstacleEngagementAsync(
-            UnitDeployment? attacker,
-            UnitDeployment? defender,
+            Brigade? attackerBrigade,
+            Brigade? defenderBrigade,
             DefenseElement obstacle,
             double detectionConfidence)
         {
@@ -520,8 +773,10 @@ namespace TechWebSol.Services
             var obstacleEffectiveness = obstacle.Effectiveness * (obstacle.Strength / 100.0);
             
             // Get morale and fatigue from deployment
-            var attackerMorale = attacker?.Morale ?? 100;
-            var attackerFatigue = attacker?.Fatigue ?? 0;
+            // Brigade model doesn't store morale/fatigue - use standard combat-ready values
+            // TODO: Add morale/fatigue tracking at Brigade or Token level for future enhancements
+            var attackerMorale = 100;  // 100 = fully motivated, combat-ready troops
+            var attackerFatigue = 0;   // 0 = fully rested troops
             
             // Obstacles primarily cause delay, minimal casualties
             var baseAttackerCasualties = 2.0 + (obstacleEffectiveness * 5.0); // 2-7% casualties
@@ -534,7 +789,8 @@ namespace TechWebSol.Services
             }
 
             // Engineers reduce casualties
-            if (attacker != null && attacker.UnitType.ToLower().Contains("engineer"))
+            var hasEngineers = attackerBrigade?.CombatEngineeringCompanies?.Any() ?? false;
+            if (hasEngineers)
             {
                 baseAttackerCasualties *= 0.3; // Engineers significantly reduce casualties
                 phase.Notes = "Engineer support minimized obstacle casualties. ";
@@ -547,7 +803,7 @@ namespace TechWebSol.Services
             var baseDelay = 20 + (obstacleEffectiveness * 40); // 20-60 minutes
             
             // Engineers speed up breaching
-            if (attacker != null && attacker.UnitType.ToLower().Contains("engineer"))
+            if (hasEngineers)
             {
                 baseDelay *= 0.4; // Engineers reduce time by 60%
             }
@@ -574,10 +830,11 @@ namespace TechWebSol.Services
 
         /// <summary>
         /// Simulate assault on a prepared defense position
+        /// NOW USES WEAPON-LEVEL CALCULATIONS
         /// </summary>
         private async Task<AttackPhaseResult> SimulateDefensePositionAssaultAsync(
-            UnitDeployment? attacker,
-            UnitDeployment? defender,
+            Brigade? attackerBrigade,
+            Brigade? defenderBrigade,
             DefenseElement position,
             double detectionConfidence)
         {
@@ -588,55 +845,171 @@ namespace TechWebSol.Services
                 Location = position.Coordinates
             };
 
-            var attackerPower = attacker?.GetEffectiveCombatPower() ?? 1.0;
-            var defenderPower = (defender?.GetEffectiveCombatPower() ?? 1.0) * position.Effectiveness;
-
-            var ratio = attackerPower / defenderPower;
-
-            // Calculate casualties based on force ratio and prepared positions
-            if (ratio >= 3.0)
+            // Use TokenId directly - Brigade has TokenId field
+            if (attackerBrigade == null || defenderBrigade == null || !attackerBrigade.TokenId.HasValue || !defenderBrigade.TokenId.HasValue)
             {
-                phase.CasualtiesAttacker = 8;  // 8%
-                phase.CasualtiesDefender = 30; // 30%
-                phase.DelayMinutes = 45;
+                _logger.LogError("❌ CRITICAL: TokenId not found - Attacker: {AttackerNull}, Defender: {DefenderNull}, AttackerTokenId: {AttackerTokenId}, DefenderTokenId: {DefenderTokenId}", 
+                    attackerBrigade == null, 
+                    defenderBrigade == null, 
+                    attackerBrigade?.TokenId, 
+                    defenderBrigade?.TokenId);
+                throw new InvalidOperationException("TokenId not found for defense position assault. Cannot calculate weapon effects.");
             }
-            else if (ratio >= 1.5)
+            
+            _logger.LogInformation("✅ DEFENSE ASSAULT: Attacker TokenId={AttackerTokenId}, Defender TokenId={DefenderTokenId}", attackerBrigade.TokenId, defenderBrigade.TokenId);
+
+            // Get tokens to extract real terrain data
+            var attackerToken = await _context.Tokens
+                .Include(t => t.MapMarkers.Where(m => m.IsActive))
+                .FirstOrDefaultAsync(t => t.Id == attackerBrigade.TokenId.Value);
+            
+            var defenderToken = await _context.Tokens
+                .Include(t => t.MapMarkers.Where(m => m.IsActive))
+                .FirstOrDefaultAsync(t => t.Id == defenderBrigade.TokenId.Value);
+
+            // Get REAL terrain from map data
+            var terrain = defenderToken != null 
+                ? await GetTerrainAtTokenPositionAsync(defenderToken) 
+                : "open";
+
+            // Create combat context with REAL terrain data
+            var context = new CombatContext
             {
-                phase.CasualtiesAttacker = 15; // 15%
-                phase.CasualtiesDefender = 20; // 20%
-                phase.DelayMinutes = 90;
+                Terrain = terrain, // REAL terrain from map data
+                Weather = "clear", // TODO: Get from game state/scenario settings
+                Visibility = "day clear", // TODO: Get from game time/weather system
+                DefenderProtection = "improved", // Prepared positions
+                AttackerPosture = "moving slow",
+                DefenderPosture = "static"
+            };
+
+            // Apply fortification effectiveness to protection level
+            if (position.Effectiveness >= 0.8)
+            {
+                context.DefenderProtection = "fortified";
             }
-            else if (ratio >= 0.8)
+            else if (position.Effectiveness >= 0.6)
             {
-                phase.CasualtiesAttacker = 20; // 20%
-                phase.CasualtiesDefender = 15; // 15%
-                phase.DelayMinutes = 120;
+                context.DefenderProtection = "improved";
             }
             else
             {
-                phase.CasualtiesAttacker = 30; // 30%
-                phase.CasualtiesDefender = 10; // 10%
-                phase.DelayMinutes = 180;
+                context.DefenderProtection = "hasty";
             }
+
+            // Calculate weapon-level combat using TokenId directly
+            var combatResult = await _unitCombatCalculator.CalculateUnitVsUnitCombatAsync(
+                attackerBrigade.TokenId.Value,
+                defenderBrigade.TokenId.Value,
+                context);
+
+            if (!combatResult.Success)
+            {
+                _logger.LogError("❌ WEAPON COMBAT CALCULATION FAILED: {ErrorMessage}", combatResult.ErrorMessage);
+                throw new InvalidOperationException($"Weapon combat calculation failed: {combatResult.ErrorMessage}");
+            }
+            
+            // Convert weapon casualties to percentages using REAL brigade strength
+            var attackerStrength = CalculateBrigadeStrength(attackerBrigade);
+            var defenderStrength = CalculateBrigadeStrength(defenderBrigade);
+
+            // CRITICAL: Model SUSTAINED COMBAT over the entire engagement duration
+            // A 3-hour assault isn't one volley - it's sustained combat with multiple engagements
+            // Calculate engagement intensity: prep fires (30min) + main assault (1-4 hours) + consolidation (30min)
+            var combatDurationMinutes = phase.DelayMinutes;
+            var sustainedCombatMultiplier = Math.Max(1.0, combatDurationMinutes / 30.0); // Every 30 min = another engagement cycle
+            
+            // Apply multiplier to represent sustained combat
+            var sustainedAttackerCasualties = combatResult.TotalDefenderCasualtiesInflicted * sustainedCombatMultiplier;
+            var sustainedDefenderCasualties = combatResult.TotalAttackerCasualtiesInflicted * sustainedCombatMultiplier;
+
+            // Calculate percentages from sustained combat
+            var attackerCasualtyPct = (sustainedAttackerCasualties / attackerStrength) * 100.0;
+            var defenderCasualtyPct = (sustainedDefenderCasualties / defenderStrength) * 100.0;
+
+            // Apply doctrine-based bounds (assault on fortified position)
+            phase.CasualtiesAttacker = Math.Min(45, Math.Max(5, (int)attackerCasualtyPct)); // Assault: 5-45% attacker casualties
+            phase.CasualtiesDefender = Math.Min(60, Math.Max(8, (int)defenderCasualtyPct)); // Fortified defense: 8-60% defender casualties
+
+            _logger.LogInformation("✅ DEFENSE POSITION ({Duration}min sustained): Single engagement: Att {AttRaw} / Def {DefRaw}. Sustained (x{Multiplier:F1}): Att {AttSustained:F0} / Def {DefSustained:F0}. Final: Att {AttPct:F2}% ({AttFinal}%) / Def {DefPct:F2}% ({DefFinal}%)", 
+                combatDurationMinutes,
+                combatResult.TotalDefenderCasualtiesInflicted, combatResult.TotalAttackerCasualtiesInflicted,
+                sustainedCombatMultiplier,
+                sustainedAttackerCasualties, sustainedDefenderCasualties,
+                attackerCasualtyPct, phase.CasualtiesAttacker,
+                defenderCasualtyPct, phase.CasualtiesDefender);
+
+            // Calculate delay based on REAL force ratio from brigade composition
+            var attackerPower = CalculateBrigadeCombatPower(attackerBrigade);
+            var defenderPower = CalculateBrigadeCombatPower(defenderBrigade);
+            var ratio = attackerPower / (defenderPower * position.Effectiveness);
+            
+            if (ratio >= 3.0)
+            {
+                phase.DelayMinutes = 120; // 2 hours
+            }
+            else if (ratio >= 1.5)
+            {
+                phase.DelayMinutes = 210; // 3.5 hours
+            }
+            else if (ratio >= 0.8)
+            {
+                phase.DelayMinutes = 300; // 5 hours
+            }
+            else
+            {
+                phase.DelayMinutes = 420; // 7 hours
+            }
+
+            // Add weapon engagement time
+            phase.DelayMinutes += (combatResult.TotalEngagementTimeSeconds / 60); // Add weapon engagement time
+            phase.DelayMinutes += 20; // Casualty evacuation
+            phase.DelayMinutes += 15; // Ammunition resupply
+            phase.DelayMinutes += 10; // Command coordination
 
             // Adjust for detection confidence
             if (detectionConfidence < 0.5)
             {
                 phase.CasualtiesAttacker = (int)(phase.CasualtiesAttacker * 1.3);
+                phase.DelayMinutes = (int)(phase.DelayMinutes * 1.3);
+            }
+            
+            // Adjust for morale and fatigue
+            // Brigade model doesn't store morale/fatigue - use standard combat-ready values
+            // TODO: Add morale/fatigue tracking at Brigade or Token level for future enhancements
+            var attackerMorale = 100;  // 100 = fully motivated, combat-ready troops
+            var attackerFatigue = 0;   // 0 = fully rested troops
+            
+            if (attackerMorale < 50)
+            {
+                phase.CasualtiesAttacker = (int)(phase.CasualtiesAttacker * 1.15);
                 phase.DelayMinutes = (int)(phase.DelayMinutes * 1.2);
             }
+            
+            if (attackerFatigue > 60)
+            {
+                phase.CasualtiesAttacker = (int)(phase.CasualtiesAttacker * 1.1);
+                phase.DelayMinutes = (int)(phase.DelayMinutes * 1.15);
+            }
 
-            phase.Notes = $"Force ratio: {ratio:F2}:1, Position effectiveness: {position.Effectiveness:F2}";
+            // Build detailed notes with weapon breakdown
+            var weaponSummary = string.Join(", ", combatResult.AttackerWeaponResults
+                .Where(w => w.TotalCasualties > 0.1)
+                .Select(w => $"{w.WeaponType}({w.Quantity}): {w.TotalCasualties:F1} kills")
+                .Take(3));
+
+            phase.Notes = $"Force ratio: {ratio:F2}:1, Protection: {context.DefenderProtection}, Weapons: {weaponSummary}";
 
             return phase;
         }
 
         /// <summary>
         /// Simulate direct assault (no prepared positions)
+        /// NOW USES WEAPON-LEVEL CALCULATIONS
         /// </summary>
         private async Task<AttackPhaseResult> SimulateDirectAssaultAsync(
-            UnitDeployment? attacker,
-            UnitDeployment? defender,
+            Brigade? attackerBrigade,
+            Brigade? defenderBrigade,
             double detectionConfidence)
         {
             var phase = new AttackPhaseResult
@@ -645,48 +1018,153 @@ namespace TechWebSol.Services
                 PhaseType = "Combat"
             };
 
-            var attackerPower = attacker?.GetEffectiveCombatPower() ?? 1.0;
-            var defenderPower = defender?.GetEffectiveCombatPower() ?? 1.0;
+            // Use TokenId directly - Brigade has TokenId field
+            if (attackerBrigade == null || defenderBrigade == null || !attackerBrigade.TokenId.HasValue || !defenderBrigade.TokenId.HasValue)
+            {
+                _logger.LogError("❌ CRITICAL: TokenId not found - Attacker: {AttackerNull}, Defender: {DefenderNull}, AttackerTokenId: {AttackerTokenId}, DefenderTokenId: {DefenderTokenId}", 
+                    attackerBrigade == null, 
+                    defenderBrigade == null, 
+                    attackerBrigade?.TokenId, 
+                    defenderBrigade?.TokenId);
+                throw new InvalidOperationException("TokenId not found for direct assault. Cannot calculate weapon effects.");
+            }
+            
+            _logger.LogInformation("✅ DIRECT ASSAULT: Attacker TokenId={AttackerTokenId}, Defender TokenId={DefenderTokenId}", attackerBrigade.TokenId, defenderBrigade.TokenId);
 
+            // Get tokens to extract real terrain data
+            var attackerToken = await _context.Tokens
+                .Include(t => t.MapMarkers.Where(m => m.IsActive))
+                .FirstOrDefaultAsync(t => t.Id == attackerBrigade.TokenId.Value);
+            
+            var defenderToken = await _context.Tokens
+                .Include(t => t.MapMarkers.Where(m => m.IsActive))
+                .FirstOrDefaultAsync(t => t.Id == defenderBrigade.TokenId.Value);
+
+            // Get REAL terrain from map data
+            var terrain = defenderToken != null 
+                ? await GetTerrainAtTokenPositionAsync(defenderToken) 
+                : "open";
+
+            // Create combat context with REAL terrain data
+            var context = new CombatContext
+            {
+                Terrain = terrain, // REAL terrain from map data
+                Weather = "clear", // TODO: Get from game state/scenario settings
+                Visibility = "day clear", // TODO: Get from game time/weather system
+                DefenderProtection = "none", // No prepared positions
+                AttackerPosture = "moving slow",
+                DefenderPosture = "static"
+            };
+
+            // Calculate weapon-level combat using TokenId directly
+            var combatResult = await _unitCombatCalculator.CalculateUnitVsUnitCombatAsync(
+                attackerBrigade.TokenId.Value,
+                defenderBrigade.TokenId.Value,
+                context);
+
+            if (!combatResult.Success)
+            {
+                _logger.LogError("❌ WEAPON COMBAT CALCULATION FAILED: {ErrorMessage}", combatResult.ErrorMessage);
+                throw new InvalidOperationException($"Weapon combat calculation failed: {combatResult.ErrorMessage}");
+            }
+            
+            // Convert weapon casualties to percentages using REAL brigade strength
+            var attackerStrength = CalculateBrigadeStrength(attackerBrigade);
+            var defenderStrength = CalculateBrigadeStrength(defenderBrigade);
+
+            // CRITICAL: Model SUSTAINED COMBAT over the entire engagement duration
+            // A 3-hour meeting engagement isn't one exchange - it's sustained combat with maneuver and multiple engagements
+            // Calculate engagement intensity based on duration
+            var combatDurationMinutes = phase.DelayMinutes;
+            var sustainedCombatMultiplier = Math.Max(1.0, combatDurationMinutes / 30.0); // Every 30 min = another engagement cycle
+            
+            // Apply multiplier to represent sustained combat
+            var sustainedAttackerCasualties = combatResult.TotalDefenderCasualtiesInflicted * sustainedCombatMultiplier;
+            var sustainedDefenderCasualties = combatResult.TotalAttackerCasualtiesInflicted * sustainedCombatMultiplier;
+
+            // Calculate percentages from sustained combat
+            var attackerCasualtyPct = (sustainedAttackerCasualties / attackerStrength) * 100.0;
+            var defenderCasualtyPct = (sustainedDefenderCasualties / defenderStrength) * 100.0;
+
+            // Apply doctrine-based bounds (meeting engagement / hasty defense)
+            phase.CasualtiesAttacker = Math.Min(35, Math.Max(3, (int)attackerCasualtyPct)); // Meeting engagement: 3-35% attacker casualties
+            phase.CasualtiesDefender = Math.Min(40, Math.Max(3, (int)defenderCasualtyPct)); // Hasty defense: 3-40% defender casualties
+
+            _logger.LogInformation("✅ DIRECT ASSAULT ({Duration}min sustained): Single engagement: Att {AttRaw} / Def {DefRaw}. Sustained (x{Multiplier:F1}): Att {AttSustained:F0} / Def {DefSustained:F0}. Final: Att {AttPct:F2}% ({AttFinal}%) / Def {DefPct:F2}% ({DefFinal}%)", 
+                combatDurationMinutes,
+                combatResult.TotalDefenderCasualtiesInflicted, combatResult.TotalAttackerCasualtiesInflicted,
+                sustainedCombatMultiplier,
+                sustainedAttackerCasualties, sustainedDefenderCasualties,
+                attackerCasualtyPct, phase.CasualtiesAttacker,
+                defenderCasualtyPct, phase.CasualtiesDefender);
+
+            // Calculate delay based on REAL force ratio from brigade composition  
+            var attackerPower = CalculateBrigadeCombatPower(attackerBrigade);
+            var defenderPower = CalculateBrigadeCombatPower(defenderBrigade);
             var ratio = attackerPower / defenderPower;
-
-            // More favorable for attacker (no prepared positions)
+            
             if (ratio >= 2.0)
             {
-                phase.CasualtiesAttacker = 5;  // 5%
-                phase.CasualtiesDefender = 25; // 25%
-                phase.DelayMinutes = 30;
+                phase.DelayMinutes = 90; // 1.5 hours
             }
             else if (ratio >= 1.0)
             {
-                phase.CasualtiesAttacker = 10; // 10%
-                phase.CasualtiesDefender = 15; // 15%
-                phase.DelayMinutes = 60;
+                phase.DelayMinutes = 150; // 2.5 hours
             }
             else
             {
-                phase.CasualtiesAttacker = 18; // 18%
-                phase.CasualtiesDefender = 8;  // 8%
-                phase.DelayMinutes = 90;
+                phase.DelayMinutes = 240; // 4 hours
             }
 
-            // Adjust for poor intelligence
+            // Add weapon engagement time and support timings
+            phase.DelayMinutes += (combatResult.TotalEngagementTimeSeconds / 60);
+            phase.DelayMinutes += 15; // Casualty evacuation
+            phase.DelayMinutes += 10; // Ammunition resupply
+            phase.DelayMinutes += 10; // Command coordination
+
+            // Adjust for detection confidence
             if (detectionConfidence < 0.5)
             {
                 phase.CasualtiesAttacker = (int)(phase.CasualtiesAttacker * 1.2);
+                phase.DelayMinutes = (int)(phase.DelayMinutes * 1.2);
+            }
+            
+            // Adjust for morale and fatigue
+            // Brigade model doesn't store morale/fatigue - use standard combat-ready values
+            // TODO: Add morale/fatigue tracking at Brigade or Token level for future enhancements
+            var attackerMorale = 100;  // 100 = fully motivated, combat-ready troops
+            var attackerFatigue = 0;   // 0 = fully rested troops
+            
+            if (attackerMorale < 50)
+            {
+                phase.CasualtiesAttacker = (int)(phase.CasualtiesAttacker * 1.1);
+                phase.DelayMinutes = (int)(phase.DelayMinutes * 1.15);
+            }
+            
+            if (attackerFatigue > 60)
+            {
+                phase.CasualtiesAttacker = (int)(phase.CasualtiesAttacker * 1.05);
+                phase.DelayMinutes = (int)(phase.DelayMinutes * 1.1);
             }
 
-            phase.Notes = $"Force ratio: {ratio:F2}:1, Meeting engagement";
+            // Build detailed notes with weapon breakdown
+            var weaponSummary = string.Join(", ", combatResult.AttackerWeaponResults
+                .Where(w => w.TotalCasualties > 0.1)
+                .Select(w => $"{w.WeaponType}({w.Quantity}): {w.TotalCasualties:F1} kills")
+                .Take(3));
+
+            phase.Notes = $"Force ratio: {ratio:F2}:1, Meeting engagement, Weapons: {weaponSummary}";
 
             return phase;
         }
 
         /// <summary>
         /// Simulate counter-attack by defender
+        /// NOW USES WEAPON-LEVEL CALCULATIONS
         /// </summary>
         private async Task<DefensePhaseResult> SimulateCounterAttackAsync(
-            UnitDeployment? defender,
-            UnitDeployment? attacker)
+            Brigade? defenderBrigade,
+            Brigade? attackerBrigade)
         {
             var phase = new DefensePhaseResult
             {
@@ -694,33 +1172,85 @@ namespace TechWebSol.Services
                 PhaseType = "Counter-Attack"
             };
 
-            var defenderPower = defender?.GetEffectiveCombatPower() ?? 1.0;
-            var attackerPower = attacker?.GetEffectiveCombatPower() ?? 1.0;
+            // Validate brigades
+            if (defenderBrigade == null || attackerBrigade == null || 
+                !defenderBrigade.TokenId.HasValue || !attackerBrigade.TokenId.HasValue)
+            {
+                _logger.LogError("❌ CRITICAL: Cannot calculate counter-attack - missing brigade data");
+                throw new InvalidOperationException("Cannot calculate counter-attack without brigade data");
+            }
 
-            // Attacker is likely weakened from assault
-            var ratio = defenderPower / (attackerPower * 0.7); // Attacker at 70% effectiveness
+            // Get tokens for terrain
+            var defenderToken = await _context.Tokens
+                .Include(t => t.MapMarkers.Where(m => m.IsActive))
+                .FirstOrDefaultAsync(t => t.Id == defenderBrigade.TokenId.Value);
+            
+            var attackerToken = await _context.Tokens
+                .Include(t => t.MapMarkers.Where(m => m.IsActive))
+                .FirstOrDefaultAsync(t => t.Id == attackerBrigade.TokenId.Value);
+
+            // Get REAL terrain
+            var terrain = defenderToken != null 
+                ? await GetTerrainAtTokenPositionAsync(defenderToken) 
+                : "open";
+
+            // Create combat context - defender is now attacking, attacker is weakened
+            var context = new CombatContext
+            {
+                Terrain = terrain,
+                Weather = "clear",
+                Visibility = "day clear",
+                DefenderProtection = "hasty", // Attacker has hasty positions
+                AttackerPosture = "moving fast", // Counter-attack is aggressive
+                DefenderPosture = "hasty fortified" // Attacker has hasty defense
+            };
+
+            // Calculate weapon-level combat (defender attacks, attacker defends)
+            var combatResult = await _unitCombatCalculator.CalculateUnitVsUnitCombatAsync(
+                defenderBrigade.TokenId.Value, // Defender is attacking
+                attackerBrigade.TokenId.Value, // Attacker is defending
+                context);
+
+            if (!combatResult.Success)
+            {
+                _logger.LogError("❌ Counter-attack combat calculation failed: {ErrorMessage}", combatResult.ErrorMessage);
+                throw new InvalidOperationException($"Counter-attack calculation failed: {combatResult.ErrorMessage}");
+            }
+
+            // Calculate REAL casualties using brigade strength
+            var defenderStrength = CalculateBrigadeStrength(defenderBrigade);
+            var attackerStrength = CalculateBrigadeStrength(attackerBrigade);
+
+            // Defender (counter-attacker) takes casualties from attacker's defensive fire
+            phase.CasualtiesDefender = Math.Min(15, (int)((combatResult.TotalDefenderCasualtiesInflicted / defenderStrength) * 100));
+            
+            // Attacker (now defending) takes casualties - attacker is weakened (70% strength)
+            var weakenedAttackerStrength = (int)(attackerStrength * 0.7);
+            phase.CasualtiesAttacker = Math.Min(25, (int)((combatResult.TotalAttackerCasualtiesInflicted / weakenedAttackerStrength) * 100));
+
+            // Calculate delay based on force ratio
+            var defenderPower = CalculateBrigadeCombatPower(defenderBrigade);
+            var attackerPower = CalculateBrigadeCombatPower(attackerBrigade) * 0.7; // Weakened
+            var ratio = defenderPower / attackerPower;
 
             if (ratio >= 1.5)
             {
-                phase.CounterAttackDelayMinutes = 20;
-                phase.CasualtiesDefender = 5;  // 5%
-                phase.CasualtiesAttacker = 20; // 20%
-                phase.Notes = "Strong counter-attack - attacker disrupted";
+                phase.CounterAttackDelayMinutes = 45; // 45 min - strong counter-attack
+                phase.Notes = $"Strong counter-attack - force ratio {ratio:F2}:1. Weapon casualties: Def {combatResult.TotalDefenderCasualtiesInflicted}, Att {combatResult.TotalAttackerCasualtiesInflicted}";
             }
             else if (ratio >= 1.0)
             {
-                phase.CounterAttackDelayMinutes = 30;
-                phase.CasualtiesDefender = 8;  // 8%
-                phase.CasualtiesAttacker = 12; // 12%
-                phase.Notes = "Balanced counter-attack";
+                phase.CounterAttackDelayMinutes = 60; // 1 hour - balanced
+                phase.Notes = $"Balanced counter-attack - force ratio {ratio:F2}:1. Weapon casualties: Def {combatResult.TotalDefenderCasualtiesInflicted}, Att {combatResult.TotalAttackerCasualtiesInflicted}";
             }
             else
             {
-                phase.CounterAttackDelayMinutes = 45;
-                phase.CasualtiesDefender = 12; // 12%
-                phase.CasualtiesAttacker = 8;  // 8%
-                phase.Notes = "Limited counter-attack capability";
+                phase.CounterAttackDelayMinutes = 90; // 1.5 hours - limited capability
+                phase.Notes = $"Limited counter-attack - force ratio {ratio:F2}:1. Weapon casualties: Def {combatResult.TotalDefenderCasualtiesInflicted}, Att {combatResult.TotalAttackerCasualtiesInflicted}";
             }
+
+            _logger.LogInformation("✅ Counter-attack calculated: Def {DefCas}%, Att {AttCas}%, Delay {Delay}min", 
+                phase.CasualtiesDefender, phase.CasualtiesAttacker, phase.CounterAttackDelayMinutes);
 
             return phase;
         }
@@ -813,6 +1343,145 @@ namespace TechWebSol.Services
             return R * c;
         }
 
+        /// <summary>
+        /// Get movement delay multiplier based on terrain
+        /// </summary>
+        private double GetTerrainMovementMultiplier(string? terrain)
+        {
+            if (string.IsNullOrEmpty(terrain))
+                return 1.0;
+
+            return terrain.ToLower() switch
+            {
+                "open" => 1.0,          // Normal movement
+                "plain" => 1.0,
+                "grassland" => 1.1,     // Slightly slower
+                "forest" => 1.4,        // 40% slower
+                "dense forest" => 1.6,  // 60% slower
+                "jungle" => 1.8,        // 80% slower
+                "hills" => 1.3,         // 30% slower
+                "mountains" => 1.7,     // 70% slower
+                "desert" => 1.2,        // 20% slower
+                "swamp" => 1.8,         // 80% slower
+                "urban" => 1.5,         // 50% slower
+                "city" => 1.6,          // 60% slower
+                "river" => 1.4,         // 40% slower (fording)
+                _ => 1.2                // Default: 20% slower for unknown terrain
+            };
+        }
+
+        /// <summary>
+        /// Get terrain type from token position by checking MapSectors
+        /// </summary>
+        private async Task<string> GetTerrainAtTokenPositionAsync(Token token)
+        {
+            try
+            {
+                var marker = token.MapMarkers?.FirstOrDefault(m => m.IsActive);
+                if (marker == null)
+                    return "open"; // Default if no position
+                
+                var lat = double.Parse(marker.latitude);
+                var lng = double.Parse(marker.longitude);
+                
+                // Query MapSectors to find terrain at this position
+                // Check if point is within any sector's geometry
+                var sectors = await _context.MapSectors
+                    .Where(s => s.IsActive && s.SectorType == "terrain")
+                    .ToListAsync();
+                
+                foreach (var sector in sectors)
+                {
+                    // Check if Properties contain terrain data
+                    if (!string.IsNullOrEmpty(sector.Properties))
+                    {
+                        try
+                        {
+                            var props = System.Text.Json.JsonDocument.Parse(sector.Properties);
+                            if (props.RootElement.TryGetProperty("terrain", out var terrainProp))
+                            {
+                                // Simple check: if sector has center coordinates, check distance
+                                if (sector.CenterLat.HasValue && sector.CenterLng.HasValue)
+                                {
+                                    var distance = CalculateDistance(lat, lng, (double)sector.CenterLat.Value, (double)sector.CenterLng.Value);
+                                    // If within ~5km of sector center, use that terrain
+                                    if (distance < 5.0)
+                                    {
+                                        return terrainProp.GetString() ?? "open";
+                                    }
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            // Continue if JSON parsing fails
+                        }
+                    }
+                }
+                
+                // Default if no terrain found
+                return "open";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error getting terrain at token position, using default 'open'");
+                return "open";
+            }
+        }
+
+        /// <summary>
+        /// Calculate brigade personnel strength from actual unit counts
+        /// </summary>
+        private int CalculateBrigadeStrength(Brigade? brigade)
+        {
+            if (brigade == null)
+                return 500; // Fallback for null brigade
+            
+            int totalPersonnel = 0;
+            
+            // Infantry battalions: ~800 personnel each
+            totalPersonnel += (brigade.InfantryBattalions?.Count ?? 0) * 800;
+            
+            // Armoured regiments: ~600 personnel each
+            totalPersonnel += (brigade.ArmouredRegiments?.Count ?? 0) * 600;
+            
+            // Artillery regiments: ~400 personnel each
+            totalPersonnel += (brigade.ArtilleryRegiments?.Count ?? 0) * 400;
+            
+            // Engineering companies: ~200 personnel each
+            totalPersonnel += (brigade.CombatEngineeringCompanies?.Count ?? 0) * 200;
+            
+            // Logistics units: ~150 personnel each
+            totalPersonnel += (brigade.LogisticsUnits?.Count ?? 0) * 150;
+            
+            return totalPersonnel > 0 ? totalPersonnel : 500; // Minimum 500 if no units
+        }
+
+        /// <summary>
+        /// Calculate brigade combat power from weapon systems and unit composition
+        /// </summary>
+        private double CalculateBrigadeCombatPower(Brigade? brigade)
+        {
+            if (brigade == null)
+                return 1.0; // Fallback
+            
+            double combatPower = 0;
+            
+            // Infantry battalions: base 100 combat power each
+            combatPower += (brigade.InfantryBattalions?.Count ?? 0) * 100;
+            
+            // Armoured regiments: 150 combat power each (tanks are force multipliers)
+            combatPower += (brigade.ArmouredRegiments?.Count ?? 0) * 150;
+            
+            // Artillery regiments: 80 combat power each (fire support)
+            combatPower += (brigade.ArtilleryRegiments?.Count ?? 0) * 80;
+            
+            // Engineering companies: 30 combat power each (specialized support)
+            combatPower += (brigade.CombatEngineeringCompanies?.Count ?? 0) * 30;
+            
+            return combatPower > 0 ? combatPower : 100.0; // Minimum 100 if no units
+        }
+
         private double ToRadians(double degrees)
         {
             return degrees * (Math.PI / 180);
@@ -844,6 +1513,14 @@ namespace TechWebSol.Services
         // Summaries
         public AttackSummary AttackSummary { get; set; } = new();
         public DefenseSummary DefenseSummary { get; set; } = new();
+
+        // Victory Condition Tracking
+        public string VictoryOutcome { get; set; } = string.Empty; // "Attacker Victory", "Defender Victory", "Stalemate"
+        public string VictoryReason { get; set; } = string.Empty;
+        public int TotalCombatRounds { get; set; }
+        public int TotalEngagementTimeMinutes { get; set; }
+        public int FinalAttackerCasualtiesPercent { get; set; }
+        public int FinalDefenderCasualtiesPercent { get; set; }
     }
 
     public class AttackPhaseResult

@@ -35,6 +35,14 @@ namespace TechWebSol.ViewModels
         
         public AttackSummaryViewModel AttackSummary { get; set; } = new AttackSummaryViewModel();
         public DefenseSummaryViewModel DefenseSummary { get; set; } = new DefenseSummaryViewModel();
+
+        // Victory Condition Results
+        public string VictoryOutcome { get; set; } = string.Empty;
+        public string VictoryReason { get; set; } = string.Empty;
+        public int TotalCombatRounds { get; set; }
+        public int TotalEngagementTimeMinutes { get; set; }
+        public int FinalAttackerCasualtiesPercent { get; set; }
+        public int FinalDefenderCasualtiesPercent { get; set; }
     }
 
     /// <summary>

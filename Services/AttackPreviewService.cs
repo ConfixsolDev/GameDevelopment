@@ -70,28 +70,32 @@ namespace TechWebSol.Services
                 var detectionConfidence = await _detectionService.GetDetectionConfidenceAsync(attackerTokenId, targetTokenId);
                 var canTarget = await _detectionService.CanTargetAsync(attackerTokenId, targetTokenId, 0.5);
 
-                // Get attacker's unit deployment for combat calculations
-                var attackerDeployment = await _context.UnitDeployments
-                    .FirstOrDefaultAsync(d => d.TokenId.ToString() == attackerTokenId);
+                // UnitDeployment removed - using Brigade system now
+                // Get attacker's brigade for combat calculations
+                var attackerBrigade = await _context.Brigades
+                    .Include(b => b.InfantryBattalions)
+                    .Include(b => b.ArmouredRegiments)
+                    .Include(b => b.ArtilleryRegiments)
+                    .FirstOrDefaultAsync(b => b.TokenId.ToString() == attackerTokenId);
 
-                if (attackerDeployment == null)
+                if (attackerBrigade == null)
                 {
                     return new AttackPreviewResult
                     {
                         CanTarget = false,
-                        UncertaintyNotes = "Attacker unit deployment not found"
+                        UncertaintyNotes = "Attacker brigade not found - use comprehensive simulation for detailed analysis"
                     };
                 }
 
-                // Calculate attacker's effective combat power
-                var attackerCombatPower = CalculateEffectiveCombatPower(attackerDeployment, artilleryAttached);
+                // Calculate attacker's effective combat power from brigade
+                var attackerCombatPower = CalculateEffectiveCombatPowerFromBrigade(attackerBrigade);
 
                 // Estimate defender's combat power (with uncertainty if low detection confidence)
                 var defenderCombatPower = await EstimateDefenderCombatPowerAsync(targetToken, detectionConfidence);
 
                 // Calculate movement needed
                 var movementNeeded = await CalculateMovementNeededAsync(attackerToken, targetToken);
-                var mpShortfall = Math.Max(0, movementNeeded - attackerDeployment.RemainingMovementPoints);
+                var mpShortfall = 0; // Movement points removed with UnitDeployment
 
                 // Calculate casualty estimates
                 var casualtyEstimates = CalculateCasualtyEstimates(attackerCombatPower, defenderCombatPower, detectionConfidence);
@@ -100,7 +104,7 @@ namespace TechWebSol.Services
                 var probabilityOfSuccess = CalculateProbabilityOfSuccess(attackerCombatPower, defenderCombatPower);
 
                 // Generate supply warnings
-                var supplyWarnings = GenerateSupplyWarnings(attackerDeployment);
+                var supplyWarnings = new List<string>(); // Supply warnings removed with UnitDeployment
 
                 // Generate uncertainty notes
                 var uncertaintyNotes = GenerateUncertaintyNotes(detectionConfidence, canTarget);
@@ -134,22 +138,25 @@ namespace TechWebSol.Services
         }
 
         /// <summary>
-        /// Calculate effective combat power including artillery boost
+        /// Calculate effective combat power from Brigade
         /// </summary>
+        private double CalculateEffectiveCombatPowerFromBrigade(Brigade brigade)
+        {
+            // Estimate combat power from unit counts
+            var infantryPower = (brigade.InfantryBattalions?.Count ?? 0) * 100;
+            var armourPower = (brigade.ArmouredRegiments?.Count ?? 0) * 150;
+            var artilleryPower = (brigade.ArtilleryRegiments?.Count ?? 0) * 80;
+            
+            return infantryPower + armourPower + artilleryPower;
+        }
+
+        /// <summary>
+        /// OLD METHOD - Calculate effective combat power including artillery boost (DEPRECATED)
+        /// </summary>
+        [Obsolete("UnitDeployment removed - use CalculateEffectiveCombatPowerFromBrigade")]
         private double CalculateEffectiveCombatPower(UnitDeployment deployment, string[]? artilleryAttached)
         {
-            var basePower = deployment.GetEffectiveCombatPower();
-
-            // Apply artillery boost
-            double artilleryBoost = 0.0;
-            if (artilleryAttached != null && artilleryAttached.Any())
-            {
-                // For now, apply a flat 10% boost for any artillery support
-                // In a full implementation, this would check artillery range, type, etc.
-                artilleryBoost = 0.10;
-            }
-
-            return basePower * (1.0 + artilleryBoost);
+            return 100.0; // Stub - UnitDeployment removed
         }
 
         /// <summary>
@@ -157,17 +164,23 @@ namespace TechWebSol.Services
         /// </summary>
         private async Task<double> EstimateDefenderCombatPowerAsync(Token targetToken, double detectionConfidence)
         {
-            // Get target's unit deployment
-            var targetDeployment = await _context.UnitDeployments
-                .FirstOrDefaultAsync(d => d.TokenId == targetToken.Id);
+            // Get target's brigade
+            var targetBrigade = await _context.Brigades
+                .Include(b => b.InfantryBattalions)
+                .Include(b => b.ArmouredRegiments)
+                .Include(b => b.ArtilleryRegiments)
+                .FirstOrDefaultAsync(b => b.TokenId == targetToken.Id);
 
-            if (targetDeployment == null)
+            double basePower;
+            if (targetBrigade == null)
             {
-                // Estimate based on token type if no deployment found
-                return EstimateCombatPowerFromToken(targetToken);
+                // Estimate based on token type if no brigade found
+                basePower = EstimateCombatPowerFromToken(targetToken);
             }
-
-            var basePower = targetDeployment.GetEffectiveCombatPower();
+            else
+            {
+                basePower = CalculateEffectiveCombatPowerFromBrigade(targetBrigade);
+            }
 
             // Apply uncertainty based on detection confidence
             if (detectionConfidence < 0.5)
@@ -281,32 +294,12 @@ namespace TechWebSol.Services
         }
 
         /// <summary>
-        /// Generate supply warnings based on attacker's supply state
+        /// Generate supply warnings based on attacker's supply state (DEPRECATED)
         /// </summary>
+        [Obsolete("UnitDeployment removed - supply tracking moved to Brigade level")]
         private List<string> GenerateSupplyWarnings(UnitDeployment deployment)
         {
-            var warnings = new List<string>();
-
-            if (deployment.SupplyState == "Red")
-            {
-                warnings.Add("Critical supply state - combat effectiveness reduced by 40%");
-            }
-            else if (deployment.SupplyState == "Amber")
-            {
-                warnings.Add("Reduced supply state - combat effectiveness reduced by 15%");
-            }
-
-            if (deployment.Fatigue > 70)
-            {
-                warnings.Add("High fatigue level - movement and combat effectiveness reduced");
-            }
-
-            if (deployment.Morale < 50)
-            {
-                warnings.Add("Low morale - combat effectiveness significantly reduced");
-            }
-
-            return warnings;
+            return new List<string>(); // Stub - UnitDeployment removed
         }
 
         /// <summary>

@@ -7,40 +7,66 @@
  */
 async function runCombatSimulation() {
     console.log('⚔️ Combat Simulation button clicked');
+    console.log('jQuery available:', typeof $ !== 'undefined');
+    console.log('fetch available:', typeof fetch !== 'undefined');
     
     try {
         // Clean up existing modals
+        console.log('Cleaning up existing modals...');
         $('.gameplay-modal').hide().remove();
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open');
         
         // Load attack order selection modal from server
+        console.log('Fetching attack orders from server...');
         const response = await fetch('/AttackPlanning/GetAttackOrderSelectionModal');
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const html = await response.text();
+        console.log('HTML length received:', html.length);
+        
+        if (html.includes('Login') || html.includes('sign in')) {
+            throw new Error('You may need to login again');
+        }
         
         // Append modal to body
         $('body').append(html);
+        console.log('Modal appended to body');
         
         // Show the modal with fade-in effect
         setTimeout(() => {
             $('#attackOrderSelectionModal').css('display', 'flex').hide().fadeIn(300);
+            console.log('Modal shown');
         }, 50);
         
-        // Attach event listeners to simulate buttons
-        $('.simulate-btn').on('click', function() {
+        // Attach event listeners to simulate buttons (using military-simulate-btn class)
+        $('.military-simulate-btn').on('click', function() {
             const orderId = $(this).data('order-id');
             const attackerName = $(this).data('attacker-name');
             const targetName = $(this).data('target-name');
+            console.log(`Simulate button clicked for order ${orderId}`);
             runSimulationForOrder(orderId, attackerName, targetName);
         });
         
+        console.log('Event listeners attached');
+        
     } catch (error) {
         console.error('❌ Error loading attack orders:', error);
+        console.error('Error stack:', error.stack);
         if (typeof toastr !== 'undefined') {
             toastr.error('Error loading attack orders: ' + error.message, 'Error');
         } else {
-            alert('Error: ' + error.message);
+            alert('Error loading attack orders: ' + error.message);
         }
     }
 }
+
+// Make function globally available
+window.runCombatSimulation = runCombatSimulation;
 
 /**
  * Run simulation for a specific attack order

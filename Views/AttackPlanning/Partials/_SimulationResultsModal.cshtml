@@ -39,6 +39,32 @@
                 }
             </div>
 
+            <!-- Victory Outcome Banner -->
+            @if (!string.IsNullOrEmpty(Model.VictoryOutcome))
+            {
+                <div class="mb-4">
+                    @{
+                        var victoryClass = Model.VictoryOutcome.Contains("Attacker") ? "victory-attacker" : 
+                                          Model.VictoryOutcome.Contains("Defender") ? "victory-defender" : 
+                                          "victory-stalemate";
+                        var victoryIcon = Model.VictoryOutcome.Contains("Attacker") ? "fa-trophy" : 
+                                         Model.VictoryOutcome.Contains("Defender") ? "fa-shield-alt" : 
+                                         "fa-handshake";
+                    }
+                    <div class="victory-banner @victoryClass">
+                        <div class="victory-header">
+                            <i class="fas @victoryIcon fa-2x"></i>
+                            <h4 class="mb-0 ml-3">@Model.VictoryOutcome</h4>
+                        </div>
+                        <div class="victory-details mt-3">
+                            <div class="military-line"><strong>OUTCOME:</strong> @Model.VictoryReason</div>
+                            <div class="military-line"><strong>COMBAT DURATION:</strong> @Model.TotalCombatRounds rounds | @((Model.TotalEngagementTimeMinutes / 60.0).ToString("F1")) hours (@Model.TotalEngagementTimeMinutes min)</div>
+                            <div class="military-line"><strong>FINAL CASUALTIES:</strong> Attacker @Model.FinalAttackerCasualtiesPercent% | Defender @Model.FinalDefenderCasualtiesPercent%</div>
+                        </div>
+                    </div>
+                </div>
+            }
+
             <!-- Attack Phases Section -->
             <div class="mb-4">
                 <div class="military-section-header">ATTACK PHASES</div>
@@ -226,6 +252,69 @@
 
     #combatSimulationModal .military-line:last-child {
         border-bottom: none;
+    }
+
+    /* Victory Banner Styles */
+    #combatSimulationModal .victory-banner {
+        padding: 20px;
+        border-radius: 8px;
+        border: 2px solid;
+        margin: 20px 0;
+        animation: victoryPulse 2s ease-in-out infinite;
+    }
+
+    #combatSimulationModal .victory-attacker {
+        background: linear-gradient(135deg, #1a0000 0%, #0a0e14 100%);
+        border-color: #ff4444;
+        box-shadow: 0 0 20px rgba(255, 68, 68, 0.3);
+    }
+
+    #combatSimulationModal .victory-defender {
+        background: linear-gradient(135deg, #001a00 0%, #0a0e14 100%);
+        border-color: #44ff44;
+        box-shadow: 0 0 20px rgba(68, 255, 68, 0.3);
+    }
+
+    #combatSimulationModal .victory-stalemate {
+        background: linear-gradient(135deg, #1a1a00 0%, #0a0e14 100%);
+        border-color: #ffaa00;
+        box-shadow: 0 0 20px rgba(255, 170, 0, 0.3);
+    }
+
+    #combatSimulationModal .victory-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #1a4d2e;
+    }
+
+    #combatSimulationModal .victory-attacker .victory-header i,
+    #combatSimulationModal .victory-attacker .victory-header h4 {
+        color: #ff4444;
+    }
+
+    #combatSimulationModal .victory-defender .victory-header i,
+    #combatSimulationModal .victory-defender .victory-header h4 {
+        color: #44ff44;
+    }
+
+    #combatSimulationModal .victory-stalemate .victory-header i,
+    #combatSimulationModal .victory-stalemate .victory-header h4 {
+        color: #ffaa00;
+    }
+
+    #combatSimulationModal .victory-details {
+        padding-top: 15px;
+    }
+
+    @@keyframes victoryPulse {
+        0%, 100% {
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+        50% {
+            box-shadow: 0 0 35px rgba(0, 255, 0, 0.5);
+        }
     }
 
     #combatSimulationModal .military-label {

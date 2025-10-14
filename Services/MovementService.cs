@@ -26,53 +26,14 @@ namespace TechWebSol.Services
 
         public async Task<MovementBudgetResult> CalculateMovementBudgetAsync(Guid unitId)
         {
-            try
+            // UnitDeployment removed - movement system needs refactoring for Brigade system
+            await Task.CompletedTask; // Suppress async warning
+            _logger.LogWarning("Movement system temporarily unavailable - UnitDeployment replaced with Brigade system");
+            return new MovementBudgetResult
             {
-                var unit = await _context.UnitDeployments
-                    .FirstOrDefaultAsync(u => u.Id == unitId);
-
-                if (unit == null)
-                {
-                    return new MovementBudgetResult
-                    {
-                        Success = false,
-                        ErrorMessage = "Unit not found"
-                    };
-                }
-
-                // Base movement budget calculation
-                var baseBudget = unit.RemainingMovementPoints;
-                var supplyModifier = GetSupplyModifier(unit.SupplyState);
-                var supplyAdjustedBudget = baseBudget * supplyModifier;
-
-                // Get terrain cost for current terrain
-                var terrainCost = await GetTerrainMovementCostAsync(unit.CurrentTerrain, "road");
-
-                var result = new MovementBudgetResult
-                {
-                    Success = true,
-                    UnitId = unitId,
-                    BaseMovementBudget = baseBudget,
-                    SupplyModifier = supplyModifier,
-                    SupplyAdjustedBudget = supplyAdjustedBudget,
-                    CurrentTerrain = unit.CurrentTerrain,
-                    TerrainCost = terrainCost,
-                    SupplyState = unit.SupplyState,
-                    EffectiveCombatPower = unit.EffectiveCombatPower_RO
-                };
-
-                _logger.LogInformation($"Movement budget calculated for unit {unitId}: {supplyAdjustedBudget} km");
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error calculating movement budget for unit {unitId}");
-                return new MovementBudgetResult
-                {
-                    Success = false,
-                    ErrorMessage = ex.Message
-                };
-            }
+                Success = false,
+                ErrorMessage = "Movement system temporarily unavailable - UnitDeployment system replaced with Brigade system. Please use token movement instead."
+            };
         }
 
         public async Task<RouteValidationResult> ValidateRouteAsync(Guid unitId, List<Waypoint> waypoints)
@@ -133,17 +94,18 @@ namespace TechWebSol.Services
             return movementType == "road" ? (double)terrain.MovementCostRoad : (double)terrain.MovementCostCrossCountry;
         }
 
+        [Obsolete("UnitDeployment removed - use Brigade system")]
         public async Task<double> GetEffectiveMovement(UnitDeployment unit)
         {
-            var baseMovement = unit.MovementPointsPerTurn;
-            var supplyModifier = GetSupplyModifier(unit.SupplyState);
-            return baseMovement * supplyModifier;
+            await Task.CompletedTask;
+            return 0; // Stub - UnitDeployment removed
         }
 
+        [Obsolete("UnitDeployment removed - use Brigade system")]
         public async Task<bool> CanMove(UnitDeployment unit, double distance)
         {
-            var effectiveMovement = await GetEffectiveMovement(unit);
-            return distance <= effectiveMovement;
+            await Task.CompletedTask;
+            return false; // Stub - UnitDeployment removed
         }
 
         private async Task<decimal> GetTerrainMovementCostAsync(string terrainCode, string movementType)

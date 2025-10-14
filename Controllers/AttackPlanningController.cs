@@ -636,8 +636,8 @@ namespace TechWebSol.Controllers
                     .Include(t => t.MapMarkers.Where(m => m.IsActive))
                     .FirstOrDefaultAsync(t => t.Id == attackOrder.AttackerTokenId);
 
-                var attackerDeployment = await _context.UnitDeployments
-                    .FirstOrDefaultAsync(d => d.TokenId == attackOrder.AttackerTokenId);
+                // UnitDeployment removed - using Brigade system now
+                // var attackerDeployment = await _context.UnitDeployments...
 
                 var attackerLocation = attackerToken?.MapMarkers?.FirstOrDefault();
 
@@ -682,9 +682,8 @@ namespace TechWebSol.Controllers
                     defenderLocation = defenderToken?.MapMarkers?.FirstOrDefault();
                 }
 
-                var defenderDeployment = defenderToken != null 
-                    ? await _context.UnitDeployments.FirstOrDefaultAsync(d => d.TokenId == defenderToken.Id)
-                    : null;
+                // UnitDeployment removed - using Brigade system now
+                // var defenderDeployment = defenderToken != null ? await _context.UnitDeployments... : null;
 
                 // ===== DEFENSE ELEMENTS =====
                 // Get all defense elements in the area (unified model with Category field)
@@ -792,19 +791,7 @@ namespace TechWebSol.Controllers
                                 longitude = attackerLocation.longitude,
                                 position = attackerLocation.Position
                             } : null,
-                            deployment = attackerDeployment != null ? new
-                            {
-                                currentStrength = attackerDeployment.CurrentStrength,
-                                maxStrength = attackerDeployment.MaxStrength,
-                                morale = attackerDeployment.Morale,
-                                fatigue = attackerDeployment.Fatigue,
-                                supplyState = attackerDeployment.SupplyState,
-                                combatPower = attackerDeployment.CombatPower,
-                                effectiveCombatPower = attackerDeployment.EffectiveCombatPower,
-                                currentTerrain = attackerDeployment.CurrentTerrain,
-                                formation = attackerDeployment.Formation,
-                                status = attackerDeployment.Status
-                            } : null
+                            deployment = (object?)null // UnitDeployment removed - use Brigade system
                         },
 
                         // Defender
@@ -824,19 +811,7 @@ namespace TechWebSol.Controllers
                                 longitude = defenderLocation.longitude,
                                 position = defenderLocation.Position
                             } : null,
-                            deployment = defenderDeployment != null ? new
-                            {
-                                currentStrength = defenderDeployment.CurrentStrength,
-                                maxStrength = defenderDeployment.MaxStrength,
-                                morale = defenderDeployment.Morale,
-                                fatigue = defenderDeployment.Fatigue,
-                                supplyState = defenderDeployment.SupplyState,
-                                combatPower = defenderDeployment.CombatPower,
-                                effectiveCombatPower = defenderDeployment.EffectiveCombatPower,
-                                currentTerrain = defenderDeployment.CurrentTerrain,
-                                formation = defenderDeployment.Formation,
-                                status = defenderDeployment.Status
-                            } : null
+                            deployment = (object?)null // UnitDeployment removed - use Brigade system
                         },
 
                         // Defense Elements
@@ -868,14 +843,60 @@ namespace TechWebSol.Controllers
                 var attackOrder = await _context.EnhancedAttackOrders
                     .FirstOrDefaultAsync(ao => ao.Id == orderGuid);
 
+
                 if (attackOrder == null)
                 {
                     return Content("<div class='alert alert-danger'>Attack order not found</div>");
                 }
 
-                _logger.LogInformation("Running simulation for attack order {OrderId}", orderGuid);
+                _logger.LogInformation("🎯 Running simulation for attack order {OrderId}", orderGuid);
+                _logger.LogInformation("  Attacker Token: {AttackerId}", attackOrder.AttackerTokenId);
+                _logger.LogInformation("  Defender Token: {DefenderId}", attackOrder.TargetTokenId);
 
-                var result = await _simulationService.SimulateAttackDefenseAsync(attackOrder.AttackerTokenId, attackOrder.TargetTokenId);
+                // Check brigade linkage for debugging
+                var attackerBrigade = await _context.Brigades
+                    .Include(b => b.InfantryBattalions)
+                    .Include(b => b.ArmouredRegiments)
+                    .Include(b => b.ArtilleryRegiments)
+                    .FirstOrDefaultAsync(b => b.TokenId == attackOrder.AttackerTokenId);
+
+                Guid? TargerToken = _context.SuspectedTokens.FirstOrDefault(x => x.Id == attackOrder.TargetTokenId)?.RealTokenId;
+
+                if (TargerToken != null)
+                {
+
+                }
+                var defenderBrigade = await _context.Brigades
+                    .Include(b => b.InfantryBattalions)
+                    .Include(b => b.ArmouredRegiments)
+                    .Include(b => b.ArtilleryRegiments)
+                    .FirstOrDefaultAsync(b => b.TokenId == TargerToken);
+
+                if (attackerBrigade != null)
+                {
+                    _logger.LogInformation("✅ Attacker Brigade Found: {Count} infantry, {Armour} armour, {Artillery} artillery", 
+                        attackerBrigade.InfantryBattalions.Count, 
+                        attackerBrigade.ArmouredRegiments.Count, 
+                        attackerBrigade.ArtilleryRegiments.Count);
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ NO BRIGADE FOUND for attacker token {TokenId}", attackOrder.AttackerTokenId);
+                }
+
+                if (defenderBrigade != null)
+                {
+                    _logger.LogInformation("✅ Defender Brigade Found: {Count} infantry, {Armour} armour, {Artillery} artillery", 
+                        defenderBrigade.InfantryBattalions.Count, 
+                        defenderBrigade.ArmouredRegiments.Count, 
+                        defenderBrigade.ArtilleryRegiments.Count);
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ NO BRIGADE FOUND for defender token {TokenId}", attackOrder.TargetTokenId);
+                }
+
+                var result = await _simulationService.SimulateAttackDefenseAsync(attackOrder.AttackerTokenId, Guid.Parse(TargerToken.ToString()));
 
                 if (!result.Success)
                 {
@@ -927,7 +948,14 @@ namespace TechWebSol.Controllers
                         TotalTimeMinutes = result.DefenseSummary.TotalTimeMinutes,
                         TotalDefenderCasualties = result.DefenseSummary.TotalDefenderCasualties,
                         TotalAttackerCasualties = result.DefenseSummary.TotalAttackerCasualties
-                    }
+                    },
+                    // Victory Condition Results
+                    VictoryOutcome = result.VictoryOutcome,
+                    VictoryReason = result.VictoryReason,
+                    TotalCombatRounds = result.TotalCombatRounds,
+                    TotalEngagementTimeMinutes = result.TotalEngagementTimeMinutes,
+                    FinalAttackerCasualtiesPercent = result.FinalAttackerCasualtiesPercent,
+                    FinalDefenderCasualtiesPercent = result.FinalDefenderCasualtiesPercent
                 };
 
                 return PartialView("Partials/_SimulationResultsModal", viewModel);

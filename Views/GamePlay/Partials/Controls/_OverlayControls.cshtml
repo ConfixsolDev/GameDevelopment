@@ -230,4 +230,37 @@
             box-shadow: 0 0 25px rgba(0, 255, 0, 0.7);
         }
     }
+    
+    /* Combat Simulation Button Styling */
+    .overlay-btn-combat {
+        background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%) !important;
+        color: #fff !important;
+        font-weight: bold;
+        border: 2px solid #ff4444 !important;
+        animation: pulse-combat 2s infinite;
+        box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
+    }
+    
+    .overlay-btn-combat:hover {
+        background: linear-gradient(135deg, #ff6666 0%, #ff4444 100%) !important;
+        box-shadow: 0 0 25px rgba(255, 68, 68, 0.7);
+        transform: scale(1.05);
+    }
+    
+    .overlay-btn-combat i {
+        color: #fff !important;
+    }
+    
+    .overlay-btn-combat span {
+        color: #fff !important;
+    }
+    
+    @@keyframes pulse-combat {
+        0%, 100% {
+            box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
+        }
+        50% {
+            box-shadow: 0 0 25px rgba(255, 68, 68, 0.7);
+        }
+    }
 </style>
