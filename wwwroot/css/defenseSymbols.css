@@ -29,7 +29,7 @@
     stroke-width: 2;
 }
 
-/* Minefields */
+/* Minefields - Modern Grid-Based Design */
 .defense-minefield {
     cursor: pointer;
     transition: all 0.3s ease;
@@ -38,6 +38,51 @@
 .defense-minefield:hover {
     opacity: 0.9;
     filter: drop-shadow(0 0 8px rgba(204, 0, 0, 0.5));
+}
+
+/* Modern Minefield Markers */
+.minefield-modern-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+.minefield-grid-cell {
+    transition: all 0.2s ease;
+}
+
+.minefield-grid-cell:hover {
+    /* Removed problematic hover effects that cause positioning issues */
+}
+
+.mine-icon-container {
+    transition: all 0.2s ease;
+}
+
+/* Central Minefield Marker */
+.minefield-central-modern-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+.minefield-central-cell {
+    animation: mine-pulse 2s ease-in-out infinite;
+}
+
+@keyframes mine-pulse {
+    0%, 100% {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+    50% {
+        box-shadow: 0 4px 16px rgba(204, 0, 0, 0.6);
+    }
+}
+
+.minefield-central-cell:hover {
+    transform: scale(1.15);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6) !important;
+    animation: none;
+    z-index: 2500 !important;
+    position: relative !important;
 }
 
 /* Minefield Fill Patterns */

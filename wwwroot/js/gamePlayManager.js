@@ -49,6 +49,9 @@ class GamePlayManager {
             // Initialize map
             await this.initializeMap();
             
+            // Load current team information (needed for force-based colors)
+            await this.loadCurrentTeamInfo();
+            
             // Initialize token manager (needed for token placement)
             await this.initializeTokenManager();
             
@@ -231,7 +234,9 @@ class GamePlayManager {
                 // Add tile loading optimization
                 updateWhenIdle: true,
                 updateWhenZooming: false,
-                keepBuffer: 2
+                keepBuffer: 2,
+                // Disable double-click zoom to prevent conflicts
+                doubleClickZoom: false
             });
             this.map.zoomControl.setPosition('bottomright');
             
@@ -291,6 +296,31 @@ class GamePlayManager {
             console.log('✅ Map initialized with dynamic bounds support and layer groups');
         } else {
             console.warn('⚠️ Leaflet not loaded, map initialization skipped');
+        }
+    }
+
+    /**
+     * Load current team information for force-based colors
+     */
+    async loadCurrentTeamInfo() {
+        console.log('👥 Loading current team information...');
+        
+        try {
+            const response = await fetch('/GamePlay/GetCurrentTeamInfo');
+            const data = await response.json();
+            
+            if (data.success && data.team) {
+                this.currentTeamInfo = data.team;
+                window.currentTeamInfo = data.team; // Make it globally accessible
+                console.log('✅ Team information loaded:', {
+                    teamName: data.team.name,
+                    forceType: data.team.forceType
+                });
+            } else {
+                console.warn('⚠️ Could not load team information');
+            }
+        } catch (error) {
+            console.error('❌ Error loading team information:', error);
         }
     }
 
@@ -399,6 +429,16 @@ class GamePlayManager {
             await window.attackVisualizationManager.initialize(this.map);
             
             console.log('✅ Attack visualization manager initialized');
+            
+            // Load attack orders after a short delay to ensure everything is ready
+            setTimeout(async () => {
+                try {
+                    await this.reloadAttackLines();
+                    console.log('✅ Attack lines loaded after initialization');
+                } catch (error) {
+                    console.error('❌ Error loading attack lines:', error);
+                }
+            }, 2000);
         } else {
             console.warn('⚠️ Attack visualization manager not available');
             console.log('🔍 Available window objects:', Object.keys(window).filter(key => key.includes('attack') || key.includes('Attack')));
@@ -756,14 +796,28 @@ class GamePlayManager {
     // Note: clearAllDefenseZones method removed - use clearAllDefenseElements() instead
     
     /**
-     * Load attack orders after tokens are placed
+     * Reload attack lines from database
      */
-    async loadAttackOrdersAfterTokensPlaced() {
-        console.log('🎯 Loading attack orders after tokens are placed...');
+    async reloadAttackLines() {
+        console.log('🎯 Reloading attack lines...');
         
+        try {
         if (window.attackVisualizationManager) {
-            await window.attackVisualizationManager.loadAttackOrdersAfterTokensPlaced();
-            console.log('✅ Attack orders loaded after tokens placed');
+                // Clear existing attack lines
+                window.attackVisualizationManager.clearAllAttackLines();
+                
+                // Wait a moment
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Reload from database
+                await window.attackVisualizationManager.loadAttackOrdersFromDatabase();
+                
+                console.log('✅ Attack lines reloaded successfully');
+            } else {
+                console.error('❌ Attack visualization manager not available');
+            }
+        } catch (error) {
+            console.error('❌ Error reloading attack lines:', error);
         }
     }
 
@@ -1989,6 +2043,44 @@ window.cancelDefenseZoneDrawing = function() {
 };
 
 console.log('✅ Defense zone functions loaded globally');
+
+// Global function to manually reload attack lines
+window.reloadAttackLines = async function() {
+    console.log('🎯 Manually reloading attack lines...');
+    
+    if (window.gamePlayManager && window.gamePlayManager.reloadAttackLines) {
+        await window.gamePlayManager.reloadAttackLines();
+    } else {
+        console.error('❌ GamePlayManager not available');
+    }
+};
+
+// Global function to check attack line status
+window.checkAttackLines = function() {
+    console.log('🔍 Checking attack line status...');
+    
+    if (window.attackVisualizationManager) {
+        console.log('✅ AttackVisualizationManager available');
+        console.log('📊 Attack lines in memory:', window.attackVisualizationManager.attackLines.size);
+        console.log('📊 Attack orders in memory:', window.attackVisualizationManager.attackOrders.size);
+        
+        if (window.attackVisualizationManager.map) {
+            let linesOnMap = 0;
+            window.attackVisualizationManager.map.eachLayer((layer) => {
+                if (layer instanceof L.Polyline && layer.options.className === 'attack-line-solid') {
+                    linesOnMap++;
+                }
+            });
+            console.log('📊 Attack lines on map:', linesOnMap);
+        } else {
+            console.warn('⚠️ Map not available');
+        }
+    } else {
+        console.error('❌ AttackVisualizationManager not available');
+    }
+};
+
+console.log('✅ Attack line functions loaded globally');
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {

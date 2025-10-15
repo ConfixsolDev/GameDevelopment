@@ -423,8 +423,11 @@ class AttackVisualizationManager {
             return null;
         }
         
-        // Create curved path for the attack line
-        const curvedPath = this.createCurvedPath(attackerPos, targetPos);
+        // Count existing attack lines between the same tokens for spacing
+        const existingLines = this.countAttackLinesBetweenTokens(attackerPos, targetPos);
+        
+        // Create curved path for the attack line with spacing
+        const curvedPath = this.createCurvedPath(attackerPos, targetPos, existingLines);
         
         // Validate curved path
         if (!curvedPath || curvedPath.length < 2) {
@@ -476,24 +479,52 @@ class AttackVisualizationManager {
         
             // Add hover effects (brighten the current arrow color)
             const originalColor = attackLine.arrowheadPolygon ? 
-                attackLine.arrowheadPolygon.options.fillColor : '#ff4444';
+                attackLine.arrowheadPolygon.options.color : '#ff4444';
             const hoverColor = this.brightenColor(originalColor);
             
             attackLine.on('mouseover', (e) => {
-                if (attackLine.setStyle) {
-                    attackLine.setStyle({
+                // Apply hover effect to individual lines and arrowhead
+                if (attackLine.line1 && attackLine.line1.setStyle) {
+                    attackLine.line1.setStyle({
                         weight: 5,
                         opacity: 1,
+                        color: hoverColor
+                    });
+                }
+                if (attackLine.line2 && attackLine.line2.setStyle) {
+                    attackLine.line2.setStyle({
+                        weight: 5,
+                        opacity: 1,
+                        color: hoverColor
+                    });
+                }
+                if (attackLine.arrowheadPolygon && attackLine.arrowheadPolygon.setStyle) {
+                    attackLine.arrowheadPolygon.setStyle({
+                        weight: 5,
                         color: hoverColor
                     });
                 }
             });
             
             attackLine.on('mouseout', (e) => {
-                if (attackLine.setStyle) {
-                    attackLine.setStyle({
+                // Restore original style to individual lines and arrowhead
+                if (attackLine.line1 && attackLine.line1.setStyle) {
+                    attackLine.line1.setStyle({
                         weight: 3,
                         opacity: 0.9,
+                        color: originalColor
+                    });
+                }
+                if (attackLine.line2 && attackLine.line2.setStyle) {
+                    attackLine.line2.setStyle({
+                        weight: 3,
+                        opacity: 0.9,
+                        color: originalColor
+                    });
+                }
+                if (attackLine.arrowheadPolygon && attackLine.arrowheadPolygon.setStyle) {
+                    attackLine.arrowheadPolygon.setStyle({
+                        weight: 3,
                         color: originalColor
                     });
                 }
@@ -572,12 +603,40 @@ class AttackVisualizationManager {
     }
 
     /**
+     * Count existing attack lines between the same two tokens
+     * @param {L.LatLng} start - Start position
+     * @param {L.LatLng} end - End position
+     * @returns {number} Number of existing lines between these tokens
+     */
+    countAttackLinesBetweenTokens(start, end) {
+        let count = 0;
+        const tolerance = 0.0001; // Small tolerance for position comparison
+        
+        this.attackLines.forEach((attackLineData) => {
+            const lineStart = attackLineData.attackerPos;
+            const lineEnd = attackLineData.targetPos;
+            
+            // Check if this line is between the same tokens (with tolerance)
+            if (lineStart && lineEnd &&
+                Math.abs(lineStart.lat - start.lat) < tolerance &&
+                Math.abs(lineStart.lng - start.lng) < tolerance &&
+                Math.abs(lineEnd.lat - end.lat) < tolerance &&
+                Math.abs(lineEnd.lng - end.lng) < tolerance) {
+                count++;
+            }
+        });
+        
+        return count;
+    }
+
+    /**
      * Create a curved path between two points
      * @param {L.LatLng} start - Start position
      * @param {L.LatLng} end - End position
+     * @param {number} lineIndex - Index for spacing multiple lines
      * @returns {Array} Array of LatLng points for the curved path
      */
-    createCurvedPath(start, end) {
+    createCurvedPath(start, end, lineIndex = 0) {
         // Validate input coordinates
         if (!start || !end || 
             !isFinite(start.lat) || !isFinite(start.lng) || 
@@ -605,8 +664,13 @@ class AttackVisualizationManager {
             return [start, end];
         }
         
-        // Create control point offset perpendicular to the line
-        const offset = distance * 0.3; // 30% of the distance as curve height
+        // Create control point offset perpendicular to the line with maximum spacing for multiple lines
+        const baseOffset = distance * 0.6; // 60% of the distance as base curve height
+        const spacingOffset = distance * 0.25 * lineIndex; // 25% spacing per line for maximum separation
+        
+        // Alternate direction for even/odd lines for better visual separation
+        const direction = lineIndex % 2 === 0 ? 1 : -1;
+        const offset = direction * (baseOffset + spacingOffset);
         
         // Calculate perpendicular direction
         const dx = end.lng - start.lng;
@@ -721,24 +785,52 @@ class AttackVisualizationManager {
                         
                         // Add hover effects with proper color
                         const originalColor = newAttackLine.arrowheadPolygon ? 
-                            newAttackLine.arrowheadPolygon.options.fillColor : '#ff4444';
+                            newAttackLine.arrowheadPolygon.options.color : '#ff4444';
                         const hoverColor = this.brightenColor(originalColor);
                         
                         newAttackLine.on('mouseover', (e) => {
-                            if (newAttackLine.setStyle) {
-                                newAttackLine.setStyle({
+                            // Apply hover effect to individual lines and arrowhead
+                            if (newAttackLine.line1 && newAttackLine.line1.setStyle) {
+                                newAttackLine.line1.setStyle({
                                     weight: 5,
                                     opacity: 1,
+                                    color: hoverColor
+                                });
+                            }
+                            if (newAttackLine.line2 && newAttackLine.line2.setStyle) {
+                                newAttackLine.line2.setStyle({
+                                    weight: 5,
+                                    opacity: 1,
+                                    color: hoverColor
+                                });
+                            }
+                            if (newAttackLine.arrowheadPolygon && newAttackLine.arrowheadPolygon.setStyle) {
+                                newAttackLine.arrowheadPolygon.setStyle({
+                                    weight: 5,
                                     color: hoverColor
                                 });
                             }
                         });
                         
                         newAttackLine.on('mouseout', (e) => {
-                            if (newAttackLine.setStyle) {
-                                newAttackLine.setStyle({
+                            // Restore original style to individual lines and arrowhead
+                            if (newAttackLine.line1 && newAttackLine.line1.setStyle) {
+                                newAttackLine.line1.setStyle({
                                     weight: 3,
                                     opacity: 0.9,
+                                    color: originalColor
+                                });
+                            }
+                            if (newAttackLine.line2 && newAttackLine.line2.setStyle) {
+                                newAttackLine.line2.setStyle({
+                                    weight: 3,
+                                    opacity: 0.9,
+                                    color: originalColor
+                                });
+                            }
+                            if (newAttackLine.arrowheadPolygon && newAttackLine.arrowheadPolygon.setStyle) {
+                                newAttackLine.arrowheadPolygon.setStyle({
+                                    weight: 3,
                                     color: originalColor
                                 });
                             }

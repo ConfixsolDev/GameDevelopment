@@ -204,12 +204,13 @@ class AttackSymbolRenderer {
         // Create layer group for the complete arrow
         const lineGroup = L.layerGroup();
         
-        // Base line style
+        // Base line style with canvas rendering for better performance and fixed positioning
         let lineStyle = {
             color: arrowColor,
             weight: 3,
             opacity: 0.9,
-            className: `nato-attack-line ${symbolConfig.className}`
+            className: `nato-attack-line ${symbolConfig.className}`,
+            renderer: L.canvas() // Use canvas renderer for better performance and fixed positioning
         };
 
         // Customize line style based on attack type
@@ -239,33 +240,17 @@ class AttackSymbolRenderer {
 
         if (path.length < 2) return lineGroup;
 
-        const spacing = 0.00008; // Spacing between parallel lines (in degrees)
+        const spacing = 0.0003; // Maximum spacing between parallel lines (in degrees) for clear separation
         
-        // Split path: arrowhead at START (first 10%), then parallel lines
-        const arrowheadLength = 0.10; // 10% of path for starting arrowhead
-        const splitIndex = Math.max(1, Math.floor(path.length * arrowheadLength));
+        // Split path: parallel lines with gap before target, then arrowhead at END (near target)
+        const endGap = 0.1; // 10% gap from target token
+        const arrowheadLength = 0.05; // Only 5% of path for ending arrowhead (much shorter)
+        const splitIndex = Math.max(1, Math.floor(path.length * (1 - arrowheadLength - endGap)));
         
-        const arrowheadPath = path.slice(0, splitIndex + 1);
-        const bodyPath = path.slice(splitIndex);
+        const bodyPath = path.slice(0, splitIndex + 1);
+        const arrowheadPath = path.slice(splitIndex);
         
-        // 1. Create ARROWHEAD at START (near attacker)
-        if (arrowheadPath.length >= 2) {
-            const arrowhead = this.createStartingArrowhead(
-                arrowheadPath,
-                spacing,
-                arrowColor,  // Use determined arrow color
-                options
-            );
-            
-            if (arrowhead.polygon) {
-                lineGroup.addLayer(arrowhead.polygon);
-                lineGroup.arrowheadPolygon = arrowhead.polygon;
-            }
-            
-            // Don't add label here - we'll add it to the main line instead
-        }
-        
-        // 2. Create parallel lines extending FROM arrowhead TO target
+        // 1. Create TWO PARALLEL LINES from attacker toward target
         if (bodyPath.length >= 2) {
             const bodyPath1 = this.offsetPath(bodyPath, spacing);
             const bodyPath2 = this.offsetPath(bodyPath, -spacing);
@@ -278,42 +263,57 @@ class AttackSymbolRenderer {
             
             lineGroup.line1 = line1;
             lineGroup.line2 = line2;
-            
-            // 3. Add attack number label ON the main attack line (midpoint of full path)
-            const fullPathMidpoint = Math.floor(path.length / 2);
-            const labelPos = path[fullPathMidpoint];
-            
-            // Use sequential attack number if provided, otherwise fallback to unit symbol
-            let labelText = '';
-            if (options.attackNumber) {
-                labelText = options.attackNumber.toString();
-                console.log('🎯 Creating attack label with sequential number:', labelText);
-            } else {
-                const attackerSymbol = options.attackerSymbol || options.attackerName || '';
-                labelText = this.extractSymbolNumber(attackerSymbol);
-                console.log('🎯 Creating attack label with unit symbol:', labelText);
-            }
-            
-            console.log('🎯 Label position:', labelPos);
-            console.log('🎯 Full path length:', path.length, 'Midpoint index:', fullPathMidpoint);
-            
-            const labelIcon = L.divIcon({
-                html: `<div class="nato-attack-label">${labelText}</div>`,
-                className: 'nato-attack-label-marker',
-                iconSize: [30, 20],
-                iconAnchor: [15, 10]
-            });
-            
-            const labelMarker = L.marker(labelPos, {
-                icon: labelIcon,
-                zIndexOffset: 2000
-            });
-            
-            lineGroup.addLayer(labelMarker);
-            lineGroup.arrowheadLabel = labelMarker;
-            
-            console.log('✅ Attack label added to line group:', labelText, 'at position:', labelPos);
         }
+        
+        // 2. Create ARROWHEAD at END (near target)
+        if (arrowheadPath.length >= 2) {
+            const arrowhead = this.createEndingArrowhead(
+                arrowheadPath,
+                spacing,
+                arrowColor,  // Use determined arrow color
+                options
+            );
+            
+            if (arrowhead.polygon) {
+                lineGroup.addLayer(arrowhead.polygon);
+                lineGroup.arrowheadPolygon = arrowhead.polygon;
+            }
+        }
+        
+        // 3. Add attack number label ON the main attack line (midpoint of full path)
+        const fullPathMidpoint = Math.floor(path.length / 2);
+        const labelPos = path[fullPathMidpoint];
+        
+        // Use sequential attack number if provided, otherwise fallback to unit symbol
+        let labelText = '';
+        if (options.attackNumber) {
+            labelText = options.attackNumber.toString();
+            console.log('🎯 Creating attack label with sequential number:', labelText);
+        } else {
+            const attackerSymbol = options.attackerSymbol || options.attackerName || '';
+            labelText = this.extractSymbolNumber(attackerSymbol);
+            console.log('🎯 Creating attack label with unit symbol:', labelText);
+        }
+        
+        console.log('🎯 Label position:', labelPos);
+        console.log('🎯 Full path length:', path.length, 'Midpoint index:', fullPathMidpoint);
+        
+        const labelIcon = L.divIcon({
+            html: `<div class="nato-attack-label">${labelText}</div>`,
+            className: 'nato-attack-label-marker',
+            iconSize: [30, 20],
+            iconAnchor: [15, 10]
+        });
+        
+        const labelMarker = L.marker(labelPos, {
+            icon: labelIcon,
+            zIndexOffset: 2000
+        });
+        
+        lineGroup.addLayer(labelMarker);
+        lineGroup.arrowheadLabel = labelMarker;
+        
+        console.log('✅ Attack label added to line group:', labelText, 'at position:', labelPos);
         
         // Make the group respond to events
         lineGroup.setStyle = function(style) {
@@ -400,12 +400,84 @@ class AttackSymbolRenderer {
             fillColor: color,
             fillOpacity: 0.9,
             weight: 2,
-            className: 'nato-attack-arrowhead-polygon'
+            className: 'nato-attack-arrowhead-polygon',
+            renderer: L.canvas() // Use canvas renderer for better performance and fixed positioning
         });
         
         return {
             polygon: arrowheadPolygon,
             label: null
+        };
+    }
+
+    /**
+     * Create a simple triangular arrowhead at the END of the attack line (near target)
+     * Creates a clean, solid triangular arrowhead like the attached image
+     * @param {Array} path - Path segment for the arrowhead
+     * @param {number} spacing - Distance between parallel lines
+     * @param {string} color - Arrow color
+     * @param {Object} options - Additional options
+     * @returns {Object} Object containing arrowhead polygon
+     */
+    createEndingArrowhead(path, spacing, color, options = {}) {
+        if (path.length < 2) return { polygon: null };
+        
+        const startPoint = path[0]; // Where parallel lines end
+        const endPoint = path[path.length - 1]; // Target position (arrow tip)
+        
+        // Calculate direction (from parallel lines toward target)
+        const dx = endPoint.lng - startPoint.lng;
+        const dy = endPoint.lat - startPoint.lat;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        
+        if (length === 0) return { polygon: null };
+        
+        // Normalized direction
+        const dirX = dx / length;
+        const dirY = dy / length;
+        
+        // Perpendicular direction
+        const perpX = -dirY;
+        const perpY = dirX;
+        
+        // Create a simple triangular arrowhead
+        // Base width proportional to spacing, but make it much larger for visibility
+        const arrowBaseWidth = spacing * 6; // Make arrowhead 6x wider than line spacing for bigger size
+        
+        // Gap size to prevent overlap with parallel lines
+        const gapSize = spacing * 0.5; // 50% of line spacing for gap
+        
+        // Base points (back of arrow) with gap so lines don't touch arrowhead
+        const baseLeft = L.latLng(
+            startPoint.lat + perpY * (arrowBaseWidth + gapSize),
+            startPoint.lng + perpX * (arrowBaseWidth + gapSize)
+        );
+        const baseRight = L.latLng(
+            startPoint.lat - perpY * (arrowBaseWidth + gapSize),
+            startPoint.lng - perpX * (arrowBaseWidth + gapSize)
+        );
+        
+        // Tip point (front of arrow) - fixed size arrowhead regardless of path length
+        const fixedTipExtension = 0.00005; // Fixed distance in degrees for consistent arrowhead size
+        const tip = L.latLng(
+            endPoint.lat + dirY * fixedTipExtension,
+            endPoint.lng + dirX * fixedTipExtension
+        );
+        
+        // Arrowhead with hidden base line: just two sides converging to tip (no bottom base line)
+        const arrowheadPoints = [baseLeft, tip, baseRight];
+        
+        const arrowheadPolygon = L.polygon(arrowheadPoints, {
+            color: color, // Outline color same as lines
+            fillColor: 'transparent', // Empty/transparent fill
+            fillOpacity: 0.0, // No fill - empty arrowhead
+            weight: 3, // Thick border for visibility
+            className: 'nato-attack-arrowhead-empty',
+            renderer: L.canvas() // Use canvas renderer for better performance and fixed positioning
+        });
+        
+        return {
+            polygon: arrowheadPolygon
         };
     }
 

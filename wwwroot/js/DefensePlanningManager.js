@@ -24,7 +24,149 @@ class DefensePlanningManager {
         
         this.renderer = window.defenseSymbolRenderer;
         
+        // Check if renderer is available, if not, wait for it
+        if (!this.renderer) {
+            console.warn('⚠️ Defense symbol renderer not yet available, will retry...');
+            this.waitForRenderer();
+        } else {
+            // Set map reference for zoom-responsive sizing
+            this.renderer.setMap(this.map);
+        }
+        
+        // Add zoom event listener to refresh minefield sizes
+        this.map.on('zoomend', () => {
+            this.refreshMinefieldSizes();
+        });
+        
         console.log('🛡️ Defense Planning Manager initialized');
+    }
+    
+    /**
+     * Refresh minefield sizes based on current zoom level
+     */
+    refreshMinefieldSizes() {
+        if (!this.renderer || !this.renderer.map) return;
+        
+        const currentZoom = this.renderer.map.getZoom();
+        const newCellSize = Math.max(16, Math.min(48, 20 + (currentZoom - 10) * 2));
+        
+        console.log(`🔄 Refreshing minefield sizes for zoom ${currentZoom}, cell size: ${newCellSize}px`);
+        
+        // Update all existing minefield markers
+        this.defenseElements.forEach((element, elementId) => {
+            if (element.category === 'minefield' && element.layers && element.layers.markers) {
+                element.layers.markers.forEach(marker => {
+                    const element = marker.getElement();
+                    if (element) {
+                        const mineIcon = element.querySelector('.mine-icon-container');
+                        if (mineIcon) {
+                            const iconSize = newCellSize * 0.9;
+                            mineIcon.style.width = `${iconSize}px`;
+                            mineIcon.style.height = `${iconSize}px`;
+                        }
+                        
+                        const cell = element.querySelector('.minefield-grid-cell');
+                        if (cell) {
+                            cell.style.width = `${newCellSize}px`;
+                            cell.style.height = `${newCellSize}px`;
+                        }
+                    }
+                });
+            }
+        });
+    }
+    
+    /**
+     * Wait for the defense symbol renderer to become available
+     */
+    waitForRenderer() {
+        const checkRenderer = () => {
+            if (window.defenseSymbolRenderer) {
+                this.renderer = window.defenseSymbolRenderer;
+                this.renderer.setMap(this.map); // Set map reference for zoom-responsive sizing
+                console.log('✅ Defense symbol renderer now available');
+            } else {
+                // Retry after 100ms
+                setTimeout(checkRenderer, 100);
+            }
+        };
+        checkRenderer();
+    }
+    
+    /**
+     * Get current team's force type for color-coding defense elements
+     */
+    getCurrentForceType() {
+        // Try to get from global currentTeamInfo
+        if (window.currentTeamInfo && window.currentTeamInfo.forceType) {
+            return window.currentTeamInfo.forceType;
+        }
+        
+        // Try to get from gamePlayManager
+        if (window.gamePlayManager && window.gamePlayManager.currentTeamInfo && window.gamePlayManager.currentTeamInfo.forceType) {
+            return window.gamePlayManager.currentTeamInfo.forceType;
+        }
+        
+        // Default to neutral if not available
+        console.warn('⚠️ Could not determine force type, using default');
+        return 'Neutral';
+    }
+    
+    /**
+     * Handle right-click on defense element for deletion
+     */
+    handleDefenseElementRightClick(e, elementId, category) {
+        // Prevent default context menu
+        e.originalEvent.preventDefault();
+        e.originalEvent.stopPropagation();
+        
+        // Show confirmation dialog
+        const elementType = category === 'killzone' ? 'Kill Zone' : 
+                          category === 'minefield' ? 'Minefield' : 
+                          category.charAt(0).toUpperCase() + category.slice(1);
+        
+        if (confirm(`Are you sure you want to delete this ${elementType}?`)) {
+            this.deleteDefenseElement(elementId, category);
+        }
+    }
+    
+    /**
+     * Delete a defense element by ID
+     */
+    deleteDefenseElement(elementId, category) {
+        try {
+            console.log(`🗑️ Deleting defense element: ${elementId} (${category})`);
+            
+            // Remove from local storage
+            if (this.defenseElements.has(elementId)) {
+                const elementData = this.defenseElements.get(elementId);
+                
+                // Remove from map layers
+                if (elementData.layers) {
+                    if (elementData.layers.polygon) {
+                        this.map.removeLayer(elementData.layers.polygon);
+                    }
+                    if (elementData.layers.label) {
+                        this.map.removeLayer(elementData.layers.label);
+                    }
+                    if (elementData.layers.markers) {
+                        elementData.layers.markers.forEach(marker => {
+                            this.map.removeLayer(marker);
+                        });
+                    }
+                }
+                
+                // Remove from local storage
+                this.defenseElements.delete(elementId);
+                
+                console.log(`✅ Defense element ${elementId} deleted successfully`);
+            } else {
+                console.warn(`⚠️ Defense element ${elementId} not found in local storage`);
+            }
+            
+        } catch (error) {
+            console.error(`❌ Error deleting defense element ${elementId}:`, error);
+        }
     }
     
     /**
@@ -95,11 +237,14 @@ class DefensePlanningManager {
             // Parse coordinates from JSON
             const coordinates = JSON.parse(dbElement.coordinates);
             
+            // Get current team's force type for color-coding
+            const forceType = this.getCurrentForceType();
+            
             // Create the visual element using the renderer
             let element;
             
             if (dbElement.category === 'killzone') {
-                element = this.renderer.createKillZone(coordinates, dbElement.type);
+                element = this.renderer.createKillZone(coordinates, dbElement.type, { forceType });
                 this.killZoneLayer.addLayer(element.polygon);
                 if (element.label) {
                     this.killZoneLayer.addLayer(element.label);
@@ -108,22 +253,27 @@ class DefensePlanningManager {
                 // Add click event
                 if (element.polygon) {
                     element.polygon.on('click', () => this.showDefenseElementDetails(dbElement.elementId));
+                    element.polygon.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'killzone'));
+                }
+                if (element.label) {
+                    element.label.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'killzone'));
                 }
             } else if (dbElement.category === 'minefield') {
-                element = this.renderer.createMinefield(coordinates, dbElement.type);
+                element = this.renderer.createMinefield(coordinates, dbElement.type, { forceType });
                 if (element.markers) {
-                    element.markers.forEach(marker => this.minefieldLayer.addLayer(marker));
-                }
-                if (element.centerIcon) {
-                    this.minefieldLayer.addLayer(element.centerIcon);
+                    element.markers.forEach(marker => {
+                        this.minefieldLayer.addLayer(marker);
+                        marker.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'minefield'));
+                    });
                 }
             } else if (dbElement.category === 'obstacle') {
-                element = this.renderer.createObstacle(coordinates, dbElement.type);
+                element = this.renderer.createObstacle(coordinates, dbElement.type, { forceType });
                 if (element.line) {
                     this.obstacleLayer.addLayer(element.line);
+                    element.line.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'obstacle'));
                 }
             } else if (dbElement.category === 'route') {
-                element = this.renderer.createWithdrawalRoute(coordinates, dbElement.type);
+                element = this.renderer.createWithdrawalRoute(coordinates, dbElement.type, { forceType });
                 if (element.route) {
                     this.withdrawalLayer.addLayer(element.route);
                 }
@@ -234,8 +384,33 @@ class DefensePlanningManager {
         
         console.log(`🖊️ Started drawing ${category} (${type})`);
         
+        // Remove any existing event listeners first
+        this.map.off('click', this.handlePolygonClick);
+        this.map.off('dblclick', this.finishPolygonDrawing);
+        
+        // Add new event listeners
         this.map.on('click', this.handlePolygonClick.bind(this));
         this.map.on('dblclick', this.finishPolygonDrawing.bind(this));
+        
+        // Add right-click to finish drawing as alternative
+        this.map.on('contextmenu', (e) => {
+            e.preventDefault();
+            if (this.drawingMode === category) {
+                this.finishPolygonDrawing(e);
+            }
+        });
+        
+        // Add keyboard shortcut (Enter key) to finish drawing
+        this.keyboardHandler = (e) => {
+            if (e.key === 'Enter' && this.drawingMode === category) {
+                e.preventDefault();
+                this.finishPolygonDrawing(e);
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                this.cancelDrawing();
+            }
+        };
+        document.addEventListener('keydown', this.keyboardHandler);
     }
 
     /**
@@ -318,15 +493,27 @@ class DefensePlanningManager {
      * Finish polygon drawing
      */
     finishPolygonDrawing(e) {
-        L.DomEvent.stop(e);
+        if (e) {
+            L.DomEvent.stop(e);
+        }
+        
+        console.log(`🖊️ Finishing polygon drawing with ${this.drawingPoints.length} points`);
         
         if (this.drawingPoints.length < 3) {
             console.warn('Need at least 3 points to create a polygon');
+            alert('Please click at least 3 points to create a polygon, then double-click to finish.');
             this.cancelDrawing();
             return;
         }
         
-        this.createPolygonElement(this.drawingMode, this.drawingType, this.drawingPoints);
+        try {
+            this.createPolygonElement(this.drawingMode, this.drawingType, this.drawingPoints);
+            console.log(`✅ Successfully created ${this.drawingMode} polygon`);
+        } catch (error) {
+            console.error('Error creating polygon element:', error);
+            alert('Error creating polygon. Please try again.');
+        }
+        
         this.cancelDrawing();
     }
 
@@ -350,71 +537,126 @@ class DefensePlanningManager {
      * Cancel drawing
      */
     cancelDrawing() {
+        // Remove all event listeners
         this.map.off('click', this.handlePolygonClick);
         this.map.off('click', this.handlePolylineClick);
         this.map.off('dblclick', this.finishPolygonDrawing);
         this.map.off('dblclick', this.finishPolylineDrawing);
+        this.map.off('contextmenu');
         
+        // Remove keyboard handler
+        if (this.keyboardHandler) {
+            document.removeEventListener('keydown', this.keyboardHandler);
+            this.keyboardHandler = null;
+        }
+        
+        // Clean up temporary layer
         if (this.tempLayer) {
             this.map.removeLayer(this.tempLayer);
             this.tempLayer = null;
         }
         
+        // Reset drawing state
         this.drawingMode = null;
         this.drawingType = null;
         this.drawingPoints = [];
         this.map.getContainer().style.cursor = '';
         
-        console.log('🛑 Drawing cancelled');
+        console.log('🛑 Drawing cancelled and cleaned up');
     }
 
     /**
      * Create polygon element (kill zone or minefield)
      */
     createPolygonElement(category, type, coordinates) {
-        const elementId = this.generateId();
-        let element;
-        
-        if (category === 'killzone') {
-            element = this.renderer.createKillZone(coordinates, type);
-            this.killZoneLayer.addLayer(element.polygon);
-            if (element.label) {
-                this.killZoneLayer.addLayer(element.label);
+        try {
+            console.log(`🔧 Creating ${category} element with ${coordinates.length} coordinates`);
+            
+            // Ensure renderer is available
+            if (!this.renderer) {
+                console.warn('⚠️ Renderer not available, trying to get it...');
+                this.renderer = window.defenseSymbolRenderer;
+                
+                if (!this.renderer) {
+                    console.error('❌ Defense symbol renderer not available');
+                    throw new Error('Defense symbol renderer not initialized. Please refresh the page.');
+                }
             }
-        } else if (category === 'minefield') {
-            element = this.renderer.createMinefield(coordinates, type);
-            // Minefields now only return markers (NATO APP-6 standard)
-            if (element.markers) {
-                element.markers.forEach(marker => this.minefieldLayer.addLayer(marker));
+            
+            const elementId = this.generateId();
+            
+            // Get current team's force type for color-coding
+            const forceType = this.getCurrentForceType();
+            console.log(`🎨 Using force type for defense element: ${forceType}`);
+            
+            let element;
+            
+            if (category === 'killzone') {
+                element = this.renderer.createKillZone(coordinates, type, { forceType });
+                if (!element) {
+                    throw new Error('Failed to create kill zone element');
+                }
+                this.killZoneLayer.addLayer(element.polygon);
+                if (element.label) {
+                    this.killZoneLayer.addLayer(element.label);
+                }
+                
+                // Add right-click delete functionality
+                element.polygon.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, elementId, 'killzone'));
+                if (element.label) {
+                    element.label.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, elementId, 'killzone'));
+                }
+                
+            } else if (category === 'minefield') {
+                console.log(`🔧 Creating minefield with type: ${type}`);
+                element = this.renderer.createMinefield(coordinates, type, { forceType });
+                if (!element) {
+                    throw new Error('Failed to create minefield element');
+                }
+                // Minefields now only return markers (NATO APP-6 standard)
+                if (element.markers) {
+                    console.log(`🔧 Adding ${element.markers.length} mine markers to map`);
+                    element.markers.forEach(marker => {
+                        this.minefieldLayer.addLayer(marker);
+                        // Add right-click delete functionality to each mine marker
+                        marker.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, elementId, 'minefield'));
+                    });
+                }
+            } else {
+                throw new Error(`Unknown category: ${category}`);
             }
+            
+            // Store element locally
+            const defenseElementData = {
+                id: elementId,
+                category,
+                type,
+                coordinates,
+                layers: element,
+                tokenId: null,
+                strength: 100,
+                visibility: 'friendly',
+                createdAt: new Date().toISOString()
+            };
+            
+            this.defenseElements.set(elementId, defenseElementData);
+            
+            // Save to database
+            this.saveDefenseElementToDatabase(defenseElementData);
+            
+            // Add click event
+            if (element.polygon) {
+                element.polygon.on('click', () => this.showDefenseElementDetails(elementId));
+            }
+            
+            console.log(`✅ Created ${category} (${type}) with ID: ${elementId}`);
+            
+            return elementId;
+            
+        } catch (error) {
+            console.error(`❌ Error creating ${category} element:`, error);
+            throw error; // Re-throw to be caught by the calling method
         }
-        
-        // Store element locally
-        const defenseElementData = {
-            id: elementId,
-            category,
-            type,
-            coordinates,
-            layers: element,
-            tokenId: null,
-            strength: 100,
-            visibility: 'friendly',
-            createdAt: new Date().toISOString()
-        };
-        
-        this.defenseElements.set(elementId, defenseElementData);
-        
-        // Save to database
-        this.saveDefenseElementToDatabase(defenseElementData);
-        
-        // Add click event
-        if (element.polygon) {
-            element.polygon.on('click', () => this.showDefenseElementDetails(elementId));
-        }
-        
-        console.log(`✅ Created ${category} (${type}) with ID: ${elementId}`);
-        
-        return elementId;
     }
     
     /**

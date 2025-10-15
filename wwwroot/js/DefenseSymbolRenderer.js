@@ -5,8 +5,35 @@
  */
 
 class DefenseSymbolRenderer {
-    constructor() {
+    constructor(map = null) {
+        this.map = map;
         this.symbols = this.initializeDefenseSymbols();
+    }
+    
+    /**
+     * Set map reference for zoom-responsive sizing
+     */
+    setMap(map) {
+        this.map = map;
+    }
+    
+    /**
+     * Get color based on force type
+     * Blue Land = Blue, Fox Land = Red
+     */
+    getForceColor(forceType) {
+        if (!forceType) return null;
+        
+        const forceTypeLower = forceType.toLowerCase();
+        
+        if (forceTypeLower.includes('blue')) {
+            return '#0000ff'; // Blue for Blue Land
+        } else if (forceTypeLower.includes('fox') || forceTypeLower.includes('red')) {
+            return '#ff0000'; // Red for Fox Land
+        }
+        
+        // Default to null to use original colors
+        return null;
     }
 
     /**
@@ -42,31 +69,34 @@ class DefenseSymbolRenderer {
                 }
             },
 
-            // Minefields (Military mine symbols - larger sizes)
+            // Minefields (Modern grid-based design with NATO standard mine icons)
             minefields: {
                 'antipersonnel': {
-                    symbol: '⊗', // Circle with X (standard mine symbol)
+                    symbol: '💣', // Modern mine emoji for fallback
                     color: '#cc0000',
                     name: 'Anti-Personnel Minefield',
                     radius: 16,
                     strokeWidth: 2,
-                    iconSize: 24
+                    iconSize: 28,
+                    cellSize: 28
                 },
                 'antitank': {
-                    symbol: '⧉', // Diamond with X for larger mines
+                    symbol: '💣', // Modern mine emoji for fallback
                     color: '#990000',
                     name: 'Anti-Tank Minefield',
                     radius: 18,
                     strokeWidth: 2,
-                    iconSize: 28
+                    iconSize: 28,
+                    cellSize: 28
                 },
                 'mixed': {
-                    symbol: '☠', // Skull for mixed/dangerous minefields
+                    symbol: '💣', // Modern mine emoji for fallback
                     color: '#660000',
                     name: 'Mixed Minefield',
                     radius: 20,
                     strokeWidth: 3,
-                    iconSize: 32
+                    iconSize: 28,
+                    cellSize: 28
                 }
             },
 
@@ -228,9 +258,15 @@ class DefenseSymbolRenderer {
     createKillZone(coordinates, type = 'primary', options = {}) {
         const killZoneConfig = this.symbols.killZones[type];
         
+        // Get force-based color
+        const forceColor = this.getForceColor(options.forceType);
+        const color = forceColor || killZoneConfig.color;
+        
+        console.log(`🎨 Kill zone color: ${color} (force: ${options.forceType})`);
+        
         const polygon = L.polygon(coordinates, {
-            color: killZoneConfig.color,
-            fillColor: killZoneConfig.color,
+            color: color,
+            fillColor: color,
             fillOpacity: killZoneConfig.fillOpacity,
             weight: killZoneConfig.strokeWidth,
             dashArray: killZoneConfig.strokeDashArray,
@@ -240,7 +276,7 @@ class DefenseSymbolRenderer {
 
         // Add label marker at center
         const center = this.getPolygonCenter(coordinates);
-        const label = this.createDefenseLabel(center, killZoneConfig.symbol, killZoneConfig.name);
+        const label = this.createDefenseLabel(center, killZoneConfig.symbol, killZoneConfig.name, color);
 
         return { polygon, label };
     }
@@ -251,16 +287,21 @@ class DefenseSymbolRenderer {
     createMinefield(coordinates, type = 'mixed', options = {}) {
         const minefieldConfig = this.symbols.minefields[type];
         
-        // Add type to config for marker styling
+        // Get force-based color
+        const forceColor = this.getForceColor(options.forceType);
+        const color = forceColor || minefieldConfig.color;
+        
+        console.log(`🎨 Minefield color: ${color} (force: ${options.forceType})`);
+        
+        // Add type and color to config for marker styling
         minefieldConfig.type = type;
+        minefieldConfig.forceColor = color;
         
         // Create individual mine markers with icons
         const markers = this.createMinefieldMarkers(coordinates, minefieldConfig);
         
-        // Create central mine icon at the center of the minefield
-        const centerMineIcon = this.createCentralMineIcon(coordinates, minefieldConfig);
-        
-        return { markers, centerIcon: centerMineIcon };
+        // Return only markers, no central icon
+        return { markers };
     }
 
     /**
@@ -269,8 +310,14 @@ class DefenseSymbolRenderer {
     createObstacle(coordinates, type = 'wire', options = {}) {
         const obstacleConfig = this.symbols.obstacles[type];
         
+        // Get force-based color
+        const forceColor = this.getForceColor(options.forceType);
+        const color = forceColor || obstacleConfig.color;
+        
+        console.log(`🎨 Obstacle color: ${color} (force: ${options.forceType})`);
+        
         const polyline = L.polyline(coordinates, {
-            color: obstacleConfig.color,
+            color: color,
             weight: obstacleConfig.strokeWidth,
             dashArray: obstacleConfig.strokeDashArray,
             className: `defense-obstacle obstacle-${type}`,
@@ -310,8 +357,14 @@ class DefenseSymbolRenderer {
     createWithdrawalRoute(coordinates, type = 'primary', options = {}) {
         const routeConfig = this.symbols.withdrawalRoutes[type];
         
+        // Get force-based color
+        const forceColor = this.getForceColor(options.forceType);
+        const color = forceColor || routeConfig.color;
+        
+        console.log(`🎨 Withdrawal route color: ${color} (force: ${options.forceType})`);
+        
         const polyline = L.polyline(coordinates, {
-            color: routeConfig.color,
+            color: color,
             weight: routeConfig.strokeWidth,
             dashArray: routeConfig.strokeDashArray,
             className: `defense-withdrawal withdrawal-${type}`,
@@ -330,8 +383,14 @@ class DefenseSymbolRenderer {
     createDefensiveLine(coordinates, type = 'feba', options = {}) {
         const lineConfig = this.symbols.defensiveLines[type];
         
+        // Get force-based color
+        const forceColor = this.getForceColor(options.forceType);
+        const color = forceColor || lineConfig.color;
+        
+        console.log(`🎨 Defensive line color: ${color} (force: ${options.forceType})`);
+        
         const polyline = L.polyline(coordinates, {
-            color: lineConfig.color,
+            color: color,
             weight: lineConfig.strokeWidth,
             dashArray: lineConfig.strokeDashArray === 'none' ? null : lineConfig.strokeDashArray,
             className: `defense-line line-${type}`,
@@ -344,11 +403,14 @@ class DefenseSymbolRenderer {
     /**
      * Create defense label marker
      */
-    createDefenseLabel(latlng, symbol, name) {
+    createDefenseLabel(latlng, symbol, name, color = null) {
+        // Clean white text and icon with no background
+        const textStyle = 'color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);';
+        
         const html = `
-            <div class="defense-label">
-                <div class="defense-symbol">${symbol}</div>
-                <div class="defense-name">${name}</div>
+            <div class="defense-label" style="background: transparent; border: none; padding: 4px;">
+                <div class="defense-symbol" style="${textStyle} font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 2px;">${symbol}</div>
+                <div class="defense-name" style="${textStyle} font-size: 12px; font-weight: bold; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;">${name}</div>
             </div>
         `;
 
@@ -363,151 +425,314 @@ class DefenseSymbolRenderer {
     }
 
     /**
-     * Create minefield markers with mine icons
+     * Create minefield markers with proper grid line layout
      */
     createMinefieldMarkers(coordinates, config) {
         const markers = [];
         
-        // Create markers along the polygon perimeter and inside
-        const numMarkers = Math.max(5, Math.floor(coordinates.length * 2)); // More markers for better coverage
+        // Use force color if available, otherwise use default config color
+        const mineColor = config.forceColor || config.color;
         
-        for (let i = 0; i < numMarkers; i++) {
-            let latlng;
-            
-            if (i < coordinates.length) {
-                // Place markers on polygon vertices
-                latlng = L.latLng(coordinates[i][0], coordinates[i][1]);
-            } else {
-                // Place additional markers inside the polygon
-                const center = this.getPolygonCenter(coordinates);
-                const randomOffset = 0.001; // Small random offset for visual variety
-                latlng = L.latLng(
-                    center[0] + (Math.random() - 0.5) * randomOffset,
-                    center[1] + (Math.random() - 0.5) * randomOffset
-                );
-            }
-            
-            // Create simple, visible mine icons
-            let mineSymbol = '';
-            let backgroundColor = '';
-            
-            if (config.type === 'antipersonnel') {
-                mineSymbol = '●';
-                backgroundColor = config.color;
-            } else if (config.type === 'antitank') {
-                mineSymbol = '◆';
-                backgroundColor = config.color;
-            } else {
-                mineSymbol = '!';
-                backgroundColor = config.color;
-            }
-
+        // Calculate polygon bounds
+        const bounds = L.latLngBounds(coordinates);
+        const center = bounds.getCenter();
+        
+        // Calculate polygon dimensions
+        const polygonWidth = bounds.getEast() - bounds.getWest();
+        const polygonHeight = bounds.getNorth() - bounds.getSouth();
+        
+        // Calculate appropriate number of mines based on polygon size
+        // Increased minimum spacing between mines (in degrees) for better visibility
+        const minSpacing = 0.0015; // Increased spacing for better separation
+        
+        // Calculate how many mines can fit horizontally
+        const maxMinesHorizontal = Math.floor(polygonWidth / minSpacing);
+        
+        // Use reasonable limits: minimum 3 mines, maximum 12 mines (reduced for better spacing)
+        const numMines = Math.max(3, Math.min(12, maxMinesHorizontal));
+        
+        // Get current map zoom level for responsive sizing
+        const currentZoom = this.map ? this.map.getZoom() : 14;
+        const cellSize = Math.max(16, Math.min(48, 20 + (currentZoom - 10) * 2)); // Responsive size based on zoom
+        const gridRows = 1;
+        const gridCols = numMines;
+        
+        // Calculate spacing between mines
+        const horizontalSpacing = polygonWidth / (gridCols + 1);
+        const verticalSpacing = polygonHeight / (gridRows + 1);
+        
+        // Start position (top-left of grid)
+        const startLat = bounds.getNorth() - verticalSpacing;
+        const startLng = bounds.getWest() + horizontalSpacing;
+        
+        // Create different mine variations for visual variety
+        const mineTypes = ['standard', 'cross', 'diamond', 'dots'];
+        
+        // Create grid of mines in a straight line
+        for (let row = 0; row < gridRows; row++) {
+            for (let col = 0; col < gridCols; col++) {
+                // Calculate position for this mine
+                const lat = startLat - (row * verticalSpacing);
+                const lng = startLng + (col * horizontalSpacing);
+                
+                // Check if this position is within the polygon
+                const point = L.latLng(lat, lng);
+                if (this.isPointInPolygon(point, coordinates)) {
+                    const latlng = L.latLng(lat, lng);
+                    
+                    // Select different mine type for variety
+                    const mineType = mineTypes[col % mineTypes.length];
+                    const mineSvg = this.createMineSvg(mineType, mineColor);
+                    
+                    // Create mine cell with proper styling
             const html = `
-                <div style="
-                    width: ${config.iconSize}px;
-                    height: ${config.iconSize}px;
-                    background: ${backgroundColor};
-                    border: 3px solid #000;
-                    border-radius: 50%;
+                        <div class="minefield-grid-cell" style="
+                            width: ${cellSize}px;
+                            height: ${cellSize}px;
+                            background: #FFFFFF;
+                            border: 2px solid #000000;
+                            border-radius: 4px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    color: #000;
-                    font-weight: bold;
-                    font-size: ${config.iconSize * 0.6}px;
-                    text-shadow: 1px 1px 0px #fff;
-                    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.7);
+                            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
                     cursor: pointer;
-                ">
-                    ${mineSymbol}
+                            transition: all 0.2s ease;
+                            transform-origin: center center;
+                        ">
+                            <div class="mine-icon-container" style="
+                                width: ${cellSize * 0.9}px;
+                                height: ${cellSize * 0.9}px;
+                                border-radius: 50%;
+                                border: 2px solid ${mineColor};
+                                background: rgba(255, 255, 255, 0.95);
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                padding: 4px;
+                            ">
+                                ${mineSvg}
+                            </div>
                 </div>
             `;
 
             const icon = L.divIcon({
                 html: html,
-                className: 'minefield-icon-marker-container',
-                iconSize: [config.iconSize + 4, config.iconSize + 4],
-                iconAnchor: [(config.iconSize + 4) / 2, (config.iconSize + 4) / 2]
+                        className: 'minefield-modern-marker',
+                        iconSize: [cellSize + 4, cellSize + 4],
+                        iconAnchor: [(cellSize + 4) / 2, (cellSize + 4) / 2]
             });
 
             const marker = L.marker(latlng, { 
                 icon: icon,
-                zIndexOffset: 1500 // Higher z-index to ensure minefields are visible
+                        zIndexOffset: 1500
+                    });
+
+                    // Add hover effect - simplified approach
+                    marker.on('mouseover', function(e) {
+                        const element = e.target.getElement();
+                        if (element) {
+                            element.style.transform = 'scale(1.1)';
+                            element.style.zIndex = '2000';
+                        }
+                    });
+                    
+                    marker.on('mouseout', function(e) {
+                        const element = e.target.getElement();
+                        if (element) {
+                            element.style.transform = 'scale(1)';
+                            element.style.zIndex = '1500';
+                        }
             });
 
             // Add click handler for minefield info
             marker.on('click', () => {
                 console.log(`💣 Minefield clicked: ${config.name}`);
-                // TODO: Show minefield info panel
+                        // Show minefield details
             });
 
             markers.push(marker);
+                }
+            }
         }
         
         return markers;
     }
+    
+    /**
+     * Check if a point is inside a polygon
+     */
+    isPointInPolygon(point, polygon) {
+        const x = point.lng;
+        const y = point.lat;
+        let inside = false;
+        
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+            const xi = polygon[i][1];
+            const yi = polygon[i][0];
+            const xj = polygon[j][1];
+            const yj = polygon[j][0];
+            
+            if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+                inside = !inside;
+            }
+        }
+        
+        return inside;
+    }
+    
+    /**
+     * Create different mine SVG variations
+     */
+    createMineSvg(mineType, color) {
+        const variations = {
+            'standard': `
+                <svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'>
+                    <circle cx='12' cy='12' r='5' fill='${color}'/>
+                    <line x1='12' y1='1.5' x2='12' y2='5' stroke='${color}' stroke-width='2'/>
+                    <line x1='12' y1='19' x2='12' y2='22.5' stroke='${color}' stroke-width='2'/>
+                    <line x1='1.5' y1='12' x2='5' y2='12' stroke='${color}' stroke-width='2'/>
+                    <line x1='19' y1='12' x2='22.5' y2='12' stroke='${color}' stroke-width='2'/>
+                    <line x1='4.2' y1='4.2' x2='6.6' y2='6.6' stroke='${color}' stroke-width='2'/>
+                    <line x1='17.4' y1='17.4' x2='19.8' y2='19.8' stroke='${color}' stroke-width='2'/>
+                    <line x1='4.2' y1='19.8' x2='6.6' y2='17.4' stroke='${color}' stroke-width='2'/>
+                    <line x1='17.4' y1='6.6' x2='19.8' y2='4.2' stroke='${color}' stroke-width='2'/>
+                    <circle cx='15' cy='9' r='1.2' fill='white'/>
+                </svg>
+            `,
+            'cross': `
+                <svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'>
+                    <circle cx='12' cy='12' r='5' fill='${color}'/>
+                    <line x1='12' y1='2' x2='12' y2='22' stroke='${color}' stroke-width='3'/>
+                    <line x1='2' y1='12' x2='22' y2='12' stroke='${color}' stroke-width='3'/>
+                    <circle cx='12' cy='12' r='2' fill='white'/>
+                </svg>
+            `,
+            'diamond': `
+                <svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'>
+                    <circle cx='12' cy='12' r='5' fill='${color}'/>
+                    <polygon points='12,2 18,8 12,14 6,8' fill='${color}' stroke='${color}' stroke-width='2'/>
+                    <circle cx='12' cy='12' r='2' fill='white'/>
+                </svg>
+            `,
+            'dots': `
+                <svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'>
+                    <circle cx='12' cy='12' r='5' fill='${color}'/>
+                    <circle cx='8' cy='8' r='1.5' fill='white'/>
+                    <circle cx='16' cy='8' r='1.5' fill='white'/>
+                    <circle cx='8' cy='16' r='1.5' fill='white'/>
+                    <circle cx='16' cy='16' r='1.5' fill='white'/>
+                    <circle cx='12' cy='12' r='2' fill='white'/>
+                </svg>
+            `
+        };
+        return variations[mineType] || variations['standard'];
+    }
 
     /**
      * Create central mine icon at the center of the minefield
+     * Enhanced with modern minimal design
      */
     createCentralMineIcon(coordinates, config) {
         const center = this.getPolygonCenter(coordinates);
         const centerLatLng = L.latLng(center[0], center[1]);
         
-        // Create a larger, more prominent central mine icon
-        const centerIconSize = config.iconSize + 8; // Make central icon larger
+        // Create a larger, more prominent central mine icon with modern design
+        const centerCellSize = 40; // Larger than regular cells
         
-        let mineSymbol = '';
-        let backgroundColor = '';
-        
+        // Get minefield type label
+        let typeLabel = '';
         if (config.type === 'antipersonnel') {
-            mineSymbol = '●';
-            backgroundColor = config.color;
+            typeLabel = ''; // Remove AP label
         } else if (config.type === 'antitank') {
-            mineSymbol = '◆';
-            backgroundColor = config.color;
+            typeLabel = ''; // Remove AT label
         } else {
-            mineSymbol = '!';
-            backgroundColor = config.color;
+            typeLabel = ''; // Remove MX label
         }
+        
+        // SVG mine icon (NATO standard with spikes)
+        const mineSvg = `
+            <svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'>
+                <circle cx='12' cy='12' r='5' fill='${config.color}'/>
+                <line x1='12' y1='1.5' x2='12' y2='5' stroke='${config.color}' stroke-width='2'/>
+                <line x1='12' y1='19' x2='12' y2='22.5' stroke='${config.color}' stroke-width='2'/>
+                <line x1='1.5' y1='12' x2='5' y2='12' stroke='${config.color}' stroke-width='2'/>
+                <line x1='19' y1='12' x2='22.5' y2='12' stroke='${config.color}' stroke-width='2'/>
+                <line x1='4.2' y1='4.2' x2='6.6' y2='6.6' stroke='${config.color}' stroke-width='2'/>
+                <line x1='17.4' y1='17.4' x2='19.8' y2='19.8' stroke='${config.color}' stroke-width='2'/>
+                <line x1='4.2' y1='19.8' x2='6.6' y2='17.4' stroke='${config.color}' stroke-width='2'/>
+                <line x1='17.4' y1='6.6' x2='19.8' y2='4.2' stroke='${config.color}' stroke-width='2'/>
+                <circle cx='15' cy='9' r='1.2' fill='white'/>
+            </svg>
+        `;
 
         const html = `
-            <div style="
-                width: ${centerIconSize}px;
-                height: ${centerIconSize}px;
-                background: ${backgroundColor};
-                border: 4px solid #000;
-                border-radius: 50%;
+            <div class="minefield-central-cell" style="
+                width: ${centerCellSize}px;
+                height: ${centerCellSize}px;
+                background: #FFFFFF;
+                border: 3px solid #000000;
+                border-radius: 6px;
                 display: flex;
+                flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                color: #000;
-                font-weight: bold;
-                font-size: ${centerIconSize * 0.6}px;
-                text-shadow: 2px 2px 0px #fff;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
                 cursor: pointer;
+                transition: all 0.3s ease;
+                position: relative;
             ">
-                ${mineSymbol}
+                <div class="mine-icon-container" style="
+                    width: ${centerCellSize * 0.9}px;
+                    height: ${centerCellSize * 0.9}px;
+                    border-radius: 50%;
+                    border: 2px solid ${config.color};
+                    background: rgba(255, 255, 255, 0.95);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 4px;
+                ">
+                    ${mineSvg}
+                </div>
             </div>
         `;
 
         const icon = L.divIcon({
             html: html,
-            className: 'minefield-central-icon-container',
-            iconSize: [centerIconSize + 6, centerIconSize + 6],
-            iconAnchor: [(centerIconSize + 6) / 2, (centerIconSize + 6) / 2]
+            className: 'minefield-central-modern-marker',
+            iconSize: [centerCellSize + 6, centerCellSize + 6],
+            iconAnchor: [(centerCellSize + 6) / 2, (centerCellSize + 6) / 2]
         });
 
         const marker = L.marker(centerLatLng, { 
             icon: icon,
-            zIndexOffset: 2000 // Higher z-index to ensure it's visible above other markers
+            zIndexOffset: 2000
+        });
+        
+        // Add hover effect
+        marker.on('mouseover', function(e) {
+            const element = e.target.getElement();
+            if (element) {
+                element.style.transform = 'scale(1.15)';
+                element.style.zIndex = '2500';
+                element.style.position = 'relative';
+            }
+        });
+        
+        marker.on('mouseout', function(e) {
+            const element = e.target.getElement();
+            if (element) {
+                element.style.transform = 'scale(1)';
+                element.style.zIndex = '2000';
+                element.style.position = 'relative';
+            }
         });
 
         // Add click handler for central mine icon
         marker.on('click', () => {
             console.log(`💣 Central minefield icon clicked: ${config.name}`);
-            // TODO: Show minefield info panel
+            // Show minefield info panel with details
         });
 
         return marker;

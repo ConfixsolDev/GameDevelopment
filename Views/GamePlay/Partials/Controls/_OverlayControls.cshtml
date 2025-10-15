@@ -14,6 +14,16 @@
                 </button>
             </div>
             <div class="control-row">
+                <button class="overlay-btn" id="btnReloadAttackLines" onclick="reloadAttackLines()" title="Reload Attack Lines">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Reload Attacks</span>
+                </button>
+                <button class="overlay-btn" id="btnCheckAttackLines" onclick="checkAttackLines()" title="Check Attack Lines Status">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Check Status</span>
+                </button>
+            </div>
+            <div class="control-row">
                 <button class="overlay-btn token-action-btn" id="btnPlanMove" data-mode="move">
                     <i class="fas fa-route"></i>
                     <span>Plan Move</span>
@@ -49,10 +59,12 @@
                 </button>
             </div>
             <div class="control-row">
-                <button class="overlay-btn defense-btn" id="btnMinefield" onclick="startMinefieldDrawing('mixed')" title="Minefield">
+                <button class="overlay-btn defense-btn" id="btnMinefieldAP" onclick="startMinefieldDrawing('antipersonnel')" title="Anti-Personnel Minefield" style="position: relative;">
                     <i class="fas fa-bomb"></i>
-                    <span>Minefield</span>
+                    <span>Mine Field</span>
                 </button>
+            </div>
+            <div class="control-row">
                 <button class="overlay-btn defense-btn" id="btnObstacle" onclick="startObstacleDrawing('wire')" title="Obstacle">
                     <i class="fas fa-shield-alt"></i>
                     <span>Obstacle</span>
@@ -96,10 +108,6 @@
                 <button class="overlay-btn" onclick="cancelDefenseDrawing()">
                     <i class="fas fa-times"></i>
                     <span>Cancel Drawing</span>
-                </button>
-                <button class="overlay-btn" onclick="clearAllDefenseElements()">
-                    <i class="fas fa-trash"></i>
-                    <span>Clear All</span>
                 </button>
             </div>
         </div>
