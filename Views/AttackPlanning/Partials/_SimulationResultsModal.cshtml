@@ -1,0 +1,356 @@
+@model TechWebSol.ViewModels.CombatSimulationResultsViewModel
+
+<div id="combatSimulationModal" class="gameplay-modal">
+    <div class="gameplay-modal-content extra-large">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-crosshairs"></i> Comprehensive Combat Simulation Results</h3>
+            <button class="gameplay-modal-close" onclick="closeSimulationModal('combatSimulationModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <!-- Token Information -->
+            <div class="simulation-header mb-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-card attacker-card p-3 rounded">
+                            <h6><i class="fas fa-user-shield"></i> Attacker</h6>
+                            <p class="mb-0"><strong>@Model.AttackerTokenName</strong></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-card defender-card p-3 rounded">
+                            <h6><i class="fas fa-bullseye"></i> Defender</h6>
+                            <p class="mb-0">
+                                <strong>@Model.DefenderTokenName</strong>
+                                @if (Model.WasSuspectedToken)
+                                {
+                                    <span class="badge badge-warning ml-2"><i class="fas fa-question-circle"></i> Suspected Token</span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                @if (Model.WasSuspectedToken)
+                {
+                    <div class="alert alert-warning mt-2 mb-0" style="background: rgba(255, 193, 7, 0.1); border-color: #ffc107;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Intelligence Note:</strong> Target was a suspected token (@((Model.DetectionConfidence * 100).ToString("F0"))% confidence).
+                        System resolved to real token: <strong>@Model.DefenderTokenName</strong>
+                    </div>
+                }
+            </div>
+
+            <!-- Victory Outcome Banner -->
+            @if (!string.IsNullOrEmpty(Model.VictoryOutcome))
+            {
+                <div class="mb-4">
+                    @{
+                        var victoryClass = Model.VictoryOutcome.Contains("Attacker") ? "victory-attacker" : 
+                                          Model.VictoryOutcome.Contains("Defender") ? "victory-defender" : 
+                                          "victory-stalemate";
+                        var victoryIcon = Model.VictoryOutcome.Contains("Attacker") ? "fa-trophy" : 
+                                         Model.VictoryOutcome.Contains("Defender") ? "fa-shield-alt" : 
+                                         "fa-handshake";
+                    }
+                    <div class="victory-banner @victoryClass">
+                        <div class="victory-header">
+                            <i class="fas @victoryIcon fa-2x"></i>
+                            <h4 class="mb-0 ml-3">@Model.VictoryOutcome</h4>
+                        </div>
+                        <div class="victory-details mt-3">
+                            <div class="military-line"><strong>OUTCOME:</strong> @Model.VictoryReason</div>
+                            <div class="military-line"><strong>COMBAT DURATION:</strong> @Model.TotalCombatRounds rounds | @((Model.TotalEngagementTimeMinutes / 60.0).ToString("F1")) hours (@Model.TotalEngagementTimeMinutes min)</div>
+                            <div class="military-line"><strong>FINAL CASUALTIES:</strong> Attacker @Model.FinalAttackerCasualtiesPercent% | Defender @Model.FinalDefenderCasualtiesPercent%</div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Attack Phases Section -->
+            <div class="mb-4">
+                <div class="military-section-header">ATTACK PHASES</div>
+                <div class="military-content">
+                    @if (Model.AttackPhases == null || !Model.AttackPhases.Any())
+                    {
+                        <div class="military-line">NO ATTACK PHASES DATA AVAILABLE</div>
+                    }
+                    else
+                    {
+                        @foreach (var phase in Model.AttackPhases)
+                        {
+                            <div class="military-line">
+                                <span class="military-label">[@phase.PhaseType]</span> 
+                                @phase.PhaseName: 
+                                Delay @phase.DelayMinutes min | 
+                                Attacker Casualties @phase.CasualtiesAttacker% | 
+                                Defender Casualties @phase.CasualtiesDefender%
+                                @if (!string.IsNullOrEmpty(phase.Notes))
+                                {
+                                    <span class="military-note"> - @phase.Notes</span>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- Defense Phases Section -->
+            <div class="mb-4">
+                <div class="military-section-header">DEFENSE PHASES</div>
+                <div class="military-content">
+                    @if (Model.DefensePhases == null || !Model.DefensePhases.Any())
+                    {
+                        <div class="military-line">NO DEFENSE PHASES DATA AVAILABLE</div>
+                    }
+                    else
+                    {
+                        @foreach (var phase in Model.DefensePhases)
+                        {
+                            <div class="military-line">
+                                <span class="military-label">[@phase.PhaseType]</span> 
+                                @phase.PhaseName:@if (phase.TimeToStayMinutes > 0)
+                                {
+                                    <text> Hold @phase.TimeToStayMinutes min |</text>
+                                }
+                                @if (phase.MovementDelayMinutes > 0)
+                                {
+                                    <text> Movement @phase.MovementDelayMinutes min |</text>
+                                }
+                                @if (phase.CounterAttackDelayMinutes > 0)
+                                {
+                                    <text> Counter-Attack @phase.CounterAttackDelayMinutes min |</text>
+                                } Defender Casualties @phase.CasualtiesDefender% | Attacker Casualties @phase.CasualtiesAttacker%
+                                @if (!string.IsNullOrEmpty(phase.Notes))
+                                {
+                                    <span class="military-note"> - @phase.Notes</span>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- Summary Section -->
+            <div class="mb-4">
+                <div class="military-section-header">ATTACK SUMMARY</div>
+                <div class="military-content">
+                    <div class="military-line">1. @Model.AttackSummary.EngagementKillZoneSummary</div>
+                    <div class="military-line">2. @Model.AttackSummary.DefensePositionsSummary</div>
+                    <div class="military-line military-total">TOTAL: @Model.AttackSummary.TotalDelayMinutes min delay | Attacker Losses @Model.AttackSummary.TotalAttackerCasualties% | Defender Losses @Model.AttackSummary.TotalDefenderCasualties%</div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="military-section-header">DEFENSE SUMMARY</div>
+                <div class="military-content">
+                    <div class="military-line">1. @Model.DefenseSummary.TimeToStaySummary</div>
+                    <div class="military-line">2. @Model.DefenseSummary.CounterPenetrationMovementSummary</div>
+                    <div class="military-line">3. @Model.DefenseSummary.CounterAttackSummary</div>
+                    <div class="military-line military-total">TOTAL: @Model.DefenseSummary.TotalTimeMinutes min | Defender Losses @Model.DefenseSummary.TotalDefenderCasualties% | Attacker Losses @Model.DefenseSummary.TotalAttackerCasualties%</div>
+                </div>
+            </div>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeSimulationModal('combatSimulationModal')">Close</button>
+            <button type="button" class="btn btn-primary" onclick="exportSimulationResults()">
+                <i class="fas fa-download"></i> Export Results
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Military Dark Terminal Theme */
+    #combatSimulationModal .gameplay-modal-content {
+        background-color: #0a0e14;
+        border: 2px solid #1a4d2e;
+        max-width: 1100px;
+    }
+
+    #combatSimulationModal .gameplay-modal-header {
+        background-color: #0f1419;
+        border-bottom: 2px solid #1a4d2e;
+        color: #00ff00;
+        font-family: 'Courier New', monospace;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    #combatSimulationModal .gameplay-modal-body {
+        background-color: #0a0e14;
+        color: #00ff00;
+        font-family: 'Courier New', monospace;
+        padding: 20px;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    #combatSimulationModal .gameplay-modal-footer {
+        background-color: #0f1419;
+        border-top: 2px solid #1a4d2e;
+    }
+
+    /* Info Cards */
+    #combatSimulationModal .info-card {
+        background: #0f1419;
+        border: 1px solid #1a4d2e;
+        border-left: 3px solid #00ff00;
+        padding: 10px 15px;
+        margin-bottom: 15px;
+    }
+
+    #combatSimulationModal .info-card h6,
+    #combatSimulationModal .info-card p,
+    #combatSimulationModal .info-card strong {
+        color: #00ff00;
+        margin: 3px 0;
+    }
+
+    #combatSimulationModal .alert-warning {
+        background: #1a1a00;
+        border: 1px solid #ffaa00;
+        border-left: 3px solid #ffaa00;
+        color: #ffaa00;
+        font-family: 'Courier New', monospace;
+    }
+
+    #combatSimulationModal .badge-warning {
+        background-color: #ffaa00;
+        color: #000;
+        font-weight: bold;
+        font-family: 'Courier New', monospace;
+    }
+
+    /* Military Section Headers */
+    #combatSimulationModal .military-section-header {
+        background-color: #0f1419;
+        border: 1px solid #1a4d2e;
+        border-left: 4px solid #00ff00;
+        padding: 8px 15px;
+        margin-bottom: 10px;
+        font-weight: bold;
+        font-size: 14px;
+        letter-spacing: 2px;
+        color: #00ff00;
+        text-transform: uppercase;
+    }
+
+    /* Military Content */
+    #combatSimulationModal .military-content {
+        padding: 10px 15px;
+        background-color: #0a0e14;
+        border: 1px solid #1a4d2e;
+        margin-bottom: 15px;
+    }
+
+    #combatSimulationModal .military-line {
+        color: #00ff00;
+        padding: 5px 0;
+        border-bottom: 1px dotted #1a4d2e;
+        line-height: 1.8;
+        font-size: 13px;
+    }
+
+    #combatSimulationModal .military-line:last-child {
+        border-bottom: none;
+    }
+
+    /* Victory Banner Styles */
+    #combatSimulationModal .victory-banner {
+        padding: 20px;
+        border-radius: 8px;
+        border: 2px solid;
+        margin: 20px 0;
+        animation: victoryPulse 2s ease-in-out infinite;
+    }
+
+    #combatSimulationModal .victory-attacker {
+        background: linear-gradient(135deg, #1a0000 0%, #0a0e14 100%);
+        border-color: #ff4444;
+        box-shadow: 0 0 20px rgba(255, 68, 68, 0.3);
+    }
+
+    #combatSimulationModal .victory-defender {
+        background: linear-gradient(135deg, #001a00 0%, #0a0e14 100%);
+        border-color: #44ff44;
+        box-shadow: 0 0 20px rgba(68, 255, 68, 0.3);
+    }
+
+    #combatSimulationModal .victory-stalemate {
+        background: linear-gradient(135deg, #1a1a00 0%, #0a0e14 100%);
+        border-color: #ffaa00;
+        box-shadow: 0 0 20px rgba(255, 170, 0, 0.3);
+    }
+
+    #combatSimulationModal .victory-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #1a4d2e;
+    }
+
+    #combatSimulationModal .victory-attacker .victory-header i,
+    #combatSimulationModal .victory-attacker .victory-header h4 {
+        color: #ff4444;
+    }
+
+    #combatSimulationModal .victory-defender .victory-header i,
+    #combatSimulationModal .victory-defender .victory-header h4 {
+        color: #44ff44;
+    }
+
+    #combatSimulationModal .victory-stalemate .victory-header i,
+    #combatSimulationModal .victory-stalemate .victory-header h4 {
+        color: #ffaa00;
+    }
+
+    #combatSimulationModal .victory-details {
+        padding-top: 15px;
+    }
+
+    @@keyframes victoryPulse {
+        0%, 100% {
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+        50% {
+            box-shadow: 0 0 35px rgba(0, 255, 0, 0.5);
+        }
+    }
+
+    #combatSimulationModal .military-label {
+        color: #ffaa00;
+        font-weight: bold;
+    }
+
+    #combatSimulationModal .military-note {
+        color: #888;
+        font-style: italic;
+    }
+
+    #combatSimulationModal .military-total {
+        border-top: 2px solid #1a4d2e;
+        margin-top: 10px;
+        padding-top: 10px;
+        font-weight: bold;
+        color: #ffaa00;
+        border-bottom: none;
+    }
+
+    /* Scrollbar styling for dark theme */
+    #combatSimulationModal .gameplay-modal-body::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #combatSimulationModal .gameplay-modal-body::-webkit-scrollbar-track {
+        background: #0f1419;
+    }
+
+    #combatSimulationModal .gameplay-modal-body::-webkit-scrollbar-thumb {
+        background: #1a4d2e;
+        border-radius: 4px;
+    }
+
+    #combatSimulationModal .gameplay-modal-body::-webkit-scrollbar-thumb:hover {
+        background: #00ff00;
+    }
+</style>

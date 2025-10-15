@@ -88,6 +88,26 @@ namespace TechWebSol.Models
         /// Related ISR missions for this suspected token
         /// </summary>
         public virtual ICollection<ISRMission>? ISRMissions { get; set; }
+
+        /// <summary>
+        /// The actual real token this suspected contact represents (known only to system for simulation)
+        /// Automatically matched when suspected token is placed or updated
+        /// </summary>
+        public Guid? RealTokenId { get; set; }
+
+        [ForeignKey("RealTokenId")]
+        public virtual Token? RealToken { get; set; }
+
+        /// <summary>
+        /// Position accuracy in meters (how close the suspected position is to real token)
+        /// </summary>
+        public int? PositionAccuracyMeters { get; set; }
+
+        /// <summary>
+        /// Confidence score of the automatic matching (0-100)
+        /// </summary>
+        [Column(TypeName = "decimal(5,2)")]
+        public decimal? MatchingConfidence { get; set; }
     }
 
     /// <summary>

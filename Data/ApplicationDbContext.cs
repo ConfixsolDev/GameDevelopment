@@ -86,7 +86,7 @@ namespace TechWebSol.Data
 
         // War Game Simulation DbSets
         public DbSet<WarGameScenario> WarGameScenarios { get; set; }
-        public DbSet<UnitDeployment> UnitDeployments { get; set; }
+        //public DbSet<UnitDeployment> UnitDeployments { get; set; }
         public DbSet<MovementOrder> MovementOrders { get; set; }
         public DbSet<Battle> Battles { get; set; }
         public DbSet<BattleParticipant> BattleParticipants { get; set; }
@@ -266,7 +266,6 @@ namespace TechWebSol.Data
             modelBuilder.Entity<Brigade>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.BrigadeCode).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.ForceType).IsRequired().HasMaxLength(50);
 

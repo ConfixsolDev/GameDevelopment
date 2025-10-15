@@ -1,0 +1,158 @@
+@model List<TechWebSol.ViewModels.AttackOrderSelectionViewModel>
+
+<div id="attackOrderSelectionModal" class="gameplay-modal">
+    <div class="gameplay-modal-content large">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-crosshairs"></i> Select Attack Order to Simulate</h3>
+            <button class="gameplay-modal-close" onclick="closeSimulationModal('attackOrderSelectionModal')">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <div class="military-instruction mb-3">SELECT ATTACK ORDER FOR COMBAT SIMULATION</div>
+            <div class="military-orders-list">
+                @foreach (var order in Model)
+                {
+                    <div class="military-order-item">
+                        <div class="military-order-line">
+                            ATTACKER: <span class="military-value">@order.AttackerTokenName</span> → 
+                            TARGET: <span class="military-value">@order.TargetTokenName</span>
+                            @if (order.IsSuspectedToken)
+                            {
+                                <span class="military-tag">[SUSPECTED]</span>
+                            }
+                            | STATUS: <span class="military-status">@order.Status.ToUpper()</span> 
+                            | COMPLETION: <span class="military-value">@order.CompletionPercentage</span>
+                        </div>
+                        <button type="button" class="military-simulate-btn"
+                                data-order-id="@order.Id"
+                                data-attacker-name="@order.AttackerTokenName"
+                                data-target-name="@order.TargetTokenName">
+                            ► RUN SIMULATION
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeSimulationModal('attackOrderSelectionModal')">Cancel</button>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetStatusBadgeColor(string status)
+    {
+        return status switch
+        {
+            "Draft" => "secondary",
+            "Planned" => "info",
+            "Approved" => "success",
+            "Executing" => "warning",
+            "Completed" => "dark",
+            "Failed" => "danger",
+            "Cancelled" => "secondary",
+            _ => "secondary"
+        };
+    }
+}
+
+<style>
+    /* Military Dark Theme for Attack Order Selection */
+    #attackOrderSelectionModal .gameplay-modal-content {
+        background-color: #0a0e14;
+        border: 2px solid #1a4d2e;
+        max-width: 900px;
+    }
+
+    #attackOrderSelectionModal .gameplay-modal-header {
+        background-color: #0f1419;
+        border-bottom: 2px solid #1a4d2e;
+        color: #00ff00;
+        font-family: 'Courier New', monospace;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    #attackOrderSelectionModal .gameplay-modal-body {
+        background-color: #0a0e14;
+        color: #00ff00;
+        font-family: 'Courier New', monospace;
+        padding: 20px;
+    }
+
+    #attackOrderSelectionModal .gameplay-modal-footer {
+        background-color: #0f1419;
+        border-top: 2px solid #1a4d2e;
+    }
+
+    #attackOrderSelectionModal .military-instruction {
+        background-color: #0f1419;
+        border: 1px solid #1a4d2e;
+        border-left: 4px solid #00ff00;
+        padding: 10px 15px;
+        font-weight: bold;
+        font-size: 13px;
+        letter-spacing: 2px;
+        color: #00ff00;
+    }
+
+    #attackOrderSelectionModal .military-orders-list {
+        margin-top: 15px;
+    }
+
+    #attackOrderSelectionModal .military-order-item {
+        background-color: #0f1419;
+        border: 1px solid #1a4d2e;
+        padding: 15px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    #attackOrderSelectionModal .military-order-item:hover {
+        border-color: #00ff00;
+        background-color: #0a1212;
+    }
+
+    #attackOrderSelectionModal .military-order-line {
+        color: #00ff00;
+        font-size: 13px;
+        flex: 1;
+    }
+
+    #attackOrderSelectionModal .military-value {
+        color: #ffaa00;
+        font-weight: bold;
+    }
+
+    #attackOrderSelectionModal .military-tag {
+        color: #ffaa00;
+        font-weight: bold;
+        background: #1a1a00;
+        padding: 2px 6px;
+        border: 1px solid #ffaa00;
+    }
+
+    #attackOrderSelectionModal .military-status {
+        color: #00ff00;
+        font-weight: bold;
+    }
+
+    #attackOrderSelectionModal .military-simulate-btn {
+        background: #1a4d2e;
+        border: 2px solid #00ff00;
+        color: #00ff00;
+        padding: 8px 20px;
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-left: 15px;
+    }
+
+    #attackOrderSelectionModal .military-simulate-btn:hover {
+        background: #00ff00;
+        color: #000;
+    }
+</style>

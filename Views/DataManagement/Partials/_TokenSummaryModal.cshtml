@@ -42,9 +42,8 @@
                         @foreach (var brigade in Model.Brigades)
                         {
                             <div class="summary-item brigade">
-                                <strong>Brigade:</strong> @(brigade.Name ?? "Unnamed Brigade")
+                                <strong>Brigade:</strong> @(brigade.BrigadeCode ?? "No Code")
                                 <span class="badge-military">@(brigade.ForceType ?? "Unknown")</span>
-                                <div class="text-muted">@(brigade.Description ?? "")</div>
                                 
                                 <!-- Infantry Units under this Brigade -->
                                 @{

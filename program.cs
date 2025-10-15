@@ -166,6 +166,12 @@ builder.Services.AddScoped<SupplyService>();
 builder.Services.AddScoped<IDetectionService, DetectionService>();
 builder.Services.AddScoped<IAttackPreviewService, AttackPreviewService>();
 builder.Services.AddScoped<IOrderPersistenceService, OrderPersistenceService>();
+builder.Services.AddScoped<ISuspectedTokenMatchingService, SuspectedTokenMatchingService>();
+builder.Services.AddScoped<IComprehensiveCombatSimulationService, ComprehensiveCombatSimulationService>();
+
+// Weapon-level combat simulation services
+builder.Services.AddScoped<IWeaponEffectivenessService, WeaponEffectivenessService>();
+builder.Services.AddScoped<IUnitCombatCalculatorService, UnitCombatCalculatorService>();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();

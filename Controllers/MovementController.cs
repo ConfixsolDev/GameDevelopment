@@ -37,32 +37,8 @@ namespace TechWebSol.Controllers
                 if (user == null)
                     return Unauthorized("User not authenticated");
 
-                // Find the unit deployment
-                var unitDeployment = await _context.UnitDeployments
-                    .FirstOrDefaultAsync(ud => ud.UnitId == unitId && ud.TeamId == user.TeamId);
-
-                if (unitDeployment == null)
-                    return NotFound("Unit not found");
-
-                var movementData = new UnitMovementData
-                {
-                    UnitId = unitId,
-                    UnitName = unitDeployment.UnitName ?? "Unknown Unit",
-                    UnitType = unitDeployment.UnitType ?? "Unknown",
-                    MovementPointsPerTurn = unitDeployment.MovementPointsPerTurn,
-                    RemainingMovementPoints = unitDeployment.RemainingMovementPoints,
-                    CurrentTerrain = unitDeployment.CurrentTerrain ?? "OPEN",
-                    SupplyState = unitDeployment.SupplyState ?? "Green",
-                    CombatPowerIndex = unitDeployment.CombatPowerIndex,
-                    EffectiveCombatPower = unitDeployment.EffectiveCombatPower_RO,
-                    Position = new Position
-                    {
-                        Lat = 0, // Will be extracted from Position JSON if needed
-                        Lng = 0
-                    }
-                };
-
-                return Ok(movementData);
+                // UnitDeployment system removed - using Brigade system
+                return BadRequest("UnitDeployment movement system temporarily unavailable - use token-based movement instead");
             }
             catch (Exception ex)
             {
@@ -131,41 +107,8 @@ namespace TechWebSol.Controllers
                 if (user == null)
                     return Unauthorized("User not authenticated");
 
-                var unitDeployment = await _context.UnitDeployments
-                    .FirstOrDefaultAsync(ud => ud.UnitId == request.UnitId && ud.TeamId == user.TeamId);
-
-                if (unitDeployment == null)
-                    return NotFound("Unit not found");
-
-                var availableMovement = await _movementService.GetEffectiveMovement(unitDeployment);
-                var canMove = request.RequiredMovementCost <= availableMovement;
-
-                var result = new MovementValidationResult
-                {
-                    UnitId = request.UnitId,
-                    AvailableMovement = availableMovement,
-                    RequiredMovement = request.RequiredMovementCost,
-                    CanMove = canMove,
-                    RemainingAfterMove = canMove ? availableMovement - request.RequiredMovementCost : 0,
-                    Warnings = new List<string>()
-                };
-
-                // Add warnings
-                if (!canMove)
-                {
-                    result.Warnings.Add($"Insufficient movement points. Need {request.RequiredMovementCost}, have {availableMovement}");
-                }
-                else if (result.RemainingAfterMove < 5)
-                {
-                    result.Warnings.Add($"Warning: Low remaining movement points ({result.RemainingAfterMove})");
-                }
-
-                if (unitDeployment.SupplyState == "Red")
-                {
-                    result.Warnings.Add("Unit has Red supply state - movement effectiveness reduced");
-                }
-
-                return Ok(result);
+                // UnitDeployment system removed
+                return BadRequest("UnitDeployment movement system unavailable - use token movement");
             }
             catch (Exception ex)
             {
@@ -186,40 +129,8 @@ namespace TechWebSol.Controllers
                     return Unauthorized("User not authenticated");
 
                 // Validate unit exists
-                var unitDeployment = await _context.UnitDeployments
-                    .FirstOrDefaultAsync(ud => ud.UnitId == request.UnitId && ud.TeamId == user.TeamId);
-
-                if (unitDeployment == null)
-                    return NotFound("Unit not found");
-
-                // Create route draft
-                var routeDraft = new RoutesDraft
-                {
-                    UnitId = unitDeployment.Id,
-                    RouteName = request.RouteName ?? $"Route {DateTime.Now:yyyy-MM-dd HH:mm}",
-                    WaypointsJson = System.Text.Json.JsonSerializer.Serialize(request.Waypoints),
-                    TotalDistanceKm = (decimal)request.TotalDistanceKm,
-                    EstimatedTimeTurns = (int)request.EstimatedTimeHours,
-                    SupplyImpact = (decimal)(request.SupplyImpact ?? 0),
-                    IsCommitted = false,
-                    TeamId = user.TeamId,
-                    CreatedDate = DateTime.Now,
-                    IsActive = true
-                };
-
-                _context.RoutesDrafts.Add(routeDraft);
-                await _context.SaveChangesAsync();
-
-                var result = new RouteDraftResult
-                {
-                    RouteId = routeDraft.Id,
-                    RouteName = routeDraft.RouteName,
-                    TotalDistanceKm = (double)routeDraft.TotalDistanceKm,
-                    ETA = routeDraft.CreatedDate?.AddHours(routeDraft.EstimatedTimeTurns),
-                    IsSaved = true
-                };
-
-                return Ok(result);
+                // UnitDeployment system removed
+                return BadRequest("UnitDeployment movement system unavailable - use token movement");
             }
             catch (Exception ex)
             {
@@ -239,57 +150,8 @@ namespace TechWebSol.Controllers
                 if (user == null)
                     return Unauthorized("User not authenticated");
 
-                var unitDeployment = await _context.UnitDeployments
-                    .FirstOrDefaultAsync(ud => ud.UnitId == request.UnitId && ud.TeamId == user.TeamId);
-
-                if (unitDeployment == null)
-                    return NotFound("Unit not found");
-
-                // Validate movement
-                var availableMovement = await _movementService.GetEffectiveMovement(unitDeployment);
-                if (request.MovementCost > availableMovement)
-                {
-                    return BadRequest($"Insufficient movement points. Need {request.MovementCost}, have {availableMovement}");
-                }
-
-                // Update unit deployment
-                unitDeployment.RemainingMovementPoints -= (int)request.MovementCost;
-                
-                if (request.ActionType == "assembly")
-                {
-                    // For assembly, we could add a status field or notes
-                    unitDeployment.Status = "Assembled";
-                }
-
-                // Update position if waypoints provided
-                if (request.Waypoints != null && request.Waypoints.Count > 0)
-                {
-                    var finalWaypoint = request.Waypoints.Last();
-                    // Update position JSON
-                    unitDeployment.Position = System.Text.Json.JsonSerializer.Serialize(new { 
-                        lat = finalWaypoint.Lat, 
-                        lng = finalWaypoint.Lng 
-                    });
-                    unitDeployment.CurrentTerrain = request.TerrainType ?? unitDeployment.CurrentTerrain;
-                }
-
-                // Update effective combat power
-                unitDeployment.UpdateEffectiveCombatPower();
-
-                await _context.SaveChangesAsync();
-
-                var result = new MovementCommitResult
-                {
-                    UnitId = request.UnitId,
-                    ActionType = request.ActionType,
-                    MovementCost = request.MovementCost,
-                    RemainingMovement = unitDeployment.RemainingMovementPoints,
-                    IsCommitted = true,
-                    NewPosition = request.Waypoints?.LastOrDefault(),
-                    EffectiveCombatPower = unitDeployment.EffectiveCombatPower_RO
-                };
-
-                return Ok(result);
+                // UnitDeployment system removed
+                return BadRequest("UnitDeployment movement system unavailable - use token movement");
             }
             catch (Exception ex)
             {
@@ -343,12 +205,12 @@ namespace TechWebSol.Controllers
                 };
 
                 // Check database tables exist
-                var hasUnitDeployments = await _context.UnitDeployments.AnyAsync();
+                // UnitDeployments table removed - using Brigade system now
                 healthCheck.Checks.Add(new HealthCheckItem
                 {
-                    Name = "UnitDeployments Table",
-                    Status = hasUnitDeployments ? "OK" : "WARNING",
-                    Message = hasUnitDeployments ? "Table exists with data" : "Table empty"
+                    Name = "Brigade System",
+                    Status = "OK",
+                    Message = "Using Brigade-based movement system"
                 });
 
                 var hasTerrainTypes = await _context.TerrainTypes.AnyAsync();
