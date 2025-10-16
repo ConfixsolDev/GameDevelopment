@@ -41,6 +41,65 @@ namespace TechWebSol.Controllers
         }
 
         /// <summary>
+        /// Test endpoint to verify routing is working
+        /// </summary>
+        [HttpGet]
+        public IActionResult TestApi()
+        {
+            return Json(new { success = true, message = "API routing is working", timestamp = DateTime.UtcNow });
+        }
+
+        /// <summary>
+        /// Get current team information for force-based color coding
+        /// </summary>
+        [HttpGet]
+        public IActionResult GetCurrentTeamInfo()
+        {
+            try
+            {
+                // Get fresh user data to ensure ForceType is current
+                var currentUser = _userSessionService.GetCurrentUser();
+                
+                if (currentUser?.TeamId == null)
+                {
+                    return Json(new { success = false, message = "No team assigned to current user" });
+                }
+
+                var team = _context.Teams.FirstOrDefault(t => t.Id == currentUser.TeamId);
+                
+                if (team == null)
+                {
+                    return Json(new { success = false, message = "Team not found" });
+                }
+
+                // Determine force type with fallback logic
+                var forceType = currentUser.ForceType ?? team.ForceType ?? "Neutral";
+                
+                _logger.LogInformation($"Force type determined: {forceType} (User: {currentUser.ForceType}, Team: {team.ForceType})");
+
+                var result = new
+                {
+                    success = true,
+                    team = new
+                    {
+                        id = team.Id,
+                        name = team.Name,
+                        forceType = forceType
+                    }
+                };
+
+                _logger.LogInformation($"Returning team info: {result.team.name} with force type: {result.team.forceType}");
+                
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting current team info");
+                return Json(new { success = false, message = "Error retrieving team information" });
+            }
+        }
+
+        /// <summary>
         /// Military Adjudication - Comprehensive analysis of all token movements
         /// </summary>
         [HttpPost]

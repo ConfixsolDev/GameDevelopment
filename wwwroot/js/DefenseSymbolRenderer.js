@@ -22,17 +22,26 @@ class DefenseSymbolRenderer {
      * Blue Land = Blue, Fox Land = Red
      */
     getForceColor(forceType) {
-        if (!forceType) return null;
+        console.log(`🎨 getForceColor called with: "${forceType}"`);
+        
+        if (!forceType) {
+            console.warn('⚠️ Force type is null/undefined - using default NATO colors');
+            return null;
+        }
         
         const forceTypeLower = forceType.toLowerCase();
+        console.log(`🎨 Force type lowercase: "${forceTypeLower}"`);
         
         if (forceTypeLower.includes('blue')) {
+            console.log('✅ Detected Blueland - using BLUE color (#0000ff)');
             return '#0000ff'; // Blue for Blue Land
         } else if (forceTypeLower.includes('fox') || forceTypeLower.includes('red')) {
+            console.log('✅ Detected Foxland - using RED color (#ff0000)');
             return '#ff0000'; // Red for Fox Land
         }
         
         // Default to null to use original colors
+        console.warn(`⚠️ Force type "${forceType}" not recognized - using default NATO colors`);
         return null;
     }
 
@@ -333,9 +342,15 @@ class DefenseSymbolRenderer {
     createDefensivePosition(latlng, type = 'foxhole', options = {}) {
         const positionConfig = this.symbols.positions[type];
         
+        // Get force-based color
+        const forceColor = this.getForceColor(options.forceType);
+        const color = forceColor || positionConfig.color;
+        
+        console.log(`🎨 Defensive position color: ${color} (force: ${options.forceType})`);
+        
         const html = `
             <div class="defense-position position-${type}">
-                <div class="position-symbol" style="font-size: ${positionConfig.size}px; color: ${positionConfig.color};">
+                <div class="position-symbol" style="font-size: ${positionConfig.size}px; color: ${color};">
                     ${positionConfig.symbol}
                 </div>
             </div>
@@ -528,22 +543,9 @@ class DefenseSymbolRenderer {
                         zIndexOffset: 1500
                     });
 
-                    // Add hover effect - simplified approach
-                    marker.on('mouseover', function(e) {
-                        const element = e.target.getElement();
-                        if (element) {
-                            element.style.transform = 'scale(1.1)';
-                            element.style.zIndex = '2000';
-                        }
-                    });
-                    
-                    marker.on('mouseout', function(e) {
-                        const element = e.target.getElement();
-                        if (element) {
-                            element.style.transform = 'scale(1)';
-                            element.style.zIndex = '1500';
-                        }
-            });
+                    // Hover effects disabled to prevent positioning issues
+                    // marker.on('mouseover', function(e) { ... });
+                    // marker.on('mouseout', function(e) { ... });
 
             // Add click handler for minefield info
             marker.on('click', () => {
@@ -710,24 +712,9 @@ class DefenseSymbolRenderer {
             zIndexOffset: 2000
         });
         
-        // Add hover effect
-        marker.on('mouseover', function(e) {
-            const element = e.target.getElement();
-            if (element) {
-                element.style.transform = 'scale(1.15)';
-                element.style.zIndex = '2500';
-                element.style.position = 'relative';
-            }
-        });
-        
-        marker.on('mouseout', function(e) {
-            const element = e.target.getElement();
-            if (element) {
-                element.style.transform = 'scale(1)';
-                element.style.zIndex = '2000';
-                element.style.position = 'relative';
-            }
-        });
+        // Hover effects disabled to prevent positioning issues
+        // marker.on('mouseover', function(e) { ... });
+        // marker.on('mouseout', function(e) { ... });
 
         // Add click handler for central mine icon
         marker.on('click', () => {
@@ -793,6 +780,18 @@ class DefenseSymbolRenderer {
     }
 
     /**
+     * Get display text for defense zone type
+     */
+    getDefenseZoneTypeText(type) {
+        const typeTexts = {
+            'primary': 'Primary Defense Zone',
+            'secondary': 'Secondary Defense Zone', 
+            'support': 'Support Defense Zone'
+        };
+        return typeTexts[type] || 'Defense Zone';
+    }
+
+    /**
      * Create Defense Zone with oval/circular shape and parallel lines
      * @param {Array} coordinates - Array of [lat, lng] coordinates defining the zone boundary
      * @param {string} type - Defense zone type ('primary', 'secondary', 'support')
@@ -801,6 +800,12 @@ class DefenseSymbolRenderer {
      */
     createDefenseZone(coordinates, type = 'primary', options = {}) {
         const config = this.symbols.defenseZones[type] || this.symbols.defenseZones.primary;
+        
+        // Get force-based color
+        const forceColor = this.getForceColor(options.forceType);
+        const zoneColor = forceColor || config.color;
+        
+        console.log(`🎨 Defense zone color: ${zoneColor} (force: ${options.forceType})`);
         
         // Create defense zone group
         const defenseZoneGroup = L.layerGroup();
@@ -819,24 +824,26 @@ class DefenseSymbolRenderer {
             const radius = this.calculateCircleRadius(points);
             shape = L.circle(centerLatLng, {
                 radius: radius,
-                color: config.color,
+                color: zoneColor,
                 weight: config.strokeWidth,
                 opacity: 0.8,
-                fillColor: config.color,
+                fillColor: zoneColor,
                 fillOpacity: config.fillOpacity,
                 dashArray: config.strokeDashArray,
-                className: 'defense-zone-shape'
+                className: 'defense-zone-shape',
+                interactive: true // Make sure it's interactive
             });
         } else {
             // Create oval/polygon shape
             shape = L.polygon(points, {
-                color: config.color,
+                color: zoneColor,
                 weight: config.strokeWidth,
                 opacity: 0.8,
-                fillColor: config.color,
+                fillColor: zoneColor,
                 fillOpacity: config.fillOpacity,
                 dashArray: config.strokeDashArray,
-                className: 'defense-zone-shape'
+                className: 'defense-zone-shape',
+                interactive: true // Make sure it's interactive
             });
         }
         
@@ -844,40 +851,64 @@ class DefenseSymbolRenderer {
         
         // 2. Add parallel lines across the shape if enabled
         if (config.parallelLines) {
-            const parallelLines = this.createParallelLines(points, config);
+            const parallelLines = this.createParallelLines(points, config, zoneColor);
             parallelLines.forEach(line => {
                 defenseZoneGroup.addLayer(line);
             });
         }
         
-        // 3. Add defense token at exact center
+        // 3. Add defense token with zone type text at exact center
+        const zoneTypeText = this.getDefenseZoneTypeText(type);
         const tokenIcon = L.divIcon({
             html: `
-                <div class="defense-zone-token" style="
-                    background: ${config.color};
-                    color: white;
-                    width: ${config.tokenSize}px;
-                    height: ${config.tokenSize}px;
-                    border-radius: 50%;
+                <div class="defense-zone-container" style="
                     display: flex;
+                    flex-direction: column;
                     align-items: center;
                     justify-content: center;
-                    font-size: ${config.tokenSize * 0.6}px;
-                    font-weight: bold;
-                    border: 2px solid white;
-                    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
                 ">
-                    ${config.symbol}
+                    <div class="defense-zone-token" style="
+                        background: ${zoneColor};
+                        color: white;
+                        width: ${config.tokenSize}px;
+                        height: ${config.tokenSize}px;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: ${config.tokenSize * 0.6}px;
+                        font-weight: bold;
+                        border: 2px solid white;
+                        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                        margin-bottom: 2px;
+                    ">
+                        ${config.symbol}
+                    </div>
+                    <div class="defense-zone-label" style="
+                        background: transparent;
+                        border: none;
+                        color: white;
+                        font-size: 12px;
+                        font-weight: bold;
+                        text-align: center;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                        white-space: nowrap;
+                        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+                    ">
+                        ${zoneTypeText}
+                    </div>
                 </div>
             `,
             className: 'defense-zone-token-marker',
-            iconSize: [config.tokenSize + 4, config.tokenSize + 4],
-            iconAnchor: [(config.tokenSize + 4) / 2, (config.tokenSize + 4) / 2]
+            iconSize: [config.tokenSize + 20, config.tokenSize + 20],
+            iconAnchor: [(config.tokenSize + 20) / 2, (config.tokenSize + 20) / 2]
         });
         
         const tokenMarker = L.marker(centerLatLng, {
             icon: tokenIcon,
-            zIndexOffset: 2000
+            zIndexOffset: 2000,
+            interactive: true
         });
         
         defenseZoneGroup.addLayer(tokenMarker);
@@ -888,11 +919,7 @@ class DefenseSymbolRenderer {
         defenseZoneGroup.config = config;
         defenseZoneGroup.type = type;
         
-        // Add click handler for defense zone info
-        defenseZoneGroup.on('click', (e) => {
-            console.log(`🛡️ Defense Zone clicked: ${config.name} (${type})`);
-            // TODO: Show defense zone info panel
-        });
+        // Note: Click and contextmenu handlers are added by DefensePlanningManager
         
         return defenseZoneGroup;
     }
@@ -901,10 +928,14 @@ class DefenseSymbolRenderer {
      * Create two short parallel lines across the defense zone
      * @param {Array} points - LatLng points defining the zone
      * @param {Object} config - Defense zone configuration
+     * @param {string} lineColor - Optional color override for force-based coloring
      * @returns {Array} Array of L.polyline objects
      */
-    createParallelLines(points, config) {
+    createParallelLines(points, config, lineColor = null) {
         const lines = [];
+        
+        // Use provided color or config color
+        const color = lineColor || config.color;
         
         // Calculate zone bounds
         const bounds = L.latLngBounds(points);
@@ -924,7 +955,7 @@ class DefenseSymbolRenderer {
         const line1Start = L.latLng(center.lat + line1Offset, center.lng - lineLength/2);
         const line1End = L.latLng(center.lat + line1Offset, center.lng + lineLength/2);
         const line1 = L.polyline([line1Start, line1End], {
-            color: config.color,
+            color: color,
             weight: 3,
             opacity: 0.8,
             className: 'defense-zone-parallel-line'
@@ -934,7 +965,7 @@ class DefenseSymbolRenderer {
         const line2Start = L.latLng(center.lat + line2Offset, center.lng - lineLength/2);
         const line2End = L.latLng(center.lat + line2Offset, center.lng + lineLength/2);
         const line2 = L.polyline([line2Start, line2End], {
-            color: config.color,
+            color: color,
             weight: 3,
             opacity: 0.8,
             className: 'defense-zone-parallel-line'

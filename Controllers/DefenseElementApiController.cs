@@ -87,6 +87,42 @@ namespace TechWebSol.Controllers
         }
 
         /// <summary>
+        /// Get all visible defense elements for current user's team (no session filter)
+        /// </summary>
+        [HttpGet("team")]
+        public async Task<IActionResult> GetTeamDefenseElements()
+        {
+            try
+            {
+                var currentUser = _userSessionService.GetCurrentUser();
+                var teamId = currentUser.TeamId ?? Guid.Empty;
+                var forceType = currentUser.ForceType ?? "Blueland";
+
+                if (teamId == Guid.Empty)
+                {
+                    return Ok(new { success = true, elements = new List<DefenseElement>(), count = 0 });
+                }
+
+                var dal = new DefenseElementDAL(_context);
+                var elements = await dal.GetTeamDefenseElementsAsync(teamId, forceType);
+
+                return Ok(new
+                {
+                    success = true,
+                    elements = elements,
+                    count = elements.Count,
+                    teamId = teamId,
+                    forceType = forceType
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting team defense elements");
+                return StatusCode(500, new { success = false, message = "Internal server error" });
+            }
+        }
+
+        /// <summary>
         /// Get defense elements for a specific token
         /// </summary>
         [HttpGet("token/{tokenId}")]

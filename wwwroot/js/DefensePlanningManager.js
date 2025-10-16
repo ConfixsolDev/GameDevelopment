@@ -97,25 +97,279 @@ class DefensePlanningManager {
      * Get current team's force type for color-coding defense elements
      */
     getCurrentForceType() {
-        // Try to get from global currentTeamInfo
+        console.log('🔍 Getting current force type from session...');
+        console.log('🔍 window.currentTeamInfo:', window.currentTeamInfo);
+        
+        // Get from session data (set directly from server-side)
         if (window.currentTeamInfo && window.currentTeamInfo.forceType) {
+            console.log(`✅ Force type from session: ${window.currentTeamInfo.forceType}`);
             return window.currentTeamInfo.forceType;
         }
         
-        // Try to get from gamePlayManager
-        if (window.gamePlayManager && window.gamePlayManager.currentTeamInfo && window.gamePlayManager.currentTeamInfo.forceType) {
-            return window.gamePlayManager.currentTeamInfo.forceType;
-        }
-        
         // Default to neutral if not available
-        console.warn('⚠️ Could not determine force type, using default');
+        console.warn('⚠️ Force type not available in session, using default');
         return 'Neutral';
     }
     
     /**
+     * Debug method to check force type detection
+     */
+    debugForceType() {
+        console.log('🔍 DEBUG: Force Type Detection');
+        console.log('window.currentTeamInfo:', window.currentTeamInfo);
+        console.log('window.gamePlayManager:', window.gamePlayManager);
+        console.log('window.gamePlayManager?.currentTeamInfo:', window.gamePlayManager?.currentTeamInfo);
+        
+        const forceType = this.getCurrentForceType();
+        console.log('Detected force type:', forceType);
+        
+        // Test the color detection
+        if (window.defensePlanningManager && window.defensePlanningManager.renderer) {
+            const color = window.defensePlanningManager.renderer.getForceColor(forceType);
+            console.log('Force color:', color);
+        }
+        
+        return forceType;
+    }
+
+    /**
+     * Debug method to test right-click functionality
+     */
+    debugRightClick() {
+        console.log('🔍 DEBUG: Right-Click Functionality');
+        console.log('Defense elements count:', this.defenseElements.size);
+        
+        this.defenseElements.forEach((element, id) => {
+            console.log(`Element ${id}:`, {
+                category: element.category,
+                type: element.type,
+                hasLayers: !!element.layers,
+                hasElement: !!element.element,
+                hasDbId: !!element.dbId,
+                dbId: element.dbId,
+                layersType: element.layers?.constructor?.name
+            });
+        });
+        
+        // Test right-click handler
+        console.log('Testing right-click handler...');
+        this.handleDefenseElementRightClick({ originalEvent: { preventDefault: () => {}, stopPropagation: () => {} } }, 'test-id', 'defensezone');
+        
+        return this.defenseElements.size;
+    }
+
+    /**
+     * Debug method to test delete functionality
+     */
+    async debugDelete() {
+        console.log('🔍 DEBUG: Delete Functionality');
+        console.log('Defense elements count:', this.defenseElements.size);
+        
+        if (this.defenseElements.size === 0) {
+            console.log('No elements to test delete on');
+            return;
+        }
+        
+        // Get first element for testing
+        const [firstId, firstElement] = this.defenseElements.entries().next().value;
+        console.log(`Testing delete on element: ${firstId}`, firstElement);
+        
+        // Test delete without actually deleting
+        console.log('Testing delete method (dry run)...');
+        await this.deleteDefenseElement(firstId, firstElement.category);
+        
+        return firstId;
+    }
+
+    /**
+     * Clean up inactive elements from local storage
+     * This ensures local storage only contains active elements
+     */
+    async cleanupInactiveElements() {
+        console.log('🧹 Cleaning up inactive elements from local storage...');
+        
+        try {
+            // Get all active elements from database
+            const result = await this.loadDefenseElements();
+            
+            if (result.success) {
+                const activeElementIds = new Set(result.elements.map(e => e.elementId));
+                
+                // Remove any local elements that are not in the active list
+                const elementsToRemove = [];
+                this.defenseElements.forEach((element, id) => {
+                    if (!activeElementIds.has(id)) {
+                        elementsToRemove.push(id);
+                    }
+                });
+                
+                if (elementsToRemove.length > 0) {
+                    console.log(`🧹 Removing ${elementsToRemove.length} inactive elements from local storage`);
+                    elementsToRemove.forEach(id => {
+                        this.defenseElements.delete(id);
+                    });
+                } else {
+                    console.log('✅ Local storage is clean - no inactive elements found');
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error cleaning up inactive elements:', error);
+        }
+    }
+
+    /**
+     * Force refresh team info and test force type detection
+     */
+    async forceRefreshTeamInfo() {
+        console.log('🔄 Force refreshing team info...');
+        
+        try {
+            if (window.gamePlayManager && typeof window.gamePlayManager.loadCurrentTeamInfo === 'function') {
+                await window.gamePlayManager.loadCurrentTeamInfo();
+                console.log('✅ Team info refreshed');
+                
+                // Test force type detection
+                const forceType = this.getCurrentForceType();
+                console.log(`🎨 Current force type: ${forceType}`);
+                
+                // Test color detection
+                if (window.defensePlanningManager && window.defensePlanningManager.renderer) {
+                    const color = window.defensePlanningManager.renderer.getForceColor(forceType);
+                    console.log(`🎨 Force color: ${color}`);
+                }
+                
+                return forceType;
+            } else {
+                console.warn('⚠️ GamePlayManager not available');
+                return null;
+            }
+        } catch (error) {
+            console.error('❌ Error refreshing team info:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Test the API call directly to debug force type issues
+     */
+    async testApiCall() {
+        console.log('🧪 Testing GetCurrentTeamInfo API call directly...');
+        
+        try {
+            const response = await fetch('/GamePlay/GetCurrentTeamInfo');
+            console.log('📡 Direct API Response status:', response.status);
+            
+            const data = await response.json();
+            console.log('📦 Direct API Response data:', data);
+            
+            if (data.success && data.team) {
+                console.log('✅ API call successful:');
+                console.log('  - Team Name:', data.team.name);
+                console.log('  - Team ID:', data.team.id);
+                console.log('  - Force Type:', data.team.forceType);
+                
+                // Test force color with this data
+                if (this.renderer) {
+                    const color = this.renderer.getForceColor(data.team.forceType);
+                    console.log('  - Detected Color:', color);
+                }
+                
+                return data.team;
+            } else {
+                console.warn('⚠️ API call failed:', data);
+                return null;
+            }
+        } catch (error) {
+            console.error('❌ Error in direct API call:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Test defense zone color creation with current force type
+     */
+    testDefenseZoneColor() {
+        console.log('🧪 Testing defense zone color creation...');
+        
+        // Get current force type
+        const forceType = this.getCurrentForceType();
+        console.log(`🎨 Current force type: ${forceType}`);
+        
+        // Test renderer color detection
+        if (this.renderer) {
+            const color = this.renderer.getForceColor(forceType);
+            console.log(`🎨 Renderer detected color: ${color}`);
+            
+            // Test different force types
+            console.log('🧪 Testing different force types:');
+            const testTypes = ['Foxland', 'Blueland', 'Fox Land', 'Blue Land', 'Neutral'];
+            testTypes.forEach(testType => {
+                const testColor = this.renderer.getForceColor(testType);
+                console.log(`  ${testType} -> ${testColor}`);
+            });
+        } else {
+            console.warn('⚠️ Renderer not available');
+        }
+        
+        // Check if we have any existing defense zones
+        let defenseZoneCount = 0;
+        this.defenseElements.forEach((element, id) => {
+            if (element.category === 'defensezone') {
+                defenseZoneCount++;
+                console.log(`🛡️ Existing defense zone ${id}:`, {
+                    type: element.type,
+                    hasElement: !!element.element,
+                    hasShape: !!element.element?.shape
+                });
+            }
+        });
+        
+        console.log(`📊 Found ${defenseZoneCount} existing defense zones`);
+        
+        return {
+            currentForceType: forceType,
+            detectedColor: this.renderer?.getForceColor(forceType),
+            existingDefenseZones: defenseZoneCount
+        };
+    }
+
+    /**
+     * Refresh all defense zones with correct colors based on current force type
+     * Call this after team info is loaded to fix any color mismatches
+     */
+    async refreshDefenseZoneColors() {
+        console.log('🎨 Refreshing defense zone colors...');
+        
+        try {
+            // Get current force type
+            const forceType = this.getCurrentForceType();
+            console.log(`🎨 Current force type for refresh: ${forceType}`);
+            
+            // Clear all layers and reload from database
+            console.log('🔄 Clearing and reloading defense elements...');
+            await this.loadDefenseElements();
+            
+            console.log('✅ Defense zone colors refreshed');
+            
+            return {
+                success: true,
+                forceType: forceType
+            };
+        } catch (error) {
+            console.error('❌ Error refreshing defense zone colors:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    /**
      * Handle right-click on defense element for deletion
      */
-    handleDefenseElementRightClick(e, elementId, category) {
+    async handleDefenseElementRightClick(e, elementId, category) {
+        console.log(`🖱️ Right-click detected on ${category} element: ${elementId}`);
+        
         // Prevent default context menu
         e.originalEvent.preventDefault();
         e.originalEvent.stopPropagation();
@@ -123,45 +377,130 @@ class DefensePlanningManager {
         // Show confirmation dialog
         const elementType = category === 'killzone' ? 'Kill Zone' : 
                           category === 'minefield' ? 'Minefield' : 
+                          category === 'defensezone' ? 'Defense Zone' :
                           category.charAt(0).toUpperCase() + category.slice(1);
         
+        console.log(`🗑️ Showing delete confirmation for ${elementType}`);
+        
         if (confirm(`Are you sure you want to delete this ${elementType}?`)) {
-            this.deleteDefenseElement(elementId, category);
+            console.log(`✅ User confirmed deletion of ${elementType}`);
+            await this.deleteDefenseElement(elementId, category);
+        } else {
+            console.log(`❌ User cancelled deletion of ${elementType}`);
         }
     }
     
     /**
      * Delete a defense element by ID
      */
-    deleteDefenseElement(elementId, category) {
+    async deleteDefenseElement(elementId, category) {
         try {
             console.log(`🗑️ Deleting defense element: ${elementId} (${category})`);
             
-            // Remove from local storage
-            if (this.defenseElements.has(elementId)) {
-                const elementData = this.defenseElements.get(elementId);
-                
-                // Remove from map layers
-                if (elementData.layers) {
-                    if (elementData.layers.polygon) {
-                        this.map.removeLayer(elementData.layers.polygon);
-                    }
-                    if (elementData.layers.label) {
-                        this.map.removeLayer(elementData.layers.label);
-                    }
-                    if (elementData.layers.markers) {
-                        elementData.layers.markers.forEach(marker => {
-                            this.map.removeLayer(marker);
-                        });
-                    }
-                }
-                
-                // Remove from local storage
-                this.defenseElements.delete(elementId);
-                
-                console.log(`✅ Defense element ${elementId} deleted successfully`);
-            } else {
+            // Get element data
+            const elementData = this.defenseElements.get(elementId);
+            if (!elementData) {
                 console.warn(`⚠️ Defense element ${elementId} not found in local storage`);
+                return;
+            }
+            
+            console.log(`🔍 Element data structure:`, {
+                id: elementData.id,
+                category: elementData.category,
+                type: elementData.type,
+                hasLayers: !!elementData.layers,
+                hasDbId: !!elementData.dbId,
+                dbId: elementData.dbId,
+                layersType: elementData.layers?.constructor?.name
+            });
+            
+            // Remove from map layers based on category
+            let removedFromMap = false;
+            
+            if (category === 'killzone') {
+                if (elementData.layers && elementData.layers.polygon) {
+                    this.killZoneLayer.removeLayer(elementData.layers.polygon);
+                    removedFromMap = true;
+                }
+                if (elementData.layers && elementData.layers.label) {
+                    this.killZoneLayer.removeLayer(elementData.layers.label);
+                    removedFromMap = true;
+                }
+            } else if (category === 'minefield') {
+                if (elementData.layers && elementData.layers.markers) {
+                    elementData.layers.markers.forEach(marker => {
+                        this.minefieldLayer.removeLayer(marker);
+                    });
+                    removedFromMap = true;
+                }
+            } else if (category === 'obstacle') {
+                if (elementData.layers && elementData.layers.line) {
+                    this.obstacleLayer.removeLayer(elementData.layers.line);
+                    removedFromMap = true;
+                }
+            } else if (category === 'withdrawal' || category === 'route') {
+                if (elementData.layers && elementData.layers.route) {
+                    this.withdrawalLayer.removeLayer(elementData.layers.route);
+                    removedFromMap = true;
+                }
+            } else if (category === 'line') {
+                if (elementData.layers && elementData.layers.line) {
+                    this.defensiveLineLayer.removeLayer(elementData.layers.line);
+                    removedFromMap = true;
+                }
+            } else if (category === 'position') {
+                if (elementData.layers) {
+                    this.positionLayer.removeLayer(elementData.layers);
+                    removedFromMap = true;
+                }
+            } else if (category === 'defensezone') {
+                if (elementData.layers || elementData.element) {
+                    const layerToRemove = elementData.layers || elementData.element;
+                    this.defenseZoneLayer.removeLayer(layerToRemove);
+                    removedFromMap = true;
+                }
+            }
+            
+            if (!removedFromMap) {
+                console.warn(`⚠️ Could not remove ${category} from map - no valid layer found`);
+            } else {
+                console.log(`✅ Removed ${category} from map`);
+            }
+            
+            // Delete from database if it has a database ID
+            let databaseDeleted = false;
+            if (elementData.dbId) {
+                try {
+                    console.log(`🗄️ Deleting from database with ID: ${elementData.dbId}`);
+                    const response = await fetch(`/api/DefenseElementApi/delete/${elementData.dbId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log(`✅ Defense element ${elementId} deleted from database:`, result);
+                        databaseDeleted = true;
+                    } else {
+                        const errorText = await response.text();
+                        console.warn(`⚠️ Failed to delete defense element ${elementId} from database:`, errorText);
+                    }
+                } catch (dbError) {
+                    console.error(`❌ Error deleting defense element ${elementId} from database:`, dbError);
+                }
+            } else {
+                console.warn(`⚠️ No database ID found for element ${elementId} - skipping database deletion`);
+            }
+            
+            // Remove from local storage
+            this.defenseElements.delete(elementId);
+            
+            console.log(`✅ Defense element ${elementId} deleted successfully`);
+            
+            // Refresh elements from database only if database deletion was successful
+            // This ensures that if the page is refreshed, deleted elements won't reappear
+            if (databaseDeleted) {
+                console.log('🔄 Refreshing defense elements from database to ensure consistency...');
+                await this.loadDefenseElements();
             }
             
         } catch (error) {
@@ -172,34 +511,48 @@ class DefensePlanningManager {
     /**
      * Load all defense elements from database (single function call)
      * Similar to token placement loading pattern
+     * Only loads ACTIVE elements (soft delete handled at database level)
      */
     async loadDefenseElements(gameSessionId = null) {
         try {
             const sessionId = gameSessionId || this.getCurrentGameSessionId();
             
-            if (!sessionId) {
-                console.warn('⚠️ No game session ID - cannot load defense elements');
-                return { success: false, message: 'No game session ID' };
+            let response;
+            if (sessionId) {
+                console.log(`📥 Loading ACTIVE defense elements from database for session ${sessionId}...`);
+                response = await fetch(`/api/DefenseElementApi/visible/${sessionId}`);
+            } else {
+                console.log(`📥 Loading ACTIVE defense elements from database for team (no session)...`);
+                response = await fetch(`/api/DefenseElementApi/team`);
             }
             
-            console.log(`📥 Loading defense elements from database for session ${sessionId}...`);
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`❌ API error (${response.status}):`, errorText);
+                return { success: false, message: `API error: ${response.status}` };
+            }
             
-            const response = await fetch(`/api/DefenseElementApi/visible/${sessionId}`);
             const result = await response.json();
+            console.log('📥 API response:', result);
             
             if (result.success && result.elements) {
-                console.log(`📥 Loaded ${result.elements.length} defense elements from database`);
+                console.log(`📥 Loaded ${result.elements.length} ACTIVE defense elements from database`);
                 
-                // Clear existing elements first
+                // Clear existing elements first (removes any locally deleted elements)
                 this.clearAllLayers();
                 this.defenseElements.clear();
                 
-                // Reconstruct each element on the map
+                // Reconstruct each ACTIVE element on the map
                 for (const dbElement of result.elements) {
-                    await this.reconstructDefenseElement(dbElement);
+                    // Double-check element is active (should be filtered by DAL, but extra safety)
+                    if (dbElement.status === 'active') {
+                        await this.reconstructDefenseElement(dbElement);
+                    } else {
+                        console.warn(`⚠️ Skipping inactive element: ${dbElement.elementId} (status: ${dbElement.status})`);
+                    }
                 }
                 
-                console.log('✅ All defense elements loaded and visualized');
+                console.log('✅ All ACTIVE defense elements loaded and visualized');
                 
                 return {
                     success: true,
@@ -207,7 +560,7 @@ class DefensePlanningManager {
                     elements: result.elements
                 };
             } else {
-                console.log('ℹ️ No defense elements found in database');
+                console.log('ℹ️ No ACTIVE defense elements found in database');
                 return { success: true, count: 0, elements: [] };
             }
         } catch (error) {
@@ -278,13 +631,24 @@ class DefensePlanningManager {
                     this.withdrawalLayer.addLayer(element.route);
                 }
             } else if (dbElement.category === 'line') {
-                element = this.renderer.createDefensiveLine(coordinates, dbElement.type);
+                element = this.renderer.createDefensiveLine(coordinates, dbElement.type, { forceType });
                 if (element.line) {
                     this.defensiveLineLayer.addLayer(element.line);
                 }
+            } else if (dbElement.category === 'position') {
+                // Defensive position - coordinates format: [[lat, lng]]
+                const latlng = L.latLng(coordinates[0][0], coordinates[0][1]);
+                element = this.renderer.createDefensivePosition(latlng, dbElement.type, { forceType });
+                this.positionLayer.addLayer(element);
+                
+                // Add click and right-click events
+                element.on('click', () => this.showDefenseElementDetails(dbElement.elementId));
+                element.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'position'));
             } else if (dbElement.category === 'defensezone') {
                 // New defense zone implementation
+                console.log(`🔄 Reconstructing defense zone with force type: ${forceType}`);
                 element = this.renderer.createDefenseZone(coordinates, dbElement.type, {
+                    forceType: forceType,
                     tokenId: dbElement.tokenId,
                     tokenName: dbElement.tokenName || 'Defense Zone'
                 });
@@ -292,8 +656,21 @@ class DefensePlanningManager {
                 // Add the entire defense zone group to the layer
                 this.defenseZoneLayer.addLayer(element);
                 
-                // Add click event to the group
+                // Add click and right-click events to both group and shape
                 element.on('click', () => this.showDefenseElementDetails(dbElement.elementId));
+                element.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'defensezone'));
+                
+                // Also attach to the shape itself for better event handling
+                if (element.shape) {
+                    element.shape.on('click', () => this.showDefenseElementDetails(dbElement.elementId));
+                    element.shape.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'defensezone'));
+                }
+                
+                // Also attach to the token marker for complete coverage
+                if (element.tokenMarker) {
+                    element.tokenMarker.on('click', () => this.showDefenseElementDetails(dbElement.elementId));
+                    element.tokenMarker.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'defensezone'));
+                }
             }
             
             // Store element locally
@@ -374,6 +751,13 @@ class DefensePlanningManager {
     }
 
     /**
+     * Start drawing a defense zone (same pattern as kill zones)
+     */
+    startDefenseZoneDrawing(type = 'primary') {
+        this.startPolygonDrawing('defensezone', type);
+    }
+
+    /**
      * Start polygon drawing (for kill zones and minefields)
      */
     startPolygonDrawing(category, type) {
@@ -394,7 +778,9 @@ class DefensePlanningManager {
         
         // Add right-click to finish drawing as alternative
         this.map.on('contextmenu', (e) => {
-            e.preventDefault();
+            if (e.originalEvent) {
+                e.originalEvent.preventDefault();
+            }
             if (this.drawingMode === category) {
                 this.finishPolygonDrawing(e);
             }
@@ -411,6 +797,64 @@ class DefensePlanningManager {
             }
         };
         document.addEventListener('keydown', this.keyboardHandler);
+        
+        // Show instruction message
+        this.showDrawingInstructions(category, type);
+    }
+    
+    /**
+     * Show drawing instructions (unified for all polygon types)
+     */
+    showDrawingInstructions(category, type) {
+        // Remove any existing instruction
+        const existingInstruction = document.getElementById('defenseDrawingInstructions');
+        if (existingInstruction) {
+            existingInstruction.remove();
+        }
+        
+        const categoryNames = {
+            'killzone': 'Kill Zone',
+            'minefield': 'Minefield',
+            'defensezone': 'Defense Zone'
+        };
+        
+        const displayName = categoryNames[category] || category;
+        
+        const instructionDiv = document.createElement('div');
+        instructionDiv.id = 'defenseDrawingInstructions';
+        instructionDiv.innerHTML = `
+            <div style="
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 102, 204, 0.95);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 6px;
+                border: 2px solid rgba(255, 255, 255, 0.8);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+                font-family: Arial, sans-serif;
+                font-size: 14px;
+                font-weight: bold;
+                z-index: 10000;
+                text-align: center;
+            ">
+                🛡️ Drawing ${displayName} (${type})<br>
+                <small style="opacity: 0.9;">Click 4 points, then double-click/Enter/right-click to finish</small>
+            </div>
+        `;
+        document.body.appendChild(instructionDiv);
+    }
+    
+    /**
+     * Hide drawing instructions
+     */
+    hideDrawingInstructions() {
+        const instructions = document.getElementById('defenseDrawingInstructions');
+        if (instructions) {
+            instructions.remove();
+        }
     }
 
     /**
@@ -436,12 +880,26 @@ class DefensePlanningManager {
         
         this.drawingPoints.push([e.latlng.lat, e.latlng.lng]);
         
+        // Update instruction with point count
+        const instructions = document.getElementById('defenseDrawingInstructions');
+        if (instructions) {
+            const pointsNeeded = Math.max(0, 4 - this.drawingPoints.length);
+            const small = instructions.querySelector('small');
+            if (small) {
+                if (pointsNeeded > 0) {
+                    small.textContent = `Click ${pointsNeeded} more point${pointsNeeded !== 1 ? 's' : ''} (${this.drawingPoints.length}/4)`;
+                } else {
+                    small.textContent = `${this.drawingPoints.length} points - double-click/Enter/right-click to finish`;
+                }
+            }
+        }
+        
         // Show temporary polygon
         if (this.tempLayer) {
             this.map.removeLayer(this.tempLayer);
         }
         
-        if (this.drawingPoints.length >= 3) {
+        if (this.drawingPoints.length >= 4) {
             this.tempLayer = L.polygon(this.drawingPoints, {
                 color: '#ff6600',
                 fillOpacity: 0.2,
@@ -499,9 +957,8 @@ class DefensePlanningManager {
         
         console.log(`🖊️ Finishing polygon drawing with ${this.drawingPoints.length} points`);
         
-        if (this.drawingPoints.length < 3) {
-            console.warn('Need at least 3 points to create a polygon');
-            alert('Please click at least 3 points to create a polygon, then double-click to finish.');
+        if (this.drawingPoints.length < 4) {
+            console.warn('Need at least 4 points to create a polygon - cancelling drawing');
             this.cancelDrawing();
             return;
         }
@@ -511,7 +968,6 @@ class DefensePlanningManager {
             console.log(`✅ Successfully created ${this.drawingMode} polygon`);
         } catch (error) {
             console.error('Error creating polygon element:', error);
-            alert('Error creating polygon. Please try again.');
         }
         
         this.cancelDrawing();
@@ -555,6 +1011,9 @@ class DefensePlanningManager {
             this.map.removeLayer(this.tempLayer);
             this.tempLayer = null;
         }
+        
+        // Hide drawing instructions
+        this.hideDrawingInstructions();
         
         // Reset drawing state
         this.drawingMode = null;
@@ -622,6 +1081,33 @@ class DefensePlanningManager {
                         marker.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, elementId, 'minefield'));
                     });
                 }
+            } else if (category === 'defensezone') {
+                console.log(`🔧 Creating defense zone with type: ${type}`);
+                element = this.renderer.createDefenseZone(coordinates, type, {
+                    forceType: forceType,
+                    tokenName: `${type.charAt(0).toUpperCase() + type.slice(1)} Defense Zone`,
+                    elementId: elementId
+                });
+                if (!element) {
+                    throw new Error('Failed to create defense zone element');
+                }
+                this.defenseZoneLayer.addLayer(element);
+                
+                // Add click and right-click handlers to both group and shape
+                element.on('click', () => this.showDefenseElementDetails(elementId));
+                element.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, elementId, 'defensezone'));
+                
+                // Also attach to the shape itself for better event handling
+                if (element.shape) {
+                    element.shape.on('click', () => this.showDefenseElementDetails(elementId));
+                    element.shape.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, elementId, 'defensezone'));
+                }
+                
+                // Also attach to the token marker for complete coverage
+                if (element.tokenMarker) {
+                    element.tokenMarker.on('click', () => this.showDefenseElementDetails(elementId));
+                    element.tokenMarker.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, elementId, 'defensezone'));
+                }
             } else {
                 throw new Error(`Unknown category: ${category}`);
             }
@@ -635,6 +1121,7 @@ class DefensePlanningManager {
                 layers: element,
                 tokenId: null,
                 strength: 100,
+                effectiveness: 1.0,
                 visibility: 'friendly',
                 createdAt: new Date().toISOString()
             };
@@ -647,6 +1134,8 @@ class DefensePlanningManager {
             // Add click event
             if (element.polygon) {
                 element.polygon.on('click', () => this.showDefenseElementDetails(elementId));
+            } else if (category === 'defensezone') {
+                element.on('click', () => this.showDefenseElementDetails(elementId));
             }
             
             console.log(`✅ Created ${category} (${type}) with ID: ${elementId}`);
@@ -672,15 +1161,17 @@ class DefensePlanningManager {
                 type: elementData.type,
                 coordinates: elementData.coordinates,
                 tokenId: elementData.tokenId,
-                strength: elementData.strength,
-                effectiveness: 1.0,
-                visibility: elementData.visibility,
+                strength: elementData.strength || 100,
+                effectiveness: elementData.effectiveness || 1.0,
+                visibility: elementData.visibility || 'friendly',
                 gameSessionId: gameSessionId,
-                notes: null,
+                notes: elementData.notes || null,
                 metadata: {
                     createdAt: elementData.createdAt
                 }
             };
+            
+            console.log('📤 Sending defense element to database:', requestData);
             
             const response = await fetch('/api/DefenseElementApi/create', {
                 method: 'POST',
@@ -689,6 +1180,13 @@ class DefensePlanningManager {
                 },
                 body: JSON.stringify(requestData)
             });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`❌ Server error (${response.status}):`, errorText);
+                console.error('Request data that failed:', requestData);
+                return;
+            }
             
             const result = await response.json();
             
@@ -730,21 +1228,26 @@ class DefensePlanningManager {
      */
     createPolylineElement(category, type, coordinates) {
         const elementId = this.generateId();
+        
+        // Get current team's force type for color-coding
+        const forceType = this.getCurrentForceType();
+        console.log(`🎨 Using force type for ${category}: ${forceType}`);
+        
         let element;
         let targetLayer;
         
         if (category === 'obstacle') {
-            element = this.renderer.createObstacle(coordinates, type);
+            element = this.renderer.createObstacle(coordinates, type, { forceType });
             targetLayer = this.obstacleLayer;
         } else if (category === 'withdrawal') {
-            element = this.renderer.createWithdrawalRoute(coordinates, type);
+            element = this.renderer.createWithdrawalRoute(coordinates, type, { forceType });
             targetLayer = this.withdrawalLayer;
             targetLayer.addLayer(element.polyline);
             if (element.arrows) {
                 element.arrows.forEach(arrow => targetLayer.addLayer(arrow));
             }
         } else if (category === 'line') {
-            element = this.renderer.createDefensiveLine(coordinates, type);
+            element = this.renderer.createDefensiveLine(coordinates, type, { forceType });
             targetLayer = this.defensiveLineLayer;
         }
         
@@ -761,9 +1264,13 @@ class DefensePlanningManager {
             layers: element,
             tokenId: null,
             strength: 100,
+            effectiveness: 1.0,
             visibility: 'friendly',
             createdAt: new Date().toISOString()
         });
+        
+        // Save to database
+        this.saveDefenseElementToDatabase(this.defenseElements.get(elementId));
         
         // Add click event
         const clickableElement = element.polyline || element;
@@ -779,7 +1286,12 @@ class DefensePlanningManager {
      */
     createDefensivePosition(latlng, type) {
         const elementId = this.generateId();
-        const marker = this.renderer.createDefensivePosition(latlng, type);
+        
+        // Get current team's force type for color-coding
+        const forceType = this.getCurrentForceType();
+        console.log(`🎨 Using force type for defensive position: ${forceType}`);
+        
+        const marker = this.renderer.createDefensivePosition(latlng, type, { forceType });
         
         this.positionLayer.addLayer(marker);
         
@@ -788,13 +1300,17 @@ class DefensePlanningManager {
             id: elementId,
             category: 'position',
             type,
-            coordinates: [latlng.lat, latlng.lng],
+            coordinates: [[latlng.lat, latlng.lng]],
             layers: marker,
             tokenId: null,
             strength: 100,
+            effectiveness: 1.0,
             visibility: 'friendly',
             createdAt: new Date().toISOString()
         });
+        
+        // Save to database
+        this.saveDefenseElementToDatabase(this.defenseElements.get(elementId));
         
         // Add click event
         marker.on('click', () => this.showDefenseElementDetails(elementId));
@@ -828,7 +1344,7 @@ class DefensePlanningManager {
         });
         
         // TODO: Show modal with defense element details
-        alert(`Defense Element: ${symbolInfo?.name}\nStrength: ${element.strength}%\nVisibility: ${element.visibility}`);
+        console.log(`Defense Element: ${symbolInfo?.name}, Strength: ${element.strength}%, Visibility: ${element.visibility}`);
     }
 
     /**
@@ -950,10 +1466,10 @@ class DefensePlanningManager {
     }
 
     /**
-     * Generate unique ID
+     * Generate unique ID (GUID)
      */
     generateId() {
-        return `def_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        return crypto.randomUUID();
     }
 
     /**
@@ -996,7 +1512,7 @@ class DefensePlanningManager {
             } else if (element.category === 'obstacle' || element.category === 'withdrawal' || element.category === 'line') {
                 this.createPolylineElement(element.category, element.type, element.coordinates);
             } else if (element.category === 'position') {
-                const latlng = L.latLng(element.coordinates[0], element.coordinates[1]);
+                const latlng = L.latLng(element.coordinates[0][0], element.coordinates[0][1]);
                 this.createDefensivePosition(latlng, element.type);
             }
         });
@@ -1017,8 +1533,13 @@ class DefensePlanningManager {
             // Generate unique element ID
             const elementId = options.elementId || this.generateElementId();
             
+            // Get current team's force type for color-coding
+            const forceType = this.getCurrentForceType();
+            console.log(`🎨 Using force type for defense zone: ${forceType}`);
+            
             // Create defense zone using renderer
             const defenseZoneGroup = this.renderer.createDefenseZone(coordinates, type, {
+                forceType: forceType,
                 elementId: elementId,
                 tokenId: options.tokenId,
                 tokenName: options.tokenName || 'Defense Zone'
@@ -1045,8 +1566,24 @@ class DefensePlanningManager {
             
             this.defenseElements.set(elementId, defenseElementData);
             
-            // Add click handler
+            // Save to database
+            this.saveDefenseElementToDatabase(defenseElementData);
+            
+            // Add click and right-click handlers to both group and shape
             defenseZoneGroup.on('click', () => this.showDefenseElementDetails(elementId));
+            defenseZoneGroup.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, elementId, 'defensezone'));
+            
+            // Also attach to the shape itself for better event handling
+            if (defenseZoneGroup.shape) {
+                defenseZoneGroup.shape.on('click', () => this.showDefenseElementDetails(elementId));
+                defenseZoneGroup.shape.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, elementId, 'defensezone'));
+            }
+            
+            // Also attach to the token marker for complete coverage
+            if (defenseZoneGroup.tokenMarker) {
+                defenseZoneGroup.tokenMarker.on('click', () => this.showDefenseElementDetails(elementId));
+                defenseZoneGroup.tokenMarker.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, elementId, 'defensezone'));
+            }
             
             console.log(`✅ Defense zone created: ${elementId}`);
             
@@ -1058,11 +1595,11 @@ class DefensePlanningManager {
     }
     
     /**
-     * Generate unique element ID
+     * Generate unique element ID (GUID)
      * @returns {string} Unique element ID
      */
     generateElementId() {
-        return 'defensezone_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        return crypto.randomUUID();
     }
 }
 

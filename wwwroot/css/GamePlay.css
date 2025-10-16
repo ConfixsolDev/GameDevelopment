@@ -308,14 +308,16 @@
     cursor: pointer;
 }
 
+/* Hover effects disabled to prevent positioning issues */
 .minefield-icon-marker:hover {
-    transform: scale(1.2);
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.7) !important;
-    border-width: 3px !important;
+    /* transform: scale(1.2); */
+    /* box-shadow: 0 3px 12px rgba(0, 0, 0, 0.7) !important; */
+    /* border-width: 3px !important; */
 }
 
+/* Active effects disabled to prevent positioning issues */
 .minefield-icon-marker:active {
-    transform: scale(0.95);
+    /* transform: scale(0.95); */
 }
 
 /* Different minefield types */

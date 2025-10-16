@@ -56,6 +56,22 @@ namespace TechWebSol.DAL
         }
 
         /// <summary>
+        /// Get all defense elements for a team (no session filter - for when gameSessionId is null)
+        /// </summary>
+        public async Task<List<DefenseElement>> GetTeamDefenseElementsAsync(Guid teamId, string forceType)
+        {
+            var query = _context.DefenseElements
+                .Include(d => d.Token)
+                .Include(d => d.Team)
+                .Where(d => d.TeamId == teamId && d.Status == "active");
+
+            // No session filter - get all active defense elements for this team
+            return await query
+                .OrderByDescending(d => d.CreatedDate)
+                .ToListAsync();
+        }
+
+        /// <summary>
         /// Get defense elements associated with a specific token
         /// </summary>
         public async Task<List<DefenseElement>> GetDefenseElementsByTokenAsync(Guid tokenId)
