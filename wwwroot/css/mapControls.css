@@ -1,0 +1,230 @@
+/**
+ * Map Controls CSS - Styles for the cleaned up UI controls
+ */
+
+/* Edit Mode Controls */
+.edit-mode-control {
+    transition: all 0.3s ease;
+}
+
+.region-panel.edit-mode .edit-mode-control {
+    display: block !important;
+}
+
+/* Basemap Dropdown */
+#basemapDropdown {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #444;
+    background: #2d3748;
+    color: #e2e8f0;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+#basemapDropdown:focus {
+    outline: none;
+    border-color: #4299e1;
+    box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
+}
+
+/* Layer Panel */
+#layerPanel {
+    background: rgba(45, 55, 72, 0.95);
+    border: 1px solid #4a5568;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#layerPanel h6 {
+    margin: 0 0 10px 0;
+    color: #e2e8f0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Layer Checkboxes */
+#layerPanel .overlay-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #4a5568;
+    border: 1px solid #718096;
+    border-radius: 4px;
+    color: #e2e8f0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#layerPanel .overlay-btn:hover {
+    background: #5a6578;
+    border-color: #4299e1;
+}
+
+#layerPanel .overlay-btn input[type="checkbox"] {
+    margin: 0;
+    accent-color: #4299e1;
+}
+
+#layerPanel .overlay-btn span {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* Dropdown Menu */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-toggle {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: #2d3748;
+    border: 1px solid #4a5568;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    min-width: 120px;
+    padding: 5px 0;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    color: #e2e8f0;
+    text-decoration: none;
+    font-size: 13px;
+    transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background: #4a5568;
+    color: #e2e8f0;
+    text-decoration: none;
+}
+
+.dropdown-item i {
+    width: 16px;
+    text-align: center;
+}
+
+/* Fullscreen Mode */
+.gameplay-container.fullscreen-mode {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    background: #1a202c;
+}
+
+.game-map-container.fullscreen {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    border: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #layerPanel {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90%;
+        max-width: 300px;
+        z-index: 1000;
+    }
+    
+    .dropdown-menu {
+        right: auto;
+        left: 0;
+    }
+}
+
+/* Animation for smooth transitions */
+.overlay-control-group {
+    transition: all 0.3s ease;
+}
+
+.control-section {
+    transition: all 0.3s ease;
+}
+
+/* Hide elements when not in edit mode */
+.region-panel:not(.edit-mode) .edit-mode-control {
+    display: none !important;
+}
+
+/* Show elements when in edit mode */
+.region-panel.edit-mode .edit-mode-control {
+    display: block !important;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Button states */
+.overlay-btn.active {
+    background: #4299e1;
+    border-color: #3182ce;
+    color: white;
+}
+
+.overlay-btn.active:hover {
+    background: #3182ce;
+}
+
+/* Dark theme compatibility */
+@media (prefers-color-scheme: dark) {
+    #basemapDropdown {
+        background: #1a202c;
+        border-color: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .dropdown-menu {
+        background: #1a202c;
+        border-color: #4a5568;
+    }
+    
+    .dropdown-item {
+        color: #e2e8f0;
+    }
+    
+    .dropdown-item:hover {
+        background: #2d3748;
+    }
+}

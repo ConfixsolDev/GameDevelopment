@@ -1,0 +1,380 @@
+@*
+    Theme Layout - Enhanced layout with dark theme support
+    This layout includes the complete dark theme system and reusable components
+*@
+
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> _userManager
+@{
+    var ShortName = "";
+    var DisplayName = "";
+    var user = await _userManager.GetUserAsync(User);
+    if (user?.FullName != null)
+    {
+        DisplayName = user.FullName;
+        var parts = user.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var first = parts.Length > 0 ? parts[0] : "";
+        var second = parts.Length > 1 ? parts[1] : "";
+        var c1 = string.IsNullOrEmpty(first) ? "" : first.Substring(0, 1);
+        var c2 = string.IsNullOrEmpty(second) ? "" : second.Substring(0, 1);
+        ShortName = (c1 + c2).ToUpperInvariant();
+    }
+}
+
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1a1a1a" />
+    <title>@ViewData["Title"] - KSA Game</title>
+    <link rel="shortcut icon" href="~/assets/images/favicon.ico">
+
+    <!-- Critical CSS - Inline for instant dark theme (prevents white flash) -->
+    <style>
+        :root, html, body {
+            background-color: #1a1a1a !important;
+            color: #f8fafc !important;
+        }
+        html[data-theme="dark"] {
+            background-color: #1a1a1a;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        #layout-wrapper {
+            background-color: #1a1a1a;
+        }
+        #theme-loader {
+            background: #1a1a1a !important;
+        }
+    </style>
+
+    <!-- Core CSS -->
+    <link href="~/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="~/cdn_local/daterangepicker.css" rel="stylesheet" />
+    <link href="~/cdn_local/select2.min.css" rel="stylesheet" />
+    <link href="~/assets/css/toastr.min.css" rel="stylesheet" />
+    <link href="~/assets/css/metismenu.min.css" rel="stylesheet" />
+    <link href="~/assets/css/icons.min.css" rel="stylesheet">
+    <link href="~/assets/css/app.min.css" id="app-style" rel="stylesheet">
+    
+    <!-- Unified Theme System - All styles consolidated -->
+    <link href="~/css/dark-theme-system.css" rel="stylesheet" asp-append-version="true">
+    
+    <!-- Font Awesome - Local -->
+    <link href="~/assets/css/fontawesome.min.css" rel="stylesheet">
+
+    <!-- Core Scripts - Local versions -->
+    <script src="~/assets/js/sweetalert2.min.js"></script>
+    <script src="~/assets/js/jquery.min.js"></script>
+    <script src="~/assets/js/bootstrap.bundle.min.js"></script>
+
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <!-- Theme System Initialization -->
+    <div id="theme-loader" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-primary); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.3s ease;">
+        <div style="text-align: center;">
+            <div class="loading-spinner" style="margin: 0 auto 20px;"></div>
+            <p style="color: var(--text-primary);">Loading theme system...</p>
+        </div>
+    </div>
+
+    <div id="layout-wrapper">
+        <!-- Topbar Start -->
+        <div class="navbar-header">
+            <div class="d-flex">
+                <!-- LOGO -->
+                <div class="navbar-brand-box">
+                    <a href="/" class="logo logo-dark">
+                        <span class="logo-sm">
+                            <img src="~/assets/images/logo-sm.png" alt="" height="22">
+                        </span>
+                        <span class="logo-lg">
+                            <img src="~/assets/images/logo-dark.png" alt="" height="17">
+                        </span>
+                    </a>
+
+                    <a href="/" class="logo logo-light">
+                        <span class="logo-sm">
+                            <img src="~/assets/images/logo-sm.png" alt="" height="22">
+                        </span>
+                        <span class="logo-lg">
+                            <img src="~/assets/images/logo-light.png" alt="" height="17">
+                        </span>
+                    </a>
+                </div>
+
+                <button type="button" class="btn btn-sm px-3 font-size-16 header-item waves-effect" id="vertical-menu-btn">
+                    <i class="fa fa-fw fa-bars"></i>
+                </button>
+            </div>
+
+            <div class="d-flex">
+                <div class="dropdown d-inline-block">
+                    <button type="button" class="btn header-item noti-icon position-relative" id="page-header-notifications-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="bx bx-bell"></i>
+                        <span class="badge bg-danger rounded-pill">3</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0" aria-labelledby="page-header-notifications-dropdown">
+                        <div class="p-3">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <h6 class="m-0" key="t-notifications"> Notifications </h6>
+                                </div>
+                                <div class="col-auto">
+                                    <a href="#!" class="small" key="t-view-all"> View All</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div data-simplebar style="max-height: 230px;">
+                            <a href="javascript: void(0);" class="text-reset notification-item">
+                                <div class="d-flex">
+                                    <div class="avatar-xs me-3">
+                                        <span class="avatar-title bg-primary rounded-circle font-size-16">
+                                            <i class="bx bx-cart"></i>
+                                        </span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h6 class="mt-0 mb-1" key="t-your-order">Your order is placed</h6>
+                                        <div class="font-size-12 text-muted">
+                                            <p class="mb-1" key="t-grammer">If several languages coalesce the grammar</p>
+                                            <p class="mb-0"><i class="mdi mdi-clock-outline"></i> <span key="t-min-ago">3 min ago</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dropdown d-inline-block">
+                    <button type="button" class="btn header-item" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <img class="rounded-circle header-profile-user" src="~/assets/images/users/avatar-1.jpg" alt="Header Avatar">
+                        <span class="d-none d-xl-inline-block ms-1" key="t-henry">@DisplayName</span>
+                        <i class="mdi mdi-chevron-down d-none d-xl-inline-block"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <!-- item-->
+                        <a class="dropdown-item" href="/Account/Profile"><i class="bx bx-user font-size-16 align-middle me-1"></i> <span key="t-profile">Profile</span></a>
+                        <a class="dropdown-item" href="/Account/Settings"><i class="bx bx-wrench font-size-16 align-middle me-1"></i> <span key="t-settings">Settings</span></a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-danger" href="/Account/Logout"><i class="bx bx-power-off font-size-16 align-middle me-1 text-danger"></i> <span key="t-logout">Logout</span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end Topbar -->
+
+        <!-- Left Sidebar Start -->
+        <div class="vertical-menu">
+            <div data-simplebar class="h-100">
+                <!--- Sidemenu -->
+                <div id="sidebar-menu">
+                    <!-- Left Menu Start -->
+                    <ul class="metismenu list-unstyled" id="side-menu">
+                        <li class="menu-title" key="t-menu"> Menu</li>
+
+                        <li>
+                            <a href="/" class="waves-effect">
+                                <i class="bx bx-home-circle"></i>
+                                <span key="t-dashboards">Dashboards</span>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="/Home/ComponentDemo" class="waves-effect">
+                                <i class="bx bx-palette"></i>
+                                <span>Component Library Demo</span>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="javascript: void(0);" class="has-arrow waves-effect">
+                                <i class="bx bx-layout"></i>
+                                <span key="t-layouts">Game Management</span>
+                            </a>
+                            <ul class="sub-menu" aria-expanded="true">
+                                <li><a href="/GameManagement" key="t-horizontal">Game Sessions</a></li>
+                                <li><a href="/TeamManagement" key="t-vertical">Team Management</a></li>
+                                <li><a href="/TokenManagement" key="t-detached">Token Management</a></li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a href="javascript: void(0);" class="has-arrow waves-effect">
+                                <i class="bx bx-map"></i>
+                                <span key="t-apps">Map System</span>
+                            </a>
+                            <ul class="sub-menu" aria-expanded="false">
+                                <li><a href="/MapConfiguration" key="t-calendar">Map Configuration</a></li>
+                                <li><a href="/GamePlay" key="t-chat">Game Play</a></li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a href="javascript: void(0);" class="has-arrow waves-effect">
+                                <i class="bx bx-shield"></i>
+                                <span key="t-components">Administration</span>
+                            </a>
+                            <ul class="sub-menu" aria-expanded="false">
+                                <li><a href="/AdminToken" key="t-lightbox">Token Administration</a></li>
+                                <li><a href="/DataManagement" key="t-range-slider">Data Management</a></li>
+                                <li><a href="/Settings" key="t-sweet-alert">Settings</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <!-- Sidebar -->
+            </div>
+        </div>
+        <!-- Left Sidebar End -->
+
+        <!-- Start right Content here -->
+        <div class="main-content">
+            <div class="page-content">
+                <div class="container-fluid">
+                    <!-- start page title -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                                <h4 class="mb-sm-0 font-size-18">@ViewData["Title"]</h4>
+                                <div class="page-title-right">
+                                    <ol class="breadcrumb m-0">
+                                        <li class="breadcrumb-item"><a href="javascript: void(0);">KSA Game</a></li>
+                                        <li class="breadcrumb-item active">@ViewData["Title"]</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- end page title -->
+
+                    @RenderBody()
+                </div> <!-- container-fluid -->
+            </div>
+            <!-- End Page-content -->
+
+            <footer class="footer">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <script>document.write(new Date().getFullYear())</script> © KSA Game.
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="text-sm-end d-none d-sm-block">
+                                Design & Develop by KSA Team
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+        <!-- end main content-->
+    </div>
+    <!-- END layout-wrapper -->
+
+    <!-- JAVASCRIPT -->
+    <script src="~/assets/libs/jquery/jquery.min.js"></script>
+    <script src="~/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/assets/libs/metismenu/metisMenu.min.js"></script>
+    <script src="~/assets/libs/simplebar/simplebar.min.js"></script>
+    <script src="~/assets/libs/node-waves/waves.min.js"></script>
+
+    <!-- Dark Theme System -->
+    <script src="~/js/theme-system.js"></script>
+
+    <!-- App js -->
+    <script src="~/assets/js/app.js"></script>
+
+    <!-- Modal Helper Functions -->
+    <script>
+        (function(w) {
+          function hasB5() { return typeof w.bootstrap !== 'undefined'; }
+          function hasJqModal(el) { return typeof $ !== 'undefined' && $(el).data('bs.modal') !== undefined; }
+
+          function ensureBackdrop() {
+            let backdrop = document.querySelector('.modal-backdrop');
+            if (!backdrop) {
+              backdrop = document.createElement('div');
+              backdrop.className = 'modal-backdrop fade show';
+              backdrop.style.zIndex = '1040';
+              document.body.appendChild(backdrop);
+            }
+          }
+
+          function removeBackdrop() {
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) backdrop.remove();
+          }
+
+          function show(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (hasB5()) { w.bootstrap.Modal.getOrCreateInstance(el).show(); return; }
+            if (hasJqModal(el)) { $(el).modal('show'); return; }
+            // Use new modal system
+            if (typeof modalSystem !== 'undefined') { modalSystem.show(id); return; }
+            // Manual fallback
+            el.style.display = 'block';
+            el.removeAttribute('aria-hidden');
+            el.classList.add('show');
+            document.body.classList.add('modal-open');
+            ensureBackdrop();
+          }
+
+          function hide(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            // Try a dismiss control first
+            const dismiss = el.querySelector('[data-bs-dismiss="modal"], .btn-close, [data-dismiss="modal"]');
+            if (dismiss) { dismiss.click(); return; }
+            if (hasB5()) { w.bootstrap.Modal.getOrCreateInstance(el).hide(); return; }
+            if (hasJqModal(el)) { $(el).modal('hide'); return; }
+            // Use new modal system
+            if (typeof modalSystem !== 'undefined') { modalSystem.hide(id); return; }
+            // Manual fallback
+            el.classList.remove('show');
+            el.style.display = 'none';
+            el.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('modal-open');
+            removeBackdrop();
+          }
+
+          w.ModalHelper = { show, hide };
+        })(window);
+    </script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('.select2').select2({
+                search: true,
+                width: '100%',
+                placeholder: "Select",
+                allowClear: true,
+            });
+            $('.select2-multiple').select2();
+        });
+    </script>
+
+    <!-- Hide theme loader after everything is loaded -->
+    <script>
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const loader = document.getElementById('theme-loader');
+                if (loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(function() {
+                        loader.style.display = 'none';
+                    }, 300);
+                }
+            }, 500);
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

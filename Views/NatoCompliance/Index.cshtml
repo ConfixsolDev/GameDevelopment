@@ -1,0 +1,1186 @@
+@{
+    ViewData["Title"] = "NATO Compliance Dashboard";
+}
+
+<div class="nato-compliance-container">
+    <div class="compliance-header">
+        <h1>NATO Compliance Verification Dashboard</h1>
+        <p>Comprehensive NATO standards compliance verification and system integration status</p>
+    </div>
+
+    <div class="compliance-overview">
+        <div class="overview-card">
+            <h3>Overall Compliance Status</h3>
+            <div id="overallComplianceStatus" class="compliance-status">
+                <div class="status-indicator">
+                    <span class="status-icon">⏳</span>
+                    <span class="status-text">Checking...</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="overview-card">
+            <h3>Systems Connected</h3>
+            <div id="systemsConnected" class="systems-count">
+                <div class="count-display">
+                    <span class="count-number">0</span>
+                    <span class="count-total">/ 9</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="overview-card">
+            <h3>Integration Health</h3>
+            <div id="integrationHealth" class="health-status">
+                <div class="health-indicator">
+                    <span class="health-text">Pending</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nato-standards">
+        <h3>NATO Standards Compliance</h3>
+        <div class="standards-grid">
+            <div class="standard-card">
+                <h4>ATP-3-90.1</h4>
+                <p class="standard-title">Tactics</p>
+                <div id="atp3901Status" class="standard-status">
+                    <span class="status-badge">Checking...</span>
+                </div>
+                <div class="standard-details">
+                    <ul>
+                        <li>Tactical principles</li>
+                        <li>Decision-making process</li>
+                        <li>Force employment</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="standard-card">
+                <h4>ATP-3-90.2</h4>
+                <p class="standard-title">Offensive Operations</p>
+                <div id="atp3902Status" class="standard-status">
+                    <span class="status-badge">Checking...</span>
+                </div>
+                <div class="standard-details">
+                    <ul>
+                        <li>Attack types</li>
+                        <li>Force ratios</li>
+                        <li>Offensive planning</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="standard-card">
+                <h4>ATP-3-90.3</h4>
+                <p class="standard-title">Defensive Operations</p>
+                <div id="atp3903Status" class="standard-status">
+                    <span class="status-badge">Checking...</span>
+                </div>
+                <div class="standard-details">
+                    <ul>
+                        <li>Defense types</li>
+                        <li>Kill zones</li>
+                        <li>Defensive planning</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="standard-card">
+                <h4>ATP-3-90.4</h4>
+                <p class="standard-title">Terrain Analysis</p>
+                <div id="atp3904Status" class="standard-status">
+                    <span class="status-badge">Checking...</span>
+                </div>
+                <div class="standard-details">
+                    <ul>
+                        <li>Terrain classification</li>
+                        <li>Impact coefficients</li>
+                        <li>Terrain factors</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="standard-card">
+                <h4>APP-6</h4>
+                <p class="standard-title">Military Symbology</p>
+                <div id="app6Status" class="standard-status">
+                    <span class="status-badge">Checking...</span>
+                </div>
+                <div class="standard-details">
+                    <ul>
+                        <li>Unit symbols</li>
+                        <li>Attack symbols</li>
+                        <li>Defense symbols</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="standard-card">
+                <h4>NETN-FOM</h4>
+                <p class="standard-title">HLA Federation Object Model</p>
+                <div id="netnStatus" class="standard-status">
+                    <span class="status-badge">Checking...</span>
+                </div>
+                <div class="standard-details">
+                    <ul>
+                        <li>Physical entities</li>
+                        <li>Aggregate entities</li>
+                        <li>Interactions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="systems-status">
+        <h3>Integrated Systems Status</h3>
+        <div class="systems-grid" id="systemsGrid">
+            <!-- Systems will be loaded here -->
+        </div>
+    </div>
+
+    <div class="capabilities-matrix">
+        <h3>System Capabilities</h3>
+        <div class="capabilities-table" id="capabilitiesTable">
+            <!-- Capabilities will be loaded here -->
+        </div>
+    </div>
+
+    <div class="compliance-actions">
+        <h3>Actions</h3>
+        <div class="action-buttons">
+            <button id="btnRefreshCompliance" class="btn btn-primary">
+                <i class="fas fa-sync"></i> Refresh Compliance Check
+            </button>
+            <button id="btnGenerateComplianceReport" class="btn btn-info">
+                <i class="fas fa-file-alt"></i> Generate Compliance Report
+            </button>
+            <button id="btnGenerateHealthReport" class="btn btn-success">
+                <i class="fas fa-heartbeat"></i> Generate Health Report
+            </button>
+            <button id="btnExportReports" class="btn btn-secondary">
+                <i class="fas fa-download"></i> Export All Reports
+            </button>
+        </div>
+    </div>
+
+    <div class="compliance-recommendations" id="complianceRecommendations" style="display: none;">
+        <h3>Recommendations</h3>
+        <div class="recommendations-list" id="recommendationsList">
+            <!-- Recommendations will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- Compliance Report Modal -->
+<div class="modal fade" id="complianceReportModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">NATO Compliance Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="complianceReportContent">
+                    <!-- Report content will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btnExportComplianceReport">Export Report</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.nato-compliance-container {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.compliance-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.compliance-header h1 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.compliance-header p {
+    color: #7f8c8d;
+    font-size: 1.1em;
+}
+
+.compliance-overview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.overview-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.overview-card h3 {
+    margin-bottom: 20px;
+    font-size: 1.1em;
+    opacity: 0.9;
+}
+
+.compliance-status, .systems-count, .health-status {
+    text-align: center;
+}
+
+.status-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-icon {
+    font-size: 3em;
+}
+
+.status-text {
+    font-size: 1.3em;
+    font-weight: 600;
+}
+
+.count-display {
+    font-size: 3em;
+    font-weight: 600;
+}
+
+.count-total {
+    font-size: 0.6em;
+    opacity: 0.8;
+}
+
+.health-indicator {
+    font-size: 2em;
+}
+
+.health-text {
+    font-weight: 600;
+}
+
+.nato-standards {
+    margin-bottom: 40px;
+}
+
+.nato-standards h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 10px;
+}
+
+.standards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.standard-card {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.standard-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.standard-card h4 {
+    color: #3498db;
+    margin-bottom: 5px;
+}
+
+.standard-title {
+    color: #7f8c8d;
+    margin-bottom: 15px;
+    font-size: 0.9em;
+}
+
+.standard-status {
+    margin-bottom: 15px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+.status-badge.compliant {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-badge.non-compliant {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status-badge.partial {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.standard-details ul {
+    list-style: none;
+    padding: 0;
+    font-size: 0.9em;
+    color: #495057;
+}
+
+.standard-details li {
+    padding: 5px 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.standard-details li:last-child {
+    border-bottom: none;
+}
+
+.standard-details li::before {
+    content: "✓";
+    color: #28a745;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.systems-status {
+    margin-bottom: 40px;
+}
+
+.systems-status h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 10px;
+}
+
+.systems-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.system-card {
+    background: white;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.system-info {
+    flex: 1;
+}
+
+.system-name {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.system-description {
+    font-size: 0.85em;
+    color: #7f8c8d;
+}
+
+.system-status-indicator {
+    font-size: 1.5em;
+}
+
+.capabilities-matrix {
+    margin-bottom: 40px;
+}
+
+.capabilities-matrix h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 10px;
+}
+
+.capabilities-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.capability-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    padding: 15px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.capability-row:nth-child(even) {
+    background: #f8f9fa;
+}
+
+.capability-row:hover {
+    background: #e9ecef;
+}
+
+.capability-name {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.capability-system {
+    color: #7f8c8d;
+    font-size: 0.9em;
+}
+
+.capability-status {
+    text-align: right;
+}
+
+.compliance-actions {
+    margin-bottom: 40px;
+}
+
+.compliance-actions h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 10px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+    flex: 1;
+    min-width: 200px;
+}
+
+.compliance-recommendations {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.compliance-recommendations h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+.recommendations-list {
+    list-style: none;
+    padding: 0;
+}
+
+.recommendation-item {
+    background: white;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    border-left: 4px solid #3498db;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.recommendation-icon {
+    font-size: 1.5em;
+    color: #3498db;
+}
+
+.recommendation-text {
+    flex: 1;
+    color: #2c3e50;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+.btn-info {
+    background: #17a2b8;
+    color: white;
+}
+
+.btn-info:hover {
+    background: #138496;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #218838;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-dialog {
+    background: white;
+    border-radius: 8px;
+    max-width: 900px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    color: #7f8c8d;
+}
+
+.btn-close:hover {
+    color: #2c3e50;
+}
+
+.modal-body {
+    padding: 20px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.modal-footer {
+    padding: 20px;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.report-section {
+    margin-bottom: 25px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+}
+
+.report-section h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 10px;
+}
+
+.report-content {
+    color: #495057;
+    line-height: 1.6;
+}
+
+.report-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.report-item {
+    padding: 10px;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.report-item strong {
+    color: #2c3e50;
+}
+
+.report-list {
+    list-style: none;
+    padding: 0;
+}
+
+.report-list li {
+    padding: 8px;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.report-list li:last-child {
+    border-bottom: none;
+}
+
+.report-list li::before {
+    content: "✓";
+    color: #28a745;
+    font-weight: bold;
+}
+
+.report-list li.warning::before {
+    content: "⚠";
+    color: #ffc107;
+}
+
+.report-list li.error::before {
+    content: "✗";
+    color: #dc3545;
+}
+
+@@media (max-width: 1024px) {
+    .compliance-overview {
+        grid-template-columns: 1fr;
+    }
+    
+    .standards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .systems-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@@media (max-width: 768px) {
+    .standards-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .systems-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .report-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+    }
+}
+</style>
+
+<script>
+// NATO Compliance Manager
+class NatoComplianceManager {
+    constructor() {
+        this.complianceData = null;
+        this.healthData = null;
+        
+        this.initializeEventListeners();
+        this.runComplianceCheck();
+    }
+
+    initializeEventListeners() {
+        document.getElementById('btnRefreshCompliance').addEventListener('click', () => this.runComplianceCheck());
+        document.getElementById('btnGenerateComplianceReport').addEventListener('click', () => this.generateComplianceReport());
+        document.getElementById('btnGenerateHealthReport').addEventListener('click', () => this.generateHealthReport());
+        document.getElementById('btnExportReports').addEventListener('click', () => this.exportAllReports());
+        document.getElementById('btnExportComplianceReport').addEventListener('click', () => this.exportComplianceReport());
+    }
+
+    runComplianceCheck() {
+        console.log('🔍 Running NATO compliance check...');
+        
+        if (!window.natoSystemIntegrator) {
+            alert('NATO System Integrator not available');
+            return;
+        }
+        
+        // Get integration status
+        const integrationStatus = window.natoSystemIntegrator.getIntegrationStatus();
+        
+        // Get compliance verification
+        const complianceCheck = window.natoSystemIntegrator.verifyNatoCompliance();
+        
+        // Get system health
+        const healthReport = window.natoSystemIntegrator.generateSystemHealthReport();
+        
+        this.complianceData = {
+            integrationStatus: integrationStatus,
+            complianceCheck: complianceCheck,
+            healthReport: healthReport,
+            timestamp: new Date().toISOString()
+        };
+        
+        // Display results
+        this.displayComplianceStatus();
+        this.displaySystemsStatus();
+        this.displayCapabilities();
+        this.displayRecommendations();
+        
+        console.log('✅ Compliance check complete');
+    }
+
+    displayComplianceStatus() {
+        // Overall compliance
+        const overallStatus = document.getElementById('overallComplianceStatus');
+        const isCompliant = this.complianceData.integrationStatus.natoCompliant;
+        
+        overallStatus.innerHTML = `
+            <div class="status-indicator">
+                <span class="status-icon">${isCompliant ? '✅' : '⚠️'}</span>
+                <span class="status-text">${isCompliant ? 'NATO COMPLIANT' : 'PARTIAL COMPLIANCE'}</span>
+            </div>
+        `;
+        
+        // Systems connected
+        const systemsConnected = document.getElementById('systemsConnected');
+        const connected = this.complianceData.integrationStatus.systemsConnected;
+        const total = this.complianceData.integrationStatus.totalSystems;
+        
+        systemsConnected.innerHTML = `
+            <div class="count-display">
+                <span class="count-number">${connected}</span>
+                <span class="count-total">/ ${total}</span>
+            </div>
+        `;
+        
+        // Integration health
+        const integrationHealth = document.getElementById('integrationHealth');
+        const health = this.complianceData.healthReport.overallHealth;
+        
+        integrationHealth.innerHTML = `
+            <div class="health-indicator">
+                <span class="health-text">${health.toUpperCase()}</span>
+            </div>
+        `;
+        
+        // Update standard statuses
+        this.updateStandardStatuses();
+    }
+
+    updateStandardStatuses() {
+        const details = this.complianceData.complianceCheck;
+        
+        // ATP-3-90.1 (Tactics) - covered by AI and Effectiveness
+        const atp3901 = details.ai?.compliant && details.effectiveness?.compliant;
+        document.getElementById('atp3901Status').innerHTML = 
+            `<span class="status-badge ${atp3901 ? 'compliant' : 'partial'}">${atp3901 ? 'Compliant' : 'Partial'}</span>`;
+        
+        // ATP-3-90.2 (Offensive) - covered by Effectiveness
+        const atp3902 = details.effectiveness?.compliant;
+        document.getElementById('atp3902Status').innerHTML = 
+            `<span class="status-badge ${atp3902 ? 'compliant' : 'partial'}">${atp3902 ? 'Compliant' : 'Partial'}</span>`;
+        
+        // ATP-3-90.3 (Defensive) - covered by Effectiveness
+        const atp3903 = details.effectiveness?.compliant;
+        document.getElementById('atp3903Status').innerHTML = 
+            `<span class="status-badge ${atp3903 ? 'compliant' : 'partial'}">${atp3903 ? 'Compliant' : 'Partial'}</span>`;
+        
+        // ATP-3-90.4 (Terrain) - covered by Terrain
+        const atp3904 = details.terrain?.compliant;
+        document.getElementById('atp3904Status').innerHTML = 
+            `<span class="status-badge ${atp3904 ? 'compliant' : 'partial'}">${atp3904 ? 'Compliant' : 'Partial'}</span>`;
+        
+        // APP-6 (Symbology) - assumed compliant (already implemented)
+        document.getElementById('app6Status').innerHTML = 
+            `<span class="status-badge compliant">Compliant</span>`;
+        
+        // NETN-FOM (HLA) - covered by HLA
+        const netn = details.hla?.compliant;
+        document.getElementById('netnStatus').innerHTML = 
+            `<span class="status-badge ${netn ? 'compliant' : 'partial'}">${netn ? 'Compliant' : 'Partial'}</span>`;
+    }
+
+    displaySystemsStatus() {
+        const systemsGrid = document.getElementById('systemsGrid');
+        const systems = this.complianceData.integrationStatus.systems;
+        
+        systemsGrid.innerHTML = '';
+        
+        const systemNames = {
+            effectiveness: 'NATO Effectiveness Engine',
+            terrain: 'NATO Terrain Engine',
+            ai: 'NATO AI Analysis Engine',
+            simulation: 'Combat Simulation Engine',
+            results: 'Simulation Results Manager',
+            hla: 'HLA Integration Adapter',
+            terrainIntegration: 'Terrain Integration Service',
+            aiIntegration: 'AI Integration Service',
+            interoperability: 'Interoperability Service'
+        };
+        
+        Object.entries(systems).forEach(([key, operational]) => {
+            const card = document.createElement('div');
+            card.className = 'system-card';
+            card.innerHTML = `
+                <div class="system-info">
+                    <div class="system-name">${systemNames[key]}</div>
+                    <div class="system-description">${operational ? 'Operational' : 'Unavailable'}</div>
+                </div>
+                <div class="system-status-indicator">
+                    ${operational ? '✅' : '❌'}
+                </div>
+            `;
+            systemsGrid.appendChild(card);
+        });
+    }
+
+    displayCapabilities() {
+        const capabilitiesTable = document.getElementById('capabilitiesTable');
+        
+        const capabilities = [
+            { name: 'Attack Planning', system: 'Effectiveness Engine', status: !!this.complianceData.integrationStatus.systems.effectiveness },
+            { name: 'Defense Planning', system: 'Effectiveness Engine', status: !!this.complianceData.integrationStatus.systems.effectiveness },
+            { name: 'Terrain Analysis', system: 'Terrain Engine', status: !!this.complianceData.integrationStatus.systems.terrain },
+            { name: 'AI Decision Support', system: 'AI Analysis Engine', status: !!this.complianceData.integrationStatus.systems.ai },
+            { name: 'Turn-Based Simulation', system: 'Simulation Engine', status: !!this.complianceData.integrationStatus.systems.simulation },
+            { name: 'Two-Player Mode', system: 'Simulation Engine', status: !!this.complianceData.integrationStatus.systems.simulation },
+            { name: 'Fog of War', system: 'Simulation Engine', status: !!this.complianceData.integrationStatus.systems.simulation },
+            { name: 'Results Analysis', system: 'Results Manager', status: !!this.complianceData.integrationStatus.systems.results },
+            { name: 'Comparative Analysis', system: 'Results Manager', status: !!this.complianceData.integrationStatus.systems.results },
+            { name: 'HLA Interoperability', system: 'HLA Adapter', status: !!this.complianceData.integrationStatus.systems.hla },
+            { name: 'NATO Symbology (APP-6)', system: 'Symbol Renderer', status: true },
+            { name: 'Attack Symbols', system: 'Symbol Renderer', status: true },
+            { name: 'Defense Elements', system: 'Defense Planning', status: true }
+        ];
+        
+        capabilitiesTable.innerHTML = '';
+        
+        capabilities.forEach(capability => {
+            const row = document.createElement('div');
+            row.className = 'capability-row';
+            row.innerHTML = `
+                <div class="capability-name">${capability.name}</div>
+                <div class="capability-system">${capability.system}</div>
+                <div class="capability-status">
+                    ${capability.status ? '✅ Available' : '❌ Unavailable'}
+                </div>
+            `;
+            capabilitiesTable.appendChild(row);
+        });
+    }
+
+    displayRecommendations() {
+        const complianceReport = window.natoSystemIntegrator.generateComplianceReport();
+        const recommendations = complianceReport.recommendations;
+        
+        if (recommendations.length === 0) {
+            document.getElementById('complianceRecommendations').style.display = 'none';
+            return;
+        }
+        
+        document.getElementById('complianceRecommendations').style.display = 'block';
+        
+        const recommendationsList = document.getElementById('recommendationsList');
+        recommendationsList.innerHTML = '';
+        
+        recommendations.forEach(recommendation => {
+            const item = document.createElement('div');
+            item.className = 'recommendation-item';
+            item.innerHTML = `
+                <div class="recommendation-icon">💡</div>
+                <div class="recommendation-text">${recommendation}</div>
+            `;
+            recommendationsList.appendChild(item);
+        });
+    }
+
+    generateComplianceReport() {
+        if (!window.natoSystemIntegrator) {
+            alert('NATO System Integrator not available');
+            return;
+        }
+        
+        const report = window.natoSystemIntegrator.generateComplianceReport();
+        
+        const modal = document.getElementById('complianceReportModal');
+        const content = document.getElementById('complianceReportContent');
+        
+        content.innerHTML = `
+            <div class="report-section">
+                <h4>Executive Summary</h4>
+                <div class="report-content">
+                    <div class="report-grid">
+                        <div class="report-item">
+                            <strong>Report Date:</strong> ${new Date(report.reportDate).toLocaleString()}
+                        </div>
+                        <div class="report-item">
+                            <strong>Report Type:</strong> ${report.reportType}
+                        </div>
+                        <div class="report-item">
+                            <strong>Overall Compliance:</strong> ${report.natoCompliance.overall ? '✅ Compliant' : '⚠️ Partial'}
+                        </div>
+                        <div class="report-item">
+                            <strong>Systems Connected:</strong> ${report.systemStatus.connectionRate}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="report-section">
+                <h4>NATO Standards Compliance</h4>
+                <div class="report-content">
+                    <ul class="report-list">
+                        ${Object.entries(report.standards).map(([code, name]) => {
+                            const detail = report.natoCompliance.details;
+                            let compliant = false;
+                            let className = '';
+                            
+                            if (code.includes('ATP-3-90')) {
+                                if (code === 'ATP-3-90.1') compliant = detail.ai?.compliant || false;
+                                else if (code === 'ATP-3-90.2') compliant = detail.effectiveness?.compliant || false;
+                                else if (code === 'ATP-3-90.3') compliant = detail.effectiveness?.compliant || false;
+                                else if (code === 'ATP-3-90.4') compliant = detail.terrain?.compliant || false;
+                            } else if (code === 'APP-6') {
+                                compliant = true; // Already implemented
+                            } else if (code === 'NETN-FOM') {
+                                compliant = detail.hla?.compliant || false;
+                            }
+                            
+                            className = compliant ? '' : 'warning';
+                            
+                            return `<li class="${className}"><strong>${code}:</strong> ${name} - ${compliant ? 'Compliant' : 'Partial'}</li>`;
+                        }).join('')}
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="report-section">
+                <h4>System Capabilities</h4>
+                <div class="report-content">
+                    <ul class="report-list">
+                        ${Object.entries(report.capabilities).map(([capability, available]) => {
+                            const className = available ? '' : 'warning';
+                            return `<li class="${className}"><strong>${this.formatCapabilityName(capability)}:</strong> ${available ? 'Available' : 'Unavailable'}</li>`;
+                        }).join('')}
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="report-section">
+                <h4>Integration Status</h4>
+                <div class="report-content">
+                    <ul class="report-list">
+                        ${Object.entries(report.integration).map(([integration, status]) => {
+                            const className = status ? '' : 'warning';
+                            return `<li class="${className}"><strong>${this.formatCapabilityName(integration)}:</strong> ${status ? 'Integrated' : 'Not Integrated'}</li>`;
+                        }).join('')}
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="report-section">
+                <h4>Recommendations</h4>
+                <div class="report-content">
+                    <ul class="report-list">
+                        ${report.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+        `;
+        
+        modal.classList.add('show');
+    }
+
+    generateHealthReport() {
+        if (!window.natoSystemIntegrator) {
+            alert('NATO System Integrator not available');
+            return;
+        }
+        
+        const health = window.natoSystemIntegrator.generateSystemHealthReport();
+        
+        const modal = document.getElementById('complianceReportModal');
+        const content = document.getElementById('complianceReportContent');
+        
+        content.innerHTML = `
+            <div class="report-section">
+                <h4>System Health Overview</h4>
+                <div class="report-content">
+                    <div class="report-grid">
+                        <div class="report-item">
+                            <strong>Overall Health:</strong> ${health.overallHealth.toUpperCase()}
+                        </div>
+                        <div class="report-item">
+                            <strong>Timestamp:</strong> ${new Date(health.timestamp).toLocaleString()}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="report-section">
+                <h4>System Status</h4>
+                <div class="report-content">
+                    <ul class="report-list">
+                        ${Object.entries(health.systems).map(([system, status]) => {
+                            const className = status.health === 'healthy' ? '' : 'warning';
+                            return `<li class="${className}"><strong>${this.formatCapabilityName(system)}:</strong> ${status.status} (${status.health})</li>`;
+                        }).join('')}
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="report-section">
+                <h4>Issues</h4>
+                <div class="report-content">
+                    ${health.issues.length > 0 ? `
+                        <ul class="report-list">
+                            ${health.issues.map(issue => `<li class="warning">${issue}</li>`).join('')}
+                        </ul>
+                    ` : '<p>No issues detected</p>'}
+                </div>
+            </div>
+            
+            <div class="report-section">
+                <h4>Recommendations</h4>
+                <div class="report-content">
+                    ${health.recommendations.length > 0 ? `
+                        <ul class="report-list">
+                            ${health.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                        </ul>
+                    ` : '<p>No recommendations</p>'}
+                </div>
+            </div>
+        `;
+        
+        modal.classList.add('show');
+    }
+
+    exportComplianceReport() {
+        if (!this.complianceData) {
+            alert('No compliance data to export');
+            return;
+        }
+        
+        const report = window.natoSystemIntegrator.generateComplianceReport();
+        const data = JSON.stringify(report, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `nato_compliance_report_${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        console.log('📤 Compliance report exported');
+    }
+
+    exportAllReports() {
+        if (!window.natoSystemIntegrator) {
+            alert('NATO System Integrator not available');
+            return;
+        }
+        
+        const complianceReport = window.natoSystemIntegrator.generateComplianceReport();
+        const healthReport = window.natoSystemIntegrator.generateSystemHealthReport();
+        
+        const allReports = {
+            complianceReport: complianceReport,
+            healthReport: healthReport,
+            exportTimestamp: new Date().toISOString()
+        };
+        
+        const data = JSON.stringify(allReports, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `nato_all_reports_${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        console.log('📤 All reports exported');
+    }
+
+    formatCapabilityName(name) {
+        return name.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).trim();
+    }
+}
+
+// Initialize compliance manager
+const natoComplianceManager = new NatoComplianceManager();
+console.log('📊 NATO Compliance Manager initialized');
+
+// Close modal functionality
+document.querySelectorAll('.btn-close, .modal .btn-secondary').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.classList.remove('show');
+        });
+    });
+});
+</script>

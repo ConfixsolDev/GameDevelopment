@@ -1,0 +1,56 @@
+﻿@{
+    var currentUser = ViewBag.CurrentUser as ApplicationUserVM;
+    string fullName = currentUser.FullName;
+    string[] nameParts = fullName.Split(' ');
+    string shortForm = nameParts[0].Substring(0, 1) + nameParts[1].Substring(0, 1);
+}
+ 
+<header id="page-topbar">
+    <div class="navbar-header">
+        <div class="d-flex">
+            <!-- LOGO -->
+            <div class="navbar-brand-box">
+                <a href="/Home/Index" class="logo logo-light">
+                    <span class="logo-sm">
+                        <img src="~/assets/images/logo-sm.png" alt="" width="32">
+                    </span>
+                    <span class="logo-lg" style="font-size: xx-large;">
+                        <img src="~/assets/images/logo-sm.png" alt="" width="32"><span style="color:white">HCM</span>
+                    </span>
+                </a>
+            </div>
+
+            <button type="button" class="btn btn-sm px-3 font-size-24 header-item" id="vertical-menu-btn">
+                <i class="mdi mdi-menu"></i>
+            </button>
+            
+        </div>
+
+        <div class="d-flex">
+            <div class="dropdown d-inline-block">
+                <button type="button" class="btn header-item noti-icon Helpinfo">
+                    <i class="mdi mdi-help-circle-outline"></i>
+                </button>
+            </div>
+
+            <div class="dropdown d-inline-block">
+                <button type="button" class="btn header-item" id="page-header-user-dropdown"
+                        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                     <span class="rounded-circle">@shortForm.ToUpper()</span> 
+                    @*<span class="rounded-circle">DA</span>*@
+                </button>
+
+                <div class="dropdown-menu dropdown-menu-end">
+                    <a class="dropdown-item d-flex align-items-center" href="~/Identity/AccountAdmin/SetUserUrl"><i class="fas fa-home"></i><span>Settings</span></a>
+                    <a class="dropdown-item d-flex align-items-center" href="~/Identity/AccountAdmin/PasswordReset"><i class="fas fa-key"></i><span>Change Password</span></a>
+                    <div class="dropdown-divider"></div>
+                        <!--<button id="logout" type="submit" class="nav-link btn btn-link text-dark border-0">Sign Out</button>-->
+                        <a asp-area="" asp-controller="Account" asp-action="Logout"  class="dropdown-item"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+                </div>
+            </div>
+
+            @* @Html.Partial("_LoginPartial") *@
+
+        </div>
+    </div>
+</header>

@@ -1,0 +1,12 @@
+---
+description: Use this rule when writing JS or jquery code 
+
+1. Write new code if already not present 
+2. Use the available js files for writing code always check if the code is already written or not 
+3. For any form or other data entry create a partial view and c# code use Js to call function and display the information in the model
+4. avoid duplication 
+5. no js or css in the the cshtml file use already included js and css files to write these for darm theme use the generic theme properties already present in the code.
+
+globs: always consider this when wirting the js code. 
+alwaysApply: true
+---

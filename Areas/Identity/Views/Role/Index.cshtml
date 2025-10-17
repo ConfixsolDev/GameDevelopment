@@ -1,0 +1,81 @@
+﻿@model IEnumerable<TechWebSol.ViewModels.UserCountViewModel>
+<style>
+    /* .dataTables_filter, .dataTables_info {
+        display: none;
+    } */
+    .white {
+        color: white;
+    }
+</style>
+@{
+    ViewData["Title"] = "Role Management";
+}
+
+<div class="card card-shadow">
+    <div class="card-body">
+        <hr class="mt-2 mb-4">
+        <div class="row">
+            <div class="col-lg-5 mb-3">
+                <a class="btn btn-primary" asp-action="Create" asp-route-AppId="HCM">
+                    <i class="fas fa-plus me-1"></i> Add Role
+                </a>
+            
+            </div>
+            <div class="col-lg-12 filter-wrap" id="formContainer">
+                <div class="input-group search-filter mb-3 ms-2">
+                    <input type="text" id="searchFilter" class="form-control" placeholder="Search">
+                </div>
+
+                <div class="mb-3 ms-2">
+                    <button class="btn btn-primary" id="searchBtn"> <i class="fas fa-search me-1" title="Search"></i></button>
+                </div>
+                <div class="mb-3 ms-2">
+                    <button class="btn btn-warning" onclick="resetFields()" id="resetBtn"> <i class="fas fa-undo me-1" title="Reset Search Filters"></i></button>
+                </div>
+            </div>
+        </div>
+        <table aria-label="" role="grid" id="dataTableGrid12" class="table table-striped w-100">
+            <thead>
+                <tr>
+                    <th width="40%"><label>Name</label> </th>
+                    <th width="15%"><label>Total Users</label></th>
+                    <th width="10%"><label>Actions</label></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var role in Model.OrderBy(x => x.AppId))
+                {
+                    <tr>
+                        <td>@Html.DisplayFor(m => role.RollName)</td>
+                        <td style="text-align:center">
+                            <div>
+                                @role.Count
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-group" aria-label="Basic Basic example" role="group">
+                                <a class="btn btn-primary" asp-action="Edit" asp-route-AppId="@role.AppId" asp-route-id="@role.ApplicationRoleId">
+                                    <i class="fas fa-pencil"></i> Edit
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Breadcrump {
+    <li class="breadcrumb-item"><a asp-action="Index" asp-controller="Home">Home</a></li>
+    <li class="breadcrumb-item active">List</li>
+}
+
+<!-- [ Main Content ] end -->
+@section Styles {
+    <partial name="_datatablestylepartial" />
+}
+
+@section Scripts {
+    <partial name="_DatatableScriptsFEPartial" />
+}

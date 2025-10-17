@@ -1,0 +1,317 @@
+<!-- LEFT: Unified Region controls (Sectors, Labels, Basemap) -->
+<aside class="team-status-panel slide-up" id="regionPanel">
+    <div class="team-status-header">
+        <div class="team-status-icon">⚑</div>
+            <h5>Region Controls</h5>
+    </div>
+
+    <div class="panel-body">
+           
+            <!-- Map Selection -->
+            <div class="control-section" style="display:none;">
+                <h6><i class="fas fa-map"></i> Offline Map Selection</h6>
+                <div class="control-row">
+                    <select id="mapSelector" class="overlay-btn" style="width: 100%; padding: 8px; border: 1px solid #00ff00; background: #1a1a1a; color: #00ff00; border-radius: 4px; font-size: 13px;">
+                        <option value="">Loading maps...</option>
+                    </select>
+                </div>
+                <small style="color: #00ff88; font-size: 11px; display: block; margin-top: 4px;">
+                    <i class="fas fa-info-circle"></i> Select a map to load bounded area
+                </small>
+            </div>
+
+            <!-- Region Settings -->
+            <div class="control-section">
+                <h6><i class="fas fa-cog"></i> Region Settings</h6>
+                <div class="control-row">
+                    <label for="defaultZoomLevel" style="color: #00ff88; font-size: 12px; margin-bottom: 4px; display: block;">Default Zoom Level:</label>
+                    <select id="defaultZoomLevel" class="overlay-btn" onchange="updateDefaultZoomLevel(this.value)" style="width: 100%; padding: 8px; border: 1px solid #00ff00; background: #1a1a1a; color: #00ff00; border-radius: 4px; font-size: 13px;">
+                        <option value="12">12 - District View</option>
+                        <option value="13">13 - District View</option>
+                        <option value="14" selected>14 - Street View</option>
+                        <option value="15">15 - Street View</option>
+                        <option value="16">16 - Building View</option>
+                        <option value="17">17 - Building View</option>
+                        <option value="18">18 - Detail View</option>
+                        <option value="19">19 - Detail View</option>
+                        <option value="20">20 - Close Detail</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Basemap Dropdown -->
+            <div class="control-section">
+                <h6><i class="fas fa-globe"></i> Basemap Style</h6>
+                <div class="control-row">
+                    <select id="basemapDropdown" class="overlay-btn" onchange="changeBasemap(this.value)" style="width: 100%; padding: 8px; border: 1px solid #444; background: #2d3748; color: #e2e8f0; border-radius: 4px;">
+                        <option value="Offline" selected>Offline Map</option>
+                        <option value="Offline_Dark">Offline Dark</option>
+                        <option value="Offline_Light">Offline Light</option>
+                        <option value="Offline_Terrain">Offline Terrain</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Layer Visibility -->
+            <div class="control-section">
+                <br />
+                <h6><i class="fas fa-eye"></i> Layer Visibility</h6>
+                <div class="control-row">
+                    <label class="overlay-btn">
+                        <input id="chkShowRegions" type="checkbox" checked onchange="toggleLayer('regions')" />
+                        <span><i class="fas fa-map-marked-alt"></i> Regions</span>
+                    </label>
+                    <label class="overlay-btn">
+                        <input id="chkShowLabels" type="checkbox" checked onchange="toggleLayer('labels')" />
+                        <span><i class="fas fa-tags"></i> Labels</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Edit Mode Toggle -->
+            <div class="d-grid gap-10 control-section">
+                    <button id="btnEditMode" class="overlay-btn mb-2" onclick="toggleEditMode()">
+                        <i class="fas fa-edit"></i>
+                        <span>Edit Mode</span>
+                    </button>
+            </div>
+        <div class="control-section edit-mode-control" style="display: none;">
+            <h6><i class="fas fa-flag"></i> Force Selection</h6>
+            <div class="control-row">
+                <button id="btnSelectBlue" class="overlay-btn force-btn active" onclick="selectForce('blue')">
+                    <i class="fas fa-circle" style="color: #00d4ff;"></i>
+                    <span>Blue Land</span>
+                </button>
+                <button id="btnSelectFox" class="overlay-btn force-btn" onclick="selectForce('fox')">
+                    <i class="fas fa-circle" style="color: #ff6b6b;"></i>
+                    <span>Fox Land</span>
+                </button>
+            </div>
+        </div>
+            <!-- Map Regions -->
+            <div class="control-section edit-mode-control" style="display: none;">
+                <h6><i class="fas fa-map-marked-alt"></i> Map Regions</h6>
+                <div class="control-row">
+                    <button id="btnCreateRegion" class="overlay-btn" onclick="startRegionDrawing()">
+                        <i class="fas fa-draw-polygon"></i>
+                        <span>Create Region</span>
+                    </button>
+                    <button id="btnClearRegions" class="overlay-btn danger" onclick="clearAllRegions()">
+                        <i class="fas fa-trash"></i>
+                        <span>Clear All</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Map Labels -->
+            <div class="control-section edit-mode-control" style="display: none;">
+                <h6><i class="fas fa-tags"></i> Map Labels</h6>
+                <div class="control-row">
+                    <button id="btnAddLabel" class="overlay-btn" onclick="addMapLabel()">
+                        <i class="fas fa-tag"></i>
+                        <span>Add Label</span>
+                    </button>
+                    <button id="btnClearLabels" class="overlay-btn danger" onclick="clearAllLabels()">
+                        <i class="fas fa-times"></i>
+                        <span>Clear Labels</span>
+                    </button>
+                </div>
+        </div>
+    </div>
+</aside>
+
+<style>
+    @@keyframes pulse-btn {
+        0%, 100% {
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+        }
+        50% {
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
+        }
+    }
+</style>
+
+<script>
+/**
+ * Region Settings Manager
+ * Handles default zoom level and other region settings with localStorage persistence
+ */
+class RegionSettingsManager {
+    constructor() {
+        this.storageKey = 'ksagame_region_settings';
+        this.defaultSettings = {
+            defaultZoomLevel: 14,
+            basemapStyle: 'Offline',
+            showRegions: true,
+            showLabels: true
+        };
+        
+        this.settings = this.loadSettings();
+        this.initializeSettings();
+    }
+    
+    /**
+     * Load settings from localStorage
+     */
+    loadSettings() {
+        try {
+            const stored = localStorage.getItem(this.storageKey);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                console.log('🔧 Region settings loaded from storage:', parsed);
+                return { ...this.defaultSettings, ...parsed };
+            }
+        } catch (error) {
+            console.warn('⚠️ Failed to load region settings from storage:', error);
+        }
+        
+        console.log('🔧 Using default region settings:', this.defaultSettings);
+        return { ...this.defaultSettings };
+    }
+    
+    /**
+     * Save settings to localStorage
+     */
+    saveSettings() {
+        try {
+            localStorage.setItem(this.storageKey, JSON.stringify(this.settings));
+            console.log('💾 Region settings saved to storage:', this.settings);
+        } catch (error) {
+            console.error('❌ Failed to save region settings to storage:', error);
+        }
+    }
+    
+    /**
+     * Initialize settings UI
+     */
+    initializeSettings() {
+        // Set default zoom level dropdown
+        const zoomDropdown = document.getElementById('defaultZoomLevel');
+        if (zoomDropdown) {
+            zoomDropdown.value = this.settings.defaultZoomLevel;
+            console.log(`🔧 Default zoom level set to: ${this.settings.defaultZoomLevel}`);
+        }
+        
+        // Set basemap dropdown
+        const basemapDropdown = document.getElementById('basemapDropdown');
+        if (basemapDropdown) {
+            basemapDropdown.value = this.settings.basemapStyle;
+        }
+        
+        // Set layer visibility checkboxes
+        const regionsCheckbox = document.getElementById('chkShowRegions');
+        if (regionsCheckbox) {
+            regionsCheckbox.checked = this.settings.showRegions;
+        }
+        
+        const labelsCheckbox = document.getElementById('chkShowLabels');
+        if (labelsCheckbox) {
+            labelsCheckbox.checked = this.settings.showLabels;
+        }
+    }
+    
+    /**
+     * Update default zoom level
+     */
+    updateDefaultZoomLevel(zoomLevel) {
+        const level = parseInt(zoomLevel);
+        this.settings.defaultZoomLevel = level;
+        this.saveSettings();
+        
+        console.log(`🔧 Default zoom level updated to: ${level}`);
+        
+        // Show notification
+        if (typeof showNotification === 'function') {
+            showNotification(`Default zoom level set to ${level}`, 'success');
+        }
+        
+        // Update global variable for immediate use
+        if (window.gamePlayManager) {
+            window.gamePlayManager.defaultZoomLevel = level;
+        }
+    }
+    
+    /**
+     * Get current default zoom level
+     */
+    getDefaultZoomLevel() {
+        return this.settings.defaultZoomLevel;
+    }
+    
+    /**
+     * Update basemap style
+     */
+    updateBasemapStyle(style) {
+        this.settings.basemapStyle = style;
+        this.saveSettings();
+        console.log(`🔧 Basemap style updated to: ${style}`);
+    }
+    
+    /**
+     * Update layer visibility
+     */
+    updateLayerVisibility(layer, visible) {
+        if (layer === 'regions') {
+            this.settings.showRegions = visible;
+        } else if (layer === 'labels') {
+            this.settings.showLabels = visible;
+        }
+        this.saveSettings();
+        console.log(`🔧 Layer ${layer} visibility updated to: ${visible}`);
+    }
+    
+    /**
+     * Reset all settings to defaults
+     */
+    resetToDefaults() {
+        this.settings = { ...this.defaultSettings };
+        this.saveSettings();
+        this.initializeSettings();
+        console.log('🔧 Region settings reset to defaults');
+        
+        if (typeof showNotification === 'function') {
+            showNotification('Region settings reset to defaults', 'info');
+        }
+    }
+}
+
+// Global functions for HTML event handlers
+function updateDefaultZoomLevel(zoomLevel) {
+    if (window.regionSettingsManager) {
+        window.regionSettingsManager.updateDefaultZoomLevel(zoomLevel);
+    }
+}
+
+function changeBasemap(style) {
+    if (window.regionSettingsManager) {
+        window.regionSettingsManager.updateBasemapStyle(style);
+    }
+    
+    // Call existing basemap change function if it exists
+    if (typeof changeBasemap === 'function' && changeBasemap !== window.changeBasemap) {
+        changeBasemap(style);
+    }
+}
+
+function toggleLayer(layer) {
+    const checkbox = document.getElementById(`chkShow${layer.charAt(0).toUpperCase() + layer.slice(1)}`);
+    if (checkbox && window.regionSettingsManager) {
+        window.regionSettingsManager.updateLayerVisibility(layer, checkbox.checked);
+    }
+}
+
+// Initialize region settings manager when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    window.regionSettingsManager = new RegionSettingsManager();
+    console.log('🔧 Region Settings Manager initialized');
+});
+
+// Also initialize if DOM is already loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        window.regionSettingsManager = new RegionSettingsManager();
+    });
+} else {
+    window.regionSettingsManager = new RegionSettingsManager();
+}
+</script>

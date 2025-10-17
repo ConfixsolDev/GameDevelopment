@@ -1,0 +1,153 @@
+@{
+    ViewData["Title"] = "Edit Team";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-edit"></i> Edit Team
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form id="editTeamForm">
+                        <input type="hidden" id="teamId" value="@ViewBag.TeamId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="teamName" class="form-label">Team Name *</label>
+                                    <input type="text" class="form-control" id="teamName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="teamCode" class="form-label">Team Code *</label>
+                                    <input type="text" class="form-control" id="teamCode" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="subTeamCode" class="form-label">Sub Team Code</label>
+                                    <input type="text" class="form-control" id="subTeamCode">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="teamCategory" class="form-label">Category</label>
+                                    <select class="form-control" id="teamCategory">
+                                        <option value="">-- Select Category --</option>
+                                        <option value="Company">Company</option>
+                                        <option value="Brigade">Brigade</option>
+                                        <option value="Department">Department</option>
+                                        <option value="Unit">Unit</option>
+                                        <option value="Squad">Squad</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="teamDescription" class="form-label">Description</label>
+                                    <textarea class="form-control" id="teamDescription" rows="4"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Update Team
+                                </button>
+                                <a href="@Url.Action("Index", "TeamManagement")" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Back to Teams
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            loadTeamData();
+            
+            $('#editTeamForm').submit(function(e) {
+                e.preventDefault();
+                updateTeam();
+            });
+        });
+
+        function loadTeamData() {
+            const teamId = $('#teamId').val();
+            if (!teamId) {
+                showAlert('Team ID not provided', 'danger');
+                return;
+            }
+
+            $.get('/TeamManagement/getteams')
+                .done(function(teams) {
+                    const team = teams.find(t => t.id === teamId);
+                    if (team) {
+                        $('#teamName').val(team.name);
+                        $('#teamCode').val(team.teamCode);
+                        $('#subTeamCode').val(team.subTeamCode || '');
+                        $('#teamCategory').val(team.category || '');
+                        $('#teamDescription').val(team.description || '');
+                    } else {
+                        showAlert('Team not found', 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('Error loading team data', 'danger');
+                });
+        }
+
+        function updateTeam() {
+            const teamId = $('#teamId').val();
+            const data = {
+                name: $('#teamName').val(),
+                teamCode: $('#teamCode').val(),
+                subTeamCode: $('#subTeamCode').val(),
+                category: $('#teamCategory').val(),
+                description: $('#teamDescription').val()
+            };
+
+            if (!data.name || !data.teamCode) {
+                showAlert('Team name and code are required', 'warning');
+                return;
+            }
+
+            $.ajax({
+                url: `/TeamManagement/update-team/${teamId}`,
+                type: 'PUT',
+                data: JSON.stringify(data),
+                contentType: 'application/json'
+            })
+            .done(function(response) {
+                if (response.success) {
+                    showAlert('Team updated successfully', 'success');
+                    setTimeout(function() {
+                        window.location.href = '@Url.Action("Index", "TeamManagement")';
+                    }, 1500);
+                } else {
+                    showAlert(response.message, 'danger');
+                }
+            })
+            .fail(function(xhr) {
+                const message = xhr.responseJSON?.message || 'Error updating team';
+                showAlert(message, 'danger');
+            });
+        }
+
+        // showAlert function is now provided by the centralized AlertSystem
+    </script>
+}

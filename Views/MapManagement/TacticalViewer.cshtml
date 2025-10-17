@@ -1,0 +1,925 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tactical Route Planner - Real World Data</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #1a1a1a;
+            color: #00ff00;
+        }
+
+        header {
+            background: #000;
+            color: #00ff00;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid #00ff00;
+            height: 56px;
+        }
+
+            header h1 {
+                font-size: 18px;
+            }
+
+        #map {
+            position: absolute;
+            top: 56px; /* below header */
+            left: 0;   /* full-width behind overlay panel */
+            right: 0;
+            bottom: 0;
+            z-index: 1; /* map below the control panel */
+        }
+
+        .panel {
+            position: absolute;
+            top: 70px;
+            left: 10px;
+            background: rgba(0,0,0,0.95);
+            padding: 14px;
+            border: 2px solid #00ff00;
+            z-index: 1002; /* above map */
+            width: 320px;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+
+        .btn {
+            padding: 8px;
+            margin: 5px 0;
+            background: #000;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .btn--primary { background:#003300; }
+
+        input, select {
+            width: 100%;
+            padding: 7px;
+            background: #000;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            margin-top: 4px;
+        }
+
+        /* Cards */
+        .card { border:1px solid #00ff00; background:rgba(0,50,0,0.5); padding:10px; margin-top:12px; }
+        .card--obstacles { border-color:#ff6600; background:rgba(50,0,0,0.5); }
+        .card__title { color:#00ff00; margin:0 0 6px 0; border-bottom:1px solid #00ff00; padding-bottom:6px; font-size:14px; }
+        .card__title--warn { color:#ff6600; border-bottom-color:#ff6600; }
+
+        /* Metrics */
+        .metrics { display:block; color:#00ff00; }
+        .metric { margin:6px 0; }
+        .status { margin-top:8px; padding:8px; border:1px solid #00ff00; background:rgba(0,100,0,0.3); font-size:12px; }
+        .status--bad { border-color:#ff0000; color:#ff0000; background:rgba(100,0,0,0.3); }
+
+        .badge-water { color:#0099ff; font-weight:bold; }
+        .badge-cliff { color:#8B4513; font-weight:bold; }
+        .badge-wetland { color:#8B7355; }
+        .badge-steep { color:#ff6600; }
+        .badge-desert { color:#FFD700; }
+        .badge-soft { color:#CD853F; }
+        .badge-forest { color:#228B22; }
+        .badge-urban { color:#808080; }
+        .badge-mil { color:#ff0000; font-weight:bold; }
+        .badge-sea { color:#33a0ff; font-weight:bold; }
+
+        .note { margin-top:10px; padding:8px; background:rgba(0,0,0,0.6); border:1px solid #666; font-size:10px; color:#ccc; }
+
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner {
+            border: 4px solid #003300;
+            border-top: 4px solid #00ff00;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @@keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>⚔️ TACTICAL ROUTE PLANNER [OFFLINE MODE]</h1>
+        <div>
+            <select id="file-selector"><option value="">Select Map...</option></select>
+            <span id="terrain-status" style="color:#ff6600;font-size:11px;margin-right:12px;">No terrain data</span>
+            <a href="/" style="color:#00ff00;padding:6px 12px;">Home</a>
+        </div>
+    </header>
+
+    <div id="map"></div>
+
+    <div class="loading" id="loading">
+        <div style="text-align:center;">
+            <div class="spinner"></div>
+            <div id="loading-text" style="color:#00ff00;margin-top:20px;">Loading...</div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h3 style="color:#00ff00;border-bottom:1px solid #00ff00;padding-bottom:6px;">VEHICLE SPECS</h3>
+
+        <label style="color:#00ff00;font-size:11px;margin-top:8px;">Weight (Tons):</label>
+        <input type="number" id="vehicle-weight" value="30" min="1" max="150">
+
+        <label style="color:#00ff00;font-size:11px;margin-top:8px;">Width (meters):</label>
+        <input type="number" id="vehicle-width" value="3.5" step="0.1">
+
+        <label style="color:#00ff00;font-size:11px;margin-top:8px;">Convoy Size:</label>
+        <input type="number" id="convoy-size" value="1" min="1">
+
+        <label style="color:#00ff00;font-size:11px;margin-top:8px;">Max Time (hours):</label>
+        <input type="number" id="max-time-hours" value="1" min="0.1" step="0.1" placeholder="e.g. 1.0" title="Maximum allowed travel time in hours">
+
+        <label style="display:flex;align-items:center;gap:8px;color:#00ff00;font-size:11px;margin-top:10px;">
+            <input type="checkbox" id="show-geojson" style="width:auto;"> Show GeoJSON overlay (realtime)
+        </label>
+
+        <h3 style="color:#00ff00;border-bottom:1px solid #00ff00;padding:6px 0;margin-top:16px;">ROUTE TOOLS</h3>
+
+        <button class="btn" id="add-waypoint">📍 Add Waypoint (Click Map)</button>
+        <button class="btn btn--primary" id="analyze">⛰️ Analyze Route Feasibility</button>
+        <button class="btn" id="clear">Clear Route</button>
+
+        <div id="results" class="card" style="display:none;">
+            <h4 class="card__title">ROUTE ANALYSIS</h4>
+            <div id="results-content"></div>
+        </div>
+
+        <div id="obstacles" class="card card--obstacles" style="display:none;">
+            <h4 class="card__title card__title--warn">⚠️ OBSTACLES DETECTED</h4>
+            <div id="obstacles-content"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let map, waypoints = [], routeLine, markers = [], obstacleMarkers = [], geojsonLayer = null;
+        let currentTerrainDb = null; // Store terrain database filename
+        let currentJobId = null; // Store job ID for terrain database lookup
+
+        // Function to find and load terrain database for the current map
+        async function loadTerrainDatabase(mbtilesPath) {
+            try {
+                // Extract folder name from path: "folder-name/map.mbtiles" -> "folder-name"
+                const folderName = mbtilesPath.split('/')[0];
+                
+                // Find terrain database with matching folder
+                const terrainResponse = await fetch('/terrain/list');
+                const terrainFiles = await terrainResponse.json();
+                const terrainDb = terrainFiles.find(f => f.mapFolder === folderName);
+                
+                if (terrainDb) {
+                    currentTerrainDb = terrainDb.path; // Use full path: folder/terrain.db
+                    document.getElementById('terrain-status').textContent = '✓ Terrain data loaded';
+                    document.getElementById('terrain-status').style.color = '#00ff00';
+                    console.log('Loaded terrain database:', currentTerrainDb);
+                } else {
+                    currentTerrainDb = null;
+                    document.getElementById('terrain-status').textContent = '⚠ No terrain data (route analysis disabled)';
+                    document.getElementById('terrain-status').style.color = '#ff6600';
+                    console.warn('No terrain database found for folder:', folderName);
+                }
+            } catch (error) {
+                console.error('Failed to load terrain database:', error);
+                currentTerrainDb = null;
+                document.getElementById('terrain-status').textContent = '✗ Terrain data unavailable';
+                document.getElementById('terrain-status').style.color = '#ff0000';
+            }
+        }
+
+        // Load MBTiles list and auto-select if ?file= is present
+        fetch('/mbtiles/list').then(r => r.json()).then(files => {
+            const sel = document.getElementById('file-selector');
+            files.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f.path; // Use path (folder/map.mbtiles) instead of just name
+                opt.textContent = f.name; // Display friendly folder name
+                sel.appendChild(opt);
+            });
+            const q = new URLSearchParams(location.search);
+            const initial = q.get('file');
+            if (initial) {
+                const match = files.find(x => x.path === initial || x.name === initial);
+                if (match) {
+                    sel.value = match.path;
+                    sel.dispatchEvent(new Event('change'));
+                }
+            }
+        });
+
+        // Load map with bounded logic
+        document.getElementById('file-selector').addEventListener('change', e => {
+            if (!e.target.value) return;
+            
+            // Load terrain database for this map
+            loadTerrainDatabase(e.target.value);
+            
+            fetch(`/mbtiles/metadata?file=${encodeURIComponent(e.target.value)}`)
+                .then(r => r.json())
+                .then(data => {
+                    const md = data?.metadata || {};
+                    
+                    // Destroy existing map if present
+                    if (map) {
+                        map.remove();
+                        map = null;
+                    }
+
+                    // Parse metadata with minimum zoom of 12
+                    const minZoom = Math.max(12, parseInt(md.minzoom || 12));
+                    const maxZoom = parseInt(md.maxzoom || 22);
+                    
+                    // Parse bounds (west, south, east, north)
+                    let boundsObj = null;
+                    
+                    if (md.bounds && typeof md.bounds === 'string') {
+                        try {
+                            const parts = md.bounds.split(',').map(parseFloat);
+                            if (parts.length === 4 && parts.every(p => !isNaN(p))) {
+                                // Create Leaflet bounds object (southwest, northeast)
+                                boundsObj = L.latLngBounds(
+                                    L.latLng(parts[1], parts[0]), // southwest (south, west)
+                                    L.latLng(parts[3], parts[2])  // northeast (north, east)
+                                );
+                            }
+                        } catch (e) {
+                            console.warn('Failed to parse bounds:', e);
+                        }
+                    }
+
+                    // Parse center
+                    let center = [0, 0];
+                    let initialZoom = Math.max(minZoom, 12);
+                    
+                    if (md.center && typeof md.center === 'string') {
+                        try {
+                            const parts = md.center.split(',').map(parseFloat);
+                            if (parts.length >= 2) {
+                                center = [parts[1], parts[0]]; // [lat, lon]
+                                if (parts.length >= 3 && !isNaN(parts[2])) {
+                                    initialZoom = Math.max(minZoom, Math.min(maxZoom, parseInt(parts[2])));
+                                }
+                            }
+                        } catch (e) {
+                            console.warn('Failed to parse center:', e);
+                        }
+                    } else if (boundsObj) {
+                        // Use bounds center
+                        center = boundsObj.getCenter();
+                    }
+
+                    // Create map with strict bounds constraints
+                    map = L.map('map', {
+                        center: center,
+                        zoom: initialZoom,
+                        minZoom: minZoom,
+                        maxZoom: maxZoom,
+                        maxBounds: boundsObj,
+                        maxBoundsViscosity: 1.0,  // Completely prevent panning outside bounds
+                        worldCopyJump: false,     // No world wrapping
+                        zoomSnap: 0.1,
+                        zoomDelta: 0.5
+                    });
+
+                    // Create tile layer with strict zoom constraints
+                    const tileUrl = `/mbtiles/tile/{z}/{x}/{y}.png?file=${encodeURIComponent(e.target.value)}`;
+                    
+                    const tiles = L.tileLayer(tileUrl, {
+                        minZoom: minZoom,
+                        maxZoom: maxZoom,
+                        minNativeZoom: minZoom,  // Never fetch tiles below this zoom
+                        maxNativeZoom: maxZoom,  // Never fetch tiles above this zoom
+                        bounds: boundsObj,       // Only request tiles within bounds
+                        noWrap: true,            // No wrapping around the world
+                        keepBuffer: 1,           // Minimal buffer to reduce over-fetching
+                        updateWhenIdle: true,    // Update tiles when map stops moving
+                        updateWhenZooming: false, // Don't update during zoom animation
+                        tileSize: 256,
+                        attribution: 'MBTiles Data'
+                    });
+
+                    tiles.addTo(map);
+
+                    // Fit map to bounds perfectly on load
+                    map.whenReady(() => {
+                        // Ensure map size is correct first
+                        map.invalidateSize(true);
+                        
+                        if (boundsObj) {
+                            // Use fitBounds to ensure the dataset fills the container
+                            map.fitBounds(boundsObj, {
+                                padding: [0, 0],
+                                maxZoom: maxZoom,
+                                animate: false
+                            });
+                            
+                            // Force another size check and re-fit if needed
+                            setTimeout(() => {
+                                map.invalidateSize(true);
+                                
+                                // Re-fit to ensure full coverage
+                                map.fitBounds(boundsObj, {
+                                    padding: [0, 0],
+                                    maxZoom: maxZoom,
+                                    animate: false
+                                });
+                            }, 100);
+                            
+                            // One more check after tiles load
+                            setTimeout(() => {
+                                map.invalidateSize(true);
+                                map.fitBounds(boundsObj, {
+                                    padding: [0, 0],
+                                    maxZoom: maxZoom,
+                                    animate: false
+                                });
+                            }, 500);
+                        }
+                    });
+
+                    // Handle resize events
+                    function handleResize() {
+                        if (!map) return;
+                        
+                        // Invalidate size to handle container changes
+                        map.invalidateSize(true);
+
+                        if (boundsObj) {
+                            // Always re-fit to bounds on resize to ensure full container coverage
+                            setTimeout(() => {
+                                const currentCenter = map.getCenter();
+                                
+                                if (!boundsObj.contains(currentCenter)) {
+                                    // Center is outside bounds, re-fit
+                                    map.fitBounds(boundsObj, {
+                                        padding: [0, 0],
+                                        maxZoom: maxZoom,
+                                        animate: true
+                                    });
+                                } else {
+                                    // Check if we need to re-fit to fill container better
+                                    const currentBoundsView = map.getBounds();
+                                    
+                                    // Calculate if current view shows the full dataset
+                                    const showsFullDataset = currentBoundsView.contains(boundsObj.getSouthWest()) && 
+                                                           currentBoundsView.contains(boundsObj.getNorthEast());
+                                    
+                                    if (!showsFullDataset) {
+                                        // Re-fit to ensure full dataset is visible
+                                        map.fitBounds(boundsObj, {
+                                            padding: [0, 0],
+                                            maxZoom: maxZoom,
+                                            animate: true
+                                        });
+                                    }
+                                }
+                            }, 100);
+                        }
+                    }
+
+                    // Listen for window resize
+                    window.addEventListener('resize', handleResize);
+
+                    // Prevent zoom out beyond dataset visibility
+                    map.on('zoomend', function() {
+                        if (boundsObj) {
+                            const currentCenter = map.getCenter();
+                            // Ensure we're still within bounds
+                            if (!boundsObj.contains(currentCenter)) {
+                                map.panTo(boundsObj.getCenter(), { animate: true });
+                            }
+                        }
+                    });
+
+                    // Prevent panning outside bounds
+                    map.on('moveend', function() {
+                        if (boundsObj) {
+                            const currentCenter = map.getCenter();
+                            
+                            // Double-check we're within bounds
+                            if (!boundsObj.contains(currentCenter)) {
+                                // Snap back to bounds
+                                map.panTo(boundsObj.getCenter(), { animate: true });
+                            }
+                        }
+                    });
+
+                    // Add click handler for waypoints
+                    map.on('click', e => {
+                        if (document.getElementById('add-waypoint').classList.contains('active')) {
+                            waypoints.push(e.latlng);
+                            const m = L.circleMarker(e.latlng, {radius: 8, fillColor: '#00ff00', color: '#000', weight: 2, fillOpacity: 0.8}).addTo(map);
+                            m.bindPopup(`<b>POINT ${waypoints.length}</b>`);
+                            markers.push(m);
+                            if (waypoints.length > 1) {
+                                if (routeLine) map.removeLayer(routeLine);
+                                routeLine = L.polyline(waypoints, {color: '#00ff00', weight: 3}).addTo(map);
+                            }
+                        }
+                    });
+                });
+        });
+
+        // Toggle waypoint mode
+        document.getElementById('add-waypoint').addEventListener('click', function() {
+            this.classList.toggle('active');
+            this.style.background = this.classList.contains('active') ? '#006600' : '#000';
+        });
+
+        // TERRAIN & OBSTACLE ANALYSIS
+        document.getElementById('analyze').addEventListener('click', async () => {
+            if (waypoints.length < 2) {
+                alert('Add at least 2 waypoints!');
+                return;
+            }
+
+            if (!currentTerrainDb) {
+                alert('No terrain data available for this map. Route analysis requires terrain data to be downloaded with the map tiles.');
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('loading-text').textContent = 'Analyzing terrain and obstacles (OFFLINE)...';
+
+            try {
+                const weight = parseFloat(document.getElementById('vehicle-weight').value);
+                const width = parseFloat(document.getElementById('vehicle-width').value);
+                const convoySize = parseInt(document.getElementById('convoy-size').value);
+
+                // Build route points for detailed analysis (adaptive ~100m spacing)
+                let allPoints = [];
+                for (let i = 0; i < waypoints.length - 1; i++) {
+                    const start = waypoints[i];
+                    const end = waypoints[i + 1];
+                    const segDist = start.distanceTo(end); // meters
+                    const segments = Math.max(10, Math.min(300, Math.floor(segDist / 100))); // ~100m spacing
+                    for (let j = 0; j <= segments; j++) {
+                        const ratio = j / segments;
+                        allPoints.push({
+                            latitude: start.lat + (end.lat - start.lat) * ratio,
+                            longitude: start.lng + (end.lng - start.lng) * ratio
+                        });
+                    }
+                }
+
+                document.getElementById('loading-text').textContent = 'Fetching elevation data (OFFLINE)...';
+                
+                // Get elevation for all points from OFFLINE database
+                const elevResponse = await fetch('/api/v1/elevation/lookup', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Terrain-Database': currentTerrainDb
+                    },
+                    body: JSON.stringify({ locations: allPoints })
+                });
+                const elevData = await elevResponse.json();
+                // Guard: ensure we always have an array of elevation results
+                const elevationResults = Array.isArray(elevData?.results)
+                  ? elevData.results
+                  : allPoints.map(p => ({ latitude: p.latitude, longitude: p.longitude, elevation: 0 }));
+
+                // Calculate total distance and max slope
+                let totalDist = 0;
+                let maxSlope = 0;
+                let steepSegments = [];
+                
+                for (let i = 0; i < waypoints.length - 1; i++) {
+                    const dist = waypoints[i].distanceTo(waypoints[i + 1]);
+                    totalDist += dist;
+                }
+
+                // Analyze slopes between consecutive points (meters with lon scaled by cos(lat))
+                for (let i = 0; i < elevationResults.length - 1; i++) {
+                    const p1 = elevationResults[i];
+                    const p2 = elevationResults[i + 1];
+                    const elevDiff = Math.abs(p2.elevation - p1.elevation);
+                    const latDiff = Math.abs(allPoints[i + 1].latitude - allPoints[i].latitude);
+                    const lngDiff = Math.abs(allPoints[i + 1].longitude - allPoints[i].longitude);
+                    const meanLat = (allPoints[i + 1].latitude + allPoints[i].latitude) / 2;
+                    const latMeters = latDiff * 111000;
+                    const lngMeters = lngDiff * 111000 * Math.cos(meanLat * Math.PI / 180);
+                    const dist = Math.max(1, Math.sqrt(latMeters * latMeters + lngMeters * lngMeters));
+                    const slope = Math.atan(elevDiff / Math.max(dist, 1)) * (180 / Math.PI);
+                    
+                    if (slope > maxSlope) maxSlope = slope;
+                    
+                    // Heavy vehicles struggle on slopes > 25°, trucks > 35°
+                    const slopeLimit = weight > 20 ? 25 : 35;
+                    if (slope > slopeLimit) {
+                        steepSegments.push({ index: i, slope: slope.toFixed(1), lat: allPoints[i].latitude, lng: allPoints[i].longitude });
+                    }
+                }
+
+                document.getElementById('loading-text').textContent = 'Checking for obstacles (OFFLINE)...';
+
+                // Check for water bodies and terrain using OFFLINE terrain database
+                const bboxArray = [
+                    Math.min(...allPoints.map(p => p.latitude)),  // south
+                    Math.min(...allPoints.map(p => p.longitude)), // west
+                    Math.max(...allPoints.map(p => p.latitude)),  // north
+                    Math.max(...allPoints.map(p => p.longitude))  // east
+                ];
+                
+                const terrainResponse = await fetch('/api/terrain/features', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Terrain-Database': currentTerrainDb
+                    },
+                    body: JSON.stringify({ bbox: bboxArray })
+                });
+                const terrainData = await terrainResponse.json();
+                console.log('Offline terrain elements:', terrainData?.elements?.length || 0, 'bbox:', bboxArray);
+
+                // Optional: draw GeoJSON overlay
+                if (document.getElementById('show-geojson').checked) {
+                    try {
+                        const features = (terrainData.elements || []).filter(e => e.geometry && e.geometry.length >= 2).map(e => ({
+                            type: 'Feature',
+                            properties: { tags: e.tags || {}, id: e.id },
+                            geometry: {
+                                type: 'LineString',
+                                coordinates: e.geometry.map(g => [g.lon, g.lat])
+                            }
+                        }));
+                        const fc = { type: 'FeatureCollection', features };
+                        if (geojsonLayer) { try { map.removeLayer(geojsonLayer); } catch { } }
+                        geojsonLayer = L.geoJSON(fc, {
+                            style: f => {
+                                const tags = f.properties.tags || {};
+                                if (tags.natural === 'water' || tags.waterway) return { color: '#33a0ff', weight: 2 };
+                                if (tags.natural === 'wetland') return { color: '#8B7355', weight: 2, dashArray: '4,3' };
+                                if (tags.landuse === 'forest' || tags.natural === 'wood') return { color: '#1e8e3e', weight: 2 };
+                                if (tags.natural === 'cliff' || tags.natural === 'rock') return { color: '#8B4513', weight: 2 };
+                                if (tags.natural === 'sand' || tags.natural === 'desert') return { color: '#FFD700', weight: 2 };
+                                return { color: '#aaaaaa', weight: 1 };
+                            }
+                        }).addTo(map);
+                    } catch (e) { console.warn('GeoJSON overlay failed', e); }
+                } else {
+                    if (geojsonLayer) { try { map.removeLayer(geojsonLayer); } catch { } geojsonLayer = null; }
+                }
+
+                // Analyze obstacles
+                const obstacles = {
+                    water: [],
+                    forest: [],
+                    wetland: [],
+                    steep: steepSegments,
+                    military: [],
+                    desert: [],
+                    urban: [],
+                    softRoad: [],
+                    cliff: []
+                };
+
+                // Check if route intersects with obstacles (use sampled points along the path)
+                (terrainData?.elements || []).forEach(element => {
+                    if (!element.geometry || !element.tags) return;
+
+                    for (let i = 0; i < allPoints.length; i++) {
+                        const rp = allPoints[i];
+                        for (let node of element.geometry) {
+                            const dist = Math.sqrt(
+                                Math.pow(rp.latitude - node.lat, 2) +
+                                Math.pow(rp.longitude - node.lon, 2)
+                            ) * 111000; // meters
+
+                            // tighter threshold since we now check along the whole path
+                            if (dist < 60) {
+                                const obstacleInfo = {
+                                    type: element.tags.natural || element.tags.waterway || element.tags.landuse || element.tags.highway,
+                                    surface: element.tags.surface,
+                                    lat: node.lat,
+                                    lng: node.lon,
+                                    waypoint: undefined
+                                };
+
+                                if (element.tags.natural === 'water' || element.tags.waterway) {
+                                    obstacles.water.push(obstacleInfo);
+                                } else if (element.tags.natural === 'wood' || element.tags.landuse === 'forest' || element.tags.natural === 'scrub') {
+                                    obstacles.forest.push(obstacleInfo);
+                                } else if (element.tags.natural === 'wetland') {
+                                    obstacles.wetland.push(obstacleInfo);
+                                } else if (element.tags.landuse === 'military') {
+                                    obstacles.military.push(obstacleInfo);
+                                } else if (element.tags.natural === 'sand' || element.tags.natural === 'desert') {
+                                    obstacles.desert.push(obstacleInfo);
+                                } else if (element.tags.landuse === 'residential' || element.tags.landuse === 'industrial') {
+                                    obstacles.urban.push(obstacleInfo);
+                                } else if (element.tags.highway && element.tags.surface) {
+                                    obstacles.softRoad.push(obstacleInfo);
+                                } else if (element.tags.natural === 'cliff' || element.tags.natural === 'rock') {
+                                    obstacles.cliff.push(obstacleInfo);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                });
+
+                // Additional open-sea crossing detection using coastline distance + elevation ~0m
+                let seaCrossings = [];
+                try {
+                    // Query coastline features from OFFLINE database
+                    const coastResponse = await fetch('/api/terrain/features', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'X-Terrain-Database': currentTerrainDb
+                        },
+                        body: JSON.stringify({ bbox: bboxArray, featureType: 'coastline' })
+                    });
+                    const coast = await coastResponse.json();
+                    const coastlineNodes = [];
+                    (coast.elements || []).forEach(e => {
+                        if (!e.geometry) return;
+                        e.geometry.forEach(g => coastlineNodes.push([g.lat, g.lon]));
+                    });
+
+                    function minDistToCoast(lat, lon) {
+                        let best = Infinity;
+                        for (let j = 0; j < coastlineNodes.length; j++) {
+                            const [clat, clon] = coastlineNodes[j];
+                            const d = Math.sqrt(Math.pow(lat - clat, 2) + Math.pow(lon - clon, 2)) * 111000;
+                            if (d < best) best = d;
+                        }
+                        return best;
+                    }
+
+                    for (let i = 0; i < allPoints.length; i++) {
+                        const lat = allPoints[i].latitude, lon = allPoints[i].longitude;
+                        const elev = elevationResults[i]?.elevation ?? 0;
+                        if (elev <= 1) {
+                            const dCoast = minDistToCoast(lat, lon);
+                            if (dCoast > 300) {
+                                seaCrossings.push({ lat, lng: lon, distanceFromCoast: Math.round(dCoast) });
+                            }
+                        }
+                    }
+                } catch { /* ignore coastline errors to keep UX smooth */ }
+
+                // Fallback open water detection: consecutive near-zero elevation points far from last land obstacle
+                if (seaCrossings.length === 0) {
+                    let streak = 0;
+                    for (let i = 0; i < allPoints.length; i++) {
+                        const elev = elevationResults[i]?.elevation ?? 0;
+                        if (elev <= 1) {
+                            streak++;
+                            if (streak >= 5) {
+                                seaCrossings.push({ lat: allPoints[i].latitude, lng: allPoints[i].longitude, distanceFromCoast: 0 });
+                                break;
+                            }
+                        } else {
+                            streak = 0;
+                        }
+                    }
+                }
+
+                // Determine route feasibility
+                const waterBlocked = obstacles.water.length > 0;
+                const wetlandBlocked = obstacles.wetland.length > 0 && weight > 30; // Heavy vehicles sink
+                const steepBlocked = obstacles.steep.length > 0; // slopeLimit already applied above
+                const cliffBlocked = obstacles.cliff.length > 0;
+                const desertDifficult = obstacles.desert.length > 0 && weight > 25; // Heavy vehicles struggle in sand
+                const softRoadIssue = obstacles.softRoad.length > 0 && weight > 35;
+                
+                const seaBlocked = seaCrossings.length > 0;
+
+                // Estimate travel time
+                const totalDistKm = totalDist / 1000;
+                let baseSpeedKmH = 25; // off-road baseline
+                if (weight > 40) baseSpeedKmH *= 0.7;
+                if (desertDifficult) baseSpeedKmH *= 0.7;
+                if (softRoadIssue) baseSpeedKmH *= 0.85;
+                if (obstacles.forest.length > 0) baseSpeedKmH *= 0.8;
+                if (obstacles.urban.length > 0) baseSpeedKmH *= 0.7;
+                if (obstacles.steep.length > 0) baseSpeedKmH *= 0.6;
+                baseSpeedKmH = Math.max(5, baseSpeedKmH);
+                const estTimeHours = totalDistKm / baseSpeedKmH;
+                const maxTimeHours = parseFloat(document.getElementById('max-time-hours').value) || 0;
+
+                const timeBlocked = maxTimeHours > 0 && estTimeHours > maxTimeHours;
+                const isFeasible = !waterBlocked && !wetlandBlocked && !steepBlocked && !cliffBlocked && !seaBlocked && !timeBlocked;
+
+                // Draw route with color coding
+                if (routeLine) map.removeLayer(routeLine);
+                const routeColor = isFeasible ? '#00ff00' : (waterBlocked || steepBlocked || seaBlocked || timeBlocked ? '#ff0000' : '#ffaa00');
+                routeLine = L.polyline(waypoints, {color: routeColor, weight: 4, opacity: 0.8}).addTo(map);
+
+                // Clear previous obstacle markers
+                obstacleMarkers.forEach(m => map.removeLayer(m));
+                obstacleMarkers = [];
+
+                // Mark obstacles on map
+                obstacles.water.forEach(obs => {
+                    const marker = L.circleMarker([obs.lat, obs.lng], {
+                        radius: 6, fillColor: '#0066ff', color: '#fff', weight: 2, fillOpacity: 0.8
+                    }).addTo(map).bindPopup('🌊 WATER OBSTACLE');
+                    obstacleMarkers.push(marker);
+                });
+
+                obstacles.steep.forEach(obs => {
+                    const marker = L.circleMarker([obs.lat, obs.lng], {
+                        radius: 5, fillColor: '#ff6600', color: '#000', weight: 1, fillOpacity: 0.7
+                    }).addTo(map).bindPopup(`⛰️ STEEP: ${obs.slope}°`);
+                    obstacleMarkers.push(marker);
+                });
+
+                obstacles.forest.forEach(obs => {
+                    const marker = L.circleMarker([obs.lat, obs.lng], {
+                        radius: 4, fillColor: '#228B22', color: '#000', weight: 1, fillOpacity: 0.6
+                    }).addTo(map).bindPopup('🌲 FOREST AREA');
+                    obstacleMarkers.push(marker);
+                });
+
+                obstacles.wetland.forEach(obs => {
+                    const marker = L.circleMarker([obs.lat, obs.lng], {
+                        radius: 5, fillColor: '#8B7355', color: '#fff', weight: 1, fillOpacity: 0.7
+                    }).addTo(map).bindPopup('💧 WETLAND');
+                    obstacleMarkers.push(marker);
+                });
+
+                obstacles.desert.forEach(obs => {
+                    const marker = L.circleMarker([obs.lat, obs.lng], {
+                        radius: 4, fillColor: '#FFD700', color: '#000', weight: 1, fillOpacity: 0.6
+                    }).addTo(map).bindPopup('🏜️ DESERT/SAND');
+                    obstacleMarkers.push(marker);
+                });
+
+                obstacles.cliff.forEach(obs => {
+                    const marker = L.circleMarker([obs.lat, obs.lng], {
+                        radius: 6, fillColor: '#8B4513', color: '#fff', weight: 2, fillOpacity: 0.8
+                    }).addTo(map).bindPopup('🪨 CLIFF/ROCK');
+                    obstacleMarkers.push(marker);
+                });
+
+                obstacles.urban.forEach(obs => {
+                    const marker = L.circleMarker([obs.lat, obs.lng], {
+                        radius: 3, fillColor: '#808080', color: '#fff', weight: 1, fillOpacity: 0.5
+                    }).addTo(map).bindPopup('🏘️ URBAN AREA');
+                    obstacleMarkers.push(marker);
+                });
+
+                // Sea crossing markers
+                seaCrossings.forEach(s => {
+                    const marker = L.circleMarker([s.lat, s.lng], {
+                        radius: 6, fillColor: '#0033cc', color: '#99ccff', weight: 2, fillOpacity: 0.85
+                    }).addTo(map).bindPopup(`🌊 OPEN SEA (coast ${s.distanceFromCoast}m away)`);
+                    obstacleMarkers.push(marker);
+                });
+
+                // Display results
+                const startElev = elevationResults[0]?.elevation ?? 0;
+                const endElev = elevationResults[elevationResults.length - 1]?.elevation ?? 0;
+                const elevGain = Math.abs(endElev - startElev);
+
+                document.getElementById('results').style.display = 'block';
+                document.getElementById('results-content').innerHTML = `
+                    <div class="metrics">
+                      <div class="metric"><strong>Distance:</strong> ${(totalDist/1000).toFixed(2)} km</div>
+                      <div class="metric"><strong>Start Elevation:</strong> ${startElev.toFixed(0)}m</div>
+                      <div class="metric"><strong>End Elevation:</strong> ${endElev.toFixed(0)}m</div>
+                      <div class="metric"><strong>Elevation Gain:</strong> ${elevGain.toFixed(0)}m</div>
+                      <div class="metric"><strong>Max Slope:</strong> ${maxSlope.toFixed(1)}°</div>
+                      <div class="metric"><strong>Vehicle:</strong> ${weight}T, ${width}m wide</div>
+                      <div class="metric"><strong>Est. Time:</strong> ${estTimeHours.toFixed(2)} h at ${baseSpeedKmH.toFixed(1)} km/h</div>
+                      ${maxTimeHours ? `<div class=\"metric\"><strong>Time Limit:</strong> ${maxTimeHours} h</div>` : ''}
+                      ${convoySize > 1 ? `<div class="metric" style="color:#ffaa00;"><strong>Convoy:</strong> ${convoySize} vehicles</div>` : ''}
+                    </div>
+                    <div class="status ${isFeasible ? '' : 'status--bad'}">${isFeasible ? '✓ ROUTE FEASIBLE' : '✗ ROUTE BLOCKED'}${timeBlocked ? ' — TIME LIMIT EXCEEDED' : ''}<div style="font-size:10px;margin-top:4px;">Based on real terrain data</div></div>
+                `;
+
+                // Display obstacles
+                const hasObstacles = obstacles.water.length > 0 || obstacles.wetland.length > 0 || obstacles.steep.length > 0 || 
+                                    obstacles.forest.length > 0 || obstacles.desert.length > 0 || obstacles.cliff.length > 0 ||
+                                    obstacles.urban.length > 0 || obstacles.softRoad.length > 0 || obstacles.military.length > 0;
+                
+                if (hasObstacles || timeBlocked) {
+                    document.getElementById('obstacles').style.display = 'block';
+                    let obstacleHtml = '';
+                    
+                    if (obstacles.water.length > 0) {
+                        obstacleHtml += `<div class="badge-water" style="margin:4px 0;">🌊 WATER: ${obstacles.water.length} crossing(s) - IMPASSABLE</div>`;
+                    }
+                    if (obstacles.cliff.length > 0) {
+                        obstacleHtml += `<div class="badge-cliff" style="margin:4px 0;">🪨 CLIFF/ROCK: ${obstacles.cliff.length} area(s) - IMPASSABLE</div>`;
+                    }
+                    if (seaCrossings.length > 0) {
+                        obstacleHtml += `<div class="badge-sea" style="margin:4px 0;">🌊 OPEN SEA: ${seaCrossings.length} section(s) - IMPASSABLE without bridge/boat</div>`;
+                    }
+                    if (obstacles.wetland.length > 0 && weight > 30) {
+                        obstacleHtml += `<div class="badge-wetland" style="margin:4px 0;">💧 WETLAND: Vehicle too heavy (${weight}T) - IMPASSABLE</div>`;
+                    } else if (obstacles.wetland.length > 0) {
+                        obstacleHtml += `<div class="badge-wetland" style="margin:4px 0;">💧 WETLAND: ${obstacles.wetland.length} area(s) - DIFFICULT, reduce speed</div>`;
+                    }
+                    if (obstacles.steep.length > 0 && weight > 40) {
+                        obstacleHtml += `<div class="badge-steep" style="margin:4px 0;">⛰️ STEEP TERRAIN: ${obstacles.steep.length} segment(s) > ${weight > 20 ? '25' : '35'}° - IMPASSABLE for ${weight}T vehicle</div>`;
+                    } else if (obstacles.steep.length > 0) {
+                        obstacleHtml += `<div class="badge-steep" style="margin:4px 0;">⛰️ STEEP TERRAIN: ${obstacles.steep.length} segment(s) - DIFFICULT, use low gear</div>`;
+                    }
+                    if (obstacles.desert.length > 0 && weight > 25) {
+                        obstacleHtml += `<div class="badge-desert" style="margin:4px 0;">🏜️ DESERT/SAND: ${obstacles.desert.length} area(s) - DIFFICULT, heavy vehicle (${weight}T) may get stuck</div>`;
+                    } else if (obstacles.desert.length > 0) {
+                        obstacleHtml += `<div class="badge-desert" style="margin:4px 0;">🏜️ DESERT/SAND: ${obstacles.desert.length} area(s) - PASSABLE with caution</div>`;
+                    }
+                    if (obstacles.softRoad.length > 0 && weight > 35) {
+                        obstacleHtml += `<div class="badge-soft" style="margin:4px 0;">🛤️ SOFT ROAD: ${obstacles.softRoad.length} segment(s) - DIFFICULT for heavy vehicle</div>`;
+                    } else if (obstacles.softRoad.length > 0) {
+                        obstacleHtml += `<div class="badge-soft" style="margin:4px 0;">🛤️ SOFT ROAD: ${obstacles.softRoad.length} unpaved segment(s)</div>`;
+                    }
+                    if (obstacles.forest.length > 0) {
+                        obstacleHtml += `<div class="badge-forest" style="margin:4px 0;">🌲 FOREST: ${obstacles.forest.length} area(s) - ${width > 4 ? 'DIFFICULT for wide vehicles' : 'PASSABLE, watch for trees'}</div>`;
+                    }
+                    if (obstacles.urban.length > 0) {
+                        obstacleHtml += `<div class="badge-urban" style="margin:4px 0;">🏘️ URBAN: ${obstacles.urban.length} area(s) - Civilians present, ${width > 3.5 ? 'narrow streets' : 'maneuverable'}</div>`;
+                    }
+                    if (obstacles.military.length > 0) {
+                        obstacleHtml += `<div class="badge-mil" style="margin:4px 0;">⚠️ MILITARY ZONE: ${obstacles.military.length} area(s) - RESTRICTED ACCESS</div>`;
+                    }
+                    if (timeBlocked) {
+                        obstacleHtml += `<div class="status status--bad" style="margin:4px 0;">⏱️ TIME LIMIT: Estimated ${estTimeHours.toFixed(2)} h exceeds limit ${maxTimeHours.toFixed(2)} h</div>`;
+                    }
+                    
+                    obstacleHtml += `<div class="note">
+                        <strong style="color:#00ff00;">OFFLINE DATA SOURCES:</strong><br>
+                        • Elevation: Offline SRTM 90m (downloaded with map)<br>
+                        • Terrain/Obstacles: Offline OpenStreetMap data<br>
+                        • Route Analysis: Real-time simulation (offline)<br>
+                        • Detection Range: 60m from path samples (~100m apart)<br>
+                        • <strong style="color:#ffaa00;">✓ NO INTERNET REQUIRED</strong>
+                    </div>`;
+                    
+                    document.getElementById('obstacles-content').innerHTML = obstacleHtml;
+                } else {
+                    document.getElementById('obstacles').style.display = 'none';
+                }
+
+            } catch (error) {
+                alert('Error analyzing route: ' + error.message);
+                console.error(error);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+
+        // Clear route
+        document.getElementById('clear').addEventListener('click', () => {
+            waypoints = [];
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+            obstacleMarkers.forEach(m => map.removeLayer(m));
+            obstacleMarkers = [];
+            if (routeLine) map.removeLayer(routeLine);
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('obstacles').style.display = 'none';
+            document.getElementById('add-waypoint').classList.remove('active');
+            document.getElementById('add-waypoint').style.background = '#000';
+        });
+
+        console.log('⚔️ Tactical Route Planner with REAL-TIME OBSTACLE DETECTION loaded!');
+    </script>
+</body>
+</html>

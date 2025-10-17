@@ -1,0 +1,622 @@
+@model TechWebSol.Models.AttackPlanning.EnhancedAttackOrder
+
+<div class="attack-form-section">
+    <div class="section-header">
+        <h4><i class="fas fa-list-check"></i> Attack Order Summary</h4>
+        <p class="text-muted">Review and validate the complete attack order before execution.</p>
+    </div>
+
+    <div class="summary-container">
+        <!-- Attack Overview -->
+        <div class="summary-section">
+            <h5><i class="fas fa-crosshairs"></i> Attack Overview</h5>
+            <div class="overview-grid">
+                <div class="overview-item">
+                    <label>Attacker:</label>
+                    <span id="summaryAttacker">-</span>
+                </div>
+                <div class="overview-item">
+                    <label>Target:</label>
+                    <span id="summaryTarget">-</span>
+                </div>
+                <div class="overview-item">
+                    <label>Order ID:</label>
+                    <span id="summaryOrderId">-</span>
+                </div>
+                <div class="overview-item">
+                    <label>Status:</label>
+                    <span id="summaryStatus" class="status-badge">Draft</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Intent Summary -->
+        <div class="summary-section">
+            <h5><i class="fas fa-bullseye"></i> Attack Intent</h5>
+            <div class="intent-summary" id="intentSummary">
+                <div class="summary-item">
+                    <label>Attack Type:</label>
+                    <span id="summaryIntentType">-</span>
+                </div>
+                <div class="summary-item">
+                    <label>Maneuver Form:</label>
+                    <span id="summaryIntentManeuver">-</span>
+                </div>
+                <div class="summary-item">
+                    <label>Desired Effect:</label>
+                    <span id="summaryIntentEffect">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timing Summary -->
+        <div class="summary-section">
+            <h5><i class="fas fa-clock"></i> Timing</h5>
+            <div class="timing-summary" id="timingSummary">
+                <div class="summary-item">
+                    <label>Start Turn:</label>
+                    <span id="summaryTimingStart">-</span>
+                </div>
+                <div class="summary-item">
+                    <label>Duration:</label>
+                    <span id="summaryTimingDuration">-</span>
+                </div>
+                <div class="summary-item">
+                    <label>Posture:</label>
+                    <span id="summaryTimingPosture">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Movement Summary -->
+        <div class="summary-section">
+            <h5><i class="fas fa-route"></i> Movement</h5>
+            <div class="movement-summary" id="movementSummary">
+                <div class="summary-item">
+                    <label>MP Reserve:</label>
+                    <span id="summaryMovementReserve">-</span>
+                </div>
+                <div class="summary-item">
+                    <label>Waypoints:</label>
+                    <span id="summaryMovementWaypoints">-</span>
+                </div>
+                <div class="summary-item">
+                    <label>Distance:</label>
+                    <span id="summaryMovementDistance">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fires Support Summary -->
+        <div class="summary-section">
+            <h5><i class="fas fa-bomb"></i> Fires Support</h5>
+            <div class="fires-summary" id="firesSummary">
+                <div class="summary-item">
+                    <label>Artillery Task:</label>
+                    <span id="summaryFiresTask">-</span>
+                </div>
+                <div class="summary-item">
+                    <label>Artillery Units:</label>
+                    <span id="summaryFiresUnits">-</span>
+                </div>
+                <div class="summary-item">
+                    <label>Engineers:</label>
+                    <span id="summaryFiresEngineers">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fog of War Summary -->
+        <div class="summary-section">
+            <h5><i class="fas fa-eye-slash"></i> Fog of War</h5>
+            <div class="fogofwar-summary" id="fogOfWarSummary">
+                <div class="summary-item">
+                    <label>Detection Confidence:</label>
+                    <span id="summaryFogConfidence">-</span>
+                </div>
+                <div class="summary-item">
+                    <label>Risk Level:</label>
+                    <span id="summaryFogRisk">-</span>
+                </div>
+                <div class="summary-item">
+                    <label>Abort Criteria:</label>
+                    <span id="summaryFogAbort">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logistics Summary -->
+        <div class="summary-section">
+            <h5><i class="fas fa-truck"></i> Logistics</h5>
+            <div class="logistics-summary" id="logisticsSummary">
+                <div class="summary-item">
+                    <label>Supply Threshold:</label>
+                    <span id="summaryLogisticsThreshold">-</span>
+                </div>
+                <div class="summary-item">
+                    <label>Primary Route:</label>
+                    <span id="summaryLogisticsRoute">-</span>
+                </div>
+                <div class="summary-item">
+                    <label>Sustainability:</label>
+                    <span id="summaryLogisticsSustainability">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROE Summary -->
+        <div class="summary-section">
+            <h5><i class="fas fa-gavel"></i> Rules of Engagement</h5>
+            <div class="roe-summary" id="roeSummary">
+                <div class="summary-item">
+                    <label>Collateral Sensitivity:</label>
+                    <span id="summaryRoeCollateral">-</span>
+                </div>
+                <div class="summary-item">
+                    <label>Engagement Level:</label>
+                    <span id="summaryRoeEngagement">-</span>
+                </div>
+                <div class="summary-item">
+                    <label>Restrictions:</label>
+                    <span id="summaryRoeRestrictions">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Validation Status -->
+        <div class="validation-section">
+            <h5><i class="fas fa-check-circle"></i> Validation Status</h5>
+            <div class="validation-grid" id="validationGrid">
+                <!-- Validation items will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Risk Assessment -->
+        <div class="risk-assessment">
+            <h5><i class="fas fa-exclamation-triangle"></i> Risk Assessment</h5>
+            <div class="risk-matrix">
+                <div class="risk-item">
+                    <div class="risk-label">Overall Risk</div>
+                    <div class="risk-indicator" id="overallRisk">
+                        <div class="risk-bar">
+                            <div class="risk-fill" id="overallRiskFill"></div>
+                        </div>
+                        <div class="risk-text" id="overallRiskText">Medium</div>
+                    </div>
+                </div>
+                <div class="risk-item">
+                    <div class="risk-label">Success Probability</div>
+                    <div class="risk-indicator" id="successProbability">
+                        <div class="risk-bar">
+                            <div class="risk-fill" id="successProbabilityFill"></div>
+                        </div>
+                        <div class="risk-text" id="successProbabilityText">75%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="button" class="btn btn-outline-secondary" onclick="exportAttackOrder()">
+            <i class="fas fa-download"></i> Export Order
+        </button>
+        <button type="button" class="btn btn-outline-primary" onclick="saveAttackOrder()">
+            <i class="fas fa-save"></i> Save Order
+        </button>
+        <button type="button" class="btn btn-primary" onclick="executeAttackOrder()">
+            <i class="fas fa-play"></i> Execute Attack
+        </button>
+    </div>
+</div>
+
+<style>
+.summary-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.summary-section {
+    background: #1a1a1a;
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid #333;
+}
+
+.summary-section h5 {
+    color: #00d4ff;
+    margin: 0 0 15px 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.overview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 15px;
+}
+
+.overview-item {
+    text-align: center;
+    padding: 10px;
+    background: #2a2a2a;
+    border-radius: 6px;
+    border: 1px solid #444;
+}
+
+.overview-item label {
+    display: block;
+    color: #888;
+    font-size: 11px;
+    margin-bottom: 5px;
+}
+
+.overview-item span {
+    color: #00d4ff;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.status-badge.draft {
+    background: #ffaa00;
+    color: #000;
+}
+
+.status-badge.validated {
+    background: #00ff88;
+    color: #000;
+}
+
+.status-badge.ready {
+    background: #00d4ff;
+    color: #000;
+}
+
+.intent-summary, .timing-summary, .movement-summary, .fires-summary, 
+.fogofwar-summary, .logistics-summary, .roe-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
+}
+
+.summary-item {
+    text-align: center;
+    padding: 8px;
+    background: #2a2a2a;
+    border-radius: 4px;
+    border: 1px solid #444;
+}
+
+.summary-item label {
+    display: block;
+    color: #888;
+    font-size: 10px;
+    margin-bottom: 3px;
+}
+
+.summary-item span {
+    color: #fff;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.validation-section {
+    background: #1a1a1a;
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid #333;
+}
+
+.validation-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.validation-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background: #2a2a2a;
+    border-radius: 4px;
+    border: 1px solid #444;
+}
+
+.validation-icon {
+    width: 20px;
+    text-align: center;
+}
+
+.validation-icon.valid {
+    color: #00ff88;
+}
+
+.validation-icon.invalid {
+    color: #ff4444;
+}
+
+.validation-icon.warning {
+    color: #ffaa00;
+}
+
+.validation-text {
+    color: #ccc;
+    font-size: 12px;
+}
+
+.risk-assessment {
+    background: #1a1a1a;
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid #333;
+}
+
+.risk-matrix {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.risk-item {
+    text-align: center;
+}
+
+.risk-label {
+    color: #888;
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+
+.risk-indicator {
+    background: #2a2a2a;
+    border-radius: 6px;
+    padding: 15px;
+    border: 1px solid #444;
+}
+
+.risk-bar {
+    width: 100%;
+    height: 20px;
+    background: #333;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.risk-fill {
+    height: 100%;
+    transition: all 0.3s ease;
+    border-radius: 10px;
+}
+
+.risk-fill.low {
+    background: linear-gradient(90deg, #00ff88, #00cc66);
+    width: 25%;
+}
+
+.risk-fill.medium {
+    background: linear-gradient(90deg, #ffaa00, #ff8800);
+    width: 50%;
+}
+
+.risk-fill.high {
+    background: linear-gradient(90deg, #ff4444, #cc0000);
+    width: 75%;
+}
+
+.risk-text {
+    color: #00d4ff;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #444;
+}
+
+@@media (max-width: 768px) {
+    .overview-grid, .intent-summary, .timing-summary, .movement-summary, 
+    .fires-summary, .fogofwar-summary, .logistics-summary, .roe-summary {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .validation-grid, .risk-matrix {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+// Summary Form JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    initializeSummaryForm();
+});
+
+function initializeSummaryForm() {
+    console.log('Initializing summary form');
+    
+    // Load summary data from all tabs
+    loadSummaryData();
+    
+    // Update validation status
+    updateValidationStatus();
+    
+    // Update risk assessment
+    updateRiskAssessment();
+}
+
+function loadSummaryData() {
+    // Load attacker and target info
+    if (window.currentAttackOrder) {
+        document.getElementById('summaryAttacker').textContent = window.currentAttackOrder.attackerTokenId || 'Unknown';
+        document.getElementById('summaryTarget').textContent = window.currentAttackOrder.targetTokenId || 'Unknown';
+        document.getElementById('summaryOrderId').textContent = window.currentAttackOrder.id || 'Not generated';
+    }
+    
+    // Load data from each tab (this would normally come from the actual form data)
+    // For now, we'll use placeholder data
+    loadIntentSummary();
+    loadTimingSummary();
+    loadMovementSummary();
+    loadFiresSummary();
+    loadFogOfWarSummary();
+    loadLogisticsSummary();
+    loadRoeSummary();
+}
+
+function loadIntentSummary() {
+    // TODO: Load actual data from intent form
+    document.getElementById('summaryIntentType').textContent = 'Hasty';
+    document.getElementById('summaryIntentManeuver').textContent = 'Penetration';
+    document.getElementById('summaryIntentEffect').textContent = 'Destroy';
+}
+
+function loadTimingSummary() {
+    // TODO: Load actual data from timing form
+    document.getElementById('summaryTimingStart').textContent = 'Turn 2';
+    document.getElementById('summaryTimingDuration').textContent = '2 Turns';
+    document.getElementById('summaryTimingPosture').textContent = 'Advance';
+}
+
+function loadMovementSummary() {
+    // TODO: Load actual data from movement form
+    document.getElementById('summaryMovementReserve').textContent = '10%';
+    document.getElementById('summaryMovementWaypoints').textContent = '3';
+    document.getElementById('summaryMovementDistance').textContent = '5.2 km';
+}
+
+function loadFiresSummary() {
+    // TODO: Load actual data from fires form
+    document.getElementById('summaryFiresTask').textContent = 'Prep Fires';
+    document.getElementById('summaryFiresUnits').textContent = '2 Units';
+    document.getElementById('summaryFiresEngineers').textContent = 'Yes';
+}
+
+function loadFogOfWarSummary() {
+    // TODO: Load actual data from fog of war form
+    document.getElementById('summaryFogConfidence').textContent = '72%';
+    document.getElementById('summaryFogRisk').textContent = 'Medium';
+    document.getElementById('summaryFogAbort').textContent = '2 Criteria';
+}
+
+function loadLogisticsSummary() {
+    // TODO: Load actual data from logistics form
+    document.getElementById('summaryLogisticsThreshold').textContent = 'Green';
+    document.getElementById('summaryLogisticsRoute').textContent = 'Highway Alpha';
+    document.getElementById('summaryLogisticsSustainability').textContent = 'High';
+}
+
+function loadRoeSummary() {
+    // TODO: Load actual data from ROE form
+    document.getElementById('summaryRoeCollateral').textContent = 'Medium';
+    document.getElementById('summaryRoeEngagement').textContent = 'Medium';
+    document.getElementById('summaryRoeRestrictions').textContent = '2 Restrictions';
+}
+
+function updateValidationStatus() {
+    const validationGrid = document.getElementById('validationGrid');
+    validationGrid.innerHTML = '';
+    
+    const validations = [
+        { name: 'Attack Intent', status: 'valid', icon: 'fas fa-check' },
+        { name: 'Timing', status: 'valid', icon: 'fas fa-check' },
+        { name: 'Movement', status: 'warning', icon: 'fas fa-exclamation-triangle' },
+        { name: 'Fires Support', status: 'valid', icon: 'fas fa-check' },
+        { name: 'Fog of War', status: 'valid', icon: 'fas fa-check' },
+        { name: 'Logistics', status: 'valid', icon: 'fas fa-check' },
+        { name: 'Rules of Engagement', status: 'valid', icon: 'fas fa-check' },
+        { name: 'Overall Order', status: 'valid', icon: 'fas fa-check' }
+    ];
+    
+    validations.forEach(validation => {
+        const validationItem = document.createElement('div');
+        validationItem.className = 'validation-item';
+        validationItem.innerHTML = `
+            <div class="validation-icon ${validation.status}">
+                <i class="${validation.icon}"></i>
+            </div>
+            <div class="validation-text">${validation.name}</div>
+        `;
+        validationGrid.appendChild(validationItem);
+    });
+}
+
+function updateRiskAssessment() {
+    // Calculate overall risk based on various factors
+    const overallRisk = 'medium';
+    const successProbability = 75;
+    
+    // Update overall risk
+    const overallRiskFill = document.getElementById('overallRiskFill');
+    const overallRiskText = document.getElementById('overallRiskText');
+    
+    overallRiskFill.className = `risk-fill ${overallRisk}`;
+    overallRiskText.textContent = 'Medium Risk';
+    
+    // Update success probability
+    const successProbabilityFill = document.getElementById('successProbabilityFill');
+    const successProbabilityText = document.getElementById('successProbabilityText');
+    
+    successProbabilityFill.className = `risk-fill ${getRiskLevel(successProbability)}`;
+    successProbabilityText.textContent = `${successProbability}%`;
+}
+
+function getRiskLevel(percentage) {
+    if (percentage >= 80) return 'low';
+    else if (percentage >= 60) return 'medium';
+    else return 'high';
+}
+
+function exportAttackOrder() {
+    console.log('Exporting attack order');
+    showNotification('Attack order exported successfully', 'success');
+}
+
+function saveAttackOrder() {
+    console.log('Saving attack order');
+    showNotification('Attack order saved successfully', 'success');
+}
+
+function executeAttackOrder() {
+    console.log('Executing attack order');
+    
+    // Validate all forms first
+    if (!validateAllForms()) {
+        showNotification('Please complete all required fields before executing', 'warning');
+        return;
+    }
+    
+    // Execute the attack
+    showNotification('Attack order executed successfully', 'success');
+    
+    // Close the modal
+    if (window.closeAttackPlanningModal) {
+        window.closeAttackPlanningModal();
+    }
+}
+
+function validateAllForms() {
+    // TODO: Validate all forms and return true if all are valid
+    return true;
+}
+</script>

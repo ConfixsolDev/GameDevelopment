@@ -1,0 +1,109 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Downloads</title>
+  <style>
+    body { font-family: Segoe UI, Arial, sans-serif; margin: 16px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f5f5f5; }
+    .status-done { color: #0a7; font-weight: 600; }
+    .status-error { color: #c33; font-weight: 600; }
+    .actions a { margin-right: 8px; }
+  </style>
+</head>
+
+<body>
+  <h2>Completed and Active Jobs</h2>
+  <p><a href="/">← Back to Map</a></p>
+  <table id="jobs">
+    <thead>
+      <tr>
+        <th>Job ID</th>
+        <th>Status</th>
+        <th>Progress</th>
+        <th>Format</th>
+        <th>Style</th>
+        <th>Created (UTC)</th>
+        <th>Completed (UTC)</th>
+        <th>Size</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    function formatUtc(value) {
+      if (!value) return '-';
+      let d = new Date(value);
+      if (isNaN(d)) {
+        try {
+          d = new Date(typeof value === 'string' && !value.endsWith('Z') ? value + 'Z' : value);
+        } catch (_) {}
+      }
+      if (isNaN(d)) return '-';
+      return d.toISOString().replace('T',' ').replace('Z','');
+    }
+
+    async function loadJobs() {
+      try {
+        const res = await fetch('/jobs');
+        const data = await res.json();
+        const tbody = document.querySelector('#jobs tbody');
+        tbody.innerHTML = '';
+        for (const j of data) {
+          const tr = document.createElement('tr');
+          const status = j.error ? `<span class=\"status-error\">Error</span>` : (j.done ? `<span class=\"status-done\">Ready</span>` : 'Running');
+          const pct = j.total > 0 ? Math.floor((j.progress / j.total) * 100) : 0;
+          const size = j.size ? (j.size / (1024*1024)).toFixed(2) + ' MB' : '-';
+          const completed = formatUtc(j.completedUtc);
+          const created = formatUtc(j.createdUtc);
+          let actions = '';
+          if (j.done && !j.error) {
+            actions = `<a href=\"/get_file/${j.id}\" download>Download</a>`;
+            // Add View button for MBTiles files
+            if (j.format === 'mbtiles' && j.fileName) {
+                  actions += ` <a href=\"/MapManagement/Viewer?file=${encodeURIComponent(j.fileName)}\" target=\"_blank\">View Map</a>`;
+            }
+          }
+          
+          // Add terrain status indicator
+          let terrainStatus = '';
+          if (j.format === 'mbtiles') {
+            if (j.terrainDataFileName) {
+              terrainStatus = '<br><small style="color:#28a745;">✓ Terrain data available</small>';
+            } else if (j.terrainDataError) {
+              terrainStatus = `<br><small style="color:#ff6600;" title="${j.terrainDataError}">⚠ Terrain data failed</small>`;
+            }
+          }
+          
+          tr.innerHTML = `
+            <td>${j.id}</td>
+            <td>${status}${terrainStatus}</td>
+            <td>${j.progress} / ${j.total} (${pct}%)</td>
+            <td>${j.format}</td>
+            <td>${j.style}</td>
+            <td>${created}</td>
+            <td>${completed}</td>
+            <td>${size}</td>
+            <td class="actions">${actions}</td>`;
+          tbody.appendChild(tr);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    loadJobs();
+    setInterval(loadJobs, 3000);
+  </script>
+</body>
+
+</html>
+

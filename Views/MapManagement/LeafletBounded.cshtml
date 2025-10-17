@@ -1,0 +1,645 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBTiles Leaflet Viewer - Bounded</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossorigin="" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        #container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+        }
+
+        #header {
+            flex: 0 0 auto;
+            background: #2c3e50;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #3498db;
+            z-index: 1000;
+        }
+
+        #header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        #controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #file-selector {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        #status {
+            padding: 4px 12px;
+            background: rgba(52, 152, 219, 0.2);
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+        }
+
+        #map-container {
+            flex: 1 1 auto;
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            background: #34495e;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #info-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            max-width: 300px;
+            z-index: 1000;
+            font-size: 13px;
+            display: none;
+        }
+
+        #info-panel h3 {
+            margin: 0 0 10px 0;
+            font-size: 15px;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+
+        #info-panel .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            padding: 3px 0;
+        }
+
+        #info-panel .info-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        #info-panel .info-value {
+            color: #2c3e50;
+            font-family: 'Courier New', monospace;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @@keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(231, 76, 60, 0.95);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            text-align: center;
+            z-index: 2001;
+            max-width: 400px;
+        }
+
+        .leaflet-control-attribution {
+            font-size: 10px;
+        }
+
+         /* Ensure no scrollbars on map */
+         .leaflet-container {
+             background: #34495e;
+             width: 100% !important;
+             height: 100% !important;
+         }
+         
+         /* Force map to fill container */
+         .leaflet-map-pane {
+             width: 100% !important;
+             height: 100% !important;
+         }
+
+        /* Home link */
+        .home-link {
+            color: white;
+            text-decoration: none;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .home-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="header">
+            <h1>🗺️ MBTiles Leaflet Viewer - Bounded</h1>
+            <div id="controls">
+                <select id="file-selector">
+                    <option value="">Select MBTiles file...</option>
+                </select>
+                <span id="status">Ready</span>
+                <a href="/" class="home-link">Home</a>
+            </div>
+        </div>
+        
+        <div id="map-container">
+            <div id="map"></div>
+            <div id="info-panel">
+                <h3>📊 Dataset Info</h3>
+                <div id="info-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+            crossorigin=""></script>
+    
+    <script>
+        // ========================================
+        // Configuration
+        // ========================================
+        
+        // TILE_URL pattern: will be filled dynamically based on selected file
+        // Pattern: /mbtiles/{filename}/tile/{z}/{x}/{y}.png
+        
+        // METADATA_URL pattern: will be filled dynamically based on selected file
+        // Pattern: /mbtiles/{filename}/metadata
+        
+        // Fallback constants if metadata is unavailable
+        const FALLBACK_CONFIG = {
+            minzoom: 12,
+            maxzoom: 18,
+            bounds: [-180, -85.0511, 180, 85.0511], // [west, south, east, north]
+            center: [0, 0, 12]
+        };
+
+        // ========================================
+        // Global State
+        // ========================================
+        
+        let map = null;
+        let currentTileLayer = null;
+        let currentBounds = null;
+        let resizeObserver = null;
+
+        // ========================================
+        // Utility Functions
+        // ========================================
+        
+        function showLoading(show = true) {
+            const existing = document.querySelector('.loading-overlay');
+            if (show && !existing) {
+                const overlay = document.createElement('div');
+                overlay.className = 'loading-overlay';
+                overlay.innerHTML = '<div class="loading-spinner"></div>';
+                document.getElementById('map-container').appendChild(overlay);
+            } else if (!show && existing) {
+                existing.remove();
+            }
+        }
+
+        function showError(message) {
+            const existing = document.querySelector('.error-message');
+            if (existing) existing.remove();
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.innerHTML = `
+                <strong>❌ Error</strong><br>
+                ${message}<br>
+                <button onclick="this.parentElement.remove()" style="margin-top:10px;padding:5px 15px;cursor:pointer;">Close</button>
+            `;
+            document.getElementById('map-container').appendChild(errorDiv);
+            
+            setTimeout(() => {
+                if (errorDiv.parentElement) errorDiv.remove();
+            }, 5000);
+        }
+
+        function updateStatus(text, color = '#ecf0f1') {
+            const status = document.getElementById('status');
+            status.textContent = text;
+            status.style.background = `rgba(${color === '#ecf0f1' ? '236,240,241' : '52,152,219'}, 0.2)`;
+        }
+
+        function displayMetadata(metadata, tileCount) {
+            const infoContent = document.getElementById('info-content');
+            const panel = document.getElementById('info-panel');
+            
+            const rows = [
+                { label: 'Name', value: metadata.name || 'N/A' },
+                { label: 'Format', value: metadata.format || 'png' },
+                { label: 'Min Zoom', value: metadata.minzoom || FALLBACK_CONFIG.minzoom },
+                { label: 'Max Zoom', value: metadata.maxzoom || FALLBACK_CONFIG.maxzoom },
+                { label: 'Bounds', value: metadata.bounds ? formatBounds(metadata.bounds) : 'N/A' },
+                { label: 'Center', value: metadata.center || 'N/A' },
+                { label: 'Tiles', value: tileCount || 'N/A' }
+            ];
+            
+            infoContent.innerHTML = rows.map(row => `
+                <div class="info-row">
+                    <span class="info-label">${row.label}:</span>
+                    <span class="info-value">${row.value}</span>
+                </div>
+            `).join('');
+            
+            panel.style.display = 'block';
+        }
+
+        function formatBounds(boundsStr) {
+            if (!boundsStr) return 'N/A';
+            const parts = boundsStr.split(',').map(v => parseFloat(v).toFixed(3));
+            return `${parts.length === 4 ? parts.join(', ') : boundsStr}`;
+        }
+
+        // ========================================
+        // Map Initialization
+        // ========================================
+        
+        function initializeMap(filename, metadata) {
+            // Destroy existing map if present
+            if (map) {
+                if (resizeObserver) {
+                    resizeObserver.disconnect();
+                    resizeObserver = null;
+                }
+                map.remove();
+                map = null;
+            }
+
+            // Parse metadata with minimum zoom of 12
+            const minZoom = Math.max(12, parseInt(metadata.minzoom || FALLBACK_CONFIG.minzoom));
+            const maxZoom = parseInt(metadata.maxzoom || FALLBACK_CONFIG.maxzoom);
+            
+            // Parse bounds (west, south, east, north)
+            let bounds = FALLBACK_CONFIG.bounds;
+            let boundsObj = null;
+            
+            if (metadata.bounds && typeof metadata.bounds === 'string') {
+                try {
+                    const parts = metadata.bounds.split(',').map(parseFloat);
+                    if (parts.length === 4 && parts.every(p => !isNaN(p))) {
+                        bounds = parts;
+                        // Create Leaflet bounds object (southwest, northeast)
+                        boundsObj = L.latLngBounds(
+                            L.latLng(parts[1], parts[0]), // southwest (south, west)
+                            L.latLng(parts[3], parts[2])  // northeast (north, east)
+                        );
+                    }
+                } catch (e) {
+                    console.warn('Failed to parse bounds:', e);
+                }
+            }
+
+            // Fallback: create bounds from fallback config
+            if (!boundsObj) {
+                boundsObj = L.latLngBounds(
+                    L.latLng(bounds[1], bounds[0]),
+                    L.latLng(bounds[3], bounds[2])
+                );
+            }
+
+            currentBounds = boundsObj;
+
+            // Parse center
+            let center = [0, 0];
+            let initialZoom = Math.max(minZoom, 12);
+            
+            if (metadata.center && typeof metadata.center === 'string') {
+                try {
+                    const parts = metadata.center.split(',').map(parseFloat);
+                    if (parts.length >= 2) {
+                        center = [parts[1], parts[0]]; // [lat, lon]
+                        if (parts.length >= 3 && !isNaN(parts[2])) {
+                            initialZoom = Math.max(minZoom, Math.min(maxZoom, parseInt(parts[2])));
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Failed to parse center:', e);
+                }
+            } else {
+                // Use bounds center
+                center = boundsObj.getCenter();
+            }
+
+            // Create map with strict bounds constraints
+            map = L.map('map', {
+                center: center,
+                zoom: initialZoom,
+                minZoom: minZoom,
+                maxZoom: maxZoom,
+                maxBounds: boundsObj,
+                maxBoundsViscosity: 1.0,  // Completely prevent panning outside bounds
+                worldCopyJump: false,     // No world wrapping
+                zoomControl: true,
+                attributionControl: true
+            });
+
+            // Add attribution
+            map.attributionControl.addAttribution('MBTiles Viewer');
+
+            // Create tile layer with strict zoom constraints
+            const tileUrl = `/mbtiles/tile/{z}/{x}/{y}.png?file=${encodeURIComponent(filename)}`;
+            
+            currentTileLayer = L.tileLayer(tileUrl, {
+                minZoom: minZoom,
+                maxZoom: maxZoom,
+                minNativeZoom: minZoom,  // Never fetch tiles below this zoom
+                maxNativeZoom: maxZoom,  // Never fetch tiles above this zoom
+                bounds: boundsObj,       // Only request tiles within bounds
+                noWrap: true,            // No wrapping around the world
+                keepBuffer: 1,           // Minimal buffer to reduce over-fetching
+                updateWhenIdle: true,    // Update tiles when map stops moving
+                updateWhenZooming: false, // Don't update during zoom animation
+                tileSize: 256,
+                attribution: 'MBTiles Data'
+            });
+
+            currentTileLayer.addTo(map);
+
+             // Fit map to bounds perfectly on load
+             map.whenReady(() => {
+                 // Ensure map size is correct first
+                 map.invalidateSize(true);
+                 
+                 // Use fitBounds to ensure the dataset fills the container
+                 // This will automatically calculate the best zoom level
+                 map.fitBounds(boundsObj, {
+                     padding: [0, 0],
+                     maxZoom: maxZoom,
+                     animate: false
+                 });
+                 
+                 // Force another size check and re-fit if needed
+                 setTimeout(() => {
+                     map.invalidateSize(true);
+                     
+                     // Re-fit to ensure full coverage
+                     map.fitBounds(boundsObj, {
+                         padding: [0, 0],
+                         maxZoom: maxZoom,
+                         animate: false
+                     });
+                 }, 100);
+                 
+                 // One more check after tiles load
+                 setTimeout(() => {
+                     map.invalidateSize(true);
+                     map.fitBounds(boundsObj, {
+                         padding: [0, 0],
+                         maxZoom: maxZoom,
+                         animate: false
+                     });
+                 }, 500);
+             });
+
+             // Handle resize events
+             function handleResize() {
+                 if (!map) return;
+                 
+                 // Invalidate size to handle container changes
+                 map.invalidateSize(true);
+
+                 // Always re-fit to bounds on resize to ensure full container coverage
+                 setTimeout(() => {
+                     const currentCenter = map.getCenter();
+                     
+                     if (!currentBounds.contains(currentCenter)) {
+                         // Center is outside bounds, re-fit
+                         map.fitBounds(currentBounds, {
+                             padding: [0, 0],
+                             maxZoom: maxZoom,
+                             animate: true
+                         });
+                     } else {
+                         // Check if we need to re-fit to fill container better
+                         const currentBoundsView = map.getBounds();
+                         
+                         // Calculate if current view shows the full dataset
+                         const showsFullDataset = currentBoundsView.contains(currentBounds.getSouthWest()) && 
+                                                currentBoundsView.contains(currentBounds.getNorthEast());
+                         
+                         if (!showsFullDataset) {
+                             // Re-fit to ensure full dataset is visible
+                             map.fitBounds(currentBounds, {
+                                 padding: [0, 0],
+                                 maxZoom: maxZoom,
+                                 animate: true
+                             });
+                         }
+                     }
+                 }, 100);
+             }
+
+            // Listen for window resize
+            window.addEventListener('resize', handleResize);
+
+            // Also use ResizeObserver for container changes
+            if (typeof ResizeObserver !== 'undefined') {
+                const mapContainer = document.getElementById('map-container');
+                resizeObserver = new ResizeObserver(handleResize);
+                resizeObserver.observe(mapContainer);
+            }
+
+            // Prevent zoom out beyond dataset visibility
+            map.on('zoomend', function() {
+                const currentZoom = map.getZoom();
+                const currentCenter = map.getCenter();
+
+                // Ensure we're still within bounds
+                if (!currentBounds.contains(currentCenter)) {
+                    map.panTo(currentBounds.getCenter(), { animate: true });
+                }
+            });
+
+            // Prevent panning outside bounds
+            map.on('moveend', function() {
+                const currentCenter = map.getCenter();
+                
+                // Double-check we're within bounds
+                if (!currentBounds.contains(currentCenter)) {
+                    // Snap back to bounds
+                    map.panTo(currentBounds.getCenter(), { animate: true });
+                }
+            });
+
+            // Add click handler to show coordinates
+            map.on('click', function(e) {
+                L.popup()
+                    .setLatLng(e.latlng)
+                    .setContent(`
+                        <strong>Coordinates</strong><br>
+                        Lat: ${e.latlng.lat.toFixed(6)}<br>
+                        Lng: ${e.latlng.lng.toFixed(6)}<br>
+                        Zoom: ${map.getZoom()}
+                    `)
+                    .openOn(map);
+            });
+
+            updateStatus('Map loaded', '#3498db');
+        }
+
+        // ========================================
+        // File Selection
+        // ========================================
+        
+        async function loadMBTilesFile(filename) {
+            if (!filename) return;
+
+            showLoading(true);
+            updateStatus('Loading metadata...');
+
+            try {
+                // Fetch metadata
+                const metadataUrl = `/mbtiles/metadata?file=${encodeURIComponent(filename)}`;
+                const response = await fetch(metadataUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load metadata: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const metadata = data.metadata || {};
+                const tileCount = data.tile_count || 0;
+
+                console.log('Metadata loaded:', metadata);
+
+                // Display metadata in info panel
+                displayMetadata(metadata, tileCount);
+
+                // Initialize map
+                initializeMap(filename, metadata);
+
+                showLoading(false);
+            } catch (error) {
+                console.error('Error loading MBTiles:', error);
+                showError(error.message);
+                showLoading(false);
+                updateStatus('Error');
+            }
+        }
+
+        // ========================================
+        // Initialization
+        // ========================================
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🗺️ MBTiles Leaflet Viewer - Bounded Edition');
+            console.log('✓ Container fit with 100% width/height');
+            console.log('✓ Bounds from MBTiles metadata');
+            console.log('✓ Strict zoom limits (minNativeZoom/maxNativeZoom)');
+            console.log('✓ Constrained panning (maxBounds + viscosity 1.0)');
+            console.log('✓ No world wrapping (noWrap + worldCopyJump: false)');
+            console.log('✓ Auto-resize with bounds preservation');
+
+            // Load available MBTiles files
+            try {
+                const response = await fetch('/mbtiles/list');
+                const files = await response.json();
+                
+                const selector = document.getElementById('file-selector');
+                
+                files.forEach(file => {
+                    const option = document.createElement('option');
+                    option.value = file.path; // Use path (folder/map.mbtiles)
+                    option.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                    selector.appendChild(option);
+                });
+
+                // Check URL parameter for initial file
+                const urlParams = new URLSearchParams(window.location.search);
+                const initialFile = urlParams.get('file');
+                
+                if (initialFile && files.some(f => f.name === initialFile)) {
+                    selector.value = initialFile;
+                    await loadMBTilesFile(initialFile);
+                } else if (files.length > 0) {
+                    // Auto-select first file
+                    selector.value = files[0].name;
+                    await loadMBTilesFile(files[0].name);
+                }
+            } catch (error) {
+                console.error('Error loading file list:', error);
+                showError('Failed to load MBTiles file list');
+            }
+
+            // File selector change handler
+            document.getElementById('file-selector').addEventListener('change', async function(e) {
+                await loadMBTilesFile(e.target.value);
+            });
+        });
+    </script>
+</body>
+</html>
+

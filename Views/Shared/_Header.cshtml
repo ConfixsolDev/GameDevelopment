@@ -1,0 +1,75 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> _userManager
+@{
+    var email = "";
+    var user = await _userManager.GetUserAsync(User);
+    if (user != null)
+    {
+        email = user.FullName;
+
+
+    }
+}
+<div class="m-header">
+    <a class="mobile-menu" id="mobile-collapse1" href="#!"><span></span></a>
+    <a href="/Identity/Account/Manage/Index" class="b-brand">
+        <div class="b-bg">
+            <i class="fas fa-trending-up"></i>
+        </div>
+        <span class="b-title">Induction System</span>
+    </a>
+</div>
+<a class="mobile-menu" id="mobile-header" href="#!">
+    <i class="fas fa-more-horizontal"></i>
+</a>
+<div class="collapse navbar-collapse">
+    <ul class="navbar-nav mr-auto">
+        <li><a href="#!" class="full-screen" onclick="javascript:toggleFullScreen()"><i class="fas fa-maximize"></i></a></li>
+        <li class="nav-item">
+            <div class="main-search">
+                <div class="input-group">
+                    <input type="text" id="m-search" class="form-control" placeholder="Search . . .">
+                    <a href="#!" class="input-group-append search-close">
+                        <i class="fas fa-x input-group-text"></i>
+                    </a>
+                    <span class="input-group-append search-btn btn btn-primary">
+                        <i class="fas fa-search input-group-text"></i>
+                    </span>
+                </div>
+            </div>
+        </li>
+    </ul>
+    <ul class="navbar-nav ml-auto">
+
+        <li>
+            <div class="dropdown drp-user">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                    <i class="icon feather icon-settings"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right profile-notification">
+                    <div class="pro-head">
+                        <img src="~/assets/images/user/avatar-1.jpg" class="img-radius" alt="User-Profile-Image">
+                        <span>@email</span>
+                        <form id="formSignout2" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Todo")">
+                            <a href="javascript:void(0)" class="dud-logout" title="Logout" onclick="document.getElementById('formSignout2').submit();">
+                                <i class="fas fa-log-out"></i>
+                            </a>
+                        </form>
+
+                    </div>
+                    <ul class="pro-body">
+                        <li><a href="/Identity/Account/Manage/Index" class="dropdown-item"><i class="fas fa-user"></i> Profile</a></li>
+                        <li><a href="/Identity/Account/Manage/ChangePassword" class="dropdown-item"><i class="fas fa-settings"></i> Change Password</a></li>
+                        <li>
+                            <form id="formSignout" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Todo")">
+                                <a href="javascript:void(0)" class="dropdown-item" onclick="document.getElementById('formSignout').submit();">
+                                    <i class="fas fa-lock"></i> Logout
+                                </a>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </li>
+    </ul>
+</div>

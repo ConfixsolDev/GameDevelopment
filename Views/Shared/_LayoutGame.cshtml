@@ -1,0 +1,77 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> _userManager
+@{
+    var ShortName = "";
+    var DisplayName = "";
+    var user = await _userManager.GetUserAsync(User);
+    if (user?.FullName != null)
+    {
+        DisplayName = user.FullName;
+        var parts = user.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var first = parts.Length > 0 ? parts[0] : "";
+        var second = parts.Length > 1 ? parts[1] : "";
+        var c1 = string.IsNullOrEmpty(first) ? "" : first.Substring(0, 1);
+        var c2 = string.IsNullOrEmpty(second) ? "" : second.Substring(0, 1);
+        ShortName = (c1 + c2).ToUpperInvariant();
+    }
+}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1a1a1a" />
+    <title>@ViewData["Title"] - IDS</title>
+    <link rel="shortcut icon" href="~/assets/images/favicon.ico">
+
+    <!-- Critical CSS - Inline for instant dark theme (prevents white flash) -->
+    <style>
+        :root, html, body {
+            background-color: #1a1a1a !important;
+            color: #f8fafc !important;
+        }
+        html[data-theme="dark"] {
+            background-color: #1a1a1a;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+    </style>
+
+    <!-- Core CSS -->
+    <link href="~/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="~/css/gameplay.css" rel="stylesheet" />
+    <link href="~/cdn_local/select2.min.css" rel="stylesheet" />
+    <link href="~/assets/css/toastr.min.css" rel="stylesheet" />
+    <link href="~/assets/css/metismenu.min.css" rel="stylesheet" />
+
+    <!-- Font Awesome - Local -->
+    <link href="~/assets/css/fontawesome.min.css" rel="stylesheet">
+
+    <!-- Core scripts (order matters) -->
+    <script src="~/assets/js/jquery.min.js"></script>
+    <script src="~/assets/js/bootstrap.bundle.min.js"></script>
+
+
+
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+
+    @RenderBody()
+
+
+
+
+    <!-- Libraries - Local versions -->
+    <script src="~/assets/js/toastr.min.js"></script>
+    <script src="~/assets/js/metismenu.min.js"></script>
+    <script src="~/assets/js/simplebar.min.js"></script>
+    <script src="~/cdn_local/fullcalendar@6.1.15/select2.min.js"></script>
+    <script src="~/assets/js/sweetalert2.min.js"></script>
+
+</body>
+</html>

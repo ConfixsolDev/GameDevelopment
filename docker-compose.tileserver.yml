@@ -1,0 +1,71 @@
+# Docker Compose for KSA Game Tile Server
+# Quick start: docker-compose -f docker-compose.tileserver.yml up -d
+
+version: '3.8'
+
+services:
+  # TileServer GL - Recommended for production
+  tileserver-gl:
+    image: maptiler/tileserver-gl:latest
+    container_name: ksagame-tileserver-gl
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./App_Data/tiles:/data
+    environment:
+      - VERBOSE=true
+      - NODE_ENV=production
+    restart: unless-stopped
+    networks:
+      - tilenet
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Martin - Alternative (faster, more lightweight)
+  # Uncomment to use Martin instead of TileServer GL
+  # martin:
+  #   image: ghcr.io/maplibre/martin:latest
+  #   container_name: ksagame-martin
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./App_Data/tiles:/tiles:ro
+  #   command: --mbtiles /tiles --keep-alive 75 --worker-processes 4
+  #   restart: unless-stopped
+  #   networks:
+  #     - tilenet
+  #   healthcheck:
+  #     test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+  #     interval: 30s
+  #     timeout: 5s
+  #     retries: 3
+
+  # Nginx - Reverse proxy with caching (Optional but recommended for production)
+  nginx-tiles:
+    image: nginx:alpine
+    container_name: ksagame-nginx-tiles
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx-tiles.conf:/etc/nginx/nginx.conf:ro
+      - nginx-cache:/var/cache/nginx
+    depends_on:
+      - tileserver-gl
+    restart: unless-stopped
+    networks:
+      - tilenet
+    profiles:
+      - production
+
+networks:
+  tilenet:
+    driver: bridge
+
+volumes:
+  nginx-cache:
+    driver: local
+

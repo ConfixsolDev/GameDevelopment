@@ -1,0 +1,81 @@
+﻿<script src="~/lib/jquery.dataTables/js/jquery.dataTables.min.js"></script>
+<script src="~/lib/jquery.dataTables/js/dataTables.bootstrap5.min.js"></script>
+
+
+
+<script>
+
+    $(document).on('keypress', function (event) {
+        var code = event.keyCode || event.which;
+        if (code === 13) {
+            $("#searchBtn").click();
+        } else if (code === 127) {
+            resetFields();
+        }
+    });
+
+    function resetFields() {
+        $('#formContainer :input').val('');
+        refreshGrid();
+    }
+
+    function refreshGrid() {
+        // Use DataTable API to clear search and redraw
+        $('#dataTableGrid12').DataTable().search('').draw();
+    }
+
+    $('.delete-item').click(function (e) {
+        confirm("Are you sure want delete this role ?");
+        e.preventDefault();
+        var anchor = $(this);
+        var url = $(anchor).attr('href');
+        $.ajax({
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            processData: false,
+            type: 'DELETE',
+            url: url,
+            success: function () {
+                $(anchor).parent('td').parent('tr').fadeOut('slow',
+                    function () {
+                        $(this).remove();
+                    });
+            },
+            error: function (xmlHttpRequest, textStatus, errorThrown) {
+                let message = `${textStatus} ${xmlHttpRequest.status} ${errorThrown}`;
+                if (xmlHttpRequest.responseText != null) {
+                    const response = JSON.parse(xmlHttpRequest.responseText);
+                    for (var error of response["Error"]) {
+                        message += `\n${error}`;
+                    }
+                }
+                alert(message);
+            }
+        });
+    });
+
+    $(document).ready(function () {
+
+        var grdClientData = $('#dataTableGrid12').DataTable({
+            "responsive": true,
+            "dom": '<"toolbar">frtip',
+            dom: 'Bfrtip',
+            lengthMenu: [
+                [10, 25, 50, -1],
+                ['10 rows', '25 rows', '50 rows', 'Show all']
+            ],
+            order: [[1, "asc"]],
+            dom: "<'table-responsive mb-3'tr>" +
+                "<'row'<'col-md-6 dt-footer-left'<'me-2'l>i><'col-md-6 dt-footer-right'p>>",
+            language: {
+                sLengthMenu: "_MENU_",
+                info: "Showing _START_ - _END_ of _TOTAL_",
+            }
+        });
+
+        $('#searchBtn').on('click', function () {
+            var searchValue = $("#searchFilter").val();
+            grdClientData.search(searchValue).draw();
+        });
+    });
+</script>

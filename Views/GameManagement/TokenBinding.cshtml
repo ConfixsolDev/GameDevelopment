@@ -1,0 +1,540 @@
+@{
+    ViewData["Title"] = "Token Binding for Game Sessions";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-link"></i> Token Binding for Game Sessions
+                    </h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#bindTokenModal">
+                            <i class="fas fa-plus"></i> Bind Token to Session
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Session Selection -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">Select Game Session</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="sessionSelect" class="form-label">Active Sessions</label>
+                                        <select class="form-control" id="sessionSelect">
+                                            <option value="">-- Select a session --</option>
+                                        </select>
+                                    </div>
+                                    <div id="sessionInfo" class="alert alert-info" style="display: none;">
+                                        <!-- Session details will be loaded here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">Available Tokens</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <input type="text" class="form-control" id="tokenSearch" placeholder="Search tokens...">
+                                    </div>
+                                    <div id="availableTokens" class="token-list">
+                                        <!-- Available tokens will be loaded here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Current Bindings -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">Current Token Bindings</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table id="bindingsTable" class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>Session</th>
+                                                    <th>Token Name</th>
+                                                    <th>Token Type</th>
+                                                    <th>Bound At</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <!-- Bindings will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bind Token Modal -->
+<div class="modal fade" id="bindTokenModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Bind Token to Session</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="bindTokenForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="modalSessionSelect" class="form-label">Game Session *</label>
+                                <select class="form-control" id="modalSessionSelect" required>
+                                    <option value="">-- Select session --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="modalTokenSelect" class="form-label">Token *</label>
+                                <select class="form-control" id="modalTokenSelect" required>
+                                    <option value="">-- Select token --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="bindingType" class="form-label">Binding Type</label>
+                                <select class="form-control" id="bindingType">
+                                    <option value="automatic">Automatic (Touch Pattern)</option>
+                                    <option value="manual">Manual (Code/Name)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="priority" class="form-label">Priority</label>
+                                <select class="form-control" id="priority">
+                                    <option value="1">High</option>
+                                    <option value="2" selected>Medium</option>
+                                    <option value="3">Low</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" rows="3" placeholder="Optional notes about this binding"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveBindingBtn">Bind Token</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Token Pattern Recognition Modal -->
+<div class="modal fade" id="patternModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Draw Token Pattern</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <p>Draw the token pattern on the canvas below:</p>
+                </div>
+                <canvas id="patternCanvas" width="600" height="300" style="border: 2px solid #ddd; cursor: crosshair; width: 100%;"></canvas>
+                <div class="mt-2 text-center">
+                    <button class="btn btn-sm btn-secondary" onclick="clearPatternCanvas()">Clear</button>
+                    <button class="btn btn-sm btn-info" onclick="identifyPattern()">Identify Pattern</button>
+                </div>
+                <div id="patternResult" class="mt-3" style="display: none;">
+                    <!-- Pattern identification results will be shown here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="usePatternBtn" style="display: none;">Use This Pattern</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let patternCanvas, patternCtx;
+        let isDrawing = false;
+        let touchPoints = [];
+        let currentSessionId = null;
+        if (typeof currentTokenId === 'undefined') {
+            var currentTokenId = null;
+        }
+
+        $(document).ready(function() {
+            initializePatternCanvas();
+            loadActiveSessions();
+            loadAvailableTokens();
+            loadCurrentBindings();
+
+            $('#sessionSelect').change(function() {
+                const sessionId = $(this).val();
+                if (sessionId) {
+                    loadSessionInfo(sessionId);
+                    currentSessionId = sessionId;
+                } else {
+                    $('#sessionInfo').hide();
+                    currentSessionId = null;
+                }
+            });
+
+            $('#saveBindingBtn').click(function() {
+                saveTokenBinding();
+            });
+
+            $('#bindingType').change(function() {
+                if ($(this).val() === 'automatic') {
+                    $('#patternModal').modal('show');
+                }
+            });
+
+            $('#usePatternBtn').click(function() {
+                usePatternForBinding();
+            });
+
+            $('#tokenSearch').on('input', function() {
+                filterTokens($(this).val());
+            });
+        });
+
+        function initializePatternCanvas() {
+            patternCanvas = document.getElementById('patternCanvas');
+            patternCtx = patternCanvas.getContext('2d');
+            
+            patternCtx.strokeStyle = '#007bff';
+            patternCtx.lineWidth = 3;
+            patternCtx.lineCap = 'round';
+            patternCtx.lineJoin = 'round';
+
+            patternCanvas.addEventListener('mousedown', startPatternDrawing);
+            patternCanvas.addEventListener('mousemove', drawPattern);
+            patternCanvas.addEventListener('mouseup', stopPatternDrawing);
+            patternCanvas.addEventListener('mouseout', stopPatternDrawing);
+
+            patternCanvas.addEventListener('touchstart', handlePatternTouch);
+            patternCanvas.addEventListener('touchmove', handlePatternTouch);
+            patternCanvas.addEventListener('touchend', stopPatternDrawing);
+        }
+
+        function startPatternDrawing(e) {
+            isDrawing = true;
+            const rect = patternCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            patternCtx.beginPath();
+            patternCtx.moveTo(x, y);
+            touchPoints.push([x, y]);
+        }
+
+        function drawPattern(e) {
+            if (!isDrawing) return;
+            
+            const rect = patternCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            patternCtx.lineTo(x, y);
+            patternCtx.stroke();
+            touchPoints.push([x, y]);
+        }
+
+        function stopPatternDrawing() {
+            if (isDrawing) {
+                isDrawing = false;
+                patternCtx.beginPath();
+            }
+        }
+
+        function handlePatternTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 
+                                            e.type === 'touchmove' ? 'mousemove' : 'mouseup', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            patternCanvas.dispatchEvent(mouseEvent);
+        }
+
+        function clearPatternCanvas() {
+            patternCtx.clearRect(0, 0, patternCanvas.width, patternCanvas.height);
+            touchPoints = [];
+        }
+
+        function identifyPattern() {
+            if (touchPoints.length < 2) {
+                showAlert('Please draw a pattern with at least 2 touch points', 'warning');
+                return;
+            }
+
+            const data = {
+                touchPoints: touchPoints,
+                confidenceThreshold: 70.0,
+                preferSimplified: true
+            };
+
+            postJson(getApiUrl('UnifiedToken', 'identify'), data)
+                .done(function(response) {
+                    displayPatternResult(response);
+                })
+                .fail(function(xhr) {
+                    const message = xhr.responseJSON?.message || 'Error identifying pattern';
+                    showAlert(message, 'danger');
+                });
+        }
+
+        function displayPatternResult(result) {
+            let content = '';
+            
+            if (result.success) {
+                content = `
+                    <div class="alert alert-success">
+                        <h6><i class="fas fa-check-circle"></i> Pattern Identified!</h6>
+                        <p><strong>Token:</strong> ${result.tokenName}</p>
+                        <p><strong>Confidence:</strong> ${result.confidence.toFixed(2)}%</p>
+                        <p><strong>System:</strong> ${result.systemUsed}</p>
+                    </div>
+                `;
+                currentTokenId = result.tokenId;
+                $('#usePatternBtn').show();
+            } else {
+                content = `
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle"></i> Pattern Not Recognized</h6>
+                        <p>${result.message}</p>
+                        <p>Confidence: ${result.confidence.toFixed(2)}%</p>
+                    </div>
+                `;
+                $('#usePatternBtn').hide();
+            }
+
+            $('#patternResult').html(content).show();
+        }
+
+        function usePatternForBinding() {
+            if (currentTokenId) {
+                $('#modalTokenSelect').val(currentTokenId);
+                $('#patternModal').modal('hide');
+                $('#bindTokenModal').modal('show');
+            }
+        }
+
+        function loadActiveSessions() {
+            $.get('/api/admin/GameManagement/active-sessions')
+                .done(function(sessions) {
+                    const sessionSelect = $('#sessionSelect');
+                    const modalSessionSelect = $('#modalSessionSelect');
+                    
+                    sessionSelect.empty().append('<option value="">-- Select a session --</option>');
+                    modalSessionSelect.empty().append('<option value="">-- Select session --</option>');
+                    
+                    sessions.forEach(function(session) {
+                        const option = `<option value="${session.id}">${session.name} (${session.status})</option>`;
+                        sessionSelect.append(option);
+                        modalSessionSelect.append(option);
+                    });
+                })
+                .fail(function() {
+                    showAlert('Error loading active sessions', 'danger');
+                });
+        }
+
+        function loadAvailableTokens() {
+            $.get('/api/UnifiedToken/team-tokens')
+                .done(function(tokenGroups) {
+                    const tokenSelect = $('#modalTokenSelect');
+                    const container = $('#availableTokens');
+                    
+                    tokenSelect.empty().append('<option value="">-- Select token --</option>');
+                    container.empty();
+                    
+                    if (tokenGroups.length === 0) {
+                        container.html('<p class="text-muted">No tokens available</p>');
+                        return;
+                    }
+
+                    tokenGroups.forEach(function(group) {
+                        group.tokens.forEach(function(token) {
+                            const option = `<option value="${token.id}">${token.name} (${group.groupName})</option>`;
+                            tokenSelect.append(option);
+                            
+                            const tokenDiv = `
+                                <div class="token-item mb-2" data-token-id="${token.id}">
+                                    <div class="card">
+                                        <div class="card-body py-2">
+                                            <h6 class="card-title">${token.name}</h6>
+                                            <p class="card-text small">${token.description || 'No description'}</p>
+                                            <div class="d-flex justify-content-between">
+                                                <span class="badge bg-secondary">${token.system}</span>
+                                                <span class="badge bg-info">${token.touchCount} touches</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            container.append(tokenDiv);
+                        });
+                    });
+                })
+                .fail(function() {
+                    showAlert('Error loading available tokens', 'danger');
+                });
+        }
+
+        function loadSessionInfo(sessionId) {
+            $.get(`/api/admin/GameManagement/session/${sessionId}`)
+                .done(function(session) {
+                    const info = `
+                        <h6>Session Details</h6>
+                        <p><strong>Name:</strong> ${session.name}</p>
+                        <p><strong>Status:</strong> <span class="badge bg-${session.status === 'Active' ? 'success' : 'warning'}">${session.status}</span></p>
+                        <p><strong>Created:</strong> ${new Date(session.createdAt).toLocaleString()}</p>
+                        <p><strong>Team:</strong> ${session.teamName || 'No team assigned'}</p>
+                    `;
+                    $('#sessionInfo').html(info).show();
+                })
+                .fail(function() {
+                    showAlert('Error loading session info', 'danger');
+                });
+        }
+
+        function loadCurrentBindings() {
+            $.get('/api/admin/GameManagement/token-bindings')
+                .done(function(bindings) {
+                    const tbody = $('#bindingsTable tbody');
+                    tbody.empty();
+                    
+                    if (bindings.length === 0) {
+                        tbody.html('<tr><td colspan="6" class="text-center text-muted">No token bindings found</td></tr>');
+                        return;
+                    }
+
+                    bindings.forEach(function(binding) {
+                        const row = `
+                            <tr>
+                                <td>${binding.sessionName}</td>
+                                <td>${binding.tokenName}</td>
+                                <td><span class="badge bg-${binding.bindingType === 'automatic' ? 'primary' : 'secondary'}">${binding.bindingType}</span></td>
+                                <td>${new Date(binding.boundAt).toLocaleString()}</td>
+                                <td><span class="badge bg-${binding.isActive ? 'success' : 'danger'}">${binding.isActive ? 'Active' : 'Inactive'}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger" onclick="removeBinding('${binding.id}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.append(row);
+                    });
+                })
+                .fail(function() {
+                    showAlert('Error loading current bindings', 'danger');
+                });
+        }
+
+        function saveTokenBinding() {
+            const sessionId = $('#modalSessionSelect').val();
+            const tokenId = $('#modalTokenSelect').val();
+            const bindingType = $('#bindingType').val();
+            const priority = $('#priority').val();
+            const notes = $('#notes').val();
+
+            if (!sessionId || !tokenId) {
+                showAlert('Please select both session and token', 'warning');
+                return;
+            }
+
+            const data = {
+                sessionId: sessionId,
+                tokenId: tokenId,
+                bindingType: bindingType,
+                priority: parseInt(priority),
+                notes: notes,
+                touchPoints: bindingType === 'automatic' ? touchPoints : null
+            };
+
+            postJson(getApiUrl('AdminGameManagement', 'bindToken'), data)
+                .done(function(response) {
+                    if (response.success) {
+                        showAlert('Token binding created successfully', 'success');
+                        $('#bindTokenModal').modal('hide');
+                        $('#bindTokenForm')[0].reset();
+                        clearPatternCanvas();
+                        loadCurrentBindings();
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                })
+                .fail(function(xhr) {
+                    const message = xhr.responseJSON?.message || 'Error creating token binding';
+                    showAlert(message, 'danger');
+                });
+        }
+
+        function removeBinding(bindingId) {
+            if (confirm('Are you sure you want to remove this token binding?')) {
+                $.delete(`/api/admin/GameManagement/unbind-token/${bindingId}`)
+                    .done(function(response) {
+                        if (response.success) {
+                            showAlert('Token binding removed successfully', 'success');
+                            loadCurrentBindings();
+                        } else {
+                            showAlert(response.message, 'danger');
+                        }
+                    })
+                    .fail(function(xhr) {
+                        const message = xhr.responseJSON?.message || 'Error removing token binding';
+                        showAlert(message, 'danger');
+                    });
+            }
+        }
+
+        function filterTokens(searchTerm) {
+            $('.token-item').each(function() {
+                const tokenName = $(this).find('.card-title').text().toLowerCase();
+                const tokenDesc = $(this).find('.card-text').text().toLowerCase();
+                const search = searchTerm.toLowerCase();
+                
+                if (tokenName.includes(search) || tokenDesc.includes(search)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        }
+
+        // showAlert function is now provided by the centralized AlertSystem
+    </script>
+}

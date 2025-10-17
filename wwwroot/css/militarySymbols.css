@@ -1,0 +1,851 @@
+/**
+ * Military Symbols CSS
+ * Styles for NATO-style military unit symbols on the map
+ */
+
+/* Military Token Marker Base */
+.military-token {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+/* NATO Standard 3D Military Token */
+    .military-token.nato-standard {
+        padding-top: 20px;
+    }
+
+.military-token.nato-standard:hover {
+    transform: perspective(1000px) rotateX(0deg) scale(1.05);
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6));
+}
+
+/* NATO Frame Container - Default Rectangle Shape */
+.nato-frame {
+    position: relative;
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border: 3px solid #000;
+    border-radius: 10px;
+    padding: 3px;
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.8),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1),
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        0 8px 16px rgba(0, 0, 0, 0.2);
+    min-width: 60px;
+    min-height: 60px;
+    grid-template-columns: 1fr 2fr 1fr;
+    grid-template-rows: 1fr 2fr 1fr;
+    gap: 2px;
+    font-family: 'Arial Black', 'Arial', sans-serif;
+    font-weight: 900;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    overflow: visible;
+}
+
+
+/* Organization Level (Top) */
+.org-level-top {
+    min-height: 14px;
+    text-align: center;
+}
+
+.force-hostile .org-level-top {
+    justify-content: center;
+}
+
+.org-symbol {
+    font-size: 15px;
+    color: #000;
+    font-weight: bold;
+    line-height: 1;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.force-hostile .org-symbol {
+    margin-left:10px
+}
+
+/* Unit Type Symbol (Center) */
+.unit-symbol-center {
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin: 1px;
+}
+
+.unit-symbol {
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, #f8f8f8, #e0e0e0);
+    border: 2px solid #666;
+    border-radius: 8px;
+    box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.9), inset 0 -1px 3px rgba(0, 0, 0, 0.1);
+    position: relative;
+    margin: 1px;
+}
+
+/* Unit Type Symbols - Simple CSS Classes */
+.unit-symbol {
+    width: 32px;
+    height: 32px;
+    position: relative;
+    display: inline-block;
+    font-weight: bold;
+    font-size: 18px;
+    color: #000;
+    text-align: center;
+    line-height: 32px;
+}
+
+/* Hide any Font Awesome icons in military tokens */
+.military-token .unit-symbol-center i.fas,
+.military-token .unit-symbol-center i.fa {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* Infantry - Crossed swords (X pattern) */
+.unit-symbol.Infantry {
+    font-size: 20px;
+    font-weight: 900;
+}
+.unit-symbol.Infantry::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(45deg, transparent 45%, #000 45%, #000 55%, transparent 55%),
+                linear-gradient(-45deg, transparent 45%, #000 45%, #000 55%, transparent 55%);
+}
+
+/* Armoured - Track/oval shape */
+.unit-symbol.Armoured {
+    font-size: 20px;
+    font-weight: 900;
+}
+.unit-symbol.Armoured::before {
+    content: '';
+    position: absolute;
+    top: 40%;
+    left: 40%;
+    width: 20px;
+    height: 20px;
+    transform: translate(-50%, -50%);
+    border: 2px solid #000;
+    border-radius: 50%;
+    background: transparent;
+    z-index: 1;
+    display: block !important;
+}
+
+/* Artillery - Circle/dot */
+.unit-symbol.Artillery {
+    font-size: 20px;
+    font-weight: 900;
+}
+.unit-symbol.Artillery::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    transform: translate(-50%, -50%);
+    border: 2px solid #000;
+    border-radius: 50%;
+    background: #000;
+}
+
+/* Engineers - Bridge/E symbol */
+.unit-symbol.Engineers {
+    font-size: 20px;
+    font-weight: 900;
+}
+.unit-symbol.Engineers::before {
+    content: 'E';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(90deg);
+    font-family: Arial, sans-serif;
+}
+
+/* Signals - Lightning bolt */
+.unit-symbol.Signals {
+    font-size: 20px;
+    font-weight: 900;
+}
+.unit-symbol.Signals::before {
+    content: '⚡';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Medical - Cross */
+.unit-symbol.Medical {
+    font-size: 20px;
+    font-weight: 900;
+}
+.unit-symbol.Medical::before {
+    content: '✚';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Reconnaissance - Quatrefoil with diagonal line */
+.unit-symbol.Reconnaissance::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    transform: translate(-50%, -50%);
+    border: 2px solid #000;
+    border-radius: 50% 50% 50% 50%;
+    background: linear-gradient(45deg, transparent 45%, #000 45%, #000 55%, transparent 55%);
+}
+
+/* Air Defense - Umbrella arc */
+.unit-symbol.AirDefense::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    transform: translate(-50%, -50%);
+    border: 2px solid #000;
+    border-bottom: none;
+    border-radius: 50% 50% 0 0;
+}
+
+/* Aviation - Helicopter */
+.unit-symbol.Aviation::before {
+    content: '🚁';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Logistics - Boxes */
+.unit-symbol.Logistics::before {
+    content: '📦';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Special Forces - Special symbol */
+.unit-symbol.SpecialForces::before {
+    content: '⚔️';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Airborne - Parachute */
+.unit-symbol.AirborneParatroop::before {
+    content: '🪂';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Marines - Anchor */
+.unit-symbol.Marines::before {
+    content: '⚓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Cavalry - Horse head */
+.unit-symbol.Cavalry::before {
+    content: '🐎';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Headquarters Command - Flag */
+.unit-symbol.HeadquartersCommand::before {
+    content: '🏁';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Intelligence - Eye */
+.unit-symbol.Intelligence::before {
+    content: '👁️';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Military Police - Shield */
+.unit-symbol.MilitaryPolice::before {
+    content: '🛡️';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* CBRN - Radiation symbol */
+.unit-symbol.CBRN::before {
+    content: '☢️';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Maintenance - Wrench */
+.unit-symbol.Maintenance::before {
+    content: '🔧';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Cyber - Computer */
+.unit-symbol.Cyber::before {
+    content: '💻';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Mechanized - Truck symbol */
+.unit-symbol.Mechanized::before {
+    content: '🚛';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+}
+
+/* Unit Designation (Right) - Now nested inside unit symbol center */
+.unit-designation-right {
+    position: absolute !important;
+    top: 40% !important;
+    transform: translateY(-50%) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding-left: 30px;
+}
+
+    .unit-designation-right .unit-designation {
+        font-size: 12px !important;
+        color: #000 !important;
+        font-weight: bold !important;
+        vertical-align: middle !important;
+        margin-left: 4px;
+    }
+
+/* Force Type Color Variations */
+.military-token.nato-standard.force-friendly .nato-frame {
+    border-color: #0066cc;
+    background: linear-gradient(145deg, #e6f3ff, #cce7ff);
+}
+
+/* Hostile/Red tokens use diamond shape (NATO standard) */
+.military-token.nato-standard.force-hostile .nato-frame {
+    border-color: #cc0000;
+    background: linear-gradient(145deg, #ffe6e6, #ffcccc);
+    border-radius: 6px !important;
+    transform: rotate(45deg);
+    width: 60px;
+    height: 60px;
+    overflow: visible;
+}
+
+/* Hostile Content Frame - Only for hostile tokens */
+.hostile-content-frame {
+    display: inline-block;
+}
+
+/* Keep inner content rotation-free for hostile tokens */
+.military-token.nato-standard.force-hostile .nato-frame > * {
+    transform: rotate(-45deg);
+    padding: 2px;
+}
+
+/* Fine-tune positioning for diamond shape */
+.military-token.nato-standard.force-hostile .org-level-top {
+    margin-top: -3px;
+    padding-top: 0px;
+}
+
+.military-token.nato-standard.force-hostile .unit-symbol-center {
+    margin: 0;
+    padding: 0px;
+}
+
+.military-token.nato-standard.force-hostile .unit-designation-right {
+    padding-right: 1px;
+    padding-left: 2px;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+}
+
+.military-token.nato-standard.force-neutral .nato-frame {
+    border-color: #00cc00;
+    background: linear-gradient(145deg, #e6ffe6, #ccffcc);
+}
+
+.military-token.nato-standard.force-unknown .nato-frame {
+    border-color: #cccc00;
+    background: linear-gradient(145deg, #ffffe6, #ffffcc);
+}
+
+/* Professional Military Token */
+.military-token.professional {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+}
+
+/* Unit Symbol Container */
+.military-symbol {
+    position: relative;
+    background: #fff;
+    border: 3px solid #000;
+    border-radius: 8px;
+    padding: 8px 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    min-width: 60px;
+    text-align: center;
+    font-family: 'Arial', 'Helvetica', sans-serif;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+/* NATO-Style Frames */
+.military-symbol.frame-squad {
+    border-radius: 4px;
+    min-width: 50px;
+    min-height: 50px;
+    padding: 6px 8px;
+}
+
+.military-symbol.frame-company {
+    border-radius: 6px;
+    min-width: 60px;
+    min-height: 60px;
+    padding: 8px 10px;
+    position: relative;
+}
+
+.military-symbol.frame-company::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid #000;
+}
+
+.military-symbol.frame-brigade {
+    border-radius: 50%;
+    min-width: 70px;
+    min-height: 70px;
+    padding: 10px 12px;
+    position: relative;
+}
+
+.military-symbol.frame-division {
+    border-radius: 12px;
+    min-width: 80px;
+    min-height: 80px;
+    padding: 12px 14px;
+    position: relative;
+}
+
+.military-symbol.frame-division::after {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    border: 2px solid #000;
+    border-radius: 15px;
+    pointer-events: none;
+}
+
+/* Force Type Color Coding */
+.force-friendly {
+}
+
+.force-hostile {
+    border-color: #FF0000 !important;
+}
+
+.force-neutral {
+    border-color: #00AA00 !important;
+    background: #E6FFE6;
+}
+
+.force-unknown {
+    border-color: #FFAA00 !important;
+    background: #FFF6E6;
+}
+
+/* Organization Level Marker (top of symbol) */
+.org-level-marker {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 18px;
+    font-weight: bold;
+    color: #000;
+    text-shadow: 1px 1px 0px #fff, -1px -1px 0px #fff;
+    white-space: nowrap;
+    letter-spacing: -2px;
+}
+
+/* Unit Icon Container */
+.unit-icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 4px 0;
+    min-height: 32px;
+}
+
+/* Unit Type Icon */
+.unit-type-icon {
+    font-size: 28px;
+    color: #000;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* Old unit designation rule removed - now handled by grid layout */
+
+/* Unit Label (below symbol) */
+.unit-label {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+    border: 1px solid #333;
+}
+
+/* Unit Name (below label) */
+.unit-name {
+    position: absolute;
+    top: calc(100% + 30px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: normal;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    font-family: 'Arial', sans-serif;
+    max-width: 120px;
+    text-align: center;
+    border: 1px solid #555;
+}
+
+/* Hover Effects */
+.military-token:hover .military-symbol {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    transition: all 0.2s ease-in-out;
+}
+
+.military-token:hover .unit-label {
+    background: rgba(0, 0, 0, 0.95);
+    transform: translateX(-50%) scale(1.05);
+    transition: all 0.2s ease-in-out;
+}
+
+/* Selected State */
+.military-token.selected .military-symbol {
+    border-width: 4px;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(255, 215, 0, 1);
+    }
+}
+
+/* Size Variations by Organization Level */
+.military-symbol.size-squad,
+.military-symbol.size-platoon {
+    min-width: 50px;
+    padding: 6px 10px;
+}
+
+.military-symbol.size-company,
+.military-symbol.size-battalion {
+    min-width: 60px;
+    padding: 8px 12px;
+}
+
+.military-symbol.size-regiment,
+.military-symbol.size-brigade {
+    min-width: 70px;
+    padding: 10px 14px;
+}
+
+.military-symbol.size-division,
+.military-symbol.size-corps,
+.military-symbol.size-army {
+    min-width: 80px;
+    padding: 12px 16px;
+}
+
+/* Movement Path Styling */
+.movement-line {
+    stroke: #0066FF;
+    stroke-width: 3;
+    stroke-dasharray: 10, 5;
+    fill: none;
+    opacity: 0.7;
+}
+
+.movement-line.hostile {
+    stroke: #FF0000;
+}
+
+.movement-line.neutral {
+    stroke: #00AA00;
+}
+
+/* Coverage Area Styling */
+.coverage-area {
+    fill: rgba(0, 102, 255, 0.1);
+    stroke: #0066FF;
+    stroke-width: 2;
+    stroke-dasharray: 5, 5;
+}
+
+.coverage-area.hostile {
+    fill: rgba(255, 0, 0, 0.1);
+    stroke: #FF0000;
+}
+
+.coverage-area.neutral {
+    fill: rgba(0, 170, 0, 0.1);
+    stroke: #00AA00;
+}
+
+/* Leaflet Integration */
+.leaflet-marker-icon.military-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+/* Popup Styling for Military Tokens */
+.leaflet-popup-content .military-info {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+}
+
+.military-info .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.military-info .info-label {
+    font-weight: bold;
+    color: #666;
+}
+
+.military-info .info-value {
+    color: #000;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .military-symbol {
+        min-width: 50px;
+        padding: 6px 10px;
+    }
+    
+    .unit-type-icon {
+        font-size: 24px;
+    }
+    
+    .unit-label {
+        font-size: 10px;
+    }
+}
+
+/* Professional War Game Enhancements */
+.military-token.professional .military-symbol {
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border: 3px solid #000;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced Force Type Colors */
+.force-friendly .military-symbol {
+    border-color: #0066FF !important;
+    background: linear-gradient(145deg, #E6F0FF, #CCE0FF) !important;
+    box-shadow: 
+        0 4px 8px rgba(0, 102, 255, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.force-hostile .military-symbol {
+    border-color: #FF0000 !important;
+    background: linear-gradient(145deg, #FFE6E6, #FFCCCC) !important;
+    box-shadow: 
+        0 4px 8px rgba(255, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.force-hostile .unit-designation {
+    margin-left: 35px !important;
+    margin-bottom: 10px !important;
+}
+
+.force-neutral .military-symbol {
+    border-color: #00AA00 !important;
+    background: linear-gradient(145deg, #E6FFE6, #CCFFCC) !important;
+    box-shadow: 
+        0 4px 8px rgba(0, 170, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.force-unknown .military-symbol {
+    border-color: #FFAA00 !important;
+    background: linear-gradient(145deg, #FFF6E6, #FFEECC) !important;
+    box-shadow: 
+        0 4px 8px rgba(255, 170, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* Professional Hover Effects */
+.military-token.professional:hover .military-symbol {
+    transform: scale(1.15) rotate(2deg);
+    box-shadow: 
+        0 8px 16px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.military-token.professional:hover .unit-label {
+    background: rgba(0, 0, 0, 0.95);
+    transform: translateX(-50%) scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.military-token.professional:hover .unit-name {
+    background: rgba(0, 0, 0, 0.95);
+    transform: translateX(-50%) scale(1.05);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Status Indicators */
+.military-token.status-moving .military-symbol {
+    animation: pulse-moving 2s infinite;
+}
+
+.military-token.status-engaged .military-symbol {
+    animation: pulse-engaged 1s infinite;
+    border-color: #FF4444 !important;
+}
+
+.military-token.status-damaged .military-symbol {
+    opacity: 0.7;
+    filter: grayscale(30%);
+}
+
+@keyframes pulse-moving {
+    0%, 100% { box-shadow: 0 4px 8px rgba(0, 102, 255, 0.3); }
+    50% { box-shadow: 0 4px 8px rgba(0, 102, 255, 0.6); }
+}
+
+@keyframes pulse-engaged {
+    0%, 100% { box-shadow: 0 4px 8px rgba(255, 0, 0, 0.3); }
+    50% { box-shadow: 0 4px 8px rgba(255, 0, 0, 0.8); }
+}
+
+/* Print Styles */
+@media print {
+    .military-token {
+        break-inside: avoid;
+    }
+    
+    .military-symbol {
+        border-color: #000 !important;
+        box-shadow: none !important;
+        background: #fff !important;
+    }
+    
+    .unit-label, .unit-name {
+        background: #fff !important;
+        color: #000 !important;
+        border: 1px solid #000 !important;
+    }
+}
+

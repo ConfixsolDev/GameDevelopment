@@ -1,0 +1,481 @@
+@{
+    ViewData["Title"] = "Team Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title m-0">
+                        <i class="fas fa-users me-2"></i> Team Management
+                    </h3>
+                    <div class="card-tools">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTeamModal">
+                            <i class="fas fa-plus"></i> Create New Team
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="alertHost"></div>
+                    <div class="table-responsive">
+                        <table id="teamsTable" class="table table-bordered table-striped align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Team Name</th>
+                                    <th>Team Code</th>
+                                    <th>Sub Team Code</th>
+                                    <th>Category</th>
+                                    <th>Description</th>
+                                    <th>Members</th>
+                                    <th>Status</th>
+                                    <th style="width:230px">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows filled by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Team Modal -->
+<div class="modal fade" id="createTeamModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Team</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createTeamForm" autocomplete="off">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label for="teamName" class="form-label">Team Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="teamName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="teamCode" class="form-label">Team Code <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="teamCode" required>
+                        <div class="form-text">Unique identifier (e.g., TEAM_A, BRIG_1)</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="subTeamCode" class="form-label">Sub Team Code</label>
+                        <input type="text" class="form-control" id="subTeamCode">
+                        <div class="form-text">Optional sub-team identifier</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="teamCategory" class="form-label">Category</label>
+                        <select class="form-control" id="teamCategory">
+                            <option value="">-- Select Category --</option>
+                            <option value="Company">Company</option>
+                            <option value="Brigade">Brigade</option>
+                            <option value="Department">Department</option>
+                            <option value="Unit">Unit</option>
+                            <option value="Squad">Squad</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="teamDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="teamDescription" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveTeamBtn">Create Team</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Team Modal -->
+<div class="modal fade" id="editTeamModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Team</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editTeamForm" autocomplete="off">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="editTeamId">
+                    <div class="mb-3">
+                        <label for="editTeamName" class="form-label">Team Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="editTeamName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editTeamCode" class="form-label">Team Code <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="editTeamCode" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editSubTeamCode" class="form-label">Sub Team Code</label>
+                        <input type="text" class="form-control" id="editSubTeamCode">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editTeamCategory" class="form-label">Category</label>
+                        <select class="form-control" id="editTeamCategory">
+                            <option value="">-- Select Category --</option>
+                            <option value="Company">Company</option>
+                            <option value="Brigade">Brigade</option>
+                            <option value="Department">Department</option>
+                            <option value="Unit">Unit</option>
+                            <option value="Squad">Squad</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editTeamDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="editTeamDescription" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="updateTeamBtn">Update Team</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Team Members Modal -->
+<div class="modal fade" id="teamMembersModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Team Members</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3 align-items-end mb-3">
+                    <div class="col-md-8">
+                        <label for="userSelect" class="form-label">Select User</label>
+                        <select id="userSelect" class="form-control">
+                            <option value="">-- Select User --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="button" class="btn btn-success w-100" id="assignUserBtn">
+                            <i class="fas fa-plus"></i> Assign User
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table id="teamMembersTable" class="table table-bordered align-middle">
+                        <thead>
+                            <tr>
+                                <th>User Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Assigned Date</th>
+                                <th style="width:140px">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Filled by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden CSRF host to read token outside forms if needed -->
+<script defer src="~/assets/js/bootstrap.bundle.min.js"></script>
+
+@section Scripts {
+    <script>
+        // ---------- URL helpers (use Razor to avoid casing/typo issues) ----------
+        const URLS = {
+            getTeams: '@Url.Action("GetTeams", "TeamManagement")',
+            getTeam: (id) => '@Url.Action("GetTeam", "TeamManagement")' + '?id=' + encodeURIComponent(id),
+            createTeam: '@Url.Action("CreateTeam", "TeamManagement")',
+            updateTeam: (id) => '@Url.Action("UpdateTeam", "TeamManagement")' + '?teamId=' + encodeURIComponent(id),
+            deleteTeam: (id) => '@Url.Action("DeleteTeam", "TeamManagement")' + '?teamId=' + encodeURIComponent(id),
+            getUsers: '@Url.Action("GetUsers", "TeamManagement")',
+            getTeamMembers: (teamId) => '@Url.Action("GetTeamMembers", "TeamManagement")' + '?teamId=' + encodeURIComponent(teamId),
+            assignUserToTeam: '@Url.Action("AssignUserToTeam", "TeamManagement")',
+            removeUserFromTeam: (userId, teamId) => '@Url.Action("RemoveUserFromTeam", "TeamManagement")' + `?userId=${encodeURIComponent(userId)}&teamId=${encodeURIComponent(teamId)}`
+        };
+
+        // ---------- Generic helpers ----------
+        function csrfToken() {
+            const el = document.querySelector('input[name="__RequestVerificationToken"]');
+            return el ? el.value : '';
+        }
+
+        // Attach CSRF to all non-GET Ajax calls
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (settings.type && settings.type.toUpperCase() !== 'GET') {
+                    const token = csrfToken();
+                    if (token) xhr.setRequestHeader('RequestVerificationToken', token);
+                }
+            },
+            contentType: 'application/json; charset=utf-8'
+        });
+
+        function postJson(url, data) {
+            return $.ajax({ url, type: 'POST', data: JSON.stringify(data || {}) });
+        }
+
+        function showAlert(message, type) {
+            const id = 'alert-' + Math.random().toString(36).slice(2);
+            const html = `
+                <div id="${id}" class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>`;
+            $('#alertHost').html(html);
+            setTimeout(() => {
+                const el = document.getElementById(id);
+                if (el && window.bootstrap && bootstrap.Alert) bootstrap.Alert.getOrCreateInstance(el).close();
+                else if (el) el.remove();
+            }, 5000);
+        }
+
+        // ---------- Page init ----------
+        $(document).ready(function () {
+            loadTeams();
+            loadUsers();
+
+            $('#saveTeamBtn').on('click', createTeam);
+            $('#updateTeamBtn').on('click', updateTeam);
+            $('#assignUserBtn').on('click', assignUserToTeam);
+
+            // Reset create form when opening the modal (nice UX)
+            const createEl = document.getElementById('createTeamModal');
+            if (createEl) {
+                createEl.addEventListener('show.bs.modal', () => {
+                    $('#createTeamForm')[0].reset();
+                });
+            }
+        });
+
+        // ---------- Teams ----------
+        function loadTeams() {
+            $.get(URLS.getTeams)
+                .done(function (teams) {
+                    const tbody = $('#teamsTable tbody').empty();
+                    (teams || []).forEach(function (team) {
+                        const row = `
+                            <tr>
+                                <td>${escapeHtml(team.name)}</td>
+                                <td><span class="badge bg-info">${escapeHtml(team.teamCode)}</span></td>
+                                <td>${team.subTeamCode ? escapeHtml(team.subTeamCode) : 'N/A'}</td>
+                                <td>${team.category ? escapeHtml(team.category) : 'N/A'}</td>
+                                <td>${team.description ? escapeHtml(team.description) : 'N/A'}</td>
+                                <td><span class="badge bg-success">${Number(team.memberCount || 0)}</span></td>
+                                <td>${team.isActive ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Inactive</span>'}</td>
+                                <td class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-info" onclick="viewTeamMembers('${team.id}')" aria-label="View members of ${escapeAttr(team.name)}">
+                                        <i class="fas fa-users"></i> Members
+                                    </button>
+                                    <button class="btn btn-sm btn-warning" onclick="editTeam('${team.id}')" aria-label="Edit ${escapeAttr(team.name)}">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteTeam('${team.id}', '${escapeAttr(team.name)}')" aria-label="Delete ${escapeAttr(team.name)}">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>`;
+                        tbody.append(row);
+                    });
+                })
+                .fail(function () {
+                    showAlert('Error loading teams', 'danger');
+                });
+        }
+
+        function createTeam() {
+            const data = {
+                name: $('#teamName').val()?.trim(),
+                teamCode: $('#teamCode').val()?.trim(),
+                subTeamCode: $('#subTeamCode').val()?.trim(),
+                category: $('#teamCategory').val(),
+                description: $('#teamDescription').val()?.trim()
+            };
+
+            if (!data.name || !data.teamCode) {
+                showAlert('Team name and code are required', 'warning');
+                return;
+            }
+
+            postJson(URLS.createTeam, data)
+                .done(function (res) {
+                    if (res && res.success) {
+                        showAlert('Team created successfully', 'success');
+                        ModalHelper.hide('createTeamModal');
+                        loadTeams();
+                    } else {
+                        showAlert(res?.message || 'Create failed', 'danger');
+                    }
+                })
+                .fail(function (xhr) {
+                    showAlert(xhr.responseJSON?.message || 'Error creating team', 'danger');
+                });
+        }
+
+        function editTeam(teamId) {
+            $.get(URLS.getTeam(teamId))
+                .done(function (team) {
+                    debugger
+                    if (!team) { showAlert('Team not found', 'warning'); return; }
+                    $('#editTeamId').val(team.id);
+                    $('#editTeamName').val(team.name);
+                    $('#editTeamCode').val(team.teamCode);
+                    $('#editSubTeamCode').val(team.subTeamCode || '');
+                    $('#editTeamCategory').val(team.category || '');
+                    $('#editTeamDescription').val(team.description || '');
+                    ModalHelper.show('editTeamModal');
+                })
+                .fail(function () { showAlert('Error loading team data', 'danger'); });
+        }
+
+        function updateTeam() {
+            const teamId = $('#editTeamId').val();
+            const data = {
+                id:teamId,
+                name: $('#editTeamName').val()?.trim(),
+                teamCode: $('#editTeamCode').val()?.trim(),
+                subTeamCode: $('#editSubTeamCode').val()?.trim(),
+                teamCategory: $('#editTeamCategory').val(),
+                description: $('#editTeamDescription').val()?.trim()
+            };
+
+            if (!data.name || !data.teamCode) {
+                showAlert('Team name and code are required', 'warning');
+                return;
+            }
+
+            // Using POST for compatibility (switch to PUT if your controller uses [HttpPut])
+            postJson(URLS.updateTeam(teamId), data)
+                .done(function (res) {
+                    if (res && res.success) {
+                        showAlert('Team updated successfully', 'success');
+                        ModalHelper.hide('editTeamModal');
+                        loadTeams();
+                    } else {
+                        showAlert(res?.message || 'Update failed', 'danger');
+                    }
+                })
+                .fail(function (xhr) {
+                    showAlert(xhr.responseJSON?.message || 'Error updating team', 'danger');
+                });
+        }
+
+        function deleteTeam(teamId, teamName) {
+            if (!confirm(`Are you sure you want to delete the team "${teamName}"? This action cannot be undone.`)) return;
+            postJson(URLS.deleteTeam(teamId))
+                .done(function (res) {
+                    if (res && res.success) {
+                        showAlert('Team deleted successfully', 'success');
+                        loadTeams();
+                    } else {
+                        showAlert(res?.message || 'Delete failed', 'danger');
+                    }
+                })
+                .fail(function () { showAlert('Error deleting team', 'danger'); });
+        }
+
+        // ---------- Users & Membership ----------
+        function loadUsers() {
+            $.get(URLS.getUsers)
+                .done(function (users) {
+                    const select = $('#userSelect').empty().append('<option value="">-- Select User --</option>');
+                    (users || []).forEach(function (u) {
+                        const label = `${escapeHtml(u.fullName)} (${escapeHtml(u.email)})`;
+                        select.append(`<option value="${u.id}">${label}</option>`);
+                    });
+                })
+                .fail(function () { showAlert('Error loading users', 'danger'); });
+        }
+
+        function viewTeamMembers(teamId) {
+            $('#teamMembersModal').data('team-id', teamId);
+            loadTeamMembers(teamId);
+            ModalHelper.show('teamMembersModal');
+        }
+
+        function loadTeamMembers(teamId) {
+            $.get(URLS.getTeamMembers(teamId))
+                .done(function (members) {
+                    const tbody = $('#teamMembersTable tbody').empty();
+                    (members || []).forEach(function (m) {
+                        const dateStr = m.assignedDate ? new Date(m.assignedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' }) : '�';
+                        tbody.append(`
+                            <tr>
+                                <td>${escapeHtml(m.fullName)}</td>
+                                <td>${escapeHtml(m.email)}</td>
+                                <td><span class="badge bg-info">${escapeHtml(m.role || 'Member')}</span></td>
+                                <td>${dateStr}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger" onclick="removeUserFromTeam('${m.id}', '${teamId}')">
+                                        <i class="fas fa-trash"></i> Remove
+                                    </button>
+                                </td>
+                            </tr>`);
+                    });
+                })
+                .fail(function () { showAlert('Error loading team members', 'danger'); });
+        }
+
+        function assignUserToTeam() {
+            const teamId = $('#teamMembersModal').data('team-id');
+            const userId = $('#userSelect').val();
+            if (!teamId) { showAlert('No team selected', 'warning'); return; }
+            if (!userId) { showAlert('Please select a user', 'warning'); return; }
+
+            postJson(URLS.assignUserToTeam, { userId, teamId })
+                .done(function (res) {
+                    if (res && res.success) {
+                        showAlert('User assigned to team successfully', 'success');
+                        $('#userSelect').val('');
+                        loadTeamMembers(teamId);
+                        loadTeams(); // refresh member counts
+                    } else {
+                        showAlert(res?.message || 'Assign failed', 'danger');
+                    }
+                })
+                .fail(function (xhr) { showAlert(xhr.responseJSON?.message || 'Error assigning user to team', 'danger'); });
+        }
+
+        function removeUserFromTeam(userId, teamId) {
+            if (!confirm('Are you sure you want to remove this user from the team?')) return;
+            // Using POST for compatibility; switch to DELETE if your controller supports it
+            postJson(URLS.removeUserFromTeam(userId, teamId))
+                .done(function (res) {
+                    if (res && res.success) {
+                        showAlert('User removed from team successfully', 'success');
+                        loadTeamMembers(teamId);
+                        loadTeams();
+                    } else {
+                        showAlert(res?.message || 'Remove failed', 'danger');
+                    }
+                })
+                .fail(function () { showAlert('Error removing user from team', 'danger'); });
+        }
+
+        // ---------- Utilities ----------
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+        function escapeAttr(str) { return escapeHtml(str).replaceAll('"', '&quot;'); }
+    </script>
+}

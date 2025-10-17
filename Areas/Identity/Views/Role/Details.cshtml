@@ -1,0 +1,147 @@
+﻿@model IEnumerable<TechWebSol.ViewModels.ApplicationUserRoleVM>
+
+@* <partial name="_TableStylePartial" /> *@
+<style>
+    .dataTables_filter, .dataTables_info {
+        display: none;
+    }
+</style>
+<div class="panel">
+    <header class="panel-heading ">
+        <div class="pricing-list  text-left ">
+            <div class="pricing-header bg-red-600">
+                <h2>@ViewBag.roleName</h2>
+            </div>
+        </div>
+    </header>
+    <div class="panel-body table table-responsive">
+        <div class="form-inline float-right">
+            <label class="control-label" for="dateMin"> Search: &nbsp;</label><input type="text" id="Search" class="form-control" />
+        </div>
+        <table class=" table table-bordered dataTable table-hover table-striped w-full" id="example">
+            <thead>
+                <tr>
+                    <th width="10%">
+                        <strong>  User Id </strong>
+                    </th>
+                    <th width="20%">
+                        <strong>  Full Name </strong>
+                    </th>
+                    <th width="5%">
+                        <strong>  Login Count </strong>
+                    </th>
+                    <th width="20%">
+                        <strong>  Date </strong>
+                    </th>
+                    <th width="10%">
+                        <strong>  User Status </strong>
+                    </th>
+                    <th width="20%">
+                        <strong>  Actions </strong>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.UserId)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.FullName)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.LoginCount)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.LastLoginDate)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.IsActive)
+                    </td>
+                    <td>
+                        <secure-content asp-area="Identity" asp-controller="Account" asp-action="EditRegister">
+                            <a asp-action="EditRegister" asp-controller="Account" class="btn btn-icon btn-primary waves-effect waves-classic " asp-route-id="@item.Id"><i class="material-icons">edit</i>Edit</a>
+                        </secure-content>
+                        <secure-content asp-area="Identity" asp-controller="Account" asp-action="Delete">
+                            <a asp-action="Delete" asp-controller="Account" class="btn btn-icon btn-warning waves-effect waves-classic " asp-route-id="@item.Id">InActive</a>
+                        </secure-content>
+                    </td>
+                </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th width="10%">
+                        <strong>  User Id </strong>
+                    </th>
+                    <th width="20%">
+                        <strong>  Full Name </strong>
+                    </th>
+                    <th width="5%">
+                        <strong>  Login Count </strong>
+                    </th>
+                    <th width="20%">
+                        <strong>  Date </strong>
+                    </th>
+                    <th width="10%">
+                        <strong>  User Status </strong>
+                    </th>
+                    <th width="20%">
+                        <strong>  Actions </strong>
+                    </th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+</div>
+<partial name="_TableScriptsPartial" />
+<script>
+    $(document).ready(function () {
+        // Setup - add a text input to each footer cell
+        $('#example tfoot th').each(function () {
+            var title = $(this).text();
+            $(this).html('<input type="text" Class="form-control" placeholder="Search"  />');
+        });
+        // DataTable
+        var table = $('#example').DataTable({
+            "responsive": true,
+            "dom": '<"toolbar">frtip',
+            dom: 'Bfrtip',
+            lengthMenu: [
+                [10, 25, 50, -1],
+                ['10 rows', '25 rows', '50 rows', 'Show all']
+            ],
+            buttons: [
+                'pageLength', 'colvis',
+                {
+                    extend: 'print',
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                },
+            ],
+            columnDefs: [{
+                //targets: -1,
+                //visible: false
+            }]
+        });
+        $('#Search').on('keyup', function () {
+            table.search(this.value).draw();
+        });
+        // Apply the search
+        table.columns().every(function () {
+            var that = this;
+            $('input', this.footer()).on('keyup change', function () {
+                if (that.search() !== this.value) {
+                    that
+                        .search(this.value)
+                        .draw();
+                }
+            });
+        });
+    });
+</script>
+

@@ -1,0 +1,205 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> _userManager
+@{
+    var ShortName = "";
+    var DisplayName = "";
+    var RoleLabel = "USER";
+    var user = await _userManager.GetUserAsync(User);
+    if (user != null)
+    {
+        DisplayName = user.FullName;
+        string[] nameParts = user.FullName.Split(' ');
+        ShortName = nameParts[0].Substring(0, 1) + nameParts[1].Substring(0, 1);
+        var roles = await _userManager.GetRolesAsync(user);
+        if (roles != null && roles.Count > 0)
+        {
+            RoleLabel = roles[0];
+        }
+    }
+}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1a1a1a" />
+    <title>@ViewData["Title"] - Game Play Arena</title>
+    <link rel="shortcut icon" href="~/assets/images/favicon.ico">
+
+    <!-- Critical CSS - Inline for instant dark theme (prevents white flash) -->
+    <style>
+        :root, html, body {
+            background-color: #0a0a0a !important;
+            color: #ffffff !important;
+            margin: 0;
+            padding: 0;
+        }
+        html[data-theme="dark"] {
+            background-color: #0a0a0a;
+        }
+        .gameplay-container {
+            background: #1a1a1a;
+            min-height: 100vh;
+        }
+    </style>
+
+    <!-- Core CSS -->
+    <link href="~/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="~/assets/css/icons.min.css" rel="stylesheet">
+    <link href="~/assets/css/WarGameStyle.css" rel="stylesheet" asp-append-version="true">
+    <link href="~/css/phase01-movement.css" rel="stylesheet" asp-append-version="true">
+
+    <!-- Font Awesome - Local -->
+    <link href="~/assets/css/fontawesome.min.css" rel="stylesheet">
+
+    <!-- Map Libraries CSS ONLY - Scripts moved to bottom for faster page load -->
+    <link href="~/map/css/styles.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/map/css/leaflet.css" />
+    <link rel="stylesheet" href="~/map/css/leaflet.draw.css" />
+
+    <!-- Game Play Styles -->
+    <link href="~/css/GamePlay.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/css/DataManagement.css" rel="stylesheet" asp-append-version="true" />
+
+
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="gameplay-layout">
+    <!-- Loading Overlay (Initial page load) -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">INITIALIZING WARGAME ARENA...</div>
+    </div>
+
+    <!-- Loading Spinner (AJAX requests) -->
+    <div class="loading-overlay" id="loading" style="display: none;">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">LOADING...</div>
+    </div>
+
+    <!-- Main Game Container -->
+    <div class="gameplay-container">
+        <!-- Role Button -->
+        <div class="super-admin-button" id="superAdminBtn">
+            <i class="fas fa-crown"></i>
+            <span>@RoleLabel.ToUpper()</span>
+        </div>
+
+        <!-- Main Game Area -->
+        <div class="game-main-area">
+            @RenderBody()
+        </div>
+    </div>
+
+
+
+    <!-- Scripts - Local versions -->
+    <script src="~/assets/js/jquery.min.js"></script>
+    <script src="~/assets/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Map Libraries - Moved from head for better performance -->
+    <script src="~/map/js/leaflet.js"></script>
+    <script defer src="~/map/js/leaflet.draw.js"></script>
+    <script defer src="~/map/js/turf.min.js"></script>
+    <script defer src="~/map/js/leaflet-providers.js"></script>
+
+    <!-- Initialize Game Play Scripts -->
+    <script>
+        console.log('jQuery loaded successfully from local file');
+        initializeGamePlayScripts();
+
+        function initializeGamePlayScripts() {
+        $(document).ready(function() {
+            // Loading overlay will be hidden by GamePlayManager after initialization
+            
+            // Initialize game state
+            initializeGamePlay();
+
+            // Super Admin button functionality
+            $('#superAdminBtn').click(function() {
+                toggleBottomMenu();
+            });
+        });
+
+        function initializeGamePlay() {
+            // Initialize map and game components
+            console.log('Initializing Game Play Arena...');
+
+            // Set default team
+            updateTeamDisplay('ALPHA', 'Alpha Team', 'active');
+        }
+
+        function switchToFoxLand() {
+            updateActiveMode('fox-land');
+            updateTeamDisplay('FOX', 'Fox Land', 'attacking');
+            console.log('Switched to Fox Land mode');
+        }
+
+        function switchToBlueLand() {
+            updateActiveMode('blue-land');
+            updateTeamDisplay('BLUE', 'Blue Land', 'defending');
+            console.log('Switched to Blue Land mode');
+        }
+
+        function switchToSpectator() {
+            updateActiveMode('spectator');
+            updateTeamDisplay('OBS', 'Spectator', 'observing');
+            console.log('Switched to Spectator mode');
+        }
+
+        function updateActiveMode(mode) {
+            // Remove active class from all buttons
+            $('.control-btn').removeClass('active');
+
+            // Add active class to current mode
+            $('#' + mode + 'Btn').addClass('active');
+        }
+
+        function updateTeamDisplay(code, name, status) {
+            $('#teamLogo').html('<i class="fas fa-shield-alt"></i>');
+            $('#teamName').text(name);
+            $('#teamStatus').text(status.charAt(0).toUpperCase() + status.slice(1));
+        }
+
+        function openDataEntry() {
+            console.log('Opening Data Entry modal...');
+            // Opens the data entry modal for military unit management
+        }
+
+        function openTokenPlacement() {
+            console.log('Opening Token Placement...');
+            // Opens the token placement modal for placing tokens on map
+        }
+
+        function manageTokens() {
+            console.log('Opening Token Management...');
+            // Legacy function - kept for backward compatibility
+        }
+
+        function openSettings() {
+            console.log('Opening Settings...');
+            // TODO: Implement settings modal
+        }
+
+        function toggleBottomMenu() {
+            const panel = $('#bottomControlPanel');
+            const button = $('#superAdminBtn');
+
+            if (panel.hasClass('hidden')) {
+                // Show menu
+                panel.removeClass('hidden').addClass('slide-up');
+                button.addClass('active');
+                console.log('Bottom menu shown');
+            } else {
+                // Hide menu
+                panel.addClass('hidden').removeClass('slide-up');
+                button.removeClass('active');
+                console.log('Bottom menu hidden');
+            }
+        }
+        }
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,454 @@
+@model TechWebSol.Models.AttackPlanning.EnhancedAttackOrder
+
+<!-- Attack Planning Modal -->
+<div id="attackPlanningModal" class="gameplay-modal" style="display: none;">
+    <div class="gameplay-modal-content attack-planning-modal">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-crosshairs"></i> Attack Planning</h3>
+            <div class="attack-planning-header-info">
+                <span class="attacker-info">Attacker: <span id="attackerName">-</span></span>
+                <span class="target-info">Target: <span id="targetName">-</span></span>
+                <span class="completion-status">Completion: <span id="completionPercentage">0%</span></span>
+            </div>
+            <button class="gameplay-modal-close" onclick="closeAttackPlanningModal()">&times;</button>
+        </div>
+        
+        <div class="gameplay-modal-body">
+            <!-- Tab Navigation -->
+            <div class="attack-planning-tabs">
+                <button class="tab-button active" data-tab="intent" onclick="switchAttackTab('intent')">
+                    <i class="fas fa-bullseye"></i> Intent
+                </button>
+                <button class="tab-button" data-tab="timing" onclick="switchAttackTab('timing')">
+                    <i class="fas fa-clock"></i> Timing
+                </button>
+                <button class="tab-button" data-tab="movement" onclick="switchAttackTab('movement')">
+                    <i class="fas fa-route"></i> Movement
+                </button>
+                <button class="tab-button" data-tab="fires" onclick="switchAttackTab('fires')">
+                    <i class="fas fa-bomb"></i> Fires
+                </button>
+                <button class="tab-button" data-tab="fogofwar" onclick="switchAttackTab('fogofwar')">
+                    <i class="fas fa-eye-slash"></i> Fog of War
+                </button>
+                <button class="tab-button" data-tab="logistics" onclick="switchAttackTab('logistics')">
+                    <i class="fas fa-truck"></i> Logistics
+                </button>
+                <button class="tab-button" data-tab="roe" onclick="switchAttackTab('roe')">
+                    <i class="fas fa-gavel"></i> ROE
+                </button>
+                <button class="tab-button" data-tab="summary" onclick="switchAttackTab('summary')">
+                    <i class="fas fa-list-check"></i> Summary
+                </button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="attack-planning-content">
+                <div id="tab-intent" class="tab-content active">
+                    <div class="tab-loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading Intent Planning...
+                    </div>
+                </div>
+                
+                <div id="tab-timing" class="tab-content">
+                    <div class="tab-loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading Timing Planning...
+                    </div>
+                </div>
+                
+                <div id="tab-movement" class="tab-content">
+                    <div class="tab-loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading Movement Planning...
+                    </div>
+                </div>
+                
+                <div id="tab-fires" class="tab-content">
+                    <div class="tab-loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading Fires Support...
+                    </div>
+                </div>
+                
+                <div id="tab-fogofwar" class="tab-content">
+                    <div class="tab-loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading Fog of War...
+                    </div>
+                </div>
+                
+                <div id="tab-logistics" class="tab-content">
+                    <div class="tab-loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading Logistics...
+                    </div>
+                </div>
+                
+                <div id="tab-roe" class="tab-content">
+                    <div class="tab-loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading Rules of Engagement...
+                    </div>
+                </div>
+                
+                <div id="tab-summary" class="tab-content">
+                    <div class="tab-loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading Summary...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Auto-save indicator -->
+            <div class="auto-save-indicator" id="autoSaveIndicator">
+                <i class="fas fa-save"></i> Auto-saved at <span id="autoSaveTime">-</span>
+            </div>
+        </div>
+        
+        <div class="gameplay-modal-footer">
+            <div class="attack-planning-actions">
+                <button class="gameplay-btn gameplay-btn-primary" onclick="saveAttackDraft()">
+                    <i class="fas fa-save"></i> Save Attack Order
+                </button>
+                <button class="gameplay-btn" onclick="closeAttackPlanningModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Attack Planning Modal Styles */
+.attack-planning-modal {
+    max-width: 1200px;
+    width: 95%;
+    max-height: 90vh;
+}
+
+.attack-planning-header-info {
+    display: flex;
+    gap: 20px;
+    font-size: 12px;
+    color: #ccc;
+    margin-left: 20px;
+}
+
+.attacker-info, .target-info, .completion-status {
+    padding: 4px 8px;
+    background: #2a2a2a;
+    border-radius: 4px;
+    border: 1px solid #444;
+}
+
+.attack-planning-tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #444;
+    overflow-x: auto;
+}
+
+.tab-button {
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-bottom: none;
+    color: #ccc;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    border-radius: 8px 8px 0 0;
+}
+
+.tab-button:hover {
+    background: #3a3a3a;
+    color: #fff;
+}
+
+.tab-button.active {
+    background: #00d4ff;
+    color: #000;
+    border-color: #00d4ff;
+}
+
+.tab-button i {
+    margin-right: 8px;
+}
+
+.attack-planning-content {
+    min-height: 400px;
+    background: #1a1a1a;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.tab-loading {
+    text-align: center;
+    padding: 40px;
+    color: #888;
+}
+
+.auto-save-indicator {
+    position: absolute;
+    bottom: 10px;
+    right: 20px;
+    font-size: 11px;
+    color: #888;
+    background: #2a2a2a;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #444;
+}
+
+.attack-planning-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+/* Responsive adjustments */
+@@media (max-width: 768px) {
+    .attack-planning-modal {
+        width: 98%;
+        max-height: 95vh;
+    }
+    
+    .attack-planning-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .tab-button {
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+    
+    .attack-planning-header-info {
+        flex-direction: column;
+        gap: 5px;
+        margin-left: 0;
+    }
+}
+</style>
+
+<script>
+// Attack Planning Modal JavaScript
+let currentAttackOrder = {
+    id: null,
+    attackerTokenId: null,
+    targetTokenId: null,
+    currentTab: 'intent',
+    autoSaveInterval: null,
+    isDirty: false
+};
+
+// Initialize attack planning modal (global function)
+window.initializeAttackPlanning = function(attackerTokenId, targetTokenId, attackerName, targetName) {
+    console.log('Initializing attack planning:', { attackerTokenId, targetTokenId, attackerName, targetName });
+    
+    currentAttackOrder.attackerTokenId = attackerTokenId;
+    currentAttackOrder.targetTokenId = targetTokenId;
+    currentAttackOrder.id = 'attack_' + Date.now();
+    
+    // Update header info
+    document.getElementById('attackerName').textContent = attackerName || 'Unknown';
+    document.getElementById('targetName').textContent = targetName || 'Unknown';
+    
+    // Show modal
+    document.getElementById('attackPlanningModal').style.display = 'block';
+    
+    // Load first tab
+    switchAttackTab('intent');
+    
+    // Start auto-save
+    startAutoSave();
+}
+
+// Switch between tabs
+function switchAttackTab(tabName) {
+    console.log('Switching to tab:', tabName);
+    
+    // Update tab buttons
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    
+    // Update tab content
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    const tabContent = document.getElementById(`tab-${tabName}`);
+    tabContent.classList.add('active');
+    
+    currentAttackOrder.currentTab = tabName;
+    
+    // Load tab content if not already loaded
+    if (tabContent.querySelector('.tab-loading')) {
+        loadTabContent(tabName);
+    }
+}
+
+// Load tab content via AJAX
+function loadTabContent(tabName) {
+    const tabContent = document.getElementById(`tab-${tabName}`);
+    
+    // Map tab names to controller action names
+    const actionMap = {
+        'intent': 'LoadIntentForm',
+        'timing': 'LoadTimingForm',
+        'movement': 'LoadMovementForm',
+        'fires': 'LoadFiresForm',
+        'fogofwar': 'LoadFogOfWarForm',
+        'logistics': 'LoadLogisticsForm',
+        'roe': 'LoadROEForm',
+        'summary': 'LoadSummaryForm'
+    };
+    
+    const actionName = actionMap[tabName] || `Load${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Form`;
+    const url = `/AttackPlanning/${actionName}`;
+    
+    console.log(`📥 Loading tab content: ${tabName} from ${url}`);
+    
+    fetch(url)
+        .then(response => {
+            console.log(`📡 Response status: ${response.status} for ${tabName}`);
+            return response.text();
+        })
+        .then(html => {
+            console.log(`✅ Received HTML (${html.length} chars) for ${tabName}`);
+            console.log('First 200 chars:', html.substring(0, 200));
+            tabContent.innerHTML = html;
+            console.log(`✅ Content inserted into tab-${tabName}`);
+            
+            // Initialize form if it has an init function
+            if (typeof window[`initialize${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Form`] === 'function') {
+                console.log(`🔧 Initializing ${tabName} form`);
+                window[`initialize${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Form`]();
+            }
+        })
+        .catch(error => {
+            console.error(`❌ Error loading ${tabName} tab:`, error);
+            tabContent.innerHTML = `<div class="error" style="color: #ff4444; padding: 20px; text-align: center;">
+                <i class="fas fa-exclamation-triangle"></i><br>
+                Failed to load tab content<br>
+                <small>${error.message}</small>
+            </div>`;
+        });
+}
+
+// Start auto-save functionality
+function startAutoSave() {
+    if (currentAttackOrder.autoSaveInterval) {
+        clearInterval(currentAttackOrder.autoSaveInterval);
+    }
+    
+    currentAttackOrder.autoSaveInterval = setInterval(() => {
+        if (currentAttackOrder.isDirty) {
+            saveAttackDraft(true); // Auto-save
+        }
+    }, 30000); // 30 seconds
+}
+
+// Save attack draft
+function saveAttackDraft(isAutoSave = false) {
+    console.log('Saving attack draft:', { isAutoSave, currentTab: currentAttackOrder.currentTab });
+    
+    // TODO: Collect form data from current tab
+    const formData = collectCurrentTabData();
+    
+    const saveData = {
+        OrderId: currentAttackOrder.id,
+        TabName: currentAttackOrder.currentTab,
+        Data: formData
+    };
+    
+    fetch('/AttackPlanning/SaveDraft', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(saveData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (isAutoSave) {
+                updateAutoSaveIndicator();
+            } else {
+                showNotification('Draft saved successfully', 'success');
+            }
+            currentAttackOrder.isDirty = false;
+        } else {
+            console.error('Save failed:', data.message);
+            showNotification('Failed to save draft', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving draft:', error);
+        showNotification('Error saving draft', 'error');
+    });
+}
+
+// Collect data from current tab
+function collectCurrentTabData() {
+    const tabContent = document.getElementById(`tab-${currentAttackOrder.currentTab}`);
+    const form = tabContent.querySelector('form');
+    
+    if (!form) return {};
+    
+    const formData = new FormData(form);
+    const data = {};
+    
+    for (let [key, value] of formData.entries()) {
+        data[key] = value;
+    }
+    
+    return data;
+}
+
+// Update auto-save indicator
+function updateAutoSaveIndicator() {
+    const now = new Date();
+    document.getElementById('autoSaveTime').textContent = now.toLocaleTimeString();
+}
+
+// Close attack planning modal (global function)
+window.closeAttackPlanningModal = function() {
+    console.log('Closing attack planning modal');
+    
+    // Stop auto-save
+    if (currentAttackOrder.autoSaveInterval) {
+        clearInterval(currentAttackOrder.autoSaveInterval);
+    }
+    
+    // Hide modal
+    document.getElementById('attackPlanningModal').style.display = 'none';
+    
+    // Reset state
+    currentAttackOrder = {
+        id: null,
+        attackerTokenId: null,
+        targetTokenId: null,
+        currentTab: 'intent',
+        autoSaveInterval: null,
+        isDirty: false
+    };
+    
+    // TODO: Clear any attack arrows or visual indicators
+}
+
+// Show notification using existing system
+function showNotification(message, type) {
+    console.log(`[${type.toUpperCase()}] ${message}`);
+    
+    // Use existing notification system if available
+    if (typeof window.showNotification === 'function') {
+        window.showNotification(message, type);
+    } else {
+        // Fallback to console
+        console.log(`[${type.toUpperCase()}] ${message}`);
+    }
+}
+</script>

@@ -1,0 +1,150 @@
+﻿
+<!-- Leaflet (2D) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+
+<!-- MapTiler SDK (3D) -->
+<link href="https://cdn.maptiler.com/maptiler-sdk-js/latest/maptiler-sdk.css" rel="stylesheet">
+
+
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.116/Build/Cesium/Cesium.js"></script>
+<link href="https://cesium.com/downloads/cesiumjs/releases/1.116/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+
+<link href="~/mapconfiguration/css/styles.css" rel="stylesheet" />
+
+<div class="floating-controls">
+    <button id="btn2d" class="btn active">2D (Leaflet)</button>
+    <button id="btn3d" class="btn">3D (MapTiler)</button>
+    <button id="btn4d" class="btn">4D (MapTiler)</button>
+</div>
+
+
+
+<div id="app">
+    <div id="sidebar2">
+        <div class="row grid-2">
+            <button id="btnSaveCurrent" class="btn">Save Current</button>
+            <button id="btnDownloadAll" class="btn">Download All JSON</button>
+        </div>
+
+        <div class="row">
+            <label class="section-title">Database</label>
+            <div class="grid-2" style="margin-bottom:8px;">
+                <input id="mapName" type="text" placeholder="Map name (optional)" />
+            </div>
+            <div class="grid-2">
+                <button id="btnSaveToDb" class="btn">Save All to DB</button>
+                <button id="btnLoadFromDb" class="btn">Load Latest from DB</button>
+            </div>
+        </div>
+
+        <div class="row">
+            <label class="section-title">Import</label>
+            <div class="muted">Maps (FeatureCollection)</div>
+            <input id="fileInputMaps" type="file" accept="application/json" />
+            <div class="muted" style="margin-top:8px;">Obstacles (FeatureCollection)</div>
+            <input id="fileInputObstacles" type="file" accept="application/json" />
+        </div>
+
+        <div class="row">
+            <label class="section-title">Saved regions (<span id="savedCount">0</span>)</label>
+            <input id="searchInput" type="text" placeholder="Search by name..." />
+            <ul id="savedList"></ul>
+        </div>
+
+        <div class="row">
+            <label class="section-title">2D Terrain</label>
+            <label><input type="checkbox" id="chkTopo" /> Show OpenTopoMap (contours)</label>
+        </div>
+
+        <div class="row" style="display:none">
+            <label class="section-title">Legend</label>
+            <ul>
+                <li><span>Saved Regions</span><span class="tag" style="background:#dbeafe;color:#1e40af;">blue</span></li>
+                <li><span>Obstacles</span><span class="tag" style="background:#fee2e2;color:#7f1d1d;">red</span></li>
+                <li><span>Safe Area</span><span class="tag" style="background:#dcfce7;color:#166534;">green dashed</span></li>
+            </ul>
+        </div>
+
+        <div class="row">
+            <label class="section-title">Weather overlay (2D & 3D)</label>
+            <select id="weatherLayer">
+                <option value="">(off)</option>
+                <option value="clouds_new">Clouds</option>
+                <option value="precipitation_new">Precipitation</option>
+                <option value="wind_new">Wind</option>
+                <option value="temp_new">Temperature</option>
+                <option value="pressure_new">Pressure</option>
+            </select>
+            <div style="display:none">
+                <label>OpenWeatherMap API key</label>
+                <input id="owmKey" type="text" placeholder="YOUR_OPENWEATHERMAP_KEY" />
+            </div>
+            <label>Overlay Opacity</label>
+            <input id="weatherOpacity" type="range" min="0" max="1" step="0.05" value="0.6" />
+        </div>
+
+        <div class="row">
+            <div  style="display:none">
+                <label class="section-title">3D (MapTiler) setup</label>
+                <div class="muted">Using your MapTiler API key; select a map style below.</div>
+                <label>MapTiler API Key</label>
+                <input id="maptilerKey" type="text" value="Qtj3cVK3NsJ8PZv6ENko" readonly />
+                <label style="margin-top:8px;">Map Style</label>
+            </div>
+            <select id="styleId">
+                <option value="STREETS">Streets</option>
+                <option value="SATELLITE" selected>Satellite</option>
+                <option value="OUTDOOR">Outdoor</option>
+                <option value="DATAVIZ">Dataviz</option>
+            </select>
+            <div class="grid-2" style="margin-top:8px;">
+                <button id="btnInitMapTiler" class="btn">(Re)Initialize 3D</button>
+                <button id="btnFlyToSaved" class="btn">Fly to Saved</button>
+            </div>
+        </div>
+
+        <div style="display:none">
+            <label class="section-title">Obstacle mode (2D only)</label>
+            <label><input type="checkbox" id="chkObstacleMode" /> Draw as obstacles instead of regions</label>
+            <label>Buffer distance (meters)</label>
+            <input id="bufferMeters" type="number" min="0" value="100" />
+            <div class="grid-2" style="margin-top:8px;">
+                <button id="btnComputeSafe" class="btn">Compute Safe Area</button>
+                <button id="btnClearObstacles" class="btn">Clear Obstacles</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="stage2d">
+        <div id="map"></div>
+        <div id="runtimePanel">
+            <div style="font-weight:bold; margin-bottom:6px;">Runtime Data</div>
+            <div class="muted" style="margin-bottom:6px;">Obstacles are red (points/lines/fills). Safe area is green (dashed).</div>
+            <div id="rtWeather" class="muted">Weather: —</div>
+            <div class="grid-2" style="margin-top:6px; gap:6px; align-items:center;">
+                <input id="weatherDate" type="date" />
+                <button id="btnGetWeatherNow" class="btn">Get Weather</button>
+            </div>
+            <div id="rtObs" class="muted" style="margin-top:8px;">Obstacles: —</div>
+            <div style="margin-top:8px;">
+                <button id="btnFetchOSMObs" class="btn">Fetch Real Obstacles</button>
+            </div>
+        </div>
+    </div>
+    <div id="stage3d" class="hide">
+        <div id="mtContainer"></div>
+    </div>
+    <div id="stage4d" class="hide">
+        <div id="cesiumContainer"></div>
+    </div>
+</div>
+
+<!-- Vendor scripts -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script src="https://unpkg.com/@@turf/turf@6.5.0/turf.min.js"></script>
+<script src="https://cdn.maptiler.com/maptiler-sdk-js/latest/maptiler-sdk.umd.js"></script>
+
+<!-- App logic -->
+<script src="~/mapconfiguration/js/app.js"></script>

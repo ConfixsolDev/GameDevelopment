@@ -1,0 +1,142 @@
+﻿@{
+    ViewData["Title"] = "Create Team";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@model TechWebSol.DTOs.CreateTeamRequest
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-plus"></i> Create New Team
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" asp-controller="TeamManagement" method="post" class="needs-validation" novalidate>
+                        @Html.AntiForgeryToken()
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="teamName" class="form-label">Team Name *</label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="teamName"
+                                           asp-for="Name"
+                                           required
+                                           maxlength="100">
+                                    <div class="invalid-feedback">Please enter a team name.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="teamCode" class="form-label">Team Code *</label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="teamCode"
+                                           asp-for="TeamCode"
+                                           required
+                                           maxlength="30"
+                                           pattern="^[A-Z0-9_]+$"
+                                           title="Use only uppercase letters, numbers, and underscores (e.g., TEAM_A, BRIG_1)">
+                                    <div class="form-text">Unique identifier (e.g., TEAM_A, BRIG_1)</div>
+                                    <div class="invalid-feedback">Team Code is required and must be A–Z, 0–9, or _ only.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="subTeamCode" class="form-label">Sub Team Code</label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="subTeamCode"
+                                           asp-for="SubTeamCode"
+                                           maxlength="30"
+                                           pattern="^[A-Z0-9_]*$"
+                                           title="Use only uppercase letters, numbers, and underscores">
+                                    <div class="form-text">Optional sub-team identifier</div>
+                                    <div class="invalid-feedback">Use only A–Z, 0–9, or _ for Sub Team Code.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="teamCategory" class="form-label">Category</label>
+                                    <select class="form-control" id="teamCategory" asp-for="TeamCategory">
+                                        <option value="">-- Select Category --</option>
+                                        <option value="Company">Company</option>
+                                        <option value="Brigade">Brigade</option>
+                                        <option value="Department">Department</option>
+                                        <option value="Unit">Unit</option>
+                                        <option value="Squad">Squad</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="teamDescription" class="form-label">Description</label>
+                                    <textarea class="form-control"
+                                              id="teamDescription"
+                                              asp-for="Description"
+                                              rows="4"
+                                              maxlength="500"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary" id="submitBtn">
+                                    <i class="fas fa-save"></i> Create Team
+                                </button>
+                                <a href="@Url.Action("Index", "TeamManagement")" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Back to Teams
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.querySelector('form.needs-validation');
+            const submitBtn = document.getElementById('submitBtn');
+            const teamCodeInput = document.getElementById('teamCode');
+            const subTeamCodeInput = document.getElementById('subTeamCode');
+
+            // Force uppercase for codes
+            [teamCodeInput, subTeamCodeInput].forEach(inp => {
+                if (!inp) return;
+                inp.addEventListener('input', function () {
+                    this.value = this.value.toUpperCase();
+                });
+            });
+
+            // Validation + spinner
+            form.addEventListener('submit', function (e) {
+                if (!form.checkValidity()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    form.classList.add('was-validated');
+                    return;
+                }
+
+                // Add spinner
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+                submitBtn.disabled = true;
+            }, false);
+        });
+    </script>
+}

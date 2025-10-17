@@ -1,0 +1,40 @@
+﻿
+@using TechWebSol
+@using TechWebSol.Models
+@model IEnumerable<ApplicationUser>
+
+<div style="width:25%;margin:0 auto">
+    <div class="limiter">
+        <div class="container-login100" style="background-image: url('~/LoginScripts/images/bg-01.jpg');">
+            <div class="wrap-login100">
+                <form class="login100-form validate-form" asp-controller="Account" asp-action="ChangePicture" enctype="multipart/form-data">
+                    <div class="card card-inverse card-shadow bg-white text-center">
+                        <div class="card-block p-30">
+                            <a class="avatar avatar-100 img-bordered bg-white" href="javascript:void(0)" style="width: 210px; height: 210px; margin-bottom: 10px;">
+                                <img id="imageSrc" alt="" style="width: 210px; height: 210px;">
+                            </a>
+                            <br />
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary float-right">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<partial name="_ValidationScriptsPartial" />
+<script>
+    $(document).ready(function () {
+        $('input[type=file]').change(function () {
+            if (this.files && this.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $('#imageSrc').prop('src', e.target.result);
+                    var abc = $('#imageSrc').prop('src');
+                    $('#profileImage').val(e.target.result);
+                }
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    });
+</script>

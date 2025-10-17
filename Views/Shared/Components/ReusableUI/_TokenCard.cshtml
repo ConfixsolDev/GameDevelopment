@@ -1,0 +1,132 @@
+@*
+    Reusable Token Card Component
+    Usage: @await Component.InvokeAsync("ReusableUI", new { component = "TokenCard", data = tokenData })
+*@
+
+@model dynamic
+
+@{
+    string tokenId = Model?.id ?? Guid.NewGuid().ToString();
+    string name = Model?.name ?? "Unnamed Token";
+    string description = Model?.description ?? "";
+    string image = Model?.image ?? "";
+    string status = Model?.status ?? "active";
+    var meta = Model?.meta as Dictionary<string, object> ?? new Dictionary<string, object>();
+    var actions = Model?.actions as List<dynamic> ?? new List<dynamic>();
+    string cssClass = Model?.cssClass ?? "";
+    bool selectable = Model?.selectable ?? false;
+    bool selected = Model?.selected ?? false;
+}
+
+<div class="token-card animate-slide-up @cssClass @(selected ? "selected" : "")" 
+     data-token-id="@tokenId"
+     @if (selectable) { <text>onclick="toggleTokenSelection('@tokenId')"</text> }>
+    
+    <div class="token-card-header">
+        <h3 class="token-card-title animate-fade-in">@name</h3>
+        <span class="token-card-status @status animate-glow">@status</span>
+    </div>
+    
+    @if (!string.IsNullOrEmpty(image))
+    {
+        <img src="@image" alt="@name" class="token-card-image" 
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="token-card-placeholder" style="display:none;">
+            <i class="fas fa-crosshairs"></i>
+        </div>
+        <div class="token-name-overlay">@name</div>
+    }
+    else
+    {
+        <div class="token-card-placeholder">
+            <i class="fas fa-crosshairs"></i>
+        </div>
+        <div class="token-name-overlay">@name</div>
+    }
+    
+    @if (!string.IsNullOrEmpty(description))
+    {
+        <div class="token-card-content">
+            <p class="token-card-description">@description</p>
+        </div>
+    }
+    
+    @if (meta.Any())
+    {
+        <div class="token-card-meta">
+            @foreach (var item in meta)
+            {
+                <div class="token-card-meta-item">
+                    <i class="fas fa-@(GetMetaIcon(item.Key))"></i>
+                    <span>@item.Value</span>
+                </div>
+            }
+        </div>
+    }
+    
+    @if (actions.Any())
+    {
+        <div class="token-card-actions">
+            @foreach (var action in actions)
+            {
+                <button type="button" 
+                        class="btn @(action.variant ?? "primary") @(action.size ?? "sm")"
+                        onclick="@(action.onclick ?? "")"
+                        @if (action.disabled == true) { <text>disabled</text> }>
+                    @if (action.icon != null)
+                    {
+                        <i class="@action.icon"></i>
+                    }
+                    @action.text
+                </button>
+            }
+        </div>
+    }
+</div>
+
+@functions {
+    private string GetMetaIcon(string key)
+    {
+        var iconMap = new Dictionary<string, string>
+        {
+            {"type", "tag"},
+            {"team", "users"},
+            {"status", "circle"},
+            {"location", "map-marker-alt"},
+            {"strength", "shield-alt"},
+            {"range", "crosshairs"},
+            {"system", "cog"},
+            {"lastUsed", "clock"},
+            {"created", "calendar"},
+            {"notes", "sticky-note"}
+        };
+        return iconMap.ContainsKey(key) ? iconMap[key] : "info-circle";
+    }
+}
+
+<script>
+    function toggleTokenSelection(tokenId) {
+        const card = document.querySelector(`[data-token-id="${tokenId}"]`);
+        if (card) {
+            card.classList.toggle('selected');
+            
+            // Dispatch custom event
+            window.dispatchEvent(new CustomEvent('tokenSelectionChanged', {
+                detail: { 
+                    tokenId: tokenId, 
+                    selected: card.classList.contains('selected') 
+                }
+            }));
+        }
+    }
+    
+    // Auto-initialize if not already done
+    if (typeof window.tokenCardInitialized === 'undefined') {
+        window.tokenCardInitialized = true;
+        
+        // Global token selection handler
+        window.addEventListener('tokenSelectionChanged', function(e) {
+            console.log(`Token ${e.detail.tokenId} selection changed: ${e.detail.selected}`);
+        });
+    }
+</script>

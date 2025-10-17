@@ -1,0 +1,5 @@
+---
+description: use this when developing something on UI this rule is for writing css
+globs: Always use when writting to css. use Component_library_documentation.md before writing UI and if update needed update that/
+alwaysApply: true
+---

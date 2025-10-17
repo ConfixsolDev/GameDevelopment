@@ -1,0 +1,370 @@
+<div class="map-overlay-controls">
+    <div class="overlay-control-group">
+        <h6>War Game Tools</h6>
+        <!-- Token Actions Section -->
+        <div class="token-actions-section">
+            <div class="control-row">
+                <button class="overlay-btn token-action-btn" id="btnPlanAttack" data-mode="attack">
+                    <i class="fas fa-crosshairs"></i>
+                    <span>Plan Attack</span>
+                </button>
+                <button class="overlay-btn token-action-btn" id="btnPanAttack" data-mode="pan-attack">
+                    <i class="fas fa-bullseye"></i>
+                    <span>Pan Attack</span>
+                </button>
+            </div>
+            <div class="control-row">
+                <button class="overlay-btn" id="btnReloadAttackLines" onclick="reloadAttackLines()" title="Reload Attack Lines">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Reload Attacks</span>
+                </button>
+                <button class="overlay-btn" id="btnCheckAttackLines" onclick="checkAttackLines()" title="Check Attack Lines Status">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Check Status</span>
+                </button>
+            </div>
+            <div class="control-row">
+                <button class="overlay-btn token-action-btn" id="btnPlanMove" data-mode="move">
+                    <i class="fas fa-route"></i>
+                    <span>Plan Move</span>
+                </button>
+                <button class="overlay-btn" id="btnCancelMode" onclick="cancelTokenMode()">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel Mode</span>
+                </button>
+            </div>
+            <div class="control-row" hidden>
+                <button class="overlay-btn token-action-btn" id="btnSelectToken" data-mode="select">
+                    <i class="fas fa-hand-pointer"></i>
+                    <span>Select Token</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Defense Planning Section -->
+        <div class="defense-planning-section">
+            <h6 class="section-subtitle">Defense Planning</h6>
+            
+            <!-- Kill Zones (Red) -->
+            <div class="control-row">
+                <button class="overlay-btn defense-btn killzone-btn" id="btnKillZonePrimary" onclick="startKillZoneDrawing('primary')" title="Primary Kill Zone">
+                    <i class="fas fa-crosshairs"></i>
+                    <span>Primary Kill</span>
+                </button>
+                <button class="overlay-btn defense-btn killzone-btn" id="btnKillZoneSecondary" onclick="startKillZoneDrawing('secondary')" title="Secondary Kill Zone">
+                    <i class="fas fa-bullseye"></i>
+                    <span>Secondary Kill</span>
+                </button>
+                <button class="overlay-btn defense-btn killzone-btn" id="btnKillZoneEngagement" onclick="startKillZoneDrawing('engagement')" title="Engagement Area">
+                    <i class="fas fa-target"></i>
+                    <span>Engagement</span>
+                </button>
+            </div>
+
+            <!-- Obstacles (Orange) -->
+            <div class="control-row">
+                <button class="overlay-btn defense-btn obstacle-btn" id="btnObstacle" onclick="startObstacleDrawing('wire')" title="Obstacle">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Obstacle</span>
+                </button>
+                <button class="overlay-btn defense-btn obstacle-btn" id="btnDefensivePosition" onclick="placeDefensivePosition('foxhole')" title="Defensive Position">
+                    <i class="fas fa-circle"></i>
+                    <span>Position</span>
+                </button>
+                <button class="overlay-btn defense-btn obstacle-btn" id="btnWithdrawalRoute" onclick="startWithdrawalRouteDrawing('primary')" title="Withdrawal Route">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Withdrawal</span>
+                </button>
+            </div>
+
+            <!-- Defense Line and Minefield (Orange and Brown) -->
+            <div class="control-row">
+                <button class="overlay-btn defense-btn obstacle-btn" id="btnDefensiveLine" onclick="startDefensiveLineDrawing('feba')" title="Defensive Line">
+                    <i class="fas fa-minus"></i>
+                    <span>Defense Line</span>
+                </button>
+                <button class="overlay-btn defense-btn mine-btn" id="btnMinefieldAP" onclick="startMinefieldDrawing('antipersonnel')" title="Anti-Personnel Minefield">
+                    <i class="fas fa-bomb"></i>
+                    <span>Mine Field</span>
+                </button>
+            </div>
+
+            <!-- Defense Zones (Blue) -->
+            <div class="control-row">
+                <button class="overlay-btn defense-btn defensezone-btn" id="btnDefenseZonePrimary" onclick="startDefenseZoneDrawing('primary')" title="Primary Defense Zone">
+                    <i class="fas fa-shield"></i>
+                    <span>Primary Zone</span>
+                </button>
+                <button class="overlay-btn defense-btn defensezone-btn" id="btnDefenseZoneSecondary" onclick="startDefenseZoneDrawing('secondary')" title="Secondary Defense Zone">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Secondary Zone</span>
+                </button>
+                <button class="overlay-btn defense-btn defensezone-btn" id="btnDefenseZoneSupport" onclick="startDefenseZoneDrawing('support')" title="Support Defense Zone">
+                    <i class="fas fa-shield-virus"></i>
+                    <span>Support Zone</span>
+                </button>
+            </div>
+
+            <!-- Cancel Controls -->
+            <div class="control-row">
+                <button class="overlay-btn" id="btnCancelDefenseZoneDrawing" onclick="cancelDefenseZoneDrawing()" style="display: none;">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel Drawing</span>
+                </button>
+            </div>
+            <div class="control-row">
+                <button class="overlay-btn" onclick="cancelDefenseDrawing()">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel Drawing</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Management Tools Section -->
+        <div class="management-tools-section">
+            <h6 class="section-subtitle">Token Actions</h6>
+            <div class="control-row">
+                <button class="overlay-btn token-action-btn" id="btnPlaceToken" data-mode="place">
+                    <i class="fas fa-plus"></i>
+                    <span>Place Token</span>
+                </button>
+                <button class="overlay-btn" onclick="openDataEntry()">
+                    <i class="fas fa-database"></i>
+                    <span>Military Data</span>
+                </button>
+            </div>
+        </div>
+        @*  
+                  <button class="overlay-btn" onclick="createObjective()">
+                    <i class="fas fa-flag"></i>
+                    <span>Objective</span>
+                </button>
+                <button class="overlay-btn" onclick="openAssemblyPlanning()">
+                    <i class="fas fa-users"></i>
+                    <span>Assembly</span>
+                </button>
+                <button class="overlay-btn" onclick="showUnitStatus()">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Unit Status</span>
+                </button> *@
+    </div>
+
+
+    <div class="overlay-control-group">
+        <h6>Enemy Intelligence</h6>
+        <div class="control-row">
+            <button class="overlay-btn overlay-btn-intel" onclick="openSuspectedTokenModal()">
+                <i class="fas fa-crosshairs"></i>
+                <span>Add Enemy Token</span>
+            </button>
+            <button class="overlay-btn overlay-btn-intel" onclick="openSuspectedTokensListModal()">
+                <i class="fas fa-list-ul"></i>
+                <span>Manage Enemy Token</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="overlay-control-group" style="display:none;">
+        <h6>Map Selection</h6>
+        <div class="control-row">
+            <select id="mapSelector" class="map-selector-dropdown" onchange="switchGamePlayMap(this.value)">
+                <option value="">Loading maps...</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="overlay-control-group">
+        <h6>Military Analysis</h6>
+        <div class="control-row">
+            <button class="overlay-btn overlay-btn-analysis" onclick="runMilitaryAdjudication()">
+                <i class="fas fa-chart-line"></i>
+                <span>Adjudicate Movements</span>
+            </button>
+        </div>
+        <div class="control-row">
+            <button class="overlay-btn overlay-btn-combat" onclick="runCombatSimulation()">
+                <i class="fas fa-crosshairs"></i>
+                <span>Combat Simulation</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="overlay-control-group">
+        <h6>View Controls</h6>
+        <div class="control-row">
+            <button class="overlay-btn" onclick="toggleFullscreen()">
+                <i class="fas fa-expand"></i>
+                <span>Fullscreen</span>
+            </button>
+            <button class="overlay-btn" onclick="resetMapView()">
+                <i class="fas fa-home"></i>
+                <span>Reset View</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .map-selector-dropdown {
+        width: 100%;
+        padding: 8px 12px;
+        background: #1a1a1a;
+        color: #00ff00;
+        border: 1px solid #00ff00;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .map-selector-dropdown:hover {
+        background: #2a2a2a;
+        border-color: #00ff00;
+    }
+    
+    .map-selector-dropdown:focus {
+        outline: none;
+        box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+    }
+    
+    .map-selector-dropdown option {
+        background: #1a1a1a;
+        color: #00ff00;
+        padding: 8px;
+    }
+    
+    .overlay-btn-analysis {
+        background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%) !important;
+        color: #000 !important;
+        font-weight: bold;
+        border: 2px solid #00ff00 !important;
+        animation: pulse-analysis 2s infinite;
+        box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+    }
+    
+    .overlay-btn-analysis:hover {
+        background: linear-gradient(135deg, #00ff00 0%, #00ff00 100%) !important;
+        box-shadow: 0 0 25px rgba(0, 255, 0, 0.7);
+        transform: scale(1.05);
+    }
+    
+    .overlay-btn-analysis i {
+        color: #000 !important;
+    }
+    
+    .overlay-btn-analysis span {
+        color: #000 !important;
+    }
+    
+    @@keyframes pulse-analysis {
+        0%, 100% {
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+        }
+        50% {
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.7);
+        }
+    }
+    
+    /* Combat Simulation Button Styling */
+    .overlay-btn-combat {
+        background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%) !important;
+        color: #fff !important;
+        font-weight: bold;
+        border: 2px solid #ff4444 !important;
+        animation: pulse-combat 2s infinite;
+        box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
+    }
+    
+    .overlay-btn-combat:hover {
+        background: linear-gradient(135deg, #ff6666 0%, #ff4444 100%) !important;
+        box-shadow: 0 0 25px rgba(255, 68, 68, 0.7);
+        transform: scale(1.05);
+    }
+    
+    .overlay-btn-combat i {
+        color: #fff !important;
+    }
+    
+    .overlay-btn-combat span {
+        color: #fff !important;
+    }
+    
+    @@keyframes pulse-combat {
+        0%, 100% {
+            box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
+        }
+        50% {
+            box-shadow: 0 0 25px rgba(255, 68, 68, 0.7);
+        }
+    }
+
+    /* Defense Planning Button Styling */
+
+    /* Kill Zone Buttons */
+    .killzone-btn {
+        background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%) !important;
+        border: 1px solid #ff4444 !important;
+        color: #fff !important;
+    }
+
+    .killzone-btn:hover {
+        background: linear-gradient(135deg, #ff6666 0%, #ff4444 100%) !important;
+        box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+    }
+
+    .killzone-btn i,
+    .killzone-btn span {
+        color: #fff !important;
+    }
+
+    /* Obstacle Buttons */
+    .obstacle-btn {
+        background: linear-gradient(135deg, #ffaa00 0%, #cc8800 100%) !important;
+        border: 1px solid #ffaa00 !important;
+        color: #000 !important;
+    }
+
+    .obstacle-btn:hover {
+        background: linear-gradient(135deg, #ffcc33 0%, #ffaa00 100%) !important;
+        box-shadow: 0 0 10px rgba(255, 170, 0, 0.5);
+    }
+
+    .obstacle-btn i,
+    .obstacle-btn span {
+        color: #000 !important;
+    }
+
+    /* Mine Buttons */
+    .mine-btn {
+        background: linear-gradient(135deg, #8b4513 0%, #654321 100%) !important;
+        border: 1px solid #8b4513 !important;
+        color: #fff !important;
+    }
+
+    .mine-btn:hover {
+        background: linear-gradient(135deg, #a0522d 0%, #8b4513 100%) !important;
+        box-shadow: 0 0 10px rgba(139, 69, 19, 0.5);
+    }
+
+    .mine-btn i,
+    .mine-btn span {
+        color: #fff !important;
+    }
+
+    /* Defense Zone Buttons */
+    .defensezone-btn {
+        background: linear-gradient(135deg, #0066cc 0%, #004499 100%) !important;
+        border: 1px solid #0066cc !important;
+        color: #fff !important;
+    }
+
+    .defensezone-btn:hover {
+        background: linear-gradient(135deg, #3388ff 0%, #0066cc 100%) !important;
+        box-shadow: 0 0 10px rgba(0, 102, 204, 0.5);
+    }
+
+    .defensezone-btn i,
+    .defensezone-btn span {
+        color: #fff !important;
+    }
+</style>

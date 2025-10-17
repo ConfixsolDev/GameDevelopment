@@ -1,0 +1,296 @@
+@model TechWebSol.ViewModels.CreateTokenViewModel
+@{
+    ViewData["Title"] = "Create Token";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-plus-circle"></i> Create Token
+                    </h3>
+                    <div class="card-tools">
+                        <a href="/AdminToken/ManageTokenGroups" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Group Management
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            <form asp-action="Create" asp-controller="AdminToken" method="post" enctype="multipart/form-data">
+                                @Html.AntiForgeryToken()
+                                
+                                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                                
+                                <div class="mb-3">
+                                    <label asp-for="Name" class="form-label">Token Name</label>
+                                    <input asp-for="Name" class="form-control" placeholder="Enter token name (e.g., Unit Alpha-1, Asset Beta-2)" />
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                    <div class="form-text">Enter a descriptive name for the token</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label asp-for="TokenGroupId" class="form-label">Token Group</label>
+                                    <select asp-for="TokenGroupId" class="form-control" asp-items="@(new SelectList(Model.AvailableTokenGroups ?? new List<TechWebSol.Models.TokenGroup>(), "Id", "Name", Model.TokenGroupId))">
+                                        <option value="">-- Select Group (Optional) --</option>
+                                    </select>
+                                    <span asp-validation-for="TokenGroupId" class="text-danger"></span>
+                                    <div class="form-text">Assign to a specific group for organization</div>
+                                </div>
+
+                                <!-- Military Unit Classification -->
+                                <div class="card mb-3 border-primary">
+                                    <div class="card-header bg-primary text-white">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-flag-checkered"></i> Military Unit Classification
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label asp-for="OrganizationLevel" class="form-label">Organization Level</label>
+                                                    <select asp-for="OrganizationLevel" class="form-control" id="organizationLevelSelect">
+                                                        <option value="">-- Select Level --</option>
+                                                        <option value="1">Squad (●)</option>
+                                                        <option value="2">Platoon (●●)</option>
+                                                        <option value="3">Company (●●●)</option>
+                                                        <option value="4">Battalion (╎)</option>
+                                                        <option value="5">Regiment (╎╎)</option>
+                                                        <option value="6">Brigade (✕)</option>
+                                                        <option value="7">Division (✕✕)</option>
+                                                        <option value="8">Corps (✕✕✕)</option>
+                                                        <option value="9">Army (✕✕✕✕)</option>
+                                                    </select>
+                                                    <span asp-validation-for="OrganizationLevel" class="text-danger"></span>
+                                                    <div class="form-text">Unit size/hierarchy</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label asp-for="UnitType" class="form-label">Unit Type</label>
+                                                    <select asp-for="UnitType" class="form-control" id="unitTypeSelect">
+                                                        <option value="">-- Select Type --</option>
+                                                        <option value="0">Infantry</option>
+                                                        <option value="1">Armoured</option>
+                                                        <option value="2">Mechanized</option>
+                                                        <option value="3">Artillery</option>
+                                                        <option value="4">Aviation</option>
+                                                        <option value="5">Air Defense</option>
+                                                        <option value="6">Engineers</option>
+                                                        <option value="7">Signals</option>
+                                                        <option value="8">Logistics</option>
+                                                        <option value="9">Medical</option>
+                                                        <option value="10">Reconnaissance</option>
+                                                        <option value="11">Special Forces</option>
+                                                        <option value="12">Airborne/Paratroop</option>
+                                                        <option value="13">Marines</option>
+                                                        <option value="14">Cavalry</option>
+                                                        <option value="15">Headquarters/Command</option>
+                                                        <option value="16">Intelligence</option>
+                                                        <option value="17">Military Police</option>
+                                                        <option value="18">CBRN</option>
+                                                        <option value="19">Maintenance</option>
+                                                        <option value="20">Cyber</option>
+                                                    </select>
+                                                    <span asp-validation-for="UnitType" class="text-danger"></span>
+                                                    <div class="form-text">Functional classification</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label asp-for="UnitDesignation" class="form-label">Unit Designation</label>
+                                                    <input asp-for="UnitDesignation" class="form-control" placeholder="e.g., 29, Alpha, 1st" id="unitDesignationInput" />
+                                                    <span asp-validation-for="UnitDesignation" class="text-danger"></span>
+                                                    <div class="form-text">Unit number/identifier</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label asp-for="ForceType" class="form-label">Force Type</label>
+                                            <select asp-for="ForceType" class="form-control">
+                                                <option value="">-- Select Force Type --</option>
+                                                <option value="Friendly">Friendly (Blue)</option>
+                                                <option value="Hostile">Hostile (Red)</option>
+                                                <option value="Neutral">Neutral (Green)</option>
+                                                <option value="Unknown">Unknown (Yellow)</option>
+                                            </select>
+                                            <span asp-validation-for="ForceType" class="text-danger"></span>
+                                            <div class="form-text">Force affiliation (affects icon color)</div>
+                                        </div>
+
+                                        <!-- Live Preview -->
+                                        <div class="alert alert-info" id="unitPreview" style="display:none;">
+                                            <h6><i class="fas fa-eye"></i> Unit Label Preview:</h6>
+                                            <div style="font-size: 18px; font-weight: bold;" id="previewLabel"></div>
+                                            <small class="text-muted">This is how the unit will appear on the map</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label asp-for="AssetImage" class="form-label">Token Image/Symbol (DEPRECATED)</label>
+                                    <input asp-for="AssetImage" class="form-control" type="file" accept="image/*" />
+                                    <span asp-validation-for="AssetImage" class="text-danger"></span>
+                                    <div class="form-text"><strong>DEPRECATED:</strong> Upload image (optional - military symbols are now auto-generated from classification above)</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <h5 class="mb-3">
+                                        <i class="fas fa-crosshairs"></i> Coverage Configuration
+                                    </h5>
+                                    
+                                    <!-- Oval coverage -->
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label asp-for="FrontCoverageKm" class="form-label">Front Coverage (km)</label>
+                                                <input asp-for="FrontCoverageKm" class="form-control" type="number" step="0.1" min="0.1" max="1000" placeholder="e.g., 8.0" />
+                                                <span asp-validation-for="FrontCoverageKm" class="text-danger"></span>
+                                                <div class="form-text">Forward coverage distance</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label asp-for="RearCoverageKm" class="form-label">Rear Coverage (km)</label>
+                                                <input asp-for="RearCoverageKm" class="form-control" type="number" step="0.1" min="0.1" max="1000" placeholder="e.g., 3.0" />
+                                                <span asp-validation-for="RearCoverageKm" class="text-danger"></span>
+                                                <div class="form-text">Rearward coverage distance</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label asp-for="SideCoverageKm" class="form-label">Side Coverage (km)</label>
+                                                <input asp-for="SideCoverageKm" class="form-control" type="number" step="0.1" min="0.1" max="1000" placeholder="e.g., 5.0" />
+                                                <span asp-validation-for="SideCoverageKm" class="text-danger"></span>
+                                                <div class="form-text">Lateral coverage distance</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i>
+                                        <strong>Oval Coverage:</strong> Creates an elliptical coverage area with different front/rear distances. 
+                                        If only front and rear are specified, side coverage will be calculated automatically.
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Create Token
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" id="resetFormBtn">
+                                        <i class="fas fa-undo"></i> Reset Form
+                                    </button>
+                                    <a href="@Url.Action("Index", "AdminToken")" class="btn btn-outline-secondary">
+                                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">
+                                        <i class="fas fa-info-circle"></i> Token Info
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>What is a Token?</strong></p>
+                                    <p>A token is a digital representation on the map that can be:</p>
+                                    <ul>
+                                        <li>Positioned and moved on the tactical map</li>
+                                        <li>Assigned coverage/operational areas</li>
+                                        <li>Linked to detailed data entries later</li>
+                                        <li>Organized into groups for better management</li>
+                                    </ul>
+                                    
+                                    <hr>
+                                    
+                                    <p><strong>Two-Phase Approach:</strong></p>
+                                    <ol>
+                                        <li><strong>Create Token</strong> - Basic map representation (this form)</li>
+                                        <li><strong>Add Data Entry</strong> - Detailed specifications (DroneUnit, VehicleUnit, etc.)</li>
+                                    </ol>
+                                    
+                                    <p class="text-muted">This keeps the map simple while allowing detailed military data when needed.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Live preview of military unit label
+        const orgLevelNames = {
+            '1': 'Sqd', '2': 'Plt', '3': 'Coy', '4': 'Bn', '5': 'Regt',
+            '6': 'Brig', '7': 'Div', '8': 'Corps', '9': 'Army'
+        };
+        
+        const unitTypeNames = {
+            '0': 'Inf', '1': 'Armoured', '2': 'Mech', '3': 'Arty', '4': 'Avn',
+            '5': 'ADA', '6': 'Eng', '7': 'Sig', '8': 'Log', '9': 'Med',
+            '10': 'Recce', '11': 'SF', '12': 'Airborne', '13': 'Marines', '14': 'Cav',
+            '15': 'HQ', '16': 'Intel', '17': 'MP', '18': 'CBRN', '19': 'Maint', '20': 'Cyber'
+        };
+        
+        function updatePreview() {
+            const orgLevel = $('#organizationLevelSelect').val();
+            const unitType = $('#unitTypeSelect').val();
+            const designation = $('#unitDesignationInput').val();
+            
+            if (orgLevel && unitType && designation) {
+                const label = `${orgLevelNames[orgLevel]} ${unitTypeNames[unitType]} ${designation}`;
+                $('#previewLabel').text(label);
+                $('#unitPreview').fadeIn();
+            } else {
+                $('#unitPreview').fadeOut();
+            }
+        }
+        
+        $(document).ready(function() {
+            $('#organizationLevelSelect, #unitTypeSelect, #unitDesignationInput').on('change input', updatePreview);
+            
+            // Reset form button
+            $('#resetFormBtn').click(function() {
+                $('form')[0].reset();
+                $('#unitPreview').hide();
+            });
+        });
+    </script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Reset form functionality
+            const resetBtn = document.getElementById('resetFormBtn');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function() {
+                    if (confirm('Are you sure you want to reset the form? All entered data will be lost.')) {
+                        document.querySelector('form').reset();
+                    }
+                });
+            }
+        });
+    </script>
+}

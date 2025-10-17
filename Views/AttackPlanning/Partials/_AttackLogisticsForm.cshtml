@@ -1,0 +1,565 @@
+@model TechWebSol.Models.AttackPlanning.AttackLogistics
+
+<div class="attack-form-section">
+    <div class="section-header">
+        <h4><i class="fas fa-truck"></i> Logistics</h4>
+        <p class="text-muted">Manage supply requirements and sustainability for the attack.</p>
+    </div>
+
+    <form id="logisticsForm" class="attack-planning-form">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="SupplyThreshold" class="form-label">Supply Threshold *</label>
+                <select asp-for="SupplyThreshold" class="form-control" id="SupplyThreshold" required>
+                    <option value="">Select Supply Threshold</option>
+                    <option value="Green">Green (Full Supply)</option>
+                    <option value="Amber">Amber (Limited Supply)</option>
+                    <option value="Red">Red (Critical Supply)</option>
+                </select>
+                <small class="form-text text-muted">Minimum supply level required to proceed with attack.</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Current Supply Status</label>
+                <div class="supply-status" id="supplyStatus">
+                    <div class="supply-indicator">
+                        <div class="supply-bar">
+                            <div class="supply-fill" id="supplyFill"></div>
+                        </div>
+                        <div class="supply-label" id="supplyLabel">Green</div>
+                    </div>
+                </div>
+                <small class="form-text text-muted">Current supply level of attacking units.</small>
+            </div>
+        </div>
+
+        <div class="supply-requirements">
+            <h5><i class="fas fa-boxes"></i> Supply Requirements</h5>
+            <div class="requirements-grid">
+                <div class="requirement-item">
+                    <div class="requirement-icon">🔫</div>
+                    <div class="requirement-info">
+                        <div class="requirement-name">Ammunition</div>
+                        <div class="requirement-details">Required for sustained combat</div>
+                    </div>
+                    <div class="requirement-status">
+                        <span class="status-indicator green"></span>
+                        <span class="status-text">Available</span>
+                    </div>
+                </div>
+                
+                <div class="requirement-item">
+                    <div class="requirement-icon">⛽</div>
+                    <div class="requirement-info">
+                        <div class="requirement-name">Fuel</div>
+                        <div class="requirement-details">Required for vehicle movement</div>
+                    </div>
+                    <div class="requirement-status">
+                        <span class="status-indicator green"></span>
+                        <span class="status-text">Available</span>
+                    </div>
+                </div>
+                
+                <div class="requirement-item">
+                    <div class="requirement-icon">🍞</div>
+                    <div class="requirement-info">
+                        <div class="requirement-name">Rations</div>
+                        <div class="requirement-details">Required for personnel sustenance</div>
+                    </div>
+                    <div class="requirement-status">
+                        <span class="status-indicator amber"></span>
+                        <span class="status-text">Limited</span>
+                    </div>
+                </div>
+                
+                <div class="requirement-item">
+                    <div class="requirement-icon">🏥</div>
+                    <div class="requirement-info">
+                        <div class="requirement-name">Medical</div>
+                        <div class="requirement-details">Required for casualty treatment</div>
+                    </div>
+                    <div class="requirement-status">
+                        <span class="status-indicator green"></span>
+                        <span class="status-text">Available</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="logistics-planning">
+            <h5><i class="fas fa-route"></i> Supply Route Planning</h5>
+            <div class="route-options">
+                <div class="route-option">
+                    <div class="form-group">
+                        <label class="form-label">Primary Supply Route</label>
+                        <select class="form-control" id="primaryRoute">
+                            <option value="">Select Primary Route</option>
+                            <option value="route_1">Highway Alpha (Fast, Exposed)</option>
+                            <option value="route_2">Secondary Road Beta (Slower, Safer)</option>
+                            <option value="route_3">Cross-Country Gamma (Slowest, Safest)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="route-option">
+                    <div class="form-group">
+                        <label class="form-label">Alternate Supply Route</label>
+                        <select class="form-control" id="alternateRoute">
+                            <option value="">Select Alternate Route</option>
+                            <option value="route_1">Highway Alpha (Fast, Exposed)</option>
+                            <option value="route_2">Secondary Road Beta (Slower, Safer)</option>
+                            <option value="route_3">Cross-Country Gamma (Slowest, Safest)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sustainability-analysis">
+            <h5><i class="fas fa-chart-line"></i> Sustainability Analysis</h5>
+            <div class="analysis-grid">
+                <div class="analysis-item">
+                    <div class="analysis-label">Estimated Duration</div>
+                    <div class="analysis-value" id="estimatedDuration">2-3 turns</div>
+                </div>
+                <div class="analysis-item">
+                    <div class="analysis-label">Supply Consumption</div>
+                    <div class="analysis-value" id="supplyConsumption">High</div>
+                </div>
+                <div class="analysis-item">
+                    <div class="analysis-label">Resupply Window</div>
+                    <div class="analysis-value" id="resupplyWindow">Turn 4</div>
+                </div>
+                <div class="analysis-item">
+                    <div class="analysis-label">Risk Level</div>
+                    <div class="analysis-value" id="logisticsRisk">Medium</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="logistics-summary">
+            <div class="summary-row">
+                <div class="summary-item">
+                    <label>Supply Threshold:</label>
+                    <span id="summarySupplyThreshold">-</span>
+                </div>
+                <div class="summary-item">
+                    <label>Primary Route:</label>
+                    <span id="summaryPrimaryRoute">-</span>
+                </div>
+                <div class="summary-item">
+                    <label>Sustainability:</label>
+                    <span id="summarySustainability">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="Notes" class="form-label">Logistics Notes</label>
+            <textarea asp-for="Notes" class="form-control" id="Notes" rows="3" 
+                      placeholder="Supply considerations, route security, or logistics constraints..."></textarea>
+            <small class="form-text text-muted">Optional notes about logistics planning.</small>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn btn-outline-secondary" onclick="resetLogisticsForm()">
+                <i class="fas fa-undo"></i> Reset
+            </button>
+            <button type="button" class="btn btn-primary" onclick="validateLogisticsForm()">
+                <i class="fas fa-check"></i> Validate
+            </button>
+        </div>
+    </form>
+
+    <div class="logistics-summary-detail" id="logisticsSummary" style="display: none;">
+        <h5>Logistics Summary</h5>
+        <div class="summary-content">
+            <p><strong>Supply Threshold:</strong> <span id="summaryDetailSupplyThreshold">-</span></p>
+            <p><strong>Current Supply:</strong> <span id="summaryDetailCurrentSupply">-</span></p>
+            <p><strong>Primary Route:</strong> <span id="summaryDetailPrimaryRoute">-</span></p>
+            <p><strong>Alternate Route:</strong> <span id="summaryDetailAlternateRoute">-</span></p>
+            <p><strong>Sustainability:</strong> <span id="summaryDetailSustainability">-</span></p>
+            <p><strong>Notes:</strong> <span id="summaryDetailNotes">-</span></p>
+        </div>
+    </div>
+</div>
+
+<style>
+.supply-status {
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 15px;
+    border: 1px solid #333;
+}
+
+.supply-indicator {
+    text-align: center;
+}
+
+.supply-bar {
+    width: 100%;
+    height: 20px;
+    background: #333;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.supply-fill {
+    height: 100%;
+    transition: all 0.3s ease;
+    border-radius: 10px;
+}
+
+.supply-fill.green {
+    background: linear-gradient(90deg, #00ff88, #00cc66);
+    width: 85%;
+}
+
+.supply-fill.amber {
+    background: linear-gradient(90deg, #ffaa00, #ff8800);
+    width: 60%;
+}
+
+.supply-fill.red {
+    background: linear-gradient(90deg, #ff4444, #cc0000);
+    width: 30%;
+}
+
+.supply-label {
+    font-weight: 600;
+    font-size: 12px;
+    color: #00d4ff;
+}
+
+.supply-requirements {
+    margin-top: 20px;
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 15px;
+    border: 1px solid #333;
+}
+
+.supply-requirements h5 {
+    color: #00d4ff;
+    margin: 0 0 15px 0;
+    font-size: 14px;
+}
+
+.requirements-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.requirement-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    background: #2a2a2a;
+    border-radius: 6px;
+    border: 1px solid #444;
+}
+
+.requirement-icon {
+    font-size: 20px;
+    width: 30px;
+    text-align: center;
+}
+
+.requirement-info {
+    flex: 1;
+}
+
+.requirement-name {
+    color: #fff;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.requirement-details {
+    color: #888;
+    font-size: 10px;
+}
+
+.requirement-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-indicator.green {
+    background: #00ff88;
+}
+
+.status-indicator.amber {
+    background: #ffaa00;
+}
+
+.status-indicator.red {
+    background: #ff4444;
+}
+
+.status-text {
+    color: #ccc;
+    font-size: 11px;
+}
+
+.logistics-planning {
+    margin-top: 20px;
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 15px;
+    border: 1px solid #333;
+}
+
+.logistics-planning h5 {
+    color: #00d4ff;
+    margin: 0 0 15px 0;
+    font-size: 14px;
+}
+
+.route-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.sustainability-analysis {
+    margin-top: 20px;
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 15px;
+    border: 1px solid #333;
+}
+
+.sustainability-analysis h5 {
+    color: #00d4ff;
+    margin: 0 0 15px 0;
+    font-size: 14px;
+}
+
+.analysis-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.analysis-item {
+    text-align: center;
+    padding: 10px;
+    background: #2a2a2a;
+    border-radius: 6px;
+    border: 1px solid #444;
+}
+
+.analysis-label {
+    color: #888;
+    font-size: 11px;
+    margin-bottom: 5px;
+}
+
+.analysis-value {
+    color: #00d4ff;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.logistics-summary {
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 20px 0;
+    border: 1px solid #333;
+}
+
+.summary-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+}
+
+.summary-item {
+    text-align: center;
+}
+
+.summary-item label {
+    display: block;
+    color: #888;
+    font-size: 11px;
+    margin-bottom: 5px;
+}
+
+.summary-item span {
+    color: #00d4ff;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.logistics-summary-detail {
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 20px;
+    border: 1px solid #333;
+}
+
+.logistics-summary-detail h5 {
+    color: #00d4ff;
+    margin: 0 0 10px 0;
+    font-size: 14px;
+}
+
+.summary-content p {
+    margin: 5px 0;
+    font-size: 12px;
+    color: #ccc;
+}
+
+.summary-content strong {
+    color: #fff;
+}
+
+@@media (max-width: 768px) {
+    .requirements-grid, .route-options, .analysis-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .summary-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+}
+</style>
+
+<script>
+// Logistics Form JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    initializeLogisticsForm();
+});
+
+function initializeLogisticsForm() {
+    console.log('Initializing logistics form');
+    
+    // Add change listeners
+    document.getElementById('SupplyThreshold').addEventListener('change', updateLogisticsSummary);
+    document.getElementById('primaryRoute').addEventListener('change', updateLogisticsSummary);
+    document.getElementById('alternateRoute').addEventListener('change', updateLogisticsSummary);
+    document.getElementById('Notes').addEventListener('input', updateLogisticsSummary);
+    
+    // Mark form as dirty when changed
+    document.querySelectorAll('#logisticsForm input, #logisticsForm select, #logisticsForm textarea').forEach(element => {
+        element.addEventListener('change', () => {
+            if (window.currentAttackOrder) {
+                window.currentAttackOrder.isDirty = true;
+            }
+        });
+    });
+    
+    updateLogisticsSummary();
+}
+
+function updateLogisticsSummary() {
+    const supplyThreshold = document.getElementById('SupplyThreshold').value;
+    const primaryRoute = document.getElementById('primaryRoute').value;
+    const alternateRoute = document.getElementById('alternateRoute').value;
+    const notes = document.getElementById('Notes').value;
+    
+    // Update supply status based on threshold
+    updateSupplyStatus(supplyThreshold);
+    
+    // Update summary row
+    document.getElementById('summarySupplyThreshold').textContent = supplyThreshold || '-';
+    document.getElementById('summaryPrimaryRoute').textContent = primaryRoute ? 
+        document.getElementById('primaryRoute').options[document.getElementById('primaryRoute').selectedIndex].text : '-';
+    
+    // Calculate sustainability
+    let sustainability = 'Unknown';
+    if (supplyThreshold && primaryRoute) {
+        if (supplyThreshold === 'Green') sustainability = 'High';
+        else if (supplyThreshold === 'Amber') sustainability = 'Medium';
+        else if (supplyThreshold === 'Red') sustainability = 'Low';
+    }
+    
+    document.getElementById('summarySustainability').textContent = sustainability;
+    
+    // Update detailed summary
+    if (supplyThreshold || primaryRoute || alternateRoute || notes) {
+        document.getElementById('summaryDetailSupplyThreshold').textContent = supplyThreshold || 'Not selected';
+        document.getElementById('summaryDetailCurrentSupply').textContent = getCurrentSupplyLevel();
+        document.getElementById('summaryDetailPrimaryRoute').textContent = primaryRoute ? 
+            document.getElementById('primaryRoute').options[document.getElementById('primaryRoute').selectedIndex].text : 'Not selected';
+        document.getElementById('summaryDetailAlternateRoute').textContent = alternateRoute ? 
+            document.getElementById('alternateRoute').options[document.getElementById('alternateRoute').selectedIndex].text : 'Not selected';
+        document.getElementById('summaryDetailSustainability').textContent = sustainability;
+        document.getElementById('summaryDetailNotes').textContent = notes || 'None';
+        
+        document.getElementById('logisticsSummary').style.display = 'block';
+    } else {
+        document.getElementById('logisticsSummary').style.display = 'none';
+    }
+}
+
+function updateSupplyStatus(threshold) {
+    const supplyFill = document.getElementById('supplyFill');
+    const supplyLabel = document.getElementById('supplyLabel');
+    
+    if (threshold === 'Green') {
+        supplyFill.className = 'supply-fill green';
+        supplyLabel.textContent = 'Green (85%)';
+    } else if (threshold === 'Amber') {
+        supplyFill.className = 'supply-fill amber';
+        supplyLabel.textContent = 'Amber (60%)';
+    } else if (threshold === 'Red') {
+        supplyFill.className = 'supply-fill red';
+        supplyLabel.textContent = 'Red (30%)';
+    } else {
+        supplyFill.className = 'supply-fill green';
+        supplyLabel.textContent = 'Green (85%)';
+    }
+}
+
+function getCurrentSupplyLevel() {
+    // TODO: Get actual supply level from unit data
+    return 'Green (85%)';
+}
+
+function validateLogisticsForm() {
+    const supplyThreshold = document.getElementById('SupplyThreshold').value;
+    const primaryRoute = document.getElementById('primaryRoute').value;
+    
+    if (!supplyThreshold) {
+        showNotification('Please select a supply threshold', 'warning');
+        return false;
+    }
+    
+    if (!primaryRoute) {
+        showNotification('Please select a primary supply route', 'warning');
+        return false;
+    }
+    
+    // Check if supply threshold is realistic
+    if (supplyThreshold === 'Red') {
+        showNotification('Red supply threshold is high risk. Consider Amber or Green.', 'warning');
+    }
+    
+    console.log('Logistics form validated successfully');
+    showNotification('Logistics form validated successfully', 'success');
+    return true;
+}
+
+function resetLogisticsForm() {
+    document.getElementById('logisticsForm').reset();
+    document.getElementById('logisticsSummary').style.display = 'none';
+    updateSupplyStatus('Green');
+    console.log('Logistics form reset');
+}
+</script>

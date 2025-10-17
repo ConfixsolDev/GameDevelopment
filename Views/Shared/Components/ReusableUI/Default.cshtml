@@ -1,0 +1,47 @@
+@*
+    ReusableUI Component Library - Main Entry Point
+    This component serves as the main entry point for all reusable UI components
+    Usage: @await Component.InvokeAsync("ReusableUI", new { component = "ComponentName", data = componentData })
+*@
+
+@model dynamic
+
+@{
+    string component = Model?.component ?? "";
+    var data = Model?.data ?? new { };
+}
+
+@switch (component.ToLower())
+{
+    case "modal":
+        @await Html.PartialAsync("_Modal", (object)data)
+        break;
+        
+    case "tokencard":
+    case "token-card":
+        @await Html.PartialAsync("_TokenCard", (object)data)
+        break;
+        
+    case "alert":
+        @await Html.PartialAsync("_Alert", (object)data)
+        break;
+        
+    case "button":
+        @await Html.PartialAsync("_Button", (object)data)
+        break;
+        
+    case "card":
+        @await Html.PartialAsync("_Card", (object)data)
+        break;
+        
+    case "badge":
+        @await Html.PartialAsync("_Badge", (object)data)
+        break;
+        
+    default:
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Component Not Found:</strong> The component "@component" is not available in the ReusableUI library.
+        </div>
+        break;
+}

@@ -1,0 +1,57 @@
+﻿@model TechWebSol.ViewModels.RegisterViewModel
+<div class="site-action" data-plugin="actionBtn">
+    <a href="#" onclick="location.href = document.referrer; return false;" class="btn drp-icon btn-rounded btn-primary dropdown-toggle">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+</div>
+<div class="card">
+    <div class="card-header  card-header-primary">
+        <h4 class="card-title ">Update User</h4>
+    </div>
+    <div class="card-body e-panel">
+        <form asp-action="EditRegister" method="post" enctype="multipart/form-data" style="margin-bottom:10px">
+
+            <div class="panel-body row">
+                <input asp-for="ApplicationUserID" type="hidden" />
+                <div class="form-group col-md-4">
+                    <label asp-for="UserName" class="control-label"></label>
+                    <input required asp-for="UserName" class="form-control" placeholder="User Name" onblur="checkValue()" />
+                    <span asp-validation-for="UserName" class="text-danger"></span>
+                    <span id="spandanger" class="text-danger"></span>
+                    <span id="spanSuccess" class="text-success"></span>
+                </div>
+                <div class="form-group col-md-4">
+                    <label class="control-label">First Name</label>
+                    <input required asp-for="FirstName" class="form-control" placeholder="First Name" />
+                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                </div>
+                <div class="form-group col-md-4">
+                    <label class="control-label">Last Name</label>
+                    <input required asp-for="LastName" class="form-control" placeholder="Last Name" />
+                    <span asp-validation-for="LastName" class="text-danger"></span>
+                </div>
+                <div class="form-group col-md-4">
+                    <label asp-for="Role" class="control-label"></label>
+                    <select required asp-for="Role" class="form-control" data-plugin="selectpicker" data-live-search="true" asp-items="@(new SelectList(Model.RoleList, "Name", "Name"))">
+                        <option value="" selected>Select</option>
+                    </select>
+                    <span asp-validation-for="Role" class="text-danger"></span>
+                </div>
+                <hr />
+            </div>
+
+            <div class="form-group col-md-6">
+                <button type="submit" class="btn btn-danger"><i class="fas fa-save me-1"></i>Update</button>
+            </div>
+        </form>
+    </div>
+</div>
+<br />
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+    
+    

@@ -1,0 +1,127 @@
+﻿<div class="vertical-menu">
+    <div data-simplebar class="h-100">
+        <div id="sidebar-menu">
+            <cache expires-after="@TimeSpan.FromMinutes(10)" vary-by-user="true">
+            </cache>
+
+            <ul class="metismenu list-unstyled" id="side-menu">
+
+                <li>
+                    <a asp-area="" asp-controller="Home" asp-action="Index">
+                        <i class="fas fa-download"></i> <span>Home</span>
+                    </a>
+                </li>
+
+                <secure-content asp-area="TokenManagement" asp-controller="TokenSystem" asp-action="Index">
+                    <li>
+                        <a asp-area="TokenManagement" asp-controller="TokenSystem" asp-action="Index">
+                            <i class="fas fa-fingerprint"></i>
+                            <span>Token System </span>
+                        </a>
+                    </li>
+                </secure-content>
+
+                <!-- Token Management Section -->
+                <li class="menu-title">Token Management</li>
+                
+                <secure-content asp-area="" asp-controller="AdminToken" asp-action="Index">
+                    <li>
+                        <a asp-area="" asp-controller="AdminToken" asp-action="Dashboard">
+                            <i class="fas fa-cogs"></i>
+                            <span>Admin Dashboard </span>
+                        </a>
+                    </li>
+                </secure-content>
+                
+                <secure-content asp-area="" asp-controller="AdminToken" asp-action="ManageTokenGroups">
+                    <li>
+                        <a asp-area="" asp-controller="AdminToken" asp-action="ManageTokenGroups">
+                            <i class="fas fa-layer-group"></i>
+                            <span>Token Groups </span>
+                        </a>
+                    </li>
+                </secure-content>
+
+                <secure-content asp-area="" asp-controller="AdminToken" asp-action="Index">
+                    <li>
+                        <a asp-area="" asp-controller="AdminToken" asp-action="Index">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Tokens </span>
+                        </a>
+                    </li>
+                </secure-content>
+
+              @*   <secure-content asp-area="" asp-controller="GameManagement" asp-action="Index">
+                    <li>
+                        <a asp-area="" asp-controller="GameManagement" asp-action="Index">
+                            <i class="fas fa-gamepad"></i>
+                            <span>Game Sessions </span>
+                        </a>
+                    </li>
+                </secure-content>
+
+                <secure-content asp-area="" asp-controller="GameManagement" asp-action="ActiveSessions">
+                    <li>
+                        <a asp-area="" asp-controller="GameManagement" asp-action="ActiveSessions">
+                            <i class="fas fa-play-circle"></i>
+                            <span>Active Sessions </span>
+                        </a>
+                    </li>
+                </secure-content> *@
+
+                
+
+                <secure-content asp-area="" asp-controller="GamePlay" asp-action="Index">
+                    <li>
+                        <a asp-area="" asp-controller="GamePlay" asp-action="Index">
+                            <i class="fas fa-crosshairs"></i>
+                            <span>Game Play Arena </span>
+                        </a>
+                    </li>
+                </secure-content>
+
+                <!-- Team Management Section -->
+                <li class="menu-title">Team Management</li>
+                
+                <secure-content asp-area="" asp-controller="TeamManagement" asp-action="Index">
+                    <li>
+                        <a asp-area="" asp-controller="TeamManagement" asp-action="Index">
+                            <i class="fas fa-users"></i>
+                            <span>Teams </span>
+                        </a>
+                    </li>
+                </secure-content>
+
+                <secure-content asp-area="" asp-controller="TeamManagement" asp-action="Create">
+                    <li>
+                        <a asp-area="" asp-controller="TeamManagement" asp-action="Create">
+                            <i class="fas fa-plus"></i>
+                            <span>Create Team </span>
+                        </a>
+                    </li>
+                </secure-content>
+
+                <!-- System Management Section -->
+                <li class="menu-title">System Management</li>
+             
+                <secure-content asp-area="Identity" asp-controller="Role" asp-action="Index">
+                    <li>
+                        <a href="/Identity/Role/Index">
+                            <i class="fas fa-users-cog"></i>
+                            <span>Role Management </span>
+                        </a>
+                    </li>
+                </secure-content>
+
+                <secure-content asp-area="Identity" asp-controller="AccountAdmin" asp-action="Index">
+                    <li>
+                        <a href="/Identity/AccountAdmin/Index">
+                            <i class="fas fa-users-cog"></i>
+                            <span>User Management </span>
+                        </a>
+                    </li>
+                </secure-content>
+            </ul>
+        </div>
+    </div>
+</div>

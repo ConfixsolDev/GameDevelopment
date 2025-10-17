@@ -1,0 +1,217 @@
+@{
+    ViewData["Title"] = "Token Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-chess"></i> Token Management
+                    </h3>
+                    <div class="card-tools d-flex gap-2">
+                        <a type="button" class="btn btn-primary" asp-action="Create" asp-controller="AdminToken">
+                            <i class="fas fa-plus"></i> New Token
+                        </a>
+                        <a type="button" class="btn btn-outline-secondary" asp-action="ManageTokenGroups" asp-controller="AdminToken">
+                            <i class="fas fa-layer-group"></i> Manage Groups
+                        </a>
+                        <button type="button" class="btn btn-outline-secondary" id="refreshTokensBtn">
+                            <i class="fas fa-sync"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="tokensTable" class="table table-bordered table-striped align-middle">
+                            <thead>
+                                <tr>
+                                    <th width="60">Image</th>
+                                    <th>Name</th>
+                                    <th>Group</th>
+                                    <th>Position</th>
+                                    <th>Coverage</th>
+                                    <th>Status</th>
+                                    <th>Last Used</th>
+                                    <th>Usage</th>
+                                    <th>Notes</th>
+                                    <th class="actions-column">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be loaded via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+                $(document).ready(function () {
+                    loadTokens();
+                    $('#refreshTokensBtn').on('click', loadTokens);
+                });
+
+                function loadTokens() {
+                    $.get(getApiUrl('AdminToken', 'GetTokens'))
+                        .done(function (tokens) {
+                            const tbody = $('#tokensTable tbody');
+                            tbody.empty();
+
+                            if (!Array.isArray(tokens)) tokens = [];
+
+                            tokens.forEach(function (t) {
+                        // Status badge
+                                const statusBadge = t.isActive
+                                    ? '<span class="badge bg-success">Active</span>'
+                                    : '<span class="badge bg-secondary">Inactive</span>';
+
+                        // Last used formatting
+                        const lastUsed = t.lastUsed
+                            ? new Date(t.lastUsed).toLocaleDateString()
+                            : '—';
+
+                        // Notes display
+                        const notes = t.notes ? $('<div>').text(t.notes).html() : '—';
+                        const notesDisplay = notes.length > 50 
+                            ? notes.substring(0, 50) + '...' 
+                            : notes;
+
+                        // Image thumbnail
+                        const imageThumbnail = t.assetImagePath 
+                            ? `<img src="${t.assetImagePath}" alt="${t.name}" class="token-thumbnail" title="${t.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                               <div class="token-placeholder hidden-element">
+                                   <i class="fas fa-image"></i>
+                               </div>`
+                            : `<div class="token-placeholder">
+                                   <i class="fas fa-chess-pawn"></i>
+                               </div>`;
+
+                        // Position display
+                        const position = (t.currentLatitude && t.currentLongitude)
+                            ? `<small class="text-muted">
+                                   <i class="fas fa-map-marker-alt"></i> 
+                                   ${parseFloat(t.currentLatitude).toFixed(4)}, ${parseFloat(t.currentLongitude).toFixed(4)}
+                               </small>`
+                            : '<span class="text-muted">—</span>';
+
+                        // Coverage display
+                        const coverage = t.coverageRadiusKm
+                            ? `<span class="badge bg-info">${t.coverageRadiusKm} km</span>`
+                            : '<span class="text-muted">—</span>';
+
+                                const row = `
+                                    <tr>
+                                <td class="text-center">${imageThumbnail}</td>
+                                <td>
+                                    <strong>${t.name}</strong>
+                                    ${t.isManualToken ? '<br><small class="badge bg-secondary">Manual</small>' : ''}
+                                </td>
+                                <td>${t.tokenGroupName ?? '—'}</td>
+                                <td>${position}</td>
+                                <td>${coverage}</td>
+                                        <td>${statusBadge}</td>
+                                        <td>${lastUsed}</td>
+                                        <td><span class="badge bg-primary">${t.usageCount ?? 0}</span></td>
+                                <td class="text-truncate notes-column" title="${notes}">${notesDisplay}</td>
+                                        <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="/AdminToken/Edit/${t.id}" class="btn btn-outline-primary" title="Edit Token">
+                                                    <i class="fas fa-edit"></i>
+                                        </a>
+                                        ${t.isActive
+                                            ? `<button class="btn btn-outline-danger" onclick="toggleActive('${t.id}', false)" title="Deactivate">
+                                                   <i class="fas fa-ban"></i>
+                                               </button>`
+                                            : `<button class="btn btn-outline-success" onclick="toggleActive('${t.id}', true)" title="Activate">
+                                                   <i class="fas fa-check"></i>
+                                               </button>`
+                                        }
+                                        <button class="btn btn-outline-info" onclick="viewDetails('${t.id}')" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>`;
+
+                                tbody.append(row);
+                            });
+
+                    // Initialize or reinitialize DataTable if you're using it
+                    if ($.fn.DataTable && $.fn.DataTable.isDataTable('#tokensTable')) {
+                        $('#tokensTable').DataTable().destroy();
+                    }
+                    
+                    // Optional: Initialize DataTable for better UX
+                    $('#tokensTable').DataTable({
+                        pageLength: 25,
+                        responsive: true,
+                        order: [[1, 'asc']], // Sort by name
+                        columnDefs: [
+                            { orderable: false, targets: [0, 9] }, // Image and Actions columns not sortable
+                            { searchable: false, targets: [0, 9] }  // Image and Actions columns not searchable
+                        ]
+                    });
+                        })
+                        .fail(function () {
+                            showAlert('Error loading tokens', 'danger');
+                        });
+                }
+
+                function toggleActive(id, makeActive) {
+                    const msg = makeActive
+                        ? 'Activate this token?'
+                        : 'Deactivate this token?';
+
+                    if (!confirm(msg)) return;
+
+            const url = `/AdminToken/ToggleActive?id=${id}&active=${makeActive}`;
+            
+            $.post(url)
+                .done(function (response) {
+                    if (response.success) {
+                        showAlert(response.message || 'Status updated successfully', 'success');
+                                loadTokens();
+                            } else {
+                        showAlert(response.message || 'Unable to update status', 'danger');
+                            }
+                        })
+                        .fail(function () {
+                    showAlert('Error updating token status', 'danger');
+                });
+        }
+
+        function viewDetails(id) {
+            // Implement token details view if needed
+            window.location.href = `/AdminToken/Details/${id}`;
+                }
+
+                function getApiUrl(controller, action) {
+            return `/${controller}/${action}`;
+        }
+
+        function showAlert(message, type) {
+            // Simple alert implementation
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const alertHtml = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>`;
+            
+            // Insert at top of card body
+            $('.card-body').prepend(alertHtml);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                $('.alert').alert('close');
+            }, 5000);
+        }
+    </script>
+}

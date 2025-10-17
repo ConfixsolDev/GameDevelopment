@@ -1,0 +1,107 @@
+@*
+    Reusable Card Component
+    Usage: @await Component.InvokeAsync("ReusableUI", new { component = "Card", data = new { title = "Card Title", content = "Card content" } })
+*@
+
+@model dynamic
+
+@{
+    string title = Model?.title ?? "";
+    string subtitle = Model?.subtitle ?? "";
+    string content = Model?.content ?? "";
+    string footer = Model?.footer ?? "";
+    string cssClass = Model?.cssClass ?? "";
+    string id = Model?.id ?? "";
+    var headerActions = Model?.headerActions as List<dynamic> ?? new List<dynamic>();
+    bool hoverable = Model?.hoverable ?? true;
+}
+
+<div class="card @cssClass @(hoverable ? "hoverable" : "")" @if (!string.IsNullOrEmpty(id)) { <text>id="@id"</text> }>
+    @if (!string.IsNullOrEmpty(title) || headerActions.Any())
+    {
+        <div class="card-header">
+            <div class="card-title-section">
+                @if (!string.IsNullOrEmpty(title))
+                {
+                    <h3 class="card-title">@title</h3>
+                }
+                @if (!string.IsNullOrEmpty(subtitle))
+                {
+                    <p class="card-subtitle">@subtitle</p>
+                }
+            </div>
+            
+            @if (headerActions.Any())
+            {
+                <div class="card-header-actions">
+                    @foreach (var action in headerActions)
+                    {
+                        <button type="button" 
+                                class="btn @(action.variant ?? "ghost") @(action.size ?? "sm")"
+                                onclick="@(action.onclick ?? "")"
+                                title="@(action.title ?? "")">
+                            @if (action.icon != null)
+                            {
+                                <i class="@action.icon"></i>
+                            }
+                            @if (action.text != null)
+                            {
+                                <span>@action.text</span>
+                            }
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    }
+    
+    @if (!string.IsNullOrEmpty(content))
+    {
+        <div class="card-body">
+            @Html.Raw(content)
+        </div>
+    }
+    else
+    {
+        <div class="card-body">
+            @RenderBody()
+        </div>
+    }
+    
+    @if (!string.IsNullOrEmpty(footer))
+    {
+        <div class="card-footer">
+            @Html.Raw(footer)
+        </div>
+    }
+</div>
+
+<style>
+    .card-title-section {
+        flex: 1;
+    }
+    
+    .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+    }
+    
+    .card-header-actions {
+        display: flex;
+        gap: var(--space-2);
+    }
+    
+    .card-subtitle {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-normal);
+    }
+    
+    .card.hoverable:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+</style>

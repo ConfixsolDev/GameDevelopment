@@ -1,0 +1,122 @@
+﻿
+@using TechWebSol
+@using TechWebSol.Models
+@model IEnumerable<ApplicationUser>
+@{
+    ViewData["Title"] = "User Accounts";
+}
+<div class="card card-shadow">
+    <div class="card-body">
+        <hr class="mt-2 mb-4">
+        <div class="row">
+            <div class="col-lg-3 mb-3">
+                <a class="btn btn-primary" asp-action="Register">
+                    <i class="fas fa-plus me-1"></i> Add New
+                </a>
+            </div>
+            <div class="col-lg-12 filter-wrap" id="formContainer">
+                <div class="input-group search-filter mb-3 ms-2">
+                    <input type="text" id="searchFilter" class="form-control" placeholder="Search">
+                </div>
+
+                <div class="mb-3 ms-2">
+                    <button class="btn btn-primary" id="searchBtn"> <i class="fas fa-search me-1" title="Search"></i></button>
+                </div>
+                <div class="mb-3 ms-2">
+                    <button class="btn btn-warning" onclick="resetFields()" id="resetBtn"> <i class="fas fa-undo me-1" title="Reset Search Filters"></i></button>
+                </div>
+            </div>
+        </div>
+        <table aria-label="" role="grid" id="TableIndex" class="table table-striped w-100">
+            <thead>
+                <tr>
+                    <th width="20%">
+                        User Name
+                    </th>
+                    <th width="5%">
+                        Online
+                    </th>
+                
+                    <th width="20%">
+                        Last Login
+                    </th>
+                    <th width="5%">
+                        Count
+                    </th>
+                    <th width="10%">
+                        Status
+                    </th>
+                    <th width="20%">
+                        Role
+                    </th>
+                    <th style="text-align:center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.UserName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.IsOnline)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.LastLoginDate)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.LoginCount)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.IsActive)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.RoleName)
+                        </td>
+                        <td>
+                            <div class="btn-group" aria-label="Basic Basic example" role="group">
+                                <secure-content asp-controller="Account" asp-action="EditRegister">
+                                    <a asp-action="EditRegister" class="btn btn-warning" title="Edit" asp-route-id="@item.Id">
+                                        <i class="fas fa-edit me-1"></i>edit
+
+                                    </a>
+
+                                </secure-content>
+                                &nbsp;
+
+                                @if (item.IsActive == true)
+                                {
+                                    <secure-content asp-controller="Account" asp-action="Delete">
+                                        <a asp-action="Delete" class="btn btn-danger " title="InActive" asp-route-id="@item.Id"><i class="fas fa-lock me-1"></i>lock</a>
+                                    </secure-content>
+                                }
+                                else
+                                {
+                                    <secure-content asp-controller="Account" asp-action="Activate">
+                                        <a asp-action="Activate" class="btn btn-success " title="Active" asp-route-id="@item.Id"><i class="fas fa-lock-open me-1"></i>Unlock</a>
+                                    </secure-content>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+@section Breadcrump {
+    <li class="breadcrumb-item"><a asp-action="Index" asp-controller="Home">Home</a></li>
+    <li class="breadcrumb-item active">List</li>
+}
+
+<!-- [ Main Content ] end -->
+@section Styles {
+    <partial name="_datatablestylepartial" />
+}
+
+@section Scripts {
+    <partial name="_DatatableScriptsPartial" />
+}

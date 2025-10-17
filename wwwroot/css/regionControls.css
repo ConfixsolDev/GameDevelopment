@@ -1,0 +1,144 @@
+/* Region Controls Styling */
+
+/* Force Selection Buttons */
+.force-btn {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.force-btn.active {
+    border-color: #00d4ff;
+    background: rgba(0, 212, 255, 0.1);
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+.force-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Blue Land Button */
+#btnSelectBlue.active {
+    border-color: #00d4ff;
+    background: rgba(0, 212, 255, 0.1);
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+/* Fox Land Button */
+#btnSelectFox.active {
+    border-color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.1);
+    box-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
+}
+
+/* Region Labels */
+.region-label {
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.region-label div {
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    white-space: nowrap;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Drawing Mode Cursor */
+.drawing-mode {
+    cursor: crosshair !important;
+}
+
+/* Region Panel Enhancements */
+.control-section h6 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    color: #00d4ff;
+    font-weight: 600;
+}
+
+.control-section h6 i {
+    font-size: 14px;
+}
+
+/* Layer Visibility Checkboxes */
+.overlay-btn input[type="checkbox"] {
+    margin-right: 8px;
+    accent-color: #00d4ff;
+}
+
+.overlay-btn span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Force Selection Section */
+.control-section:has(.force-btn) {
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 10px;
+    background: rgba(42, 42, 42, 0.5);
+}
+
+/* Edit Mode Controls */
+.edit-mode-control {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Region Creation Modal Enhancements */
+.region-creation-modal .form-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.region-creation-modal .form-control[readonly] {
+    background: #333;
+    color: #888;
+    cursor: not-allowed;
+}
+
+/* Status Indicators */
+.status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+.status-indicator.blue {
+    background: #00d4ff;
+}
+
+.status-indicator.fox {
+    background: #ff6b6b;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .force-btn {
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+    
+    .control-section h6 {
+        font-size: 13px;
+    }
+}

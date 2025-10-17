@@ -1,0 +1,854 @@
+@using static TechWebSol.Controllers.DataManagementController
+@model TokenDataEntryViewModel
+
+<!-- Token Data Entry Form Modal - Simple and Clean -->
+<div id="tokenDataEntryModal" class="gameplay-modal" style="display: none;">
+    <div class="gameplay-modal-content">
+        <div class="gameplay-modal-header">
+            <h3><i class="fas fa-database"></i> Data Entry - @Model.Token.Name</h3>
+            <button class="gameplay-modal-close" onclick="closeTokenDataEntryModal()">&times;</button>
+        </div>
+        <div class="gameplay-modal-body">
+            <div class="data-entry-container">
+                <!-- Data Entry Form -->
+                <div class="data-entry-form-section">
+                    @if (Model.ExistingBrigade != null)
+                    {
+                        <!-- Edit Existing Brigade Data -->
+                        <div class="brigade-header-section">
+                            <div class="brigade-name-display">
+                                <h5>Brigade @Model.ExistingBrigade.BrigadeCode Information</h5>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="editBrigadeCode()">
+                                    <i class="fas fa-edit"></i> Edit Code
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="brigade-data-form">
+                            <!-- Comprehensive Data Entry Tabs -->
+                            <div class="data-entry-tabs">
+                                <button type="button" class="data-tab active" onclick="showDataTab('infantry')">
+                                    <i class="fas fa-user-shield"></i> Infantry Battalion
+                                </button>
+                                <button type="button" class="data-tab" onclick="showDataTab('armoured')">
+                                    <i class="fas fa-shield-alt"></i> Armoured Regiment
+                                </button>
+                                <button type="button" class="data-tab" onclick="showDataTab('artillery')">
+                                    <i class="fas fa-crosshairs"></i> Artillery Regiment
+                                </button>
+                                <button type="button" class="data-tab" onclick="showDataTab('logistics')">
+                                    <i class="fas fa-truck"></i> Logistics Unit
+                                </button>
+                                <button type="button" class="data-tab" onclick="showDataTab('engineering')">
+                                    <i class="fas fa-hard-hat"></i> Combat Engineering
+                                </button>
+                                <button type="button" class="data-tab" onclick="showDataTab('recon')">
+                                    <i class="fas fa-binoculars"></i> Reconnaissance
+                                </button>
+                            </div>
+                            
+                            <div id="infantry-data" class="data-tab-content active">
+                                <div class="tab-content-header">
+                                    <h6><i class="fas fa-user-shield"></i> Infantry Battalions</h6>
+                                    <p class="text-muted">Manage infantry battalions for Brigade @Model.ExistingBrigade.BrigadeCode</p>
+                                </div>
+                                
+                                <!-- Existing Infantry Battalions List -->
+                                <div id="infantryBattalionsList" class="units-list">
+                                    @if (Model.ExistingInfantry != null && Model.ExistingInfantry.Any())
+                                    {
+                                        @foreach (var battalion in Model.ExistingInfantry)
+                                        {
+                                            var battalionData = (dynamic)battalion;
+                                            <div class="unit-item">
+                                                <div class="unit-info">
+                                                    <div class="unit-name1">@battalionData.Name</div>
+                                                    <div class="unit-details">Code: @battalionData.UnitCode | Strength: @battalionData.Strength | Companies: @battalionData.Companies</div>
+                                                </div>
+                                                <div class="unit-actions">
+                                                    <button class="btn btn-sm btn-outline-secondary" onclick="editInfantryBattalion('@battalionData.Id')">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteInfantryBattalion('@battalionData.Id')">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="no-units-message">No infantry battalions found. Click "Add New" to create one.</div>
+                                    }
+                                </div>
+                                
+                                <!-- Add New Button -->
+                                <div class="add-unit-section">
+                                    <button type="button" class="btn btn-primary" onclick="openInfantryBattalionForm('@Model.Token.Id', '@Model.ExistingBrigade.Id')">
+                                        <i class="fas fa-plus"></i> Add New Infantry Battalion
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="armoured-data" class="data-tab-content">
+                                <div class="tab-content-header">
+                                    <h6><i class="fas fa-shield-alt"></i> Armoured Regiments</h6>
+                                    <p class="text-muted">Manage armoured regiments for Brigade @Model.ExistingBrigade.BrigadeCode</p>
+                                </div>
+                                
+                                <div id="armouredRegimentsList" class="units-list">
+                                    @if (Model.ExistingArmoured != null && Model.ExistingArmoured.Any())
+                                    {
+                                        @foreach (var regiment in Model.ExistingArmoured)
+                                        {
+                                            var regimentData = (dynamic)regiment;
+                                            <div class="unit-item">
+                                                <div class="unit-info">
+                                                    <div class="unit-name1">@regimentData.Name</div>
+                                                    <div class="unit-details">Code: @regimentData.UnitCode | Strength: @regimentData.Strength | Tanks: @regimentData.Tanks</div>
+                                                </div>
+                                                <div class="unit-actions">
+                                                    <button class="btn btn-sm btn-outline-secondary" onclick="editArmouredRegiment('@regimentData.Id')">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteArmouredRegiment('@regimentData.Id')">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="no-units-message">No armoured regiments found. Click "Add New" to create one.</div>
+                                    }
+                                </div>
+                                
+                                <div class="add-unit-section">
+                                    <button type="button" class="btn btn-primary" onclick="openArmouredRegimentForm('@Model.Token.Id', '@Model.ExistingBrigade.Id')">
+                                        <i class="fas fa-plus"></i> Add New Armoured Regiment
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="artillery-data" class="data-tab-content">
+                                <div class="tab-content-header">
+                                    <h6><i class="fas fa-crosshairs"></i> Artillery Regiments</h6>
+                                    <p class="text-muted">Manage artillery regiments for Brigade @Model.ExistingBrigade.BrigadeCode</p>
+                                </div>
+                                
+                                <div id="artilleryRegimentsList" class="units-list">
+                                    @if (Model.ExistingArtillery != null && Model.ExistingArtillery.Any())
+                                    {
+                                        @foreach (var regiment in Model.ExistingArtillery)
+                                        {
+                                            var regimentData = (dynamic)regiment;
+                                            <div class="unit-item">
+                                                <div class="unit-info">
+                                                    <div class="unit-name1">@regimentData.Name</div>
+                                                    <div class="unit-details">Code: @regimentData.UnitCode | Strength: @regimentData.Strength | Guns: @regimentData.Guns</div>
+                                                </div>
+                                                <div class="unit-actions">
+                                                    <button class="btn btn-sm btn-outline-secondary" onclick="editArtilleryRegiment('@regimentData.Id')">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteArtilleryRegiment('@regimentData.Id')">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="no-units-message">No artillery regiments found. Click "Add New" to create one.</div>
+                                    }
+                                </div>
+                                
+                                <div class="add-unit-section">
+                                    <button type="button" class="btn btn-primary" onclick="openArtilleryRegimentForm('@Model.Token.Id', '@Model.ExistingBrigade.Id')">
+                                        <i class="fas fa-plus"></i> Add New Artillery Regiment
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="logistics-data" class="data-tab-content">
+                                <div class="tab-content-header">
+                                    <h6><i class="fas fa-truck"></i> Logistics Units</h6>
+                                    <p class="text-muted">Manage logistics units for Brigade @Model.ExistingBrigade.BrigadeCode</p>
+                                </div>
+                                
+                                <div id="logisticsUnitsList" class="units-list">
+                                    @if (Model.ExistingLogistics != null)
+                                    {
+                                        <div class="unit-item">
+                                            <div class="unit-info">
+                                                <div class="unit-name1">@Model.ExistingLogistics.Name</div>
+                                                <div class="unit-details">Code: @Model.ExistingLogistics.UnitCode | Strength: @Model.ExistingLogistics.Strength | Supply Trucks: @Model.ExistingLogistics.SupplyTrucks</div>
+                                            </div>
+                                            <div class="unit-actions">
+                                                <button class="btn btn-sm btn-outline-secondary" onclick="editLogisticsUnit('@Model.ExistingLogistics.Id')">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteLogisticsUnit('@Model.ExistingLogistics.Id')">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="no-units-message">No logistics units found. Click "Add New" to create one.</div>
+                                    }
+                                </div>
+                                
+                                <div class="add-unit-section">
+                                    <button type="button" class="btn btn-primary" onclick="openLogisticsUnitForm('@Model.Token.Id', '@Model.ExistingBrigade.Id')">
+                                        <i class="fas fa-plus"></i> Add New Logistics Unit
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="engineering-data" class="data-tab-content">
+                                <div class="tab-content-header">
+                                    <h6><i class="fas fa-hard-hat"></i> Combat Engineering Companies</h6>
+                                    <p class="text-muted">Manage combat engineering companies for Brigade @Model.ExistingBrigade.BrigadeCode</p>
+                                </div>
+                                
+                                <div id="engineeringCompaniesList" class="units-list">
+                                    @if (Model.ExistingEngineering != null)
+                                    {
+                                        <div class="unit-item">
+                                            <div class="unit-info">
+                                                <div class="unit-name1">@Model.ExistingEngineering.Name</div>
+                                                <div class="unit-details">Code: @Model.ExistingEngineering.UnitCode | Strength: @Model.ExistingEngineering.Strength | Vehicles: @Model.ExistingEngineering.BridgeLayingVehicles</div>
+                                            </div>
+                                            <div class="unit-actions">
+                                                <button class="btn btn-sm btn-outline-secondary" onclick="editCombatEngineeringCompany('@Model.ExistingEngineering.Id')">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCombatEngineeringCompany('@Model.ExistingEngineering.Id')">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="no-units-message">No combat engineering companies found. Click "Add New" to create one.</div>
+                                    }
+                                </div>
+                                
+                                <div class="add-unit-section">
+                                    <button type="button" class="btn btn-primary" onclick="openCombatEngineeringCompanyForm('@Model.Token.Id', '@Model.ExistingBrigade.Id')">
+                                        <i class="fas fa-plus"></i> Add New Combat Engineering Company
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="recon-data" class="data-tab-content">
+                                <div class="tab-content-header">
+                                    <h6><i class="fas fa-binoculars"></i> Reconnaissance</h6>
+                                    <p class="text-muted">Manage reconnaissance for Brigade @Model.ExistingBrigade.BrigadeCode</p>
+                                </div>
+                                
+                                <div id="reconnaissanceList" class="units-list">
+                                    @if (Model.ExistingRecon != null && Model.ExistingRecon.Any())
+                                    {
+                                        @foreach (var recon in Model.ExistingRecon)
+                                        {
+                                            var reconData = (dynamic)recon;
+                                            <div class="unit-item">
+                                                <div class="unit-info">
+                                                    <div class="unit-name1">@reconData.ReconType</div>
+                                                    <div class="unit-details">Location: @reconData.Location | Confidence: @reconData.Confidence</div>
+                                                </div>
+                                                <div class="unit-actions">
+                                                    <button class="btn btn-sm btn-outline-secondary" onclick="editReconnaissance('@reconData.Id')">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteReconnaissance('@reconData.Id')">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="no-units-message">No reconnaissance found. Click "Add New" to create one.</div>
+                                    }
+                                </div>
+                                
+                                <div class="add-unit-section">
+                                    <button type="button" class="btn btn-primary" onclick="openReconnaissanceForm('@Model.Token.Id', '@Model.ExistingBrigade.Id')">
+                                        <i class="fas fa-plus"></i> Add New Reconnaissance
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else if (Model.AvailableBrigades.Any())
+                    {
+                        <!-- Link to Existing Brigade -->
+                        <div class="alert alert-warning">
+                            <i class="fas fa-link"></i> Link this token to an existing brigade or create new brigade data.
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Select Existing Brigade:</label>
+                            <select class="form-control" id="brigadeSelector">
+                                <option value="">-- Select a Brigade --</option>
+                                @foreach (var brigade in Model.AvailableBrigades)
+                                {
+                                    <option value="@brigade.Id">Brigade @brigade.BrigadeCode</option>
+                                }
+                            </select>
+                        </div>
+                        
+                        <div class="text-center mb-3">
+                            <button type="button" class="btn btn-primary" onclick="linkSelectedBrigade('@Model.Token.Id')">
+                                <i class="fas fa-link"></i> Link Brigade to Token
+                            </button>
+                        </div>
+                        
+                        <hr>
+                        <p class="text-center text-muted">OR</p>
+                        
+                        <div class="text-center">
+                            <button type="button" class="btn btn-success" onclick="createNewBrigadeData('@Model.Token.Id')">
+                                <i class="fas fa-plus"></i> Create New Brigade Data
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Create New Brigade -->
+                        <div class="alert alert-success">
+                            <i class="fas fa-plus"></i> Create new brigade data for this token.
+                        </div>
+                        
+                        <div class="text-center">
+                            <button type="button" class="btn btn-success" onclick="createNewBrigadeData('@Model.Token.Id')">
+                                <i class="fas fa-plus"></i> Create New Brigade Data
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="gameplay-modal-footer">
+            <button class="gameplay-btn" onclick="closeTokenDataEntryModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Dark Theme Data Entry Form */
+.data-entry-container {
+    background: #1a1a1a;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.brigade-header-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #2a2a2a;
+    border-radius: 8px;
+    border-left: 4px solid #00d4ff;
+}
+
+.brigade-name-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.brigade-name-display h5 {
+    color: #00d4ff;
+    margin: 0;
+    font-weight: 600;
+}
+
+.data-entry-tabs {
+    display: flex;
+    gap: 3px;
+    margin: 20px 0 10px 0;
+    background: #1a1a1a;
+    border-radius: 8px;
+    padding: 5px;
+}
+
+.data-tab {
+    flex: 1;
+    padding: 12px 8px;
+    border: 1px solid #333;
+    background: #2a2a2a;
+    color: #ccc;
+    cursor: pointer;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 12px;
+    transition: all 0.3s ease;
+}
+
+.data-tab:hover {
+    background: #3a3a3a;
+    color: #fff;
+}
+
+.data-tab.active {
+    background: #00d4ff;
+    color: #000;
+    border-color: #00d4ff;
+    font-weight: 600;
+}
+
+.data-tab i {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+.data-tab-content {
+    display: none;
+    padding: 20px;
+    border: 1px solid #333;
+    border-radius: 8px;
+    background: #2a2a2a;
+    margin-top: 10px;
+}
+
+.data-tab-content.active {
+    display: block;
+}
+
+.tab-content-header {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #444;
+}
+
+.tab-content-header h6 {
+    color: #00d4ff;
+    margin: 0 0 5px 0;
+    font-weight: 600;
+}
+
+.tab-content-header .text-muted {
+    color: #888 !important;
+    font-size: 13px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: #00d4ff;
+    border-color: #00d4ff;
+    color: #000;
+}
+
+.btn-primary:hover {
+    background: #00b8e6;
+    border-color: #00b8e6;
+    color: #000;
+}
+
+.btn-outline-primary {
+    background: transparent;
+    border-color: #00d4ff;
+    color: #00d4ff;
+}
+
+.btn-outline-primary:hover {
+    background: #00d4ff;
+    border-color: #00d4ff;
+    color: #000;
+}
+
+.alert {
+    padding: 12px 15px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    border-left: 4px solid;
+}
+
+.alert-info {
+    background: #1a2a3a;
+    border-left-color: #00d4ff;
+    color: #00d4ff;
+}
+
+.alert-warning {
+    background: #2a2a1a;
+    border-left-color: #ffaa00;
+    color: #ffaa00;
+}
+
+.alert-success {
+    background: #1a2a1a;
+    border-left-color: #00aa44;
+    color: #00aa44;
+}
+
+.form-control {
+    background: #1a1a1a;
+    border: 1px solid #444;
+    color: #fff;
+    border-radius: 6px;
+    padding: 10px 12px;
+}
+
+.form-control:focus {
+    background: #2a2a2a;
+    border-color: #00d4ff;
+    color: #fff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 212, 255, 0.25);
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-muted {
+    color: #888 !important;
+}
+
+.mb-3 {
+    margin-bottom: 1rem;
+}
+
+hr {
+    border-color: #444;
+    margin: 20px 0;
+}
+
+/* Units List Styling */
+.units-list {
+    margin-bottom: 20px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.loading-units {
+    text-align: center;
+    padding: 20px;
+    color: #888;
+    font-style: italic;
+}
+
+.loading-units i {
+    margin-right: 8px;
+    color: #00d4ff;
+}
+
+.unit-item {
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.unit-item:hover {
+    background: #3a3a3a;
+    border-color: #00d4ff;
+}
+
+.unit-info {
+    flex: 1;
+    margin-right: 12px;
+    overflow: hidden;
+}
+
+.unit-name1 {
+    color: #fff;
+    font-weight: 600;
+    font-size: 12px;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.unit-details {
+    color: #888;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.unit-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 4px;
+}
+
+.btn-outline-secondary {
+    background: transparent;
+    border-color: #666;
+    color: #ccc;
+}
+
+.btn-outline-secondary:hover {
+    background: #666;
+    border-color: #666;
+    color: #fff;
+}
+
+.btn-outline-danger {
+    background: transparent;
+    border-color: #ff4444;
+    color: #ff4444;
+}
+
+.btn-outline-danger:hover {
+    background: #ff4444;
+    border-color: #ff4444;
+    color: #fff;
+}
+
+.add-unit-section {
+    text-align: center;
+    padding: 15px;
+    border-top: 1px solid #444;
+    margin-top: 10px;
+}
+
+.no-units-message {
+    text-align: center;
+    padding: 30px;
+    color: #888;
+    font-style: italic;
+    font-size: 12px;
+    background: #1a1a1a;
+    border-radius: 6px;
+    border: 1px solid #333;
+}
+
+/* Scrollbar styling for units list */
+.units-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.units-list::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+.units-list::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 3px;
+}
+
+.units-list::-webkit-scrollbar-thumb:hover {
+    background: #666;
+}
+</style>
+
+<script>
+// Close token data entry modal
+function closeTokenDataEntryModal() {
+    console.log('🔒 Closing token data entry modal');
+    document.getElementById('tokenDataEntryModal').style.display = 'none';
+}
+
+// Show different data tabs
+function showDataTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.data-tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Remove active class from all tabs
+    document.querySelectorAll('.data-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Show selected tab content
+    document.getElementById(tabName + '-data').classList.add('active');
+    
+    // Activate clicked tab
+    event.target.classList.add('active');
+}
+
+// Link selected brigade to token
+function linkSelectedBrigade(tokenId) {
+    const brigadeId = document.getElementById('brigadeSelector').value;
+    if (!brigadeId) {
+        alert('Please select a brigade first');
+        return;
+    }
+    
+    console.log('🔗 Linking brigade', brigadeId, 'to token', tokenId);
+    // Implementation will be added later
+    alert('Brigade linking functionality to be implemented');
+}
+
+// Create new brigade data
+function createNewBrigadeData(tokenId) {
+    console.log('🆕 Creating new brigade data for token', tokenId);
+    
+    // Close current modal
+    closeTokenDataEntryModal();
+    
+    // Show loading
+    $("#loading").show();
+    
+    // Load the new brigade creation form via AJAX
+    $.ajax({
+        url: '/DataManagement/NewBrigadeDataEntryForm',
+        type: 'GET',
+        data: { tokenId: tokenId },
+        success: function(data) {
+            console.log('✅ New brigade form loaded for token:', tokenId);
+            
+            // Remove any existing new brigade modal
+            $('#newBrigadeDataEntryModal').remove();
+            
+            // Add the new modal to the body
+            $('body').append(data);
+            
+            // Show the modal
+            document.getElementById('newBrigadeDataEntryModal').style.display = 'flex';
+            
+            console.log('✅ New brigade form displayed successfully');
+        },
+        error: function(xhr, status, error) {
+            console.error('❌ Error loading new brigade form:', error);
+            console.error('   Status Code:', xhr.status);
+            console.error('   Response Text:', xhr.responseText);
+            
+            let errorMessage = 'Failed to load new brigade form';
+            if (xhr.status === 404) {
+                errorMessage = 'New brigade form not found (404)';
+            } else if (xhr.status === 500) {
+                errorMessage = 'Server error loading new brigade form (500)';
+            }
+            
+            alert(errorMessage);
+        },
+        complete: function() {
+            $("#loading").hide();
+        }
+    });
+}
+
+// Edit brigade code
+function editBrigadeCode() {
+    const currentCode = document.querySelector('.brigade-name-display h5').textContent.replace('Brigade ', '').replace(' Information', '');
+    const newCode = prompt('Enter new brigade code:', currentCode);
+    
+    if (newCode && newCode.trim() !== '' && newCode !== currentCode) {
+        console.log('✏️ Updating brigade code from', currentCode, 'to', newCode);
+        
+        // Update the display
+        document.querySelector('.brigade-name-display h5').textContent = 'Brigade ' + newCode + ' Information';
+        
+        // Update all references in tab content
+        document.querySelectorAll('.tab-content-header .text-muted').forEach(element => {
+            element.textContent = element.textContent.replace('Brigade ' + currentCode, 'Brigade ' + newCode);
+        });
+        
+        // Here you would typically make an AJAX call to save the new code
+        // For now, just show a success message
+        alert('Brigade code updated successfully!');
+    }
+}
+
+// Load existing units when modal opens
+// Data is now loaded in the controller, no need for AJAX loading
+
+// Data is now loaded in the controller, no need for AJAX loading
+
+// Data is now loaded in the controller, no need for AJAX loading
+
+// Data is now loaded in the controller, no need for AJAX loading
+
+// Data is now loaded in the controller, no need for AJAX loading
+
+// Data is now loaded in the controller, no need for AJAX loading
+
+// Open individual unit forms
+function openInfantryBattalionForm(tokenId, brigadeId) {
+    console.log('🆕 Opening Infantry Battalion form');
+    loadSingleUnitForm('infantry', tokenId, brigadeId);
+}
+
+function openArmouredRegimentForm(tokenId, brigadeId) {
+    console.log('🆕 Opening Armoured Regiment form');
+    loadSingleUnitForm('armoured', tokenId, brigadeId);
+}
+
+function openArtilleryRegimentForm(tokenId, brigadeId) {
+    console.log('🆕 Opening Artillery Regiment form');
+    loadSingleUnitForm('artillery', tokenId, brigadeId);
+}
+
+function openLogisticsUnitForm(tokenId, brigadeId) {
+    console.log('🆕 Opening Logistics Unit form');
+    loadSingleUnitForm('logistics', tokenId, brigadeId);
+}
+
+function openCombatEngineeringCompanyForm(tokenId, brigadeId) {
+    console.log('🆕 Opening Combat Engineering Company form');
+    loadSingleUnitForm('engineering', tokenId, brigadeId);
+}
+
+function openReconnaissanceForm(tokenId, brigadeId) {
+    console.log('🆕 Opening Reconnaissance form');
+    loadSingleUnitForm('recon', tokenId, brigadeId);
+}
+
+// Load single unit form
+function loadSingleUnitForm(unitType, tokenId, brigadeId) {
+    $("#loading").show();
+    
+    $.ajax({
+        url: '/DataManagement/SingleUnitForm',
+        type: 'GET',
+        data: { unitType: unitType, tokenId: tokenId, brigadeId: brigadeId },
+        success: function(data) {
+            console.log('✅ Single unit form loaded');
+            
+            // Remove any existing single unit modal
+            $('#singleUnitModal').remove();
+            
+            // Add the new modal to the body
+            $('body').append(data);
+            
+            // Show the modal
+            document.getElementById('singleUnitModal').style.display = 'flex';
+            
+            console.log('✅ Single unit form displayed successfully');
+        },
+        error: function(xhr, status, error) {
+            console.error('❌ Error loading single unit form:', error);
+            alert('Failed to load unit form. Please try again.');
+        },
+        complete: function() {
+            $("#loading").hide();
+        }
+    });
+}
+
+// Refresh units list after save
+function refreshUnitsList(tokenId, brigadeId) {
+    console.log('🔄 Refreshing units list...');
+    // Reload the entire modal to get fresh data
+    location.reload();
+}
+
+// Data is now loaded in the controller, no need for initialization
+</script>

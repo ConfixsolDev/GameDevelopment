@@ -1,0 +1,204 @@
+@model TechWebSol.ViewModels.TokenGroupDetailsViewModel
+@{
+    ViewData["Title"] = "Token Group Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-layer-group"></i> Token Group Details
+                    </h3>
+                    <div class="card-tools">
+                        <a href="@Url.Action("EditTokenGroup", "AdminToken", new { id = Model.Id })" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Edit Group
+                        </a>
+                        <a href="@Url.Action("ManageTokenGroups", "AdminToken")" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Groups
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Group Information -->
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h4>Group Information</h4>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Name:</strong></td>
+                                    <td>@Model.Name</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Code:</strong></td>
+                                    <td><span class="badge bg-info">@Model.GroupCode</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Category:</strong></td>
+                                    <td>@(Model.Category ?? "N/A")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td>
+                                        @if (Model.IsActive)
+                                        {
+                                            <span class="badge bg-success">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Inactive</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Created By:</strong></td>
+                                    <td>@(Model.CreatedByUserName ?? "N/A")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Created At:</strong></td>
+                                    <td>@Model.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")</td>
+                                </tr>
+                            </table>
+                            
+                            @if (!string.IsNullOrEmpty(Model.Description))
+                            {
+                                <h5>Description</h5>
+                                <p class="text-muted">@Model.Description</p>
+                            }
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Statistics</h5>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="mb-3">
+                                                <h3 class="text-primary">@Model.TokenCount</h3>
+                                                <small class="text-muted">Active Tokens</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="mb-3">
+                                                <h3 class="text-success">@Model.TeamAssignmentCount</h3>
+                                                <small class="text-muted">Team Assignments</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tokens Section -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h4>Tokens in this Group</h4>
+                            @if (Model.Tokens.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Token Name</th>
+                                                <th>Asset Type</th>
+                                                <th>Status</th>
+                                                <th>Created At</th>
+                                                <th>Coverage</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var token in Model.Tokens)
+                                            {
+                                                <tr>
+                                                    <td><strong>@token.Name</strong></td>
+                                                    <td>@(token.Notes ?? "N/A")</td>
+                                                    <td>
+                                                        @if (token.IsActive)
+                                                        {
+                                                            <span class="badge bg-success">Active</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-danger">Inactive</span>
+                                                        }
+                                                    </td>
+                                                    <td>@(token.CreatedDate?.ToString("MM/dd/yyyy") ?? "N/A")</td>
+                                                    <td>
+                                                        @if (token.IsManualToken)
+                                                        {
+                                                            <span class="badge bg-info">Map Token</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-secondary">Touch Token</span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i> No tokens assigned to this group yet.
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Team Assignments Section -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h4>Team Assignments</h4>
+                            @if (Model.TeamAssignments.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Team Name</th>
+                                                <th>Team Code</th>
+                                                <th>Assigned At</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var assignment in Model.TeamAssignments)
+                                            {
+                                                <tr>
+                                                    <td><strong>@assignment.Team.Name</strong></td>
+                                                    <td><span class="badge bg-info">@assignment.Team.TeamCode</span></td>
+                                                    <td>@assignment.AssignedAt.ToString("MMM dd, yyyy")</td>
+                                                    <td>
+                                                        @if (assignment.IsActive)
+                                                        {
+                                                            <span class="badge bg-success">Active</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-danger">Inactive</span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i> No team assignments for this group yet.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,357 @@
+@inject IUserSessionService _userSessionService;
+@{
+    var currentUser = _userSessionService.GetCurrentUser();
+    Layout = "_GamePlayLayout";
+    ViewData["Title"] = "Game Play Arena";
+    ViewData["Subtitle"] = "Strategic Command Center - Fox Land vs Blue Land";
+}
+
+<script>
+    // Set force type directly from server-side session
+    window.currentTeamInfo = {
+        forceType: '@(currentUser?.ForceType ?? "Neutral")'
+    };
+    
+    console.log('🎯 Force type set from session:', window.currentTeamInfo.forceType);
+</script>
+
+<div class="gameplay-container">
+    <!-- MAIN AREA -->
+    <main class="game-main-area">
+        <!-- MAP -->
+        <div class="game-map-container">
+            <div id="gameMap"></div>
+        </div>
+
+        <!-- LEFT: Region Panel - Lazy Loaded -->
+        <div id="regionPanelContainer">
+            <!-- Will be lazy loaded -->
+        </div>
+
+        <!-- Overlay Controls - Lazy Loaded -->
+        <div id="overlayControlsContainer">
+            <!-- Will be lazy loaded -->
+        </div>
+
+        <!-- BOTTOM-LEFT: Coordinates -->
+        <div class="coordinates-display slide-up" id="coordsBox">
+            <div class="coord-item"><span class="coord-label">Lat:</span><span class="coord-value" id="latVal">—</span></div>
+            <div class="coord-item"><span class="coord-label">Lng:</span><span class="coord-value" id="lngVal">—</span></div>
+            <div class="coord-item"><span class="coord-label">Zoom:</span><span class="coord-value" id="zoomVal">—</span></div>
+        </div>
+
+        <!-- BOTTOM-RIGHT: Quick Actions -->
+        <div class="quick-actions slide-up">
+            <button id="adjudicateMoveBtn" class="action-btn action-btn-primary" title="Adjudicate Military Movements" onclick="runMilitaryAdjudication()">
+                <i class="fas fa-chart-line"></i>
+            </button>
+            <button id="clearSelectionBtn" class="action-btn" title="Clear Selection">
+                <i class="fas fa-times-circle"></i>
+            </button>
+            <button id="centerMapBtn" class="action-btn" title="Center Map">
+                <i class="fas fa-crosshairs"></i>
+            </button>
+            <button id="toggleLayersBtn" class="action-btn" title="Toggle Layers">
+                <i class="fas fa-layer-group"></i>
+            </button>
+            <button id="toggleBoundaryBtn" class="action-btn" title="Toggle Game Area Boundary">
+                <i class="fas fa-square"></i>
+            </button>
+        </div>
+    </main>
+
+    <!-- RIGHT SIDEBAR -->
+    <aside class="game-sidebar">
+        <!-- Will be populated by components -->
+    </aside>
+
+    <!-- BOTTOM PANEL -->
+    <div class="game-bottom-panel">
+        <!-- Will be populated by components -->
+    </div>
+</div>
+
+<!-- Modal Container - All modals will be lazy loaded here -->
+<div id="modalsContainer">
+    <!-- Modals will be lazy loaded -->
+</div>
+
+<!-- Scripts Container - Lazy Loaded -->
+<div id="scriptsContainer">
+    <!-- Scripts will be lazy loaded -->
+</div>
+
+<!-- Additional Map Libraries -->
+<link rel="stylesheet" href="~/lib/leaflet/css/leaflet.css" />
+<link rel="stylesheet" href="~/lib/leaflet/css/leaflet.draw.css" />
+<link rel="stylesheet" href="~/css/regionControls.css" />
+<link rel="stylesheet" href="~/css/militarySymbols.css" />
+<link rel="stylesheet" href="~/css/attackSymbols.css" />
+<link rel="stylesheet" href="~/css/defenseSymbols.css" />
+<link rel="stylesheet" href="~/css/combatSimulation.css" />
+
+<!-- Core Scripts -->
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+<!-- Map Libraries -->
+<script src="~/lib/leaflet/js/leaflet.js"></script>
+<script src="~/lib/leaflet/js/leaflet.draw.js"></script>
+<script src="~/lib/leaflet/js/turf.min.js"></script>
+<script src="~/lib/leaflet/js/leaflet-providers.js"></script>
+
+<!-- GamePlay Arena JavaScript Modules -->
+<script src="~/js/tileServerConfig.js"></script>
+<script src="~/js/lazy-loader.js"></script>
+<script src="~/js/MilitarySymbolRenderer.js"></script>
+<script src="~/js/AttackSymbolRenderer.js"></script>
+<script src="~/js/DefenseSymbolRenderer.js"></script>
+<script src="~/js/DefensePlanningManager.js"></script>
+<script src="~/js/NatoEffectivenessEngine.js"></script>
+<script src="~/js/CombatSimulationEngine.js"></script>
+<script src="~/js/SimulationResultsManager.js"></script>
+<script src="~/js/NatoTerrainEngine.js"></script>
+<script src="~/js/TerrainIntegrationService.js"></script>
+<script src="~/js/NatoAiAnalysisEngine.js"></script>
+<script src="~/js/AiIntegrationService.js"></script>
+<script src="~/js/HlaIntegrationAdapter.js"></script>
+<script src="~/js/InteroperabilityService.js"></script>
+<script src="~/js/NatoSystemIntegrator.js"></script>
+<script src="~/js/TokenManager.js"></script>
+<script src="~/js/TokenPlacementManager.js"></script>
+<script src="~/js/suspectedTokenManager.js"></script>
+<script src="~/js/TokenActionModeManager.js"></script>
+<script src="~/js/AttackVisualizationManager.js"></script>
+<script src="~/js/RegionManager.js"></script>
+<script src="~/js/regionControls.js"></script>
+<script src="~/js/gamePlayManager.js"></script>
+<script src="~/js/mapControls.js"></script>
+<script src="~/js/scenarioPlanning.js"></script>
+<script src="~/js/militaryAdjudication.js"></script>
+<script src="~/js/combatSimulation.js"></script>
+
+<!-- Defense Planning Functions -->
+<script>
+// Global defense planning functions
+function startKillZoneDrawing(type) {
+    if (window.defensePlanningManager) {
+        window.defensePlanningManager.startKillZoneDrawing(type);
+        console.log(`🛡️ Started drawing ${type} kill zone`);
+    } else {
+        console.error('Defense planning manager not available');
+    }
+}
+
+function startMinefieldDrawing(type) {
+    if (window.defensePlanningManager) {
+        window.defensePlanningManager.startMinefieldDrawing(type);
+        console.log(`🛡️ Started drawing ${type} minefield`);
+    } else {
+        console.error('Defense planning manager not available');
+    }
+}
+
+function startDefenseZoneDrawing(type) {
+    if (window.defensePlanningManager) {
+        window.defensePlanningManager.startDefenseZoneDrawing(type);
+        console.log(`🛡️ Started drawing ${type} defense zone`);
+    } else {
+        console.error('Defense planning manager not available');
+    }
+}
+
+function startObstacleDrawing(type) {
+    if (window.defensePlanningManager) {
+        window.defensePlanningManager.startObstacleDrawing(type);
+        console.log(`🛡️ Started drawing ${type} obstacle`);
+    } else {
+        console.error('Defense planning manager not available');
+    }
+}
+
+function placeDefensivePosition(type) {
+    if (window.defensePlanningManager) {
+        window.defensePlanningManager.placeDefensivePosition(type);
+        console.log(`🛡️ Started placing ${type} defensive position`);
+    } else {
+        console.error('Defense planning manager not available');
+    }
+}
+
+function startWithdrawalRouteDrawing(type) {
+    if (window.defensePlanningManager) {
+        window.defensePlanningManager.startWithdrawalRouteDrawing(type);
+        console.log(`🛡️ Started drawing ${type} withdrawal route`);
+    } else {
+        console.error('Defense planning manager not available');
+    }
+}
+
+function startDefensiveLineDrawing(type) {
+    if (window.defensePlanningManager) {
+        window.defensePlanningManager.startDefensiveLineDrawing(type);
+        console.log(`🛡️ Started drawing ${type} defensive line`);
+    } else {
+        console.error('Defense planning manager not available');
+    }
+}
+
+function cancelDefenseDrawing() {
+    if (window.defensePlanningManager) {
+        window.defensePlanningManager.cancelDrawing();
+        console.log('🛡️ Cancelled defense drawing');
+    } else {
+        console.error('Defense planning manager not available');
+    }
+}
+
+// DEBUG: Test API routing
+async function testApiRouting() {
+    console.log('🧪 Testing API routing...');
+    
+    try {
+        // Test a known working endpoint first
+        console.log('1. Testing known working endpoint (GetPlacedTokens)...');
+        const placedResponse = await fetch('/GamePlay/GetPlacedTokens');
+        console.log('📡 GetPlacedTokens status:', placedResponse.status);
+        
+        if (placedResponse.status === 200) {
+            console.log('✅ GetPlacedTokens works - routing is functional');
+        } else {
+            console.error('❌ GetPlacedTokens failed - routing issue');
+            return null;
+        }
+        
+        // Test the simple test endpoint
+        console.log('2. Testing TestApi endpoint...');
+        const testResponse = await fetch('/GamePlay/TestApi');
+        console.log('📡 TestApi status:', testResponse.status);
+        
+        if (testResponse.status === 200) {
+            const testData = await testResponse.json();
+            console.log('✅ TestApi response:', testData);
+        } else {
+            console.error('❌ TestApi failed with status:', testResponse.status);
+        }
+        
+        // Now test the GetCurrentTeamInfo endpoint
+        console.log('3. Testing GetCurrentTeamInfo API...');
+        const teamResponse = await fetch('/GamePlay/GetCurrentTeamInfo');
+        console.log('📡 GetCurrentTeamInfo status:', teamResponse.status);
+        
+        if (teamResponse.status === 404) {
+            console.error('❌ GetCurrentTeamInfo endpoint not found (404)');
+            return null;
+        } else if (teamResponse.status === 200) {
+            const teamData = await teamResponse.json();
+            console.log('✅ GetCurrentTeamInfo response:', teamData);
+            return teamData;
+        } else {
+            console.error('❌ GetCurrentTeamInfo failed with status:', teamResponse.status);
+            const errorText = await teamResponse.text();
+            console.error('Error response:', errorText);
+            return null;
+        }
+    } catch (error) {
+        console.error('❌ Error testing API routing:', error);
+        return null;
+    }
+}
+
+// DEBUG: Test force type detection from session
+function testForceTypeFromSession() {
+    console.log('🧪 Testing force type detection from session...');
+    
+    try {
+        // Check session data
+        console.log('1. Checking session data...');
+        console.log('  - window.currentTeamInfo:', window.currentTeamInfo);
+        
+        // Test force type detection
+        console.log('2. Testing force type detection...');
+        const forceType = window.defensePlanningManager.getCurrentForceType();
+        
+        // Test color detection
+        console.log('3. Testing color detection...');
+        const color = window.defensePlanningManager.renderer?.getForceColor(forceType);
+        
+        console.log('📊 Results:');
+        console.log('  - Session Team Info:', window.currentTeamInfo);
+        console.log('  - Force Type:', forceType);
+        console.log('  - Color:', color);
+        
+        return { teamInfo: window.currentTeamInfo, forceType, color };
+    } catch (error) {
+        console.error('❌ Error in test:', error);
+        return null;
+    }
+}
+
+// DEBUG: Test defense zone creation and right-click
+function testDefenseZoneWithRightClick() {
+    console.log('🧪 Testing defense zone creation and right-click...');
+    
+    try {
+        // Test force type first
+        const forceType = window.defensePlanningManager.getCurrentForceType();
+        console.log('1. Force type:', forceType);
+        
+        // Create a test defense zone
+        console.log('2. Creating test defense zone...');
+        window.defensePlanningManager.startDefenseZoneDrawing('primary');
+        
+        console.log('📋 Instructions:');
+        console.log('  - Draw a 4-sided polygon on the map');
+        console.log('  - The zone should have correct colors based on your force type');
+        console.log('  - The text should have NO background color (transparent)');
+        console.log('  - Right-click on the zone to test delete functionality');
+        
+        return true;
+    } catch (error) {
+        console.error('❌ Error in test:', error);
+        return false;
+    }
+}
+
+// DEBUG: Test minefield hover fix
+function testMinefieldHover() {
+    console.log('🧪 Testing minefield hover fix...');
+    
+    try {
+        // Create a test minefield
+        console.log('1. Creating test minefield...');
+        window.defensePlanningManager.startMinefieldDrawing('antipersonnel');
+        
+        console.log('📋 Instructions:');
+        console.log('  - Draw a 4-sided polygon on the map');
+        console.log('  - Hover over the mine icons');
+        console.log('  - Mines should NOT move or jump around');
+        console.log('  - Right-click on mines to test delete functionality');
+        
+        return true;
+    } catch (error) {
+        console.error('❌ Error in test:', error);
+        return false;
+    }
+}
+
+function cancelDefenseZoneDrawing() {
+    if (window.defensePlanningManager) {
+        window.defensePlanningManager.cancelDrawing();
+        console.log('🛡️ Cancelled defense zone drawing');
+    } else {
+        console.error('Defense planning manager not available');
+    }
+}
+
+function clearAllDefenseElements() {
+    if (window.defensePlanningManager) {
+        if (confirm('Are you sure you want to clear all defense elements?')) {
+            window.defensePlanningManager.clearAll();
+            console.log('🛡️ Cleared all defense elements');
+        }
+    } else {
+        console.error('Defense planning manager not available');
+    }
+}
+</script>
+
