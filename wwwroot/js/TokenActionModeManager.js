@@ -1484,7 +1484,7 @@ window.showNotification = function(message, type = 'info') {
     
     // Simple fallback notification system
     if (type === 'error') {
-        alert('Error: ' + message);
+        console.error('Error: ' + message);
     }
 };
 function cancelTokenMode() {

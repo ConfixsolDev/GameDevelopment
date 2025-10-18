@@ -185,6 +185,51 @@ class AttackSymbolRenderer {
         return name.substring(0, 3).toUpperCase();
     }
 
+    /**
+     * Get token insignia based on unit type symbol (center symbol)
+     * @param {Object} token - Token object with unitType property
+     * @returns {string} Unit type symbol (e.g., "O" for Infantry, "X" for Armored)
+     */
+    getTokenInsignia(token) {
+        if (!token || !token.unitType) {
+            return 'O'; // Default to Infantry (circle)
+        }
+
+        // Map unit types to their symbols (matching what's displayed in center of token)
+        const unitTypeSymbols = {
+            'Infantry': 'O',           // Circle
+            'Armoured': 'X',           // X symbol  
+            'Mechanized': 'X',         // X symbol
+            'Artillery': '◊',          // Diamond
+            'Aviation': '△',           // Triangle
+            'AirDefense': '◊',         // Diamond
+            'Engineers': '⚒',         // Hammer/pick
+            'Signals': '◊',            // Diamond
+            'Logistics': '◊',          // Diamond
+            'Medical': '✚',           // Cross
+            'Reconnaissance': '◊',     // Diamond
+            'SpecialForces': '◊',      // Diamond
+            'AirborneParatroop': '△',  // Triangle
+            'Marines': 'O',            // Circle
+            'Cavalry': 'X',            // X symbol
+            'HeadquartersCommand': '◊', // Diamond
+            'Intelligence': '◊',       // Diamond
+            'MilitaryPolice': '✚',    // Cross
+            'CBRN': '◊',              // Diamond
+            'Maintenance': '⚒',       // Hammer/pick
+            'Cyber': '◊'              // Diamond
+        };
+
+        // Handle both string and numeric unit types
+        let unitType = token.unitType;
+        if (typeof unitType === 'number') {
+            // Convert numeric unit type to string
+            const typeNames = ['Infantry', 'Armoured', 'Mechanized', 'Artillery', 'Aviation', 'AirDefense', 'Engineers', 'Signals', 'Logistics', 'Medical', 'Reconnaissance', 'SpecialForces', 'AirborneParatroop', 'Marines', 'Cavalry', 'HeadquartersCommand', 'Intelligence', 'MilitaryPolice', 'CBRN', 'Maintenance', 'Cyber'];
+            unitType = typeNames[unitType] || 'Infantry';
+        }
+
+        return unitTypeSymbols[unitType] || 'O';
+    }
 
     /**
      * Create attack line with NATO styling (arrowhead at START, lines extend to target)
@@ -284,15 +329,18 @@ class AttackSymbolRenderer {
         const fullPathMidpoint = Math.floor(path.length / 2);
         const labelPos = path[fullPathMidpoint];
         
-        // Use sequential attack number if provided, otherwise fallback to unit symbol
+        // Use token insignia and unit number instead of sequential numbers
         let labelText = '';
-        if (options.attackNumber) {
-            labelText = options.attackNumber.toString();
-            console.log('🎯 Creating attack label with sequential number:', labelText);
+        if (options.attackerToken) {
+            // Extract insignia and unit number from attacker token
+            const insignia = this.getTokenInsignia(options.attackerToken);
+            const unitNumber = options.attackerToken.unitDesignation || '';
+            labelText = `${insignia} ${unitNumber}`.trim();
+            console.log('🎯 Creating attack label with token insignia and number:', labelText);
         } else {
-            const attackerSymbol = options.attackerSymbol || options.attackerName || '';
-            labelText = this.extractSymbolNumber(attackerSymbol);
-            console.log('🎯 Creating attack label with unit symbol:', labelText);
+            // Fallback to sequential number if no token data available
+            labelText = options.attackNumber ? options.attackNumber.toString() : '1';
+            console.log('🎯 Creating attack label with fallback sequential number:', labelText);
         }
         
         console.log('🎯 Label position:', labelPos);

@@ -433,6 +433,16 @@ class DefensePlanningManager {
                     });
                     removedFromMap = true;
                 }
+                // Also remove the border if it exists
+                if (elementData.layers && elementData.layers.border) {
+                    this.minefieldLayer.removeLayer(elementData.layers.border);
+                    removedFromMap = true;
+                }
+                // Also remove the label if it exists
+                if (elementData.layers && elementData.layers.label) {
+                    this.minefieldLayer.removeLayer(elementData.layers.label);
+                    removedFromMap = true;
+                }
             } else if (category === 'obstacle') {
                 if (elementData.layers && elementData.layers.line) {
                     this.obstacleLayer.removeLayer(elementData.layers.line);
@@ -618,6 +628,24 @@ class DefensePlanningManager {
                         this.minefieldLayer.addLayer(marker);
                         marker.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'minefield'));
                     });
+                }
+                // Add single border around entire minefield
+                if (element.border) {
+                    console.log(`🔧 Adding reconstructed minefield border to map:`, element.border);
+                    this.minefieldLayer.addLayer(element.border);
+                    element.border.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'minefield'));
+                    console.log(`🔧 Reconstructed minefield border added successfully`);
+                } else {
+                    console.log(`🔧 No border element found in reconstructed minefield`);
+                }
+                // Add "Mine field" text label above the minefield
+                if (element.label) {
+                    console.log(`🔧 Adding reconstructed minefield label to map:`, element.label);
+                    this.minefieldLayer.addLayer(element.label);
+                    element.label.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'minefield'));
+                    console.log(`🔧 Reconstructed minefield label added successfully`);
+                } else {
+                    console.log(`🔧 No label element found in reconstructed minefield`);
                 }
             } else if (dbElement.category === 'obstacle') {
                 element = this.renderer.createObstacle(coordinates, dbElement.type, { forceType });
@@ -1072,7 +1100,7 @@ class DefensePlanningManager {
                 if (!element) {
                     throw new Error('Failed to create minefield element');
                 }
-                // Minefields now only return markers (NATO APP-6 standard)
+                // Minefields now return markers and border
                 if (element.markers) {
                     console.log(`🔧 Adding ${element.markers.length} mine markers to map`);
                     element.markers.forEach(marker => {
@@ -1080,6 +1108,24 @@ class DefensePlanningManager {
                         // Add right-click delete functionality to each mine marker
                         marker.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, elementId, 'minefield'));
                     });
+                }
+                // Add single border around entire minefield
+                if (element.border) {
+                    console.log(`🔧 Adding minefield border to map:`, element.border);
+                    this.minefieldLayer.addLayer(element.border);
+                    element.border.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, elementId, 'minefield'));
+                    console.log(`🔧 Minefield border added successfully`);
+                } else {
+                    console.log(`🔧 No border element found in minefield`);
+                }
+                // Add "Mine field" text label above the minefield
+                if (element.label) {
+                    console.log(`🔧 Adding minefield label to map:`, element.label);
+                    this.minefieldLayer.addLayer(element.label);
+                    element.label.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, elementId, 'minefield'));
+                    console.log(`🔧 Minefield label added successfully`);
+                } else {
+                    console.log(`🔧 No label element found in minefield`);
                 }
             } else if (category === 'defensezone') {
                 console.log(`🔧 Creating defense zone with type: ${type}`);

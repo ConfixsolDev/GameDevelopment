@@ -183,7 +183,7 @@ class LabelManager {
             const lat = parseFloat(document.getElementById('labelLat').value);
             const lng = parseFloat(document.getElementById('labelLng').value);
             const desc = document.getElementById('labelDesc').value.trim();
-            if (!text || !Number.isFinite(lat) || !Number.isFinite(lng)) { alert('Please provide title and valid coordinates.'); return; }
+            if (!text || !Number.isFinite(lat) || !Number.isFinite(lng)) { console.error('Please provide title and valid coordinates.'); return; }
             await this.saveLabel({ text, icon, color, lat, lng, desc });
             close();
         };
@@ -225,11 +225,11 @@ class LabelManager {
                     text, latitude: lat, longitude: lng, labelType: 'point', color, icon, fontSize: 13, fontWeight: '600', description: desc
                 });
             } else {
-                alert('Failed to save label');
+                console.error('Failed to save label');
             }
         } catch (e) {
             console.error('Save label failed', e);
-            alert('Error saving label');
+            console.error('Error saving label');
         }
     }
 
@@ -242,11 +242,11 @@ class LabelManager {
                 this.layer.removeLayer(marker);
                 this.labelsById.delete(id);
             } else {
-                alert('Failed to delete label');
+                console.error('Failed to delete label');
             }
         } catch (e) {
             console.error('Delete failed', e);
-            alert('Error deleting label');
+            console.error('Error deleting label');
         }
     }
 

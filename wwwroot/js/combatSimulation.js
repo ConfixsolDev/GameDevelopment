@@ -60,7 +60,7 @@ async function runCombatSimulation() {
         if (typeof toastr !== 'undefined') {
             toastr.error('Error loading attack orders: ' + error.message, 'Error');
         } else {
-            alert('Error loading attack orders: ' + error.message);
+            console.error('Error loading attack orders: ' + error.message);
         }
     }
 }
@@ -124,7 +124,7 @@ async function runSimulationForOrder(orderId, attackerName, targetName) {
         if (typeof toastr !== 'undefined') {
             toastr.error('Error running simulation: ' + error.message, 'Error');
         } else {
-            alert('Error: ' + error.message);
+            console.error('Error: ' + error.message);
         }
     }
 }
@@ -136,7 +136,7 @@ function simulateAllOrders() {
     if (typeof toastr !== 'undefined') {
         toastr.info('Simulating all attack orders. This feature is coming soon!', 'Multiple Simulations');
     } else {
-        alert('Simulating all attack orders. This feature is coming soon!');
+        console.log('Simulating all attack orders. This feature is coming soon!');
     }
 }
 

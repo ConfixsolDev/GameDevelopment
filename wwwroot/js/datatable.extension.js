@@ -16,7 +16,7 @@
         };
     }
     catch (e) {
-        alert(e);
+        console.error(e);
     }
     return datatable;
 

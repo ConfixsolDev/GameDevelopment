@@ -9,7 +9,6 @@ class AttackVisualizationManager {
         this.attackOrders = new Map(); // Store attack order data
         this.attackLineGroup = null; // Leaflet layer group for attack lines
         this.attackMarkers = new Map(); // Store attack markers (arrows)
-        this.attackSequenceCounter = 0; // Track sequential attack numbers for labeling
         
         console.log('🎯 AttackVisualizationManager initialized');
     }
@@ -439,11 +438,7 @@ class AttackVisualizationManager {
         // Get attack type from attack order if available
         const attackType = attackLineData.attackOrder?.intent?.natoAttackType || 'attack-main';
         
-        // Increment attack sequence counter for sequential numbering
-        this.attackSequenceCounter++;
-        const attackNumber = this.attackSequenceCounter;
-        
-        console.log('🎯 AttackVisualizationManager: Creating attack #', attackNumber, 'from', attacker.name, 'to', target.name);
+        console.log('🎯 AttackVisualizationManager: Creating attack from', attacker.name, 'to', target.name);
         
         let attackLine;
         if (window.attackSymbolRenderer) {
@@ -451,10 +446,9 @@ class AttackVisualizationManager {
             const options = {
                 attackerName: attacker.name,
                 attackerSymbol: attacker.name,
-                attackerToken: attacker,  // Full attacker token data
+                attackerToken: attacker,  // Full attacker token data (includes organizationLevel, unitDesignation)
                 targetToken: target,      // Full target token data (has placerSide)
-                placerSide: target.placerSide || attacker.placerSide,  // Use target's placerSide first
-                attackNumber: attackNumber  // Pass sequential attack number for labeling
+                placerSide: target.placerSide || attacker.placerSide  // Use target's placerSide first
             };
             
             console.log('🎯 AttackVisualizationManager: Passing options to renderer:', options);

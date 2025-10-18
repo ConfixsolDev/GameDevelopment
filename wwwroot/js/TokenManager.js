@@ -328,12 +328,12 @@ class TokenManager {
                     window.currentTokenId = token.id;
                 } else {
                     console.error('❌ Token summary modal element not found');
-                    alert('Error: Could not display token summary modal');
+                    console.error('Error: Could not display token summary modal');
                 }
             },
             error: function(xhr, status, error) {
                 console.error('❌ Error loading token summary:', error);
-                alert('Failed to load token summary');
+                console.error('Failed to load token summary');
             },
             complete: function() {
                 $("#loading").hide();

@@ -306,11 +306,17 @@ class DefenseSymbolRenderer {
         minefieldConfig.type = type;
         minefieldConfig.forceColor = color;
         
-        // Create individual mine markers with icons
+        // Create individual mine markers with icons (no borders)
         const markers = this.createMinefieldMarkers(coordinates, minefieldConfig);
         
-        // Return only markers, no central icon
-        return { markers };
+        // Create single border around entire minefield
+        const border = this.createMinefieldBorder(coordinates, color);
+        
+        // Create "Mine field" text label above the minefield
+        const label = this.createMinefieldLabel(coordinates, color);
+        
+        // Return markers, border, and label
+        return { markers, border, label };
     }
 
     /**
@@ -440,6 +446,58 @@ class DefenseSymbolRenderer {
     }
 
     /**
+     * Create single border around entire minefield
+     */
+    createMinefieldBorder(coordinates, color) {
+        const border = L.polygon(coordinates, {
+            color: color,
+            weight: 4,
+            opacity: 1.0,
+            fillColor: 'transparent',
+            fillOpacity: 0,
+            className: 'minefield-border'
+        });
+        
+        console.log(`🎨 Created minefield border with ${coordinates.length} points, color: ${color}`);
+        return border;
+    }
+
+    /**
+     * Create "Mine field" text label above the minefield
+     */
+    createMinefieldLabel(coordinates, color) {
+        // Calculate the center point of the minefield
+        const bounds = L.latLngBounds(coordinates);
+        const center = bounds.getCenter();
+        
+        // Position the label above the center of the minefield
+        const labelLat = bounds.getNorth() + 0.0005; // Small offset above the northern edge
+        const labelLng = center.lng;
+        
+        const labelIcon = L.divIcon({
+            html: `<div class="minefield-label" style="
+                color: ${color};
+                font-weight: bold;
+                font-size: 14px;
+                text-align: center;
+                background: rgba(255, 255, 255, 0.8);
+                padding: 2px 6px;
+                border-radius: 3px;
+                border: 1px solid ${color};
+                white-space: nowrap;
+                font-family: Arial, sans-serif;
+            ">Mine field</div>`,
+            className: 'minefield-label-marker',
+            iconSize: [80, 20],
+            iconAnchor: [40, 10]
+        });
+        
+        const label = L.marker([labelLat, labelLng], { icon: labelIcon });
+        console.log(`🎨 Created minefield label at ${labelLat}, ${labelLng}`);
+        return label;
+    }
+
+    /**
      * Create minefield markers with proper grid line layout
      */
     createMinefieldMarkers(coordinates, config) {
@@ -463,14 +521,14 @@ class DefenseSymbolRenderer {
         // Calculate how many mines can fit horizontally
         const maxMinesHorizontal = Math.floor(polygonWidth / minSpacing);
         
-        // Use reasonable limits: minimum 3 mines, maximum 12 mines (reduced for better spacing)
-        const numMines = Math.max(3, Math.min(12, maxMinesHorizontal));
+        // Use reasonable limits: minimum 3 mines, maximum 8 mines (reduced for better spacing)
+        const numMines = Math.max(3, Math.min(8, maxMinesHorizontal));
         
         // Get current map zoom level for responsive sizing
         const currentZoom = this.map ? this.map.getZoom() : 14;
-        const cellSize = Math.max(16, Math.min(48, 20 + (currentZoom - 10) * 2)); // Responsive size based on zoom
-        const gridRows = 1;
-        const gridCols = numMines;
+        const cellSize = 24; // Fixed size to prevent overlap
+        const gridCols = Math.ceil(Math.sqrt(numMines));
+        const gridRows = Math.ceil(numMines / gridCols);
         
         // Calculate spacing between mines
         const horizontalSpacing = polygonWidth / (gridCols + 1);
@@ -483,9 +541,10 @@ class DefenseSymbolRenderer {
         // Create different mine variations for visual variety
         const mineTypes = ['standard', 'cross', 'diamond', 'dots'];
         
-        // Create grid of mines in a straight line
-        for (let row = 0; row < gridRows; row++) {
-            for (let col = 0; col < gridCols; col++) {
+        // Create grid of mines with proper spacing
+        let mineIndex = 0;
+        for (let row = 0; row < gridRows && mineIndex < numMines; row++) {
+            for (let col = 0; col < gridCols && mineIndex < numMines; col++) {
                 // Calculate position for this mine
                 const lat = startLat - (row * verticalSpacing);
                 const lng = startLng + (col * horizontalSpacing);
@@ -496,64 +555,58 @@ class DefenseSymbolRenderer {
                     const latlng = L.latLng(lat, lng);
                     
                     // Select different mine type for variety
-                    const mineType = mineTypes[col % mineTypes.length];
+                    const mineType = mineTypes[mineIndex % mineTypes.length];
                     const mineSvg = this.createMineSvg(mineType, mineColor);
                     
-                    // Create mine cell with proper styling
+                    // Create mine cell with proper styling (no border)
             const html = `
                         <div class="minefield-grid-cell" style="
                             width: ${cellSize}px;
                             height: ${cellSize}px;
-                            background: #FFFFFF;
-                            border: 2px solid #000000;
-                            border-radius: 4px;
-                    display: flex;
+                            background: transparent;
+                            border: none;
+                            display: flex;
                     align-items: center;
                     justify-content: center;
-                            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-                    cursor: pointer;
+                            cursor: pointer;
                             transition: all 0.2s ease;
                             transform-origin: center center;
                         ">
                             <div class="mine-icon-container" style="
-                                width: ${cellSize * 0.9}px;
-                                height: ${cellSize * 0.9}px;
-                                border-radius: 50%;
-                                border: 2px solid ${mineColor};
-                                background: rgba(255, 255, 255, 0.95);
+                                width: ${cellSize}px;
+                                height: ${cellSize}px;
+                                border: none;
+                                background: transparent;
                                 display: flex;
                                 align-items: center;
                                 justify-content: center;
-                                padding: 4px;
+                                padding: 2px;
                             ">
                                 ${mineSvg}
                             </div>
                 </div>
             `;
 
-            const icon = L.divIcon({
-                html: html,
+                    const icon = L.divIcon({
+                        html: html,
                         className: 'minefield-modern-marker',
-                        iconSize: [cellSize + 4, cellSize + 4],
-                        iconAnchor: [(cellSize + 4) / 2, (cellSize + 4) / 2]
-            });
+                        iconSize: [cellSize, cellSize],
+                        iconAnchor: [cellSize / 2, cellSize / 2]
+                    });
 
-            const marker = L.marker(latlng, { 
-                icon: icon,
+                    const marker = L.marker(latlng, { 
+                        icon: icon,
                         zIndexOffset: 1500
                     });
 
-                    // Hover effects disabled to prevent positioning issues
-                    // marker.on('mouseover', function(e) { ... });
-                    // marker.on('mouseout', function(e) { ... });
-
-            // Add click handler for minefield info
-            marker.on('click', () => {
-                console.log(`💣 Minefield clicked: ${config.name}`);
+                    // Add click handler for minefield info
+                    marker.on('click', () => {
+                        console.log(`💣 Minefield clicked: ${config.name}`);
                         // Show minefield details
-            });
+                    });
 
-            markers.push(marker);
+                    markers.push(marker);
+                    mineIndex++;
                 }
             }
         }
@@ -590,36 +643,36 @@ class DefenseSymbolRenderer {
         const variations = {
             'standard': `
                 <svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'>
-                    <circle cx='12' cy='12' r='5' fill='${color}'/>
-                    <line x1='12' y1='1.5' x2='12' y2='5' stroke='${color}' stroke-width='2'/>
-                    <line x1='12' y1='19' x2='12' y2='22.5' stroke='${color}' stroke-width='2'/>
-                    <line x1='1.5' y1='12' x2='5' y2='12' stroke='${color}' stroke-width='2'/>
-                    <line x1='19' y1='12' x2='22.5' y2='12' stroke='${color}' stroke-width='2'/>
-                    <line x1='4.2' y1='4.2' x2='6.6' y2='6.6' stroke='${color}' stroke-width='2'/>
-                    <line x1='17.4' y1='17.4' x2='19.8' y2='19.8' stroke='${color}' stroke-width='2'/>
-                    <line x1='4.2' y1='19.8' x2='6.6' y2='17.4' stroke='${color}' stroke-width='2'/>
-                    <line x1='17.4' y1='6.6' x2='19.8' y2='4.2' stroke='${color}' stroke-width='2'/>
+                    <circle cx='12' cy='12' r='8' fill='${color}'/>
+                    <line x1='12' y1='1.5' x2='12' y2='5' stroke='white' stroke-width='2'/>
+                    <line x1='12' y1='19' x2='12' y2='22.5' stroke='white' stroke-width='2'/>
+                    <line x1='1.5' y1='12' x2='5' y2='12' stroke='white' stroke-width='2'/>
+                    <line x1='19' y1='12' x2='22.5' y2='12' stroke='white' stroke-width='2'/>
+                    <line x1='4.2' y1='4.2' x2='6.6' y2='6.6' stroke='white' stroke-width='2'/>
+                    <line x1='17.4' y1='17.4' x2='19.8' y2='19.8' stroke='white' stroke-width='2'/>
+                    <line x1='4.2' y1='19.8' x2='6.6' y2='17.4' stroke='white' stroke-width='2'/>
+                    <line x1='17.4' y1='6.6' x2='19.8' y2='4.2' stroke='white' stroke-width='2'/>
                     <circle cx='15' cy='9' r='1.2' fill='white'/>
                 </svg>
             `,
             'cross': `
                 <svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'>
-                    <circle cx='12' cy='12' r='5' fill='${color}'/>
-                    <line x1='12' y1='2' x2='12' y2='22' stroke='${color}' stroke-width='3'/>
-                    <line x1='2' y1='12' x2='22' y2='12' stroke='${color}' stroke-width='3'/>
+                    <circle cx='12' cy='12' r='8' fill='${color}'/>
+                    <line x1='12' y1='2' x2='12' y2='22' stroke='white' stroke-width='3'/>
+                    <line x1='2' y1='12' x2='22' y2='12' stroke='white' stroke-width='3'/>
                     <circle cx='12' cy='12' r='2' fill='white'/>
                 </svg>
             `,
             'diamond': `
                 <svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'>
-                    <circle cx='12' cy='12' r='5' fill='${color}'/>
-                    <polygon points='12,2 18,8 12,14 6,8' fill='${color}' stroke='${color}' stroke-width='2'/>
+                    <circle cx='12' cy='12' r='8' fill='${color}'/>
+                    <polygon points='12,2 18,8 12,14 6,8' fill='white' stroke='white' stroke-width='2'/>
                     <circle cx='12' cy='12' r='2' fill='white'/>
                 </svg>
             `,
             'dots': `
                 <svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'>
-                    <circle cx='12' cy='12' r='5' fill='${color}'/>
+                    <circle cx='12' cy='12' r='8' fill='${color}'/>
                     <circle cx='8' cy='8' r='1.5' fill='white'/>
                     <circle cx='16' cy='8' r='1.5' fill='white'/>
                     <circle cx='8' cy='16' r='1.5' fill='white'/>

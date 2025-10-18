@@ -39,7 +39,7 @@ async function runMilitaryAdjudication() {
             if (typeof toastr !== 'undefined') {
                 toastr.error(result.message, 'Adjudication Failed');
             } else {
-                alert('Adjudication failed: ' + result.message);
+                console.error('Adjudication failed: ' + result.message);
             }
         }
     } catch (error) {
@@ -47,7 +47,7 @@ async function runMilitaryAdjudication() {
         if (typeof toastr !== 'undefined') {
             toastr.error('Error running adjudication: ' + error.message, 'Error');
         } else {
-            alert('Error: ' + error.message);
+            console.error('Error: ' + error.message);
         }
     }
 }

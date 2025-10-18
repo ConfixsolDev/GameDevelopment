@@ -1002,7 +1002,7 @@ class GamePlayManager {
         
         // Simple fallback notification system
         if (type === 'error') {
-            alert('Error: ' + message);
+            console.error('Error: ' + message);
         }
     }
 
@@ -1305,7 +1305,7 @@ function openDataEntry() {
                 console.log('✅ Data entry modal loaded and displayed successfully');
             } else {
                 console.error('❌ Modal element not found after append');
-                alert('Error: Modal element not found');
+                console.error('Error: Modal element not found');
             }
         },
         error: function(xhr, status, error) {
@@ -1327,7 +1327,7 @@ function openDataEntry() {
             if (typeof toastr !== 'undefined') {
                 toastr.error(errorMessage, 'Error');
             } else {
-                alert(errorMessage);
+                console.error(errorMessage);
             }
         },
         complete: function() {
@@ -1570,7 +1570,7 @@ window.switchGamePlayMap = async function(mapPath) {
         if (typeof toastr !== 'undefined') {
             toastr.error('Error loading map: ' + error.message, 'Error');
         } else {
-        alert('Error loading map: ' + error.message);
+        console.error('Error loading map: ' + error.message);
         }
     } finally {
         // ALWAYS remove loading overlay immediately

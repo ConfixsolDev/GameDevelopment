@@ -10,7 +10,7 @@ window.startRegionDrawing = function() {
         window.gamePlayManager.regionManager.startDrawingRegion();
     } else {
         console.error('Region manager not available');
-        alert('Region manager not available. Please wait for the system to initialize.');
+        console.warn('Region manager not available. Please wait for the system to initialize.');
     }
 };
 
@@ -20,20 +20,20 @@ window.clearAllRegions = function() {
         window.gamePlayManager.regionManager.clearAllRegions();
     } else {
         console.error('Region manager not available');
-        alert('Region manager not available. Please wait for the system to initialize.');
+        console.warn('Region manager not available. Please wait for the system to initialize.');
     }
 };
 
 window.addMapLabel = function() {
     console.log('addMapLabel called');
     // TODO: Implement map label creation
-    alert('Map label creation feature coming soon!');
+    console.log('Map label creation feature coming soon!');
 };
 
 window.clearAllLabels = function() {
     console.log('clearAllLabels called');
     // TODO: Implement label clearing
-    alert('Label clearing feature coming soon!');
+    console.log('Label clearing feature coming soon!');
 };
 
 window.selectForce = function(force) {
@@ -68,7 +68,7 @@ window.addMapLabel = function() {
             window.gamePlayManager.labelManager.startPlacement();
         } catch (e) {
             console.error('Failed to open label modal', e);
-            alert('Unable to open label creation modal');
+            console.error('Unable to open label creation modal');
         }
     } else {
         console.warn('Label manager not available, attempting lazy load...');
@@ -87,20 +87,20 @@ window.addMapLabel = function() {
                         }
                     } catch (e) {
                         console.error('Label manager loaded but failed to open modal', e);
-                        alert('Unable to open label creation modal');
+                        console.error('Unable to open label creation modal');
                     }
                 };
                 script.onerror = () => {
                     console.error('Failed to load LabelManager script');
-                    alert('Label manager not available. Please refresh the page.');
+                    console.error('Label manager not available. Please refresh the page.');
                 };
                 document.head.appendChild(script);
             } else {
-                alert('Label manager not available. Please wait for the system to initialize.');
+                console.error('Label manager not available. Please wait for the system to initialize.');
             }
         } catch (e) {
             console.error('Lazy load failed', e);
-            alert('Label manager not available. Please wait for the system to initialize.');
+            console.error('Label manager not available. Please wait for the system to initialize.');
         }
     }
 };
@@ -115,10 +115,10 @@ window.clearAllLabels = function() {
             console.log('All labels cleared');
         } catch (e) {
             console.error('Failed to clear labels', e);
-            alert('Unable to clear labels');
+            console.error('Unable to clear labels');
         }
     } else {
         console.error('Label manager not available');
-        alert('Label manager not available. Please wait for the system to initialize.');
+        console.error('Label manager not available. Please wait for the system to initialize.');
     }
 };
