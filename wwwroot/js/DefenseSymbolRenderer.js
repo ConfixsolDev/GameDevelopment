@@ -262,6 +262,20 @@ class DefenseSymbolRenderer {
     }
 
     /**
+     * Get a lighter shade of the force color for backgrounds
+     */
+    getLightForceColor(forceType) {
+        switch (forceType) {
+            case 'Blue Land':
+                return '#CCCCFF'; // Light blue
+            case 'Fox Land':
+                return '#FFCCCC'; // Light pink/red
+            default:
+                return '#FFDCDC'; // Default light red for neutral/other
+        }
+    }
+
+    /**
      * Create kill zone polygon on map
      */
     createKillZone(coordinates, type = 'primary', options = {}) {
@@ -296,27 +310,24 @@ class DefenseSymbolRenderer {
     createMinefield(coordinates, type = 'mixed', options = {}) {
         const minefieldConfig = this.symbols.minefields[type];
         
-        // Get force-based color
+        // Get force-based colors (dark for borders, light for backgrounds)
         const forceColor = this.getForceColor(options.forceType);
-        const color = forceColor || minefieldConfig.color;
+        const lightForceColor = this.getLightForceColor(options.forceType);
+        const borderColor = forceColor || minefieldConfig.color;
+        const backgroundColor = lightForceColor;
         
-        console.log(`🎨 Minefield color: ${color} (force: ${options.forceType})`);
+        console.log(`🎨 Minefield colors: border=${borderColor}, background=${backgroundColor} (force: ${options.forceType})`);
         
-        // Add type and color to config for marker styling
+        // Add colors to config for marker styling
         minefieldConfig.type = type;
-        minefieldConfig.forceColor = color;
+        minefieldConfig.borderColor = borderColor;
+        minefieldConfig.backgroundColor = backgroundColor;
         
-        // Create individual mine markers with icons (no borders)
+        // Create individual mine markers in a single horizontal line
         const markers = this.createMinefieldMarkers(coordinates, minefieldConfig);
         
-        // Create single border around entire minefield
-        const border = this.createMinefieldBorder(coordinates, color);
-        
-        // Create "Mine field" text label above the minefield
-        const label = this.createMinefieldLabel(coordinates, color);
-        
-        // Return markers, border, and label
-        return { markers, border, label };
+        // Return only markers (no label, no single border)
+        return { markers };
     }
 
     /**
@@ -498,119 +509,98 @@ class DefenseSymbolRenderer {
     }
 
     /**
-     * Create minefield markers with proper grid line layout
+     * Create minefield as a single cohesive unit with all cells together
      */
     createMinefieldMarkers(coordinates, config) {
         const markers = [];
         
-        // Use force color if available, otherwise use default config color
-        const mineColor = config.forceColor || config.color;
+        // Use force colors (dark for borders, light for backgrounds)
+        const borderColor = config.borderColor || config.color;
+        const backgroundColor = config.backgroundColor || '#FFDCDC';
         
         // Calculate polygon bounds
         const bounds = L.latLngBounds(coordinates);
         const center = bounds.getCenter();
         
-        // Calculate polygon dimensions
-        const polygonWidth = bounds.getEast() - bounds.getWest();
-        const polygonHeight = bounds.getNorth() - bounds.getSouth();
+        // Create mines as a single horizontal unit (like the reference image)
+        const numMines = 6; // Fixed number for consistent appearance
+        const cellWidth = 32; // Width of each rectangular cell
+        const cellHeight = 24; // Height of each rectangular cell
+        const spacing = 2; // Small gap between cells
         
-        // Calculate appropriate number of mines based on polygon size
-        // Increased minimum spacing between mines (in degrees) for better visibility
-        const minSpacing = 0.0015; // Increased spacing for better separation
-        
-        // Calculate how many mines can fit horizontally
-        const maxMinesHorizontal = Math.floor(polygonWidth / minSpacing);
-        
-        // Use reasonable limits: minimum 3 mines, maximum 8 mines (reduced for better spacing)
-        const numMines = Math.max(3, Math.min(8, maxMinesHorizontal));
-        
-        // Get current map zoom level for responsive sizing
-        const currentZoom = this.map ? this.map.getZoom() : 14;
-        const cellSize = 24; // Fixed size to prevent overlap
-        const gridCols = Math.ceil(Math.sqrt(numMines));
-        const gridRows = Math.ceil(numMines / gridCols);
-        
-        // Calculate spacing between mines
-        const horizontalSpacing = polygonWidth / (gridCols + 1);
-        const verticalSpacing = polygonHeight / (gridRows + 1);
-        
-        // Start position (top-left of grid)
-        const startLat = bounds.getNorth() - verticalSpacing;
-        const startLng = bounds.getWest() + horizontalSpacing;
+        // Calculate total width needed for all cells
+        const totalWidth = (numMines * cellWidth) + ((numMines - 1) * spacing);
         
         // Create different mine variations for visual variety
-        const mineTypes = ['standard', 'cross', 'diamond', 'dots'];
+        const mineTypes = ['standard', 'cross', 'diamond', 'dots', 'standard', 'cross'];
         
-        // Create grid of mines with proper spacing
-        let mineIndex = 0;
-        for (let row = 0; row < gridRows && mineIndex < numMines; row++) {
-            for (let col = 0; col < gridCols && mineIndex < numMines; col++) {
-                // Calculate position for this mine
-                const lat = startLat - (row * verticalSpacing);
-                const lng = startLng + (col * horizontalSpacing);
-                
-                // Check if this position is within the polygon
-                const point = L.latLng(lat, lng);
-                if (this.isPointInPolygon(point, coordinates)) {
-                    const latlng = L.latLng(lat, lng);
-                    
-                    // Select different mine type for variety
-                    const mineType = mineTypes[mineIndex % mineTypes.length];
-                    const mineSvg = this.createMineSvg(mineType, mineColor);
-                    
-                    // Create mine cell with proper styling (no border)
-            const html = `
-                        <div class="minefield-grid-cell" style="
-                            width: ${cellSize}px;
-                            height: ${cellSize}px;
-                            background: transparent;
-                            border: none;
-                            display: flex;
-                    align-items: center;
-                    justify-content: center;
-                            cursor: pointer;
-                            transition: all 0.2s ease;
-                            transform-origin: center center;
-                        ">
-                            <div class="mine-icon-container" style="
-                                width: ${cellSize}px;
-                                height: ${cellSize}px;
-                                border: none;
-                                background: transparent;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                padding: 2px;
-                            ">
-                                ${mineSvg}
-                            </div>
+        // Create HTML for all cells as one unit
+        let allCellsHtml = '';
+        for (let i = 0; i < numMines; i++) {
+            const mineType = mineTypes[i % mineTypes.length];
+            const mineSvg = this.createMineSvg(mineType, 'black'); // Use black symbols
+            
+            allCellsHtml += `
+                <div class="minefield-cell" style="
+                    width: ${cellWidth}px;
+                    height: ${cellHeight}px;
+                    background: ${backgroundColor};
+                    border: 2px solid ${borderColor};
+                    display: inline-block;
+                    margin-right: ${i < numMines - 1 ? spacing : 0}px;
+                    vertical-align: top;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+                ">
+                    <div class="mine-icon-container" style="
+                        width: ${cellWidth - 8}px;
+                        height: ${cellHeight - 8}px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin: 4px;
+                    ">
+                        ${mineSvg}
+                    </div>
                 </div>
             `;
-
-                    const icon = L.divIcon({
-                        html: html,
-                        className: 'minefield-modern-marker',
-                        iconSize: [cellSize, cellSize],
-                        iconAnchor: [cellSize / 2, cellSize / 2]
-                    });
-
-                    const marker = L.marker(latlng, { 
-                        icon: icon,
-                        zIndexOffset: 1500
-                    });
-
-                    // Add click handler for minefield info
-                    marker.on('click', () => {
-                        console.log(`💣 Minefield clicked: ${config.name}`);
-                        // Show minefield details
-                    });
-
-                    markers.push(marker);
-                    mineIndex++;
-                }
-            }
         }
         
+        // Create single marker with all cells as one unit with joint border
+        const html = `
+            <div class="minefield-unit" style="
+                display: inline-block;
+                white-space: nowrap;
+                border: 3px solid ${borderColor};
+                padding: 2px;
+                background: transparent;
+            ">
+                ${allCellsHtml}
+            </div>
+        `;
+
+        const icon = L.divIcon({
+            html: html,
+            className: 'minefield-unit-marker',
+            iconSize: [totalWidth + 10, cellHeight + 10], // Add space for joint border
+            iconAnchor: [(totalWidth + 10) / 2, (cellHeight + 10) / 2]
+        });
+
+        const marker = L.marker([center.lat, center.lng], { 
+            icon: icon,
+            zIndexOffset: 1500
+        });
+
+        // Add click handler for minefield info
+        marker.on('click', () => {
+            console.log(`💣 Minefield unit clicked: ${config.name}`);
+            // Show minefield details
+        });
+
+        markers.push(marker);
+        
+        console.log(`🎨 Created minefield as single unit with ${numMines} cells`);
         return markers;
     }
     

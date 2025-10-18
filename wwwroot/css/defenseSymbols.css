@@ -41,16 +41,29 @@
     /* filter: drop-shadow(0 0 8px rgba(204, 0, 0, 0.5)); */
 }
 
-/* Minefield border styling */
-.minefield-border {
+/* Minefield unit styling */
+.minefield-unit-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+.minefield-unit {
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
-.minefield-border:hover {
-    opacity: 0.9;
-    stroke-width: 4px !important;
-    filter: drop-shadow(0 0 8px rgba(204, 0, 0, 0.5));
+.minefield-unit:hover {
+    transform: scale(1.02);
+}
+
+.minefield-cell {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.minefield-cell:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4) !important;
 }
 
 /* Modern Minefield Markers */

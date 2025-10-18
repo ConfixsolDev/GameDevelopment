@@ -433,16 +433,7 @@ class DefensePlanningManager {
                     });
                     removedFromMap = true;
                 }
-                // Also remove the border if it exists
-                if (elementData.layers && elementData.layers.border) {
-                    this.minefieldLayer.removeLayer(elementData.layers.border);
-                    removedFromMap = true;
-                }
-                // Also remove the label if it exists
-                if (elementData.layers && elementData.layers.label) {
-                    this.minefieldLayer.removeLayer(elementData.layers.label);
-                    removedFromMap = true;
-                }
+                // No single border to remove - each mine has its own rectangular cell
             } else if (category === 'obstacle') {
                 if (elementData.layers && elementData.layers.line) {
                     this.obstacleLayer.removeLayer(elementData.layers.line);
@@ -629,24 +620,7 @@ class DefensePlanningManager {
                         marker.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'minefield'));
                     });
                 }
-                // Add single border around entire minefield
-                if (element.border) {
-                    console.log(`🔧 Adding reconstructed minefield border to map:`, element.border);
-                    this.minefieldLayer.addLayer(element.border);
-                    element.border.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'minefield'));
-                    console.log(`🔧 Reconstructed minefield border added successfully`);
-                } else {
-                    console.log(`🔧 No border element found in reconstructed minefield`);
-                }
-                // Add "Mine field" text label above the minefield
-                if (element.label) {
-                    console.log(`🔧 Adding reconstructed minefield label to map:`, element.label);
-                    this.minefieldLayer.addLayer(element.label);
-                    element.label.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'minefield'));
-                    console.log(`🔧 Reconstructed minefield label added successfully`);
-                } else {
-                    console.log(`🔧 No label element found in reconstructed minefield`);
-                }
+                // No single border - each mine has its own rectangular cell
             } else if (dbElement.category === 'obstacle') {
                 element = this.renderer.createObstacle(coordinates, dbElement.type, { forceType });
                 if (element.line) {
@@ -1109,24 +1083,7 @@ class DefensePlanningManager {
                         marker.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, elementId, 'minefield'));
                     });
                 }
-                // Add single border around entire minefield
-                if (element.border) {
-                    console.log(`🔧 Adding minefield border to map:`, element.border);
-                    this.minefieldLayer.addLayer(element.border);
-                    element.border.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, elementId, 'minefield'));
-                    console.log(`🔧 Minefield border added successfully`);
-                } else {
-                    console.log(`🔧 No border element found in minefield`);
-                }
-                // Add "Mine field" text label above the minefield
-                if (element.label) {
-                    console.log(`🔧 Adding minefield label to map:`, element.label);
-                    this.minefieldLayer.addLayer(element.label);
-                    element.label.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, elementId, 'minefield'));
-                    console.log(`🔧 Minefield label added successfully`);
-                } else {
-                    console.log(`🔧 No label element found in minefield`);
-                }
+                // No single border - each mine has its own rectangular cell
             } else if (category === 'defensezone') {
                 console.log(`🔧 Creating defense zone with type: ${type}`);
                 element = this.renderer.createDefenseZone(coordinates, type, {
