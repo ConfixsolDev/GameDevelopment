@@ -56,6 +56,23 @@
     transform: scale(1.02);
 }
 
+/* New SVG-based minefield styling */
+.minefield-svg-container {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.minefield-svg-container:hover {
+    transform: scale(1.05);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+}
+
+.minefield-svg-container img {
+    pointer-events: none;
+    user-select: none;
+}
+
 .minefield-cell {
     cursor: pointer;
     transition: all 0.3s ease;

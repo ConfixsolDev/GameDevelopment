@@ -310,20 +310,13 @@ class DefenseSymbolRenderer {
     createMinefield(coordinates, type = 'mixed', options = {}) {
         const minefieldConfig = this.symbols.minefields[type];
         
-        // Get force-based colors (dark for borders, light for backgrounds)
-        const forceColor = this.getForceColor(options.forceType);
-        const lightForceColor = this.getLightForceColor(options.forceType);
-        const borderColor = forceColor || minefieldConfig.color;
-        const backgroundColor = lightForceColor;
+        // Keep minefield in pure black color (no team-based coloring)
+        console.log(`🎨 Creating minefield in black color (type: ${type})`);
         
-        console.log(`🎨 Minefield colors: border=${borderColor}, background=${backgroundColor} (force: ${options.forceType})`);
-        
-        // Add colors to config for marker styling
+        // Add type to config for marker styling
         minefieldConfig.type = type;
-        minefieldConfig.borderColor = borderColor;
-        minefieldConfig.backgroundColor = backgroundColor;
         
-        // Create individual mine markers in a single horizontal line
+        // Create individual mine markers along the line
         const markers = this.createMinefieldMarkers(coordinates, minefieldConfig);
         
         // Return only markers (no label, no single border)
@@ -509,82 +502,49 @@ class DefenseSymbolRenderer {
     }
 
     /**
-     * Create minefield as a single cohesive unit with all cells together
+     * Create minefield as single SVG tile for 100m x 100m area
      */
     createMinefieldMarkers(coordinates, config) {
         const markers = [];
-        
-        // Use force colors (dark for borders, light for backgrounds)
-        const borderColor = config.borderColor || config.color;
-        const backgroundColor = config.backgroundColor || '#FFDCDC';
         
         // Calculate polygon bounds
         const bounds = L.latLngBounds(coordinates);
         const center = bounds.getCenter();
         
-        // Create mines as a single horizontal unit (like the reference image)
-        const numMines = 6; // Fixed number for consistent appearance
-        const cellWidth = 32; // Width of each rectangular cell
-        const cellHeight = 24; // Height of each rectangular cell
-        const spacing = 2; // Small gap between cells
+        // SVG dimensions for 100m x 100m area (64x64 pixels)
+        const svgSize = 64;  // Square SVG for 100m x 100m area
         
-        // Calculate total width needed for all cells
-        const totalWidth = (numMines * cellWidth) + ((numMines - 1) * spacing);
+        console.log(`🎨 Creating single minefield tile for 100m x 100m area`);
         
-        // Create different mine variations for visual variety
-        const mineTypes = ['standard', 'cross', 'diamond', 'dots', 'standard', 'cross'];
-        
-        // Create HTML for all cells as one unit
-        let allCellsHtml = '';
-        for (let i = 0; i < numMines; i++) {
-            const mineType = mineTypes[i % mineTypes.length];
-            const mineSvg = this.createMineSvg(mineType, 'black'); // Use black symbols
-            
-            allCellsHtml += `
-                <div class="minefield-cell" style="
-                    width: ${cellWidth}px;
-                    height: ${cellHeight}px;
-                    background: ${backgroundColor};
-                    border: 2px solid ${borderColor};
-                    display: inline-block;
-                    margin-right: ${i < numMines - 1 ? spacing : 0}px;
-                    vertical-align: top;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-                ">
-                    <div class="mine-icon-container" style="
-                        width: ${cellWidth - 8}px;
-                        height: ${cellHeight - 8}px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        margin: 4px;
-                    ">
-                        ${mineSvg}
-                    </div>
-                </div>
-            `;
+        // Calculate angle of the line for rotation (if applicable)
+        let angle = 0;
+        if (coordinates.length >= 2) {
+            const p1 = coordinates[0];
+            const p2 = coordinates[coordinates.length - 1];
+            angle = Math.atan2(p2[0] - p1[0], p2[1] - p1[1]) * 180 / Math.PI;
         }
         
-        // Create single marker with all cells as one unit with joint border
+        // Create single SVG marker at center
         const html = `
-            <div class="minefield-unit" style="
-                display: inline-block;
-                white-space: nowrap;
-                border: 3px solid ${borderColor};
-                padding: 2px;
-                background: transparent;
+            <div class="minefield-svg-container" style="
+                width: ${svgSize}px;
+                height: ${svgSize}px;
+                transform: rotate(${angle}deg);
+                transform-origin: center center;
+                cursor: pointer;
+                transition: all 0.2s ease;
             ">
-                ${allCellsHtml}
+                <img src="/images/minefield_cat_ears_left.svg" 
+                     style="width: 100%; height: 100%; display: block;"
+                     alt="Minefield" />
             </div>
         `;
 
         const icon = L.divIcon({
             html: html,
             className: 'minefield-unit-marker',
-            iconSize: [totalWidth + 10, cellHeight + 10], // Add space for joint border
-            iconAnchor: [(totalWidth + 10) / 2, (cellHeight + 10) / 2]
+            iconSize: [svgSize, svgSize],
+            iconAnchor: [svgSize / 2, svgSize / 2]
         });
 
         const marker = L.marker([center.lat, center.lng], { 
@@ -595,13 +555,38 @@ class DefenseSymbolRenderer {
         // Add click handler for minefield info
         marker.on('click', () => {
             console.log(`💣 Minefield unit clicked: ${config.name}`);
-            // Show minefield details
         });
 
         markers.push(marker);
         
-        console.log(`🎨 Created minefield as single unit with ${numMines} cells`);
+        console.log(`🎨 Created single minefield SVG tile for 100m x 100m area`);
         return markers;
+    }
+    
+    /**
+     * Get a point at a specific distance along a polyline
+     */
+    getPointAtDistance(coordinates, targetDistance) {
+        let currentDistance = 0;
+        
+        for (let i = 1; i < coordinates.length; i++) {
+            const p1 = L.latLng(coordinates[i-1][0], coordinates[i-1][1]);
+            const p2 = L.latLng(coordinates[i][0], coordinates[i][1]);
+            const segmentLength = p1.distanceTo(p2);
+            
+            if (currentDistance + segmentLength >= targetDistance) {
+                // The target point is on this segment
+                const ratio = (targetDistance - currentDistance) / segmentLength;
+                const lat = p1.lat + (p2.lat - p1.lat) * ratio;
+                const lng = p1.lng + (p2.lng - p1.lng) * ratio;
+                return [lat, lng];
+            }
+            
+            currentDistance += segmentLength;
+        }
+        
+        // If we've gone past the end, return the last point
+        return coordinates[coordinates.length - 1];
     }
     
     /**
