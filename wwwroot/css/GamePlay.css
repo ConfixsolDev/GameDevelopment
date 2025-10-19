@@ -1766,77 +1766,7 @@ html, body {
    MODAL SYSTEM
    ======================================== */
 
-.gameplay-modal {
-    display: none;
-    position: fixed;
-    z-index: 10000;
-    /* Custom modal styles removed - Using Bootstrap modals */
-}
-
-/* Custom modal content removed - Using Bootstrap modals */
-
-.gameplay-modal-content::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--gameplay-primary), var(--gameplay-secondary), var(--gameplay-accent));
-}
-
-.gameplay-modal-header {
-    padding: 20px;
-    border-bottom: 1px solid var(--gameplay-border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: rgba(0, 0, 0, 0.3);
-}
-
-.gameplay-modal-header h3 {
-    color: var(--gameplay-primary);
-    margin: 0;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 20px;
-    font-weight: 700;
-}
-
-.gameplay-modal-close {
-    background: none;
-    border: none;
-    color: var(--gameplay-text);
-    font-size: 24px;
-    cursor: pointer;
-    padding: 5px;
-    width: 35px;
-    height: 35px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: all 0.3s ease;
-}
-
-.gameplay-modal-close:hover {
-    background: rgba(255, 68, 68, 0.2);
-    color: var(--gameplay-accent);
-}
-
-.gameplay-modal-body {
-    padding: 20px;
-    max-height: 60vh;
-    overflow-y: auto;
-}
-
-.gameplay-modal-footer {
-    padding: 20px;
-    border-top: 1px solid var(--gameplay-border);
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    background: rgba(0, 0, 0, 0.3);
-}
+/* Custom gameplay-modal styles removed - Now using Bootstrap modals exclusively */
 
 .gameplay-btn {
     padding: 10px 20px;

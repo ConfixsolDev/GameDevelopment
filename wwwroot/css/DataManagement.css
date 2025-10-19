@@ -221,12 +221,7 @@
     font-size: 12px;
 }
 
-/* Modal Form Styles */
-.gameplay-modal-content.large .gameplay-modal-body {
-    padding: 20px;
-    overflow-y: auto;
-    max-height: calc(90vh - 120px);
-}
+/* Modal Form Styles - Removed custom gameplay-modal, now using Bootstrap */
 
 /* Section Headers in Forms */
 h5 {
@@ -241,12 +236,6 @@ h5 {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .gameplay-modal.large {
-        max-width: 95vw;
-        width: 95vw;
-        height: 95vh;
-    }
-    
     .tab-buttons {
         flex-direction: column;
     }
@@ -728,13 +717,7 @@ h5 {
     transition: width 0.3s ease;
 }
 
-/* Token Brigade Data Styles */
-.gameplay-modal-content.extra-large {
-    max-width: 95vw;
-    max-height: 95vh;
-    width: 95vw;
-    height: 95vh;
-}
+/* Token Brigade Data Styles - Removed custom gameplay-modal, now using Bootstrap */
 
 .token-info {
     color: var(--gameplay-accent);
@@ -939,12 +922,6 @@ h5 {
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
-    .gameplay-modal-content.extra-large {
-        max-width: 98vw;
-        width: 98vw;
-        height: 98vh;
-    }
-    
     .summary-cards {
         grid-template-columns: 1fr;
     }

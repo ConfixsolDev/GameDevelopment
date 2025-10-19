@@ -1437,7 +1437,10 @@ class TokenActionModeManager {
     closeAttackPlanningModal() {
         const modal = document.getElementById('attackPlanningModal');
         if (modal) {
-            modal.style.display = 'none';
+            // Hide Bootstrap modal
+            $('#attackPlanningModal').hide().removeClass('show');
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
             console.log('✅ Attack planning modal closed');
             
             // Reset attack mode when modal is closed
