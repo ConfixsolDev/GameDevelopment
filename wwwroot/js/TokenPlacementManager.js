@@ -445,6 +445,20 @@ class TokenPlacementManager {
 		// Enable drag-to-move behavior with enhanced planning
 		marker.on('dragstart', (e) => {
 			console.log('🎯 Drag start event triggered for token:', token.name);
+			
+			// Check if move mode is active - if not, prevent drag
+			const currentMode = window.tokenActionModeManager?.getCurrentMode();
+			if (currentMode !== 'move') {
+				console.log('🚫 Drag prevented - not in move mode. Current mode:', currentMode);
+				e.preventDefault();
+				e.stopPropagation();
+				// Show instruction to select move mode
+				if (window.tokenActionModeManager?.showMovementInstructions) {
+					window.tokenActionModeManager.showMovementInstructions('Please select "Plan Move" mode to move tokens');
+				}
+				return false;
+			}
+			
 			this.isDraggingMarker = true;
 			this.originalPosition = e.target.getLatLng();
 			console.log('🎯 Original position set to:', this.originalPosition);
@@ -2936,7 +2950,12 @@ class TokenPlacementManager {
      * Open attack panel
      */
     openAttackPanel(attackerToken, targetToken) {
+        console.log('🎯 openAttackPanel called with:', attackerToken?.name, '->', targetToken?.name);
         try {
+            // Remove any existing attack panel modal first
+            $('#attackPanelModal').remove();
+            $('.modal-backdrop').remove();
+            
             // Create attack panel modal - Bootstrap Modal
             const attackPanelHtml = `
                 <div class="modal fade" id="attackPanelModal" tabindex="-1" role="dialog" aria-labelledby="attackPanelModalLabel" aria-hidden="true">
@@ -3027,9 +3046,11 @@ class TokenPlacementManager {
             // Force show Bootstrap modal with setTimeout to ensure DOM is ready
             setTimeout(function() {
                 const modalElement = document.getElementById('attackPanelModal');
-                console.log('Attack panel in DOM:', modalElement ? 'YES' : 'NO');
+                console.log('🎯 Attack panel in DOM:', modalElement ? 'YES' : 'NO');
+                console.log('🎯 Modal HTML length:', attackPanelHtml.length);
                 
                 if (modalElement) {
+                    console.log('🎯 Modal element found, applying styles...');
                     $('#attackPanelModal').css({
                         'display': 'block',
                         'opacity': '1',
@@ -3037,15 +3058,28 @@ class TokenPlacementManager {
                         'z-index': '9999'
                     }).addClass('show').removeClass('fade');
                     
+                    console.log('🎯 Initializing Bootstrap modal...');
                     $('#attackPanelModal').modal({
                         backdrop: false,
                         keyboard: true,
                         show: true
                     });
                     
-                    console.log('✅ Attack panel displayed');
+                    console.log('✅ Attack panel displayed successfully');
+                    
+                    // Additional check to ensure modal is visible
+                    setTimeout(function() {
+                        const modalVisible = $('#attackPanelModal').is(':visible');
+                        console.log('🎯 Modal visibility check:', modalVisible);
+                        if (!modalVisible) {
+                            console.error('❌ Modal is not visible after initialization');
+                            // Force show again
+                            $('#attackPanelModal').show().addClass('show');
+                        }
+                    }, 200);
                 } else {
-                    console.error('❌ Attack panel not found in DOM');
+                    console.error('❌ Attack panel not found in DOM after append');
+                    console.log('🎯 Body HTML length:', $('body').html().length);
                 }
             }, 100);
         } catch (err) {

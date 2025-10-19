@@ -117,37 +117,55 @@ class TokenActionModeManager {
         this.updateUI();
         this.updateMapCursor();
         
-        // Enable default mode when no mode is selected
-        this.enableDefaultMode();
+        // Disable all token interactions when canceling modes
+        this.disableAllTokenInteractions();
+        console.log('🎯 All token interactions disabled after canceling mode');
+    }
+    
+    enableDefaultMode() {
+        // Enable token details and summaries for default mode (but NOT movement)
+        if (window.tokenManager && window.tokenManager.enableTokenDetails) {
+            window.tokenManager.enableTokenDetails();
+        }
+        
+        // Disable token dragging/movement in default mode
+        if (window.tokenManager && window.tokenManager.disableTokenMovement) {
+            window.tokenManager.disableTokenMovement();
+        }
+        
+        // Disable token dragging in TokenPlacementManager
+        if (window.tokenPlacementManager && window.tokenPlacementManager.disableTokenDragging) {
+            window.tokenPlacementManager.disableTokenDragging();
+        }
+        
+        // Re-enable right-click context menus for default mode
+        this.enableTokenContextMenus();
+        
+        // Hide instruction banner for default mode (no mode selected)
+        this.hideAllInstructions();
+        
+        console.log('Default mode enabled - token details available, movement disabled, no banner shown');
     }
 
     triggerModeAction(mode) {
+        console.log('🎯 triggerModeAction called with mode:', mode);
         // Disable all token interactions first
         this.disableAllTokenInteractions();
         
         switch (mode) {
-            case 'place':
-                // Enable token placement only
-                this.enableTokenPlacement();
-                break;
             case 'move':
-                // Enable token movement and selection
+                console.log('🎯 Enabling PLAN MOVE mode - only token movement allowed');
+                // Enable token movement ONLY - no other interactions
                 this.enableTokenMovement();
                 break;
             case 'attack':
-                // Enable attack mode only - no movement, no context menus
+                console.log('🎯 Enabling PLAN ATTACK mode - only attack planning allowed');
+                // Enable attack mode ONLY - no movement, no other interactions
                 this.enableAttackMode();
                 break;
-            case 'pan-attack':
-                // Enable pan attack mode only - no movement, no context menus
-                this.enablePanAttackMode();
-                break;
-            case 'select':
-                // Enable selection mode with movement and context menus
-                this.enableSelectionMode();
-                break;
             default:
-                // Default mode (no mode selected) - enable token details and dragging
+                console.log('🎯 Enabling default mode - only viewing summaries/details');
+                // Default mode (no mode selected) - only enable viewing summaries/details
                 this.enableDefaultMode();
                 break;
         }
@@ -335,26 +353,6 @@ class TokenActionModeManager {
         this.enableTokenContextMenus();
     }
 
-    enableDefaultMode() {
-        // Enable token dragging and details for default mode
-        if (window.tokenManager && window.tokenManager.enableTokenMovement) {
-            window.tokenManager.enableTokenMovement();
-        }
-        
-        // Enable token dragging in TokenPlacementManager
-        if (window.tokenPlacementManager && window.tokenPlacementManager.enableTokenDragging) {
-            window.tokenPlacementManager.enableTokenDragging();
-        }
-        
-        // Re-enable right-click context menus for default mode
-        this.enableTokenContextMenus();
-        
-        // Show movement instructions for default mode
-        this.showMovementInstructions('Click and drag tokens to move them, or click to view details');
-        
-        console.log('Default mode enabled - token details and dragging available');
-    }
-
     closeAttackPanel() {
         // Close any open attack panels
         const attackPanel = document.getElementById('attackPanelModal');
@@ -415,14 +413,18 @@ class TokenActionModeManager {
                 this.enableTargetSelectionMode();
             } else {
                 // Second click - this is the target, open attack panel
-                console.log('Target selected:', token.name);
+                console.log('🎯 Target selected:', token.name);
+                console.log('🎯 Selected attacker:', this.selectedAttacker?.name);
                 this.hideAttackInstructions();
                 
                 // Open attack panel with attacker and target
                 if (window.tokenPlacementManager && window.tokenPlacementManager.openAttackPanel) {
+                    console.log('🎯 Calling openAttackPanel with:', this.selectedAttacker?.name, '->', token.name);
                     window.tokenPlacementManager.openAttackPanel(this.selectedAttacker, token);
                 } else {
                     console.error('❌ tokenPlacementManager.openAttackPanel not available');
+                    console.log('🎯 tokenPlacementManager exists:', !!window.tokenPlacementManager);
+                    console.log('🎯 openAttackPanel method exists:', !!(window.tokenPlacementManager && window.tokenPlacementManager.openAttackPanel));
                 }
                 
                 // Reset attacker selection
