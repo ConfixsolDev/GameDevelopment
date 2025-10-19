@@ -139,7 +139,8 @@
 }
 
 /* Modal customizations */
-#combatSimulationModal .modal-xl {
+/* Custom modal styles removed - Using Bootstrap modals */
+/* #combatSimulationModal .modal-xl {
     max-width: 1200px;
 }
 

@@ -357,23 +357,7 @@
     font-size: 12px;
 }
 
-/* Attack panel modal styling */
-#attackPanelModal .gameplay-modal-content {
-    background: var(--gameplay-darker);
-    border: 2px solid rgba(255, 68, 68, 0.3);
-    max-width: 600px;
-}
-
-#attackPanelModal .gameplay-modal-header {
-    background: linear-gradient(135deg, rgba(255, 68, 68, 0.1), rgba(255, 68, 68, 0.05));
-    border-bottom: 1px solid rgba(255, 68, 68, 0.2);
-    color: var(--gameplay-text);
-}
-
-#attackPanelModal .gameplay-modal-header h3 {
-    color: var(--fox-land-color);
-    text-shadow: var(--fox-land-glow);
-}
+/* Attack panel modal styling - Using Bootstrap modals */
 
 /* Attack planning form */
 .attack-planning-form {
@@ -490,28 +474,7 @@
    SUSPECTED TOKENS (FOG OF WAR) STYLES
    ======================================== */
 
-/* Suspected token modal styling */
-#suspectedTokenModal .gameplay-modal-content,
-#suspectedTokensListModal .gameplay-modal-content {
-    background: var(--gameplay-darker);
-    border: 2px solid rgba(0, 255, 136, 0.3);
-}
-
-#suspectedTokenModal .gameplay-modal-header,
-#suspectedTokensListModal .gameplay-modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-bottom: 2px solid rgba(0, 255, 136, 0.3);
-}
-
-#suspectedTokenModal .gameplay-modal-header h3,
-#suspectedTokensListModal .gameplay-modal-header h3 {
-    color: var(--gameplay-text);
-}
-
-#suspectedTokenModal .gameplay-modal-body,
-#suspectedTokensListModal .gameplay-modal-body {
-    background: var(--gameplay-dark);
-}
+/* Suspected token modal styling - Using Bootstrap modals */
 
 #suspectedTokenModal .alert-info {
     background: rgba(102, 126, 234, 0.2);
@@ -1807,26 +1770,10 @@ html, body {
     display: none;
     position: fixed;
     z-index: 10000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.9);
-    backdrop-filter: blur(5px);
+    /* Custom modal styles removed - Using Bootstrap modals */
 }
 
-.gameplay-modal-content {
-    background: linear-gradient(135deg, var(--gameplay-dark) 0%, var(--gameplay-lighter) 100%);
-    margin: 5% auto;
-    padding: 0;
-    border: 2px solid var(--gameplay-border);
-    border-radius: 12px;
-    width: 90%;
-    max-width: 800px;
-    box-shadow: var(--gameplay-shadow);
-    position: relative;
-    overflow: hidden;
-}
+/* Custom modal content removed - Using Bootstrap modals */
 
 .gameplay-modal-content::before {
     content: '';
@@ -1969,125 +1916,6 @@ html, body {
 }
 
 /* ========================================
-   RESPONSIVE DESIGN
-   ======================================== */
-
-@media (max-width: 768px) {
-    .super-admin-button {
-        bottom: 10px;
-        right: 10px;
-        padding: 10px 16px;
-        font-size: 11px;
-    }
-
-    .super-admin-button i {
-        font-size: 14px;
-    }
-
-    .super-admin-button span {
-        font-size: 10px;
-    }
-
-    .control-panel-content {
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .control-menu {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .control-btn {
-        min-width: 70px;
-        padding: 10px 12px;
-    }
-
-    .control-btn i {
-        font-size: 16px;
-    }
-
-    .control-btn span {
-        font-size: 10px;
-    }
-
-    .map-overlay-controls {
-        top: 10px;
-        right: 10px;
-    }
-
-    .team-status-panel {
-        top: 10px;
-        left: 10px;
-        min-width: 200px;
-    }
-
-    .team-status-panel2 {
-        bottom: 0;
-        left: 10px;
-        min-width: 200px;
-    }
-
-    .coordinates-display {
-        bottom: 10px;
-        left: 10px;
-    }
-
-    .overlay-control-group {
-        padding: 8px;
-    }
-
-    .control-row {
-        flex-wrap: wrap;
-    }
-
-    .overlay-btn {
-        padding: 4px 8px;
-        font-size: 10px;
-    }
-}
-
-@media (max-width: 480px) {
-    .super-admin-button {
-        bottom: 8px;
-        right: 8px;
-        padding: 8px 12px;
-        font-size: 10px;
-    }
-
-    .super-admin-button i {
-        font-size: 12px;
-    }
-
-    .super-admin-button span {
-        font-size: 9px;
-    }
-
-    .team-logo {
-        width: 50px;
-        height: 50px;
-        font-size: 20px;
-    }
-
-    .team-name {
-        font-size: 16px;
-    }
-
-    .control-btn {
-        min-width: 60px;
-        padding: 8px 10px;
-    }
-
-    .control-btn i {
-        font-size: 14px;
-    }
-
-    .control-btn span {
-        font-size: 9px;
-    }
-}
-
-/* ========================================
    TOKEN SELECTION GRID
    ======================================== */
 
@@ -2218,33 +2046,6 @@ html, body {
 
 .hidden-element {
     display: none !important;
-}
-
-/* Mobile responsiveness for token selection */
-@media (max-width: 768px) {
-    .token-selection-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-        padding: 15px;
-    }
-    
-    .token-name-overlay {
-        font-size: 14px;
-        padding: 15px 8px 8px 8px;
-    }
-}
-
-@media (max-width: 480px) {
-    .token-selection-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
-        padding: 12px;
-    }
-    
-    .token-name-overlay {
-        font-size: 12px;
-        padding: 12px 6px 6px 6px;
-    }
 }
 
 /* ========================================
@@ -2766,21 +2567,7 @@ html, body {
         color: #dee2e6;
     }
 
-/* Responsive design */
-@media (max-width: 768px) {
-    .token-selection-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
 
-    .token-option {
-        padding: 12px;
-    }
-
-    .token-icon {
-        font-size: 20px;
-        margin-right: 12px;
-    }
-}
 
 .token-selection-container {
     max-height: 400px;
@@ -2900,20 +2687,7 @@ html, body {
         color: #dee2e6;
     }
 
-/* Responsive design */
-@media (max-width: 768px) {
-    .token-selection-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .token-option {
-        padding: 12px;
-    }
-
-    .token-icon {
-        font-size: 20px;
-        margin-right: 12px;
-    }
+}
 }
 
 /* Token card image backgrounds */
@@ -3394,25 +3168,7 @@ html, body {
     animation: dragPulse 1s ease-in-out infinite;
 }
 
-/* Responsive adjustments for waypoints */
-@media (max-width: 768px) {
-    .waypoint-tag {
-        min-width: 45px;
-        padding: 3px 6px;
-    }
-    
-    .waypoint-eta {
-        font-size: 10px;
-    }
-    
-    .waypoint-tooltip {
-        max-width: 280px !important;
-    }
-    
-    .tooltip-line {
-        font-size: 10px;
-    }
-}
+
 
 /* ========================================
    TOKEN ACTION MODES STYLES
@@ -3712,26 +3468,7 @@ html, body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .token-action-btn {
-        padding: 8px 12px;
-        font-size: 12px;
-    }
-    
-    .section-subtitle {
-        font-size: 11px;
-    }
-    
-    .attack-info-popup {
-        min-width: 200px;
-        padding: 10px;
-    }
-}
 
-/* ========================================
-   OFFLINE MAP STYLES
-   ======================================== */
 
 /* Dark tiles styling - Enhanced for better visibility */
 .dark-tiles {

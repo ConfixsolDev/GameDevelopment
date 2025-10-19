@@ -1,16 +1,23 @@
 @model TechWebSol.Controllers.DataManagementController.TokenSummaryViewModel
 
-<!-- Token Summary Modal -->
-<div id="tokenSummaryModal" class="gameplay-modal" style="display: none;">
-    <div class="gameplay-modal-content">
-        <div class="gameplay-modal-header">
-            <h3><i class="fas fa-info-circle"></i> Token Summary</h3>
-            <button class="gameplay-modal-close" onclick="closeTokenSummaryModal()">&times;</button>
+<!-- Using unified dark theme - no additional CSS needed -->
+
+<!-- Token Summary Modal - Bootstrap Modal -->
+<div class="modal fade" id="tokenSummaryModal" tabindex="-1" role="dialog" aria-labelledby="tokenSummaryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="tokenSummaryModalLabel">
+                    <i class="fas fa-info-circle"></i> Unit Summary - @(Model.Token?.Name ?? "Unknown Token")
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" title="Close Modal">
+                    <i class="fas fa-times"></i>
+                </button>
         </div>
         
-        <div class="gameplay-modal-body">
+            <div class="modal-body">
             <!-- Token Information -->
-            <div class="token-summary-section">
+            @* <div class="token-summary-section">
                 <h6><i class="fas fa-map-marker-alt"></i> Token Information</h6>
                 <div class="summary-item">
                     <strong>Name:</strong> @(Model.Token?.Name ?? "Unknown Token")
@@ -29,21 +36,23 @@
                 <div class="summary-item">
                     <strong>Status:</strong> <span class="badge-military">@(Model.Token?.IsActive == true ? "Active" : "Inactive")</span>
                 </div>
-            </div>
+            </div> *@
 
-            @if (Model.Brigades.Any() || Model.InfantryBattalions.Any() || Model.ArmouredRegiments.Any() || Model.ArtilleryRegiments.Any() || Model.Recon.Any())
+            @if (Model.Brigades.Any() || Model.InfantryBattalions.Any() || Model.ArmouredRegiments.Any() || Model.ArtilleryRegiments.Any() || Model.LogisticsUnits.Any() || Model.CombatEngineeringCompanies.Any() || Model.Recon.Any())
             {
-                <!-- Military Hierarchy -->
+                <!-- Complete ORBAT (Order of Battle) -->
                 <div class="token-summary-section">
-                    <h6><i class="fas fa-sitemap"></i> Military Hierarchy</h6>
+                    <h6><i class="fas fa-sitemap"></i> Complete ORBAT - Order of Battle</h6>
                     
                     @if (Model.Brigades.Any())
                     {
                         @foreach (var brigade in Model.Brigades)
                         {
                             <div class="summary-item brigade">
-                                <strong>Brigade:</strong> @(brigade.BrigadeCode ?? "No Code")
+                                <div class="unit-header">
+                                    <strong><i class="fas fa-flag"></i> Brigade:</strong> @(brigade.BrigadeCode ?? "No Code")
                                 <span class="badge-military">@(brigade.ForceType ?? "Unknown")</span>
+                                </div>
                                 
                                 <!-- Infantry Units under this Brigade -->
                                 @{
@@ -55,9 +64,29 @@
                                     {
                                         <div class="hierarchy-level">
                                             <div class="summary-item infantry">
-                                                <strong>Infantry Battalion:</strong> @(infantry.Name ?? "Unnamed Infantry")
+                                                <div class="unit-header">
+                                                    <strong><i class="fas fa-walking"></i> Infantry Battalion:</strong> @(infantry.Name ?? "Unnamed Infantry")
                                                 <span class="badge-military">Strength: @(infantry.Strength)</span>
-                                                <div class="text-muted">@(infantry.Description ?? "")</div>
+                                                    <span class="badge-military">Companies: @(infantry.Companies)</span>
+                                                </div>
+                                                <div class="unit-description">@(infantry.Description ?? "")</div>
+                                                <div class="weapons-grid">
+                                                    <div class="weapon-item">ATGMs: @(infantry.ATGMS)</div>
+                                                    <div class="weapon-item">Rocket Launchers: @(infantry.RocketLauncher)</div>
+                                                    <div class="weapon-item">81mm Mortars: @(infantry.Mortars81mm)</div>
+                                                    <div class="weapon-item">120mm Mortars: @(infantry.Mortars120mm)</div>
+                                                    <div class="weapon-item">Grenade Launchers: @(infantry.GrenadeLaunchers)</div>
+                                                    <div class="weapon-item">HMG/AGL: @(infantry.HMG_AGL)</div>
+                                                    <div class="weapon-item">MG/LMG: @(infantry.MG_LMG)</div>
+                                                    <div class="weapon-item">MANPADS: @(infantry.MANPADS)</div>
+                                                    <div class="weapon-item">Drones: @(infantry.Drones)</div>
+                                                </div>
+                                                <div class="mobility-info">
+                                                    <span class="mobility-item">Road Speed: @(infantry.MarchingSpeedTrucksRoads) km/h</span>
+                                                    <span class="mobility-item">APC Speed: @(infantry.MarchingSpeedAPCs) km/h</span>
+                                                    <span class="mobility-item">Cross Country: @(infantry.MarchingSpeedCrossCountry) km/h</span>
+                                                    <span class="mobility-item">Combat Speed: @(infantry.CombatAdvanceSpeed) km/h</span>
+                                                </div>
                                             </div>
                                         </div>
                                     }
@@ -73,9 +102,24 @@
                                     {
                                         <div class="hierarchy-level">
                                             <div class="summary-item armoured">
-                                                <strong>Armoured Regiment:</strong> @(armoured.Name ?? "Unnamed Armoured")
-                                                <span class="badge-military">Tanks: @(armoured.Tanks)</span>
-                                                <div class="text-muted">@(armoured.Description ?? "")</div>
+                                                <div class="unit-header">
+                                                    <strong><i class="fas fa-tank"></i> Armoured Regiment:</strong> @(armoured.Name ?? "Unnamed Armoured")
+                                                    <span class="badge-military">Strength: @(armoured.Strength)</span>
+                                                    <span class="badge-military">Squadrons: @(armoured.Squadrons)</span>
+                                                </div>
+                                                <div class="unit-description">@(armoured.Description ?? "")</div>
+                                                <div class="weapons-grid">
+                                                    <div class="weapon-item">Tanks: @(armoured.Tanks)</div>
+                                                    <div class="weapon-item">ATGMs: @(armoured.ATGMS)</div>
+                                                    <div class="weapon-item">120mm Mortars: @(armoured.Mortars120mm)</div>
+                                                    <div class="weapon-item">HMGs: @(armoured.HMG)</div>
+                                                    <div class="weapon-item">Drones: @(armoured.Drones)</div>
+                                                </div>
+                                                <div class="mobility-info">
+                                                    <span class="mobility-item">Road Speed: @(armoured.MarchingSpeedRoads) km/h</span>
+                                                    <span class="mobility-item">Cross Country: @(armoured.MarchingSpeedCrossCountry) km/h</span>
+                                                    <span class="mobility-item">Combat Speed: @(armoured.CombatAdvanceSpeed) km/h</span>
+                                                </div>
                                             </div>
                                         </div>
                                     }
@@ -91,9 +135,88 @@
                                     {
                                         <div class="hierarchy-level">
                                             <div class="summary-item artillery">
-                                                <strong>Artillery Regiment:</strong> @(artillery.Name ?? "Unnamed Artillery")
-                                                <span class="badge-military">Guns: @(artillery.Guns)</span>
-                                                <div class="text-muted">@(artillery.Description ?? "")</div>
+                                                <div class="unit-header">
+                                                    <strong><i class="fas fa-crosshairs"></i> Artillery Regiment:</strong> @(artillery.Name ?? "Unnamed Artillery")
+                                                    <span class="badge-military">Strength: @(artillery.Strength)</span>
+                                                    <span class="badge-military">Batteries: @(artillery.Batteries)</span>
+                                                </div>
+                                                <div class="unit-description">@(artillery.Description ?? "")</div>
+                                                <div class="weapons-grid">
+                                                    <div class="weapon-item">Guns: @(artillery.Guns)</div>
+                                                    <div class="weapon-item">Caliber: @(artillery.GunCaliber)</div>
+                                                    <div class="weapon-item">Range: @(artillery.GunRange) km</div>
+                                                    <div class="weapon-item">HMGs: @(artillery.HMG)</div>
+                                                    <div class="weapon-item">Drones: @(artillery.Drones)</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+
+                                <!-- Logistics Units under this Brigade -->
+                                @{
+                                    var brigadeLogistics = Model.LogisticsUnits.Where(l => l.BrigadeId == brigade.Id).ToList();
+                                }
+                                @if (brigadeLogistics.Any())
+                                {
+                                    @foreach (var logistics in brigadeLogistics)
+                                    {
+                                        <div class="hierarchy-level">
+                                            <div class="summary-item logistics">
+                                                <div class="unit-header">
+                                                    <strong><i class="fas fa-truck"></i> Logistics Unit:</strong> @(logistics.Name ?? "Unnamed Logistics")
+                                                    <span class="badge-military">Strength: @(logistics.Strength)</span>
+                                                    <span class="badge-military">Companies: @(logistics.Companies)</span>
+                                                </div>
+                                                <div class="unit-description">@(logistics.Description ?? "")</div>
+                                                <div class="logistics-grid">
+                                                    <div class="logistics-item">Supply Trucks: @(logistics.SupplyTrucks)</div>
+                                                    <div class="logistics-item">Fuel Trucks: @(logistics.FuelTrucks)</div>
+                                                    <div class="logistics-item">Water Trucks: @(logistics.WaterTrucks)</div>
+                                                    <div class="logistics-item">Ammo Trucks: @(logistics.AmmunitionTrucks)</div>
+                                                    <div class="logistics-item">Maintenance: @(logistics.MaintenanceVehicles)</div>
+                                                    <div class="logistics-item">Recovery: @(logistics.RecoveryVehicles)</div>
+                                                </div>
+                                                <div class="capacity-info">
+                                                    <span class="capacity-item">Fuel: @(logistics.FuelCapacity) L</span>
+                                                    <span class="capacity-item">Water: @(logistics.WaterCapacity) L</span>
+                                                    <span class="capacity-item">Ammo: @(logistics.AmmunitionStorage) T</span>
+                                                    <span class="capacity-item">Supply: @(logistics.SupplyCapacity) T</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+
+                                <!-- Combat Engineering Companies under this Brigade -->
+                                @{
+                                    var brigadeEngineering = Model.CombatEngineeringCompanies.Where(e => e.BrigadeId == brigade.Id).ToList();
+                                }
+                                @if (brigadeEngineering.Any())
+                                {
+                                    @foreach (var engineering in brigadeEngineering)
+                                    {
+                                        <div class="hierarchy-level">
+                                            <div class="summary-item engineering">
+                                                <div class="unit-header">
+                                                    <strong><i class="fas fa-tools"></i> Combat Engineering Company:</strong> @(engineering.Name ?? "Unnamed Engineering")
+                                                    <span class="badge-military">Strength: @(engineering.Strength)</span>
+                                                    <span class="badge-military">Platoons: @(engineering.Platoons)</span>
+                                                </div>
+                                                <div class="unit-description">@(engineering.Description ?? "")</div>
+                                                <div class="engineering-grid">
+                                                    <div class="engineering-item">Engineer Vehicles: @(engineering.EngineerVehicles)</div>
+                                                    <div class="engineering-item">Bridge Layers: @(engineering.BridgeLayingVehicles)</div>
+                                                    <div class="engineering-item">Mine Clearers: @(engineering.MineClearingVehicles)</div>
+                                                    <div class="engineering-item">Bulldozers: @(engineering.Bulldozers)</div>
+                                                    <div class="engineering-item">Excavators: @(engineering.Excavators)</div>
+                                                    <div class="engineering-item">Cranes: @(engineering.Cranes)</div>
+                                                </div>
+                                                <div class="capability-info">
+                                                    <span class="capability-item">Bridge: @(engineering.BridgeBuildingCapacity)</span>
+                                                    <span class="capability-item">Fortifications: @(engineering.FortificationBuildingCapacity)</span>
+                                                    <span class="capability-item">Clearing: @(engineering.ObstacleClearingCapacity)</span>
+                                                </div>
                                             </div>
                                         </div>
                                     }
@@ -139,20 +262,23 @@
             }
         </div>
         
-        <div class="gameplay-modal-footer">
-            <button class="gameplay-btn" onclick="closeTokenSummaryModal()">Close</button>
-            @if (Model.Brigades.Any() || Model.InfantryBattalions.Any() || Model.ArmouredRegiments.Any() || Model.ArtilleryRegiments.Any() || Model.Recon.Any())
-            {
-                <button class="gameplay-btn gameplay-btn-primary" onclick="editTokenData()">
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Close
+                </button>
+                @if (Model.Brigades.Any() || Model.InfantryBattalions.Any() || Model.ArmouredRegiments.Any() || Model.ArtilleryRegiments.Any() || Model.LogisticsUnits.Any() || Model.CombatEngineeringCompanies.Any() || Model.Recon.Any())
+                {
+                    <button type="button" class="btn btn-primary" onclick="editTokenData()">
                     <i class="fas fa-edit"></i> Edit Data
                 </button>
             }
             else
             {
-                <button class="gameplay-btn gameplay-btn-success" onclick="addTokenData()">
+                    <button type="button" class="btn btn-success" onclick="addTokenData()">
                     <i class="fas fa-plus"></i> Add Data
                 </button>
             }
+            </div>
         </div>
     </div>
 </div>
@@ -165,11 +291,8 @@ if (typeof currentTokenId === 'undefined') {
 
 function closeTokenSummaryModal() {
     console.log('🔒 Closing token summary modal');
-    const modal = document.getElementById('tokenSummaryModal');
-    if (modal) {
-        modal.style.display = 'none';
+    $('#tokenSummaryModal').modal('hide');
         currentTokenId = null;
-    }
 }
 
 function editTokenData() {
@@ -214,142 +337,51 @@ function openDataEntryForToken(tokenId) {
     });
 }
 
-// Set the current token ID when modal loads
-@if (Model.Token != null)
-{
-    <text>
-    currentTokenId = '@Model.Token.Id';
-    </text>
-}
+        // Set the current token ID when modal loads
+        @if (Model.Token != null)
+        {
+            <text>
+            currentTokenId = '@Model.Token.Id';
+            </text>
+        }
+
+        // Remove modal backdrop when modal is shown
+        $('#tokenSummaryModal').on('show.bs.modal', function () {
+            console.log('🎯 Modal showing - removing backdrop');
+            $('.modal-backdrop').remove();
+        });
+
+        $('#tokenSummaryModal').on('shown.bs.modal', function () {
+            console.log('✅ Modal shown - ensuring backdrop removed');
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
+        });
+
+        $('#tokenSummaryModal').on('hide.bs.modal', function () {
+            console.log('🔒 Modal hiding - cleaning up');
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
+            currentTokenId = null;
+        });
+
+        $('#tokenSummaryModal').on('hidden.bs.modal', function () {
+            console.log('✅ Modal hidden - final cleanup');
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
+            currentTokenId = null;
+        });
+
+        // Ensure close button works
+        $('#tokenSummaryModal .close, #tokenSummaryModal [data-dismiss="modal"]').on('click', function() {
+            console.log('❌ Close button clicked');
+            $('#tokenSummaryModal').modal('hide');
+        });
+
+        // Add keyboard escape key handler
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape' && $('#tokenSummaryModal').hasClass('show')) {
+                console.log('⌨️ Escape key pressed - closing modal');
+                $('#tokenSummaryModal').modal('hide');
+            }
+        });
 </script>
-
-<style>
-/* Token Summary Modal - Dark Theme Matching Place Token Modal */
-.token-summary-section {
-    margin-bottom: 15px;
-    padding: 12px;
-    background-color: #1a1a1a;
-    border-radius: 8px;
-    border: 1px solid #333;
-}
-
-.token-summary-section h6 {
-    color: #00d4ff;
-    margin-bottom: 8px;
-    font-weight: 600;
-    font-size: 14px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.summary-item {
-    margin-bottom: 6px;
-    padding: 6px 8px;
-    background-color: #2a2a2a;
-    border-radius: 4px;
-    border-left: 3px solid #555;
-    font-size: 13px;
-}
-
-.summary-item.brigade {
-    border-left-color: #ff4444;
-    background-color: #2a1a1a;
-}
-
-.summary-item.infantry {
-    border-left-color: #ffaa00;
-    background-color: #2a2a1a;
-}
-
-.summary-item.armoured {
-    border-left-color: #00aa44;
-    background-color: #1a2a1a;
-}
-
-.summary-item.artillery {
-    border-left-color: #aa44ff;
-    background-color: #2a1a2a;
-}
-
-.summary-item.intelligence {
-    border-left-color: #00aaaa;
-    background-color: #1a2a2a;
-}
-
-.summary-item.recon {
-    border-left-color: #aaaa00;
-    background-color: #2a2a1a;
-}
-
-.summary-item strong {
-    color: #ffffff;
-    font-weight: 600;
-}
-
-.summary-item .text-muted {
-    color: #888 !important;
-    font-size: 12px;
-    margin-top: 2px;
-}
-
-.badge-military {
-    background-color: #00d4ff;
-    color: #000;
-    padding: 2px 6px;
-    border-radius: 10px;
-    font-size: 11px;
-    margin-left: 5px;
-    font-weight: 600;
-}
-
-.no-data-message {
-    text-align: center;
-    padding: 20px;
-    color: #888;
-    font-style: italic;
-    background-color: #1a1a1a;
-    border-radius: 8px;
-    border: 1px solid #333;
-}
-
-.hierarchy-level {
-    margin-left: 15px;
-    position: relative;
-}
-
-.hierarchy-level::before {
-    content: "└─";
-    position: absolute;
-    left: -12px;
-    color: #666;
-    font-size: 12px;
-}
-
-/* Compact layout for all information on one screen */
-.gameplay-modal-body {
-    max-height: 70vh;
-    overflow-y: auto;
-}
-
-.token-summary-section:last-child {
-    margin-bottom: 0;
-}
-
-/* Scrollbar styling for dark theme */
-.gameplay-modal-body::-webkit-scrollbar {
-    width: 6px;
-}
-
-.gameplay-modal-body::-webkit-scrollbar-track {
-    background: #1a1a1a;
-}
-
-.gameplay-modal-body::-webkit-scrollbar-thumb {
-    background: #444;
-    border-radius: 3px;
-}
-
-.gameplay-modal-body::-webkit-scrollbar-thumb:hover {
-    background: #666;
-}
-</style>

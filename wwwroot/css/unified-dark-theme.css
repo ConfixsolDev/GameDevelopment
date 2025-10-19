@@ -1,0 +1,779 @@
+/* ========================================
+   UNIFIED DARK THEME - BOOTSTRAP ENHANCED
+   Single source of truth for all dark theme styling
+   ======================================== */
+
+/* ========================================
+   CSS VARIABLES - Professional Color Palette
+   ======================================== */
+:root {
+  /* Color Palette - Professional Dark Theme */
+  --bg-primary: #0a0a0a;           /* Deep charcoal black */
+  --bg-secondary: #1a1a1a;         /* Dark gray */
+  --bg-tertiary: #2a2a2a;          /* Medium gray */
+  --bg-quaternary: #3a3a3a;        /* Light gray */
+  
+  /* Text Colors */
+  --text-primary: #f5f5f5;         /* Off-white */
+  --text-secondary: #d1d5db;       /* Light gray */
+  --text-muted: #9ca3af;           /* Medium gray */
+  --text-disabled: #6b7280;        /* Dark gray */
+  
+  /* Professional Accent Colors */
+  --accent-amber: #ffb000;         /* Amber/Gold */
+  --accent-purple: #8b5cf6;        /* Purple/Violet */
+  --accent-orange: #f97316;        /* Orange */
+  --accent-yellow: #eab308;        /* Yellow */
+  --accent-cyan: #06b6d4;          /* Cyan (alternative) */
+  
+  /* Status Colors */
+  --status-success: #10b981;       /* Green */
+  --status-warning: #f59e0b;       /* Amber */
+  --status-error: #ef4444;         /* Red */
+  --status-info: #3b82f6;          /* Blue */
+  
+  /* Border Colors */
+  --border-primary: #374151;       /* Dark border */
+  --border-secondary: #4b5563;     /* Medium border */
+  --border-accent: #6b7280;        /* Light border */
+  
+  /* Typography */
+  --font-family-primary: 'Inter', 'Segoe UI', 'Roboto', sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  
+  /* Font Weights */
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  
+  /* Font Sizes */
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.5rem;    /* 24px */
+  --font-size-3xl: 1.875rem;  /* 30px */
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;      /* 4px */
+  --spacing-sm: 0.5rem;       /* 8px */
+  --spacing-md: 1rem;         /* 16px */
+  --spacing-lg: 1.5rem;       /* 24px */
+  --spacing-xl: 2rem;         /* 32px */
+  --spacing-2xl: 3rem;        /* 48px */
+  
+  /* Border Radius */
+  --radius-sm: 0.25rem;       /* 4px */
+  --radius-md: 0.5rem;        /* 8px */
+  --radius-lg: 0.75rem;       /* 12px */
+  --radius-xl: 1rem;          /* 16px */
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* ========================================
+   BASE STYLES - Professional Dark Theme
+   ======================================== */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  margin: 0;
+  padding: 0;
+}
+
+/* Typography Hierarchy */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+h1 { font-size: var(--font-size-3xl); }
+h2 { font-size: var(--font-size-2xl); }
+h3 { font-size: var(--font-size-xl); }
+h4 { font-size: var(--font-size-lg); }
+h5 { font-size: var(--font-size-base); }
+h6 { font-size: var(--font-size-sm); }
+
+/* Links */
+a {
+  color: var(--accent-amber);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+}
+
+a:hover {
+  color: var(--accent-yellow);
+  text-decoration: underline;
+}
+
+/* ========================================
+   BOOTSTRAP ENHANCEMENTS - Buttons
+   ======================================== */
+.btn {
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--border-secondary);
+}
+
+.btn-primary {
+  background: var(--accent-amber);
+  color: var(--bg-primary);
+  border-color: var(--accent-amber);
+}
+
+.btn-primary:hover {
+  background: var(--accent-yellow);
+  border-color: var(--accent-yellow);
+}
+
+.btn-secondary {
+  background: var(--bg-tertiary);
+  border-color: var(--border-primary);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-quaternary);
+  border-color: var(--border-secondary);
+}
+
+.btn-success {
+  background: var(--status-success);
+  border-color: var(--status-success);
+  color: var(--text-primary);
+}
+
+.btn-success:hover {
+  background: var(--status-success);
+  opacity: 0.9;
+}
+
+.btn-warning {
+  background: var(--status-warning);
+  border-color: var(--status-warning);
+  color: var(--bg-primary);
+}
+
+.btn-danger {
+  background: var(--status-error);
+  border-color: var(--status-error);
+  color: var(--text-primary);
+}
+
+/* ========================================
+   BOOTSTRAP ENHANCEMENTS - Tables
+   ======================================== */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-weight: var(--font-weight-medium);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.table th {
+  background: var(--bg-tertiary);
+  color: var(--accent-amber);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-md);
+  border: 1px solid var(--border-primary);
+  text-align: left;
+}
+
+.table td {
+  padding: var(--spacing-md);
+  border: 1px solid var(--border-primary);
+  font-size: var(--font-size-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.table tbody tr:hover {
+  background: var(--bg-tertiary);
+}
+
+/* ========================================
+   BOOTSTRAP ENHANCEMENTS - Cards
+   ======================================== */
+.card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+.card-header {
+  border-bottom: 1px solid var(--border-primary);
+  padding-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.card-title {
+  font-weight: var(--font-weight-bold);
+  color: var(--accent-amber);
+  font-size: var(--font-size-lg);
+  margin: 0;
+}
+
+/* ========================================
+   BOOTSTRAP ENHANCEMENTS - MODALS
+   ======================================== */
+
+/* Modal Sizes - Professional Design System - Force Bootstrap Override */
+.modal-sm { max-width: 40% !important; width: 40% !important; }
+.modal-md { max-width: 60% !important; width: 60% !important; }
+.modal-lg { max-width: 70% !important; width: 70% !important; }
+.modal-xl { max-width: 80% !important; width: 80% !important; }
+
+/* Force modal dialog width for token summary */
+.modal-dialog.modal-xl {
+  max-width: 80% !important;
+  width: 80% !important;
+}
+
+#tokenSummaryModal .modal-dialog {
+  max-width: 80% !important;
+  width: 80% !important;
+  margin: 1.75rem auto !important;
+}
+
+/* Remove Bootstrap backdrop to keep page visible */
+.modal-backdrop {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+.modal-backdrop.fade {
+  opacity: 0 !important;
+}
+
+.modal-backdrop.show {
+  opacity: 0 !important;
+  display: none !important;
+}
+
+.modal {
+  backdrop-filter: none !important;
+}
+
+/* Force remove any backdrop that might be created by JavaScript */
+body.modal-open .modal-backdrop {
+  display: none !important;
+  opacity: 0 !important;
+}
+
+.modal-open .modal-backdrop {
+  display: none !important;
+  opacity: 0 !important;
+}
+
+/* Bootstrap Modal Content Styling */
+.modal-content {
+  background: var(--bg-primary) !important;
+  border: 2px solid var(--accent-amber) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-xl) !important;
+  color: var(--text-primary) !important;
+}
+
+.modal-header {
+  background: var(--bg-secondary) !important;
+  border-bottom: 2px solid var(--accent-amber) !important;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 1rem 1.5rem !important;
+}
+
+.modal-title {
+  color: var(--accent-amber) !important;
+  font-weight: var(--font-weight-bold) !important;
+  font-size: var(--font-size-xl) !important;
+}
+
+.modal-header .close {
+  color: var(--text-primary) !important;
+  font-size: 24px !important;
+  font-weight: var(--font-weight-bold) !important;
+  opacity: 0.8 !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 8px 12px !important;
+  border-radius: 4px !important;
+  transition: all 0.3s ease !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.modal-header .close:hover {
+  color: var(--accent-amber) !important;
+  background: rgba(255, 176, 0, 0.1) !important;
+  opacity: 1 !important;
+  transform: scale(1.1) !important;
+}
+
+.modal-header .close:focus {
+  outline: 2px solid var(--accent-amber) !important;
+  outline-offset: 2px !important;
+}
+
+.modal-body {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  max-height: 70vh !important;
+  overflow-y: auto !important;
+}
+
+.modal-footer {
+  background: var(--bg-secondary) !important;
+  border-top: 1px solid var(--border-primary) !important;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg) !important;
+}
+
+/* ========================================
+   BOOTSTRAP ENHANCEMENTS - Forms
+   ======================================== */
+.form-control {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--accent-amber);
+  box-shadow: 0 0 0 2px rgba(255, 176, 0, 0.2);
+}
+
+/* ========================================
+   BOOTSTRAP ENHANCEMENTS - Badges
+   ======================================== */
+.badge {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-primary { background: var(--accent-amber); color: var(--bg-primary); }
+.badge-secondary { background: var(--accent-purple); color: var(--text-primary); }
+.badge-success { background: var(--status-success); color: var(--text-primary); }
+.badge-warning { background: var(--status-warning); color: var(--bg-primary); }
+.badge-danger { background: var(--status-error); color: var(--text-primary); }
+
+/* ========================================
+   TOKEN SUMMARY MODAL - ORBAT STYLING
+   ======================================== */
+
+/* Token Summary Sections */
+.token-summary-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+.token-summary-section h6 {
+  color: var(--accent-amber);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--spacing-md);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* Professional Table Layout for ORBAT */
+.orbat-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-weight: var(--font-weight-medium);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: var(--spacing-md);
+}
+
+.orbat-table th {
+  background: var(--bg-tertiary);
+  color: var(--accent-amber);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-md);
+  border: 1px solid var(--border-primary);
+  text-align: left;
+}
+
+.orbat-table td {
+  padding: var(--spacing-md);
+  border: 1px solid var(--border-primary);
+  font-size: var(--font-size-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  vertical-align: top;
+}
+
+/* Unit Type Styling */
+.unit-type-infantry { border-left: 4px solid var(--accent-orange); }
+.unit-type-armoured { border-left: 4px solid var(--accent-amber); }
+.unit-type-artillery { border-left: 4px solid var(--accent-purple); }
+.unit-type-logistics { border-left: 4px solid var(--accent-yellow); }
+.unit-type-engineering { border-left: 4px solid var(--accent-cyan); }
+
+/* Compact Data Grid */
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--spacing-sm);
+  margin: var(--spacing-sm) 0;
+}
+
+.data-item {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  padding: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  text-align: center;
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-family-mono);
+}
+
+/* Unit Headers */
+.unit-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.unit-header strong {
+  color: var(--accent-amber);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-base);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* Professional Badges */
+.badge-military {
+  background: var(--accent-purple);
+  color: var(--text-primary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Status Indicators */
+.status-active {
+  color: var(--status-success);
+  font-weight: var(--font-weight-semibold);
+}
+
+.status-inactive {
+  color: var(--text-muted);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Legacy Compatibility - Update existing classes */
+.summary-item {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--border-secondary);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.summary-item.brigade { border-left-color: var(--accent-orange); background: var(--bg-secondary); }
+.summary-item.infantry { border-left-color: var(--accent-orange); background: var(--bg-secondary); }
+.summary-item.armoured { border-left-color: var(--accent-amber); background: var(--bg-secondary); }
+.summary-item.artillery { border-left-color: var(--accent-purple); background: var(--bg-secondary); }
+.summary-item.logistics { border-left-color: var(--accent-yellow); background: var(--bg-secondary); }
+.summary-item.engineering { border-left-color: var(--accent-cyan); background: var(--bg-secondary); }
+.summary-item.recon { border-left-color: var(--accent-purple); background: var(--bg-secondary); }
+
+.summary-item strong {
+  color: var(--accent-amber);
+  font-weight: var(--font-weight-bold);
+}
+
+.summary-item .text-muted {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  margin-top: var(--spacing-xs);
+}
+
+/* Weapons Grid */
+.weapons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--spacing-sm);
+  margin: var(--spacing-md) 0;
+  padding: var(--spacing-md);
+  background: rgba(255, 176, 0, 0.1);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent-amber);
+}
+
+.weapon-item {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--accent-amber);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  color: var(--text-primary);
+  text-align: center;
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Mobility Information */
+.mobility-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: rgba(249, 115, 22, 0.1);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent-orange);
+}
+
+.mobility-item {
+  background: rgba(249, 115, 22, 0.2);
+  color: var(--accent-orange);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-medium);
+  border: 1px solid var(--accent-orange);
+}
+
+/* Logistics Grid */
+.logistics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: var(--spacing-sm);
+  margin: var(--spacing-md) 0;
+  padding: var(--spacing-md);
+  background: rgba(234, 179, 8, 0.1);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent-yellow);
+}
+
+.logistics-item {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--accent-yellow);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  color: var(--text-primary);
+  text-align: center;
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Capacity Information */
+.capacity-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: rgba(234, 179, 8, 0.1);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent-yellow);
+}
+
+.capacity-item {
+  background: rgba(234, 179, 8, 0.2);
+  color: var(--accent-yellow);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-medium);
+  border: 1px solid var(--accent-yellow);
+}
+
+/* Engineering Grid */
+.engineering-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--spacing-sm);
+  margin: var(--spacing-md) 0;
+  padding: var(--spacing-md);
+  background: rgba(6, 182, 212, 0.1);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent-cyan);
+}
+
+.engineering-item {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--accent-cyan);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  color: var(--text-primary);
+  text-align: center;
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Capability Information */
+.capability-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: rgba(6, 182, 212, 0.1);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent-cyan);
+}
+
+.capability-item {
+  background: rgba(6, 182, 212, 0.2);
+  color: var(--accent-cyan);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-medium);
+  border: 1px solid var(--accent-cyan);
+}
+
+/* Unit Descriptions */
+.unit-description {
+  color: var(--text-secondary);
+  font-size: var(--font-size-xs);
+  margin-bottom: var(--spacing-sm);
+  font-style: italic;
+}
+
+/* Hierarchy Levels */
+.hierarchy-level {
+  margin-left: var(--spacing-lg);
+  position: relative;
+}
+
+.hierarchy-level::before {
+  content: "└─";
+  position: absolute;
+  left: -12px;
+  color: var(--border-secondary);
+  font-size: var(--font-size-xs);
+}
+
+/* No Data Message */
+.no-data-message {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--text-muted);
+  font-style: italic;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-primary);
+}
+
+/* Scrollbar Styling */
+.modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: var(--border-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--border-accent);
+}
+
+/* ========================================
+   SIMPLE GOOGLE-STYLE LOADER
+   ======================================== */
+.simple-loader {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #333333;
+  border-radius: 50%;
+  animation: simple-spin 1s linear infinite;
+}
+
+@keyframes simple-spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Responsive design removed - focusing on large screens (1100px+) */

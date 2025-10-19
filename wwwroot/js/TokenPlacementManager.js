@@ -2179,12 +2179,47 @@ class TokenPlacementManager {
         console.log('📋 Showing existing token details for:', token);
         try {
             if (typeof tokenManager !== 'undefined' && tokenManager && typeof tokenManager.showTokenDetails === 'function') {
+                console.log('✅ Using tokenManager.showTokenDetails');
                 tokenManager.showTokenDetails(token);
                 return;
             }
-            console.warn('tokenManager.showTokenDetails not available');
+            console.warn('tokenManager.showTokenDetails not available, trying direct method');
+            
+            // Fallback: Try direct AJAX call
+            if (token && token.id) {
+                console.log('🔄 Fallback: Loading token summary directly');
+                    $("#simpleLoader").show();
+                
+                $.ajax({
+                    url: '/DataManagement/GetTokenSummary',
+                    type: 'GET',
+                    data: { tokenId: token.id },
+                    success: function(modalHtml) {
+                        console.log('✅ Token summary loaded via fallback');
+                        $('#tokenSummaryModal').remove();
+                        $('body').append(modalHtml);
+                        
+                        const modal = document.getElementById('tokenSummaryModal');
+                        if (modal) {
+                            modal.style.display = 'flex';
+                            window.currentTokenId = token.id;
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('❌ Fallback token summary failed:', error);
+                        alert('Failed to load token summary: ' + error);
+                    },
+                    complete: function() {
+                        $("#simpleLoader").hide();
+                    }
+                });
+            } else {
+                console.error('❌ Invalid token data');
+                alert('Invalid token data');
+            }
         } catch (err) {
             console.error('Error showing token details:', err);
+            alert('Error showing token details: ' + err.message);
         }
     }
 

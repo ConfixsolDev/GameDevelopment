@@ -53,29 +53,32 @@
     <link href="~/assets/css/fontawesome.min.css" rel="stylesheet">
 
     <!-- Map Libraries CSS ONLY - Scripts moved to bottom for faster page load -->
-    <link href="~/map/css/styles.css" rel="stylesheet" />
     <link rel="stylesheet" href="~/map/css/leaflet.css" />
     <link rel="stylesheet" href="~/map/css/leaflet.draw.css" />
 
-    <!-- Game Play Styles -->
+    <!-- Game Play Specific Styles -->
     <link href="~/css/GamePlay.css" rel="stylesheet" asp-append-version="true" />
     <link href="~/css/DataManagement.css" rel="stylesheet" asp-append-version="true" />
-
+    <link href="~/css/combatSimulation.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/css/regionControls.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/css/militarySymbols.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/css/attackSymbols.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/css/defenseSymbols.css" rel="stylesheet" asp-append-version="true" />
+    
+    <!-- Unified Dark Theme - Single Source of Truth -->
+    <link href="~/css/unified-dark-theme.css" rel="stylesheet" asp-append-version="true">
+    
+    <!-- Google Fonts for Professional Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="gameplay-layout">
-    <!-- Loading Overlay (Initial page load) -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">INITIALIZING WARGAME ARENA...</div>
-    </div>
-
-    <!-- Loading Spinner (AJAX requests) -->
-    <div class="loading-overlay" id="loading" style="display: none;">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">LOADING...</div>
-    </div>
+    <!-- Simple Google-style Loader -->
+    <div class="simple-loader" id="simpleLoader" style="display: none;"></div>
 
     <!-- Main Game Container -->
     <div class="gameplay-container">
@@ -198,6 +201,42 @@
             }
         }
         }
+    </script>
+
+    <!-- Simple Loader Functions -->
+    <script>
+        // Simple loader functions
+        function showLoader() {
+            document.getElementById('simpleLoader').style.display = 'block';
+        }
+        
+        function hideLoader() {
+            document.getElementById('simpleLoader').style.display = 'none';
+        }
+        
+        // Make functions globally available
+        window.showLoader = showLoader;
+        window.hideLoader = hideLoader;
+    </script>
+
+    <!-- Global Modal Backdrop Removal -->
+    <script>
+        $(document).ready(function() {
+            // Remove modal backdrop for all modals
+            $(document).on('show.bs.modal', '.modal', function () {
+                $('.modal-backdrop').remove();
+            });
+            
+            $(document).on('shown.bs.modal', '.modal', function () {
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open');
+            });
+            
+            $(document).on('hide.bs.modal', '.modal', function () {
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open');
+            });
+        });
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)

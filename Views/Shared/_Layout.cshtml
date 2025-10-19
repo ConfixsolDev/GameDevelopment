@@ -52,7 +52,15 @@
     <link href="~/assets/css/metismenu.min.css" rel="stylesheet" />
     <link href="~/assets/css/icons.min.css" rel="stylesheet">
     <link href="~/assets/css/app.min.css" id="app-style" rel="stylesheet">
-    <link href="~/css/dark-theme-system.css" rel="stylesheet" asp-append-version="true">
+    
+    <!-- Unified Dark Theme - Single Source of Truth -->
+    <link href="~/css/unified-dark-theme.css" rel="stylesheet" asp-append-version="true">
+    
+    <!-- Google Fonts for Professional Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
     <!-- Core scripts (order matters) -->
     <script src="~/assets/js/jquery.min.js"></script>
@@ -75,6 +83,9 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body data-sidebar="dark">
+    <!-- Simple Google-style Loader -->
+    <div class="simple-loader" id="simpleLoader" style="display: none;"></div>
+
     <!-- start .layout-wrapper -->
     <div id="layout-wrapper">
         <!-- start header -->
@@ -227,6 +238,42 @@
 
     <!-- Theme System JavaScript -->
     <script src="~/js/theme-system.js"></script>
+
+    <!-- Simple Loader Functions -->
+    <script>
+        // Simple loader functions
+        function showLoader() {
+            document.getElementById('simpleLoader').style.display = 'block';
+        }
+        
+        function hideLoader() {
+            document.getElementById('simpleLoader').style.display = 'none';
+        }
+        
+        // Make functions globally available
+        window.showLoader = showLoader;
+        window.hideLoader = hideLoader;
+    </script>
+
+    <!-- Global Modal Backdrop Removal -->
+    <script>
+        $(document).ready(function() {
+            // Remove modal backdrop for all modals
+            $(document).on('show.bs.modal', '.modal', function () {
+                $('.modal-backdrop').remove();
+            });
+            
+            $(document).on('shown.bs.modal', '.modal', function () {
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open');
+            });
+            
+            $(document).on('hide.bs.modal', '.modal', function () {
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open');
+            });
+        });
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

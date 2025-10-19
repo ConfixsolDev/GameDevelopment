@@ -13,6 +13,9 @@ class DefensePlanningManager {
         this.drawingPoints = [];
         this.tempLayer = null;
         
+        // Prevent duplicate simultaneous API calls
+        this.isLoading = false;
+        
         // Layer groups for different defense types
         this.killZoneLayer = L.layerGroup().addTo(this.map);
         this.minefieldLayer = L.layerGroup().addTo(this.map);
@@ -510,12 +513,20 @@ class DefensePlanningManager {
     }
     
     /**
-     * Load all defense elements from database (single function call)
+     * Load all defense elements from database (always fresh data)
      * Similar to token placement loading pattern
      * Only loads ACTIVE elements (soft delete handled at database level)
+     * No caching - always fetches fresh data since elements can be added by other teams
      */
     async loadDefenseElements(gameSessionId = null) {
         try {
+            // Check if already loading (prevent duplicate simultaneous calls only)
+            if (this.isLoading) {
+                console.log('⏳ Defense elements already loading, skipping duplicate call');
+                return { success: true, message: 'Already loading' };
+            }
+            
+            this.isLoading = true;
             const sessionId = gameSessionId || this.getCurrentGameSessionId();
             
             let response;
@@ -555,6 +566,8 @@ class DefensePlanningManager {
                 
                 console.log('✅ All ACTIVE defense elements loaded and visualized');
                 
+                this.isLoading = false;
+                
                 return {
                     success: true,
                     count: result.elements.length,
@@ -562,10 +575,12 @@ class DefensePlanningManager {
                 };
             } else {
                 console.log('ℹ️ No ACTIVE defense elements found in database');
+                this.isLoading = false;
                 return { success: true, count: 0, elements: [] };
             }
         } catch (error) {
             console.error('❌ Error loading defense elements from database:', error);
+            this.isLoading = false;
             return { success: false, message: error.message };
         }
     }

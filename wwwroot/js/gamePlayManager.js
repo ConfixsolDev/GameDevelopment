@@ -472,16 +472,8 @@ class GamePlayManager {
             // Initialize with map
             window.defensePlanningManager = new DefensePlanningManager(this.map);
             
-            // Load defense elements in background (team info is already loaded)
-            setTimeout(async () => {
-                try {
-                    console.log('🔄 Loading defense elements in background...');
-                    await window.defensePlanningManager.loadDefenseElements();
-                    console.log('✅ Defense elements loaded');
-                } catch (error) {
-                    console.error('❌ Error loading defense elements:', error);
-                }
-            }, 500);
+            // Defense elements will be loaded by the main initialization process
+            // No need for duplicate loading here
             
             console.log('✅ Defense planning manager initialized');
         } else {

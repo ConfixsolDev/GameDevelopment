@@ -307,7 +307,14 @@ class TokenManager {
     async showTokenDetails(token) {
         console.log('🎯 Loading token summary modal for:', token.name, token.id);
         
-        $("#loading").show();
+        // Validate token data
+        if (!token || !token.id) {
+            console.error('❌ Invalid token data provided');
+            alert('Invalid token data');
+            return;
+        }
+        
+            $("#simpleLoader").show();
         
         // Load the token summary directly from GetTokenSummary
         $.ajax({
@@ -315,29 +322,27 @@ class TokenManager {
             type: 'GET',
             data: { tokenId: token.id },
             success: function(modalHtml) {
-                console.log('✅ Token summary loaded');
+                console.log('✅ Token summary loaded successfully');
+                console.log('Modal HTML length:', modalHtml.length);
                 
                 // Remove any existing modal and add the new one
                 $('#tokenSummaryModal').remove();
                 $('body').append(modalHtml);
                 
-                // Show the modal
-                const modal = document.getElementById('tokenSummaryModal');
-                if (modal) {
-                    modal.style.display = 'flex';
-                    window.currentTokenId = token.id;
-                } else {
-                    console.error('❌ Token summary modal element not found');
-                    console.error('Error: Could not display token summary modal');
-                }
+                // Show the Bootstrap modal
+                $('#tokenSummaryModal').modal('show');
+                window.currentTokenId = token.id;
+                console.log('✅ Token summary modal displayed successfully');
             },
             error: function(xhr, status, error) {
                 console.error('❌ Error loading token summary:', error);
-                console.error('Failed to load token summary');
+                console.error('Status:', status);
+                console.error('Response:', xhr.responseText);
+                alert('Failed to load token summary: ' + error);
             },
-            complete: function() {
-                $("#loading").hide();
-            }
+                complete: function() {
+                    $("#simpleLoader").hide();
+                }
         });
         return; // Exit early - rest of method is legacy code now commented out
         

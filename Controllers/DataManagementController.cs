@@ -339,6 +339,16 @@ namespace TechWebSol.Controllers
                     .OrderByDescending(a => a.CreatedDate)
                     .ToListAsync();
 
+                var logistics = await _context.LogisticsUnits
+                    .Where(l => l.TokenId == tokenId && l.TeamId == user.TeamId && l.IsActive)
+                    .OrderByDescending(l => l.CreatedDate)
+                    .ToListAsync();
+
+                var engineering = await _context.CombatEngineeringCompanies
+                    .Where(e => e.TokenId == tokenId && e.TeamId == user.TeamId && e.IsActive)
+                    .OrderByDescending(e => e.CreatedDate)
+                    .ToListAsync();
+
                 var recon = await _context.Recon
                     .Where(r => r.TokenId == tokenId && r.TeamId == user.TeamId && r.IsActive)
                     .OrderByDescending(r => r.CreatedDate)
@@ -349,6 +359,8 @@ namespace TechWebSol.Controllers
                 var infantryForToken = infantry.Where(u => u.BrigadeId.HasValue && brigadeIds.Contains(u.BrigadeId.Value)).ToList();
                 var armouredForToken = armoured.Where(u => u.BrigadeId.HasValue && brigadeIds.Contains(u.BrigadeId.Value)).ToList();
                 var artilleryForToken = artillery.Where(u => u.BrigadeId.HasValue && brigadeIds.Contains(u.BrigadeId.Value)).ToList();
+                var logisticsForToken = logistics.Where(u => u.BrigadeId.HasValue && brigadeIds.Contains(u.BrigadeId.Value)).ToList();
+                var engineeringForToken = engineering.Where(u => u.BrigadeId.HasValue && brigadeIds.Contains(u.BrigadeId.Value)).ToList();
 
                 // Create ViewModel
                 var viewModel = new TokenSummaryViewModel
@@ -358,6 +370,8 @@ namespace TechWebSol.Controllers
                     InfantryBattalions = infantryForToken,
                     ArmouredRegiments = armouredForToken,
                     ArtilleryRegiments = artilleryForToken,
+                    LogisticsUnits = logisticsForToken,
+                    CombatEngineeringCompanies = engineeringForToken,
                     Recon = recon
                 };
 
@@ -924,11 +938,13 @@ namespace TechWebSol.Controllers
         public class TokenSummaryViewModel
         {
             public Token Token { get; set; }
-            public List<Brigade> Brigades { get; set; }
-            public List<InfantryBattalion> InfantryBattalions { get; set; }
-            public List<ArmouredRegiment> ArmouredRegiments { get; set; }
-            public List<ArtilleryRegiment> ArtilleryRegiments { get; set; }
-            public List<Recon> Recon { get; set; }
+            public List<Brigade> Brigades { get; set; } = new List<Brigade>();
+            public List<InfantryBattalion> InfantryBattalions { get; set; } = new List<InfantryBattalion>();
+            public List<ArmouredRegiment> ArmouredRegiments { get; set; } = new List<ArmouredRegiment>();
+            public List<ArtilleryRegiment> ArtilleryRegiments { get; set; } = new List<ArtilleryRegiment>();
+            public List<LogisticsUnit> LogisticsUnits { get; set; } = new List<LogisticsUnit>();
+            public List<CombatEngineeringCompany> CombatEngineeringCompanies { get; set; } = new List<CombatEngineeringCompany>();
+            public List<Recon> Recon { get; set; } = new List<Recon>();
         }
 
         public enum UnitType
