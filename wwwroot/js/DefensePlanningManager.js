@@ -641,16 +641,28 @@ class DefensePlanningManager {
                 if (element.line) {
                     this.obstacleLayer.addLayer(element.line);
                     element.line.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'obstacle'));
+                } else if (element) {
+                    // Handle polyline directly if no 'line' property
+                    this.obstacleLayer.addLayer(element);
+                    element.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'obstacle'));
                 }
             } else if (dbElement.category === 'route') {
                 element = this.renderer.createWithdrawalRoute(coordinates, dbElement.type, { forceType });
                 if (element.route) {
                     this.withdrawalLayer.addLayer(element.route);
+                    element.route.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'route'));
+                } else if (element.polyline) {
+                    this.withdrawalLayer.addLayer(element.polyline);
+                    element.polyline.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'route'));
                 }
             } else if (dbElement.category === 'line') {
                 element = this.renderer.createDefensiveLine(coordinates, dbElement.type, { forceType });
                 if (element.line) {
                     this.defensiveLineLayer.addLayer(element.line);
+                    element.line.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'line'));
+                } else if (element) {
+                    this.defensiveLineLayer.addLayer(element);
+                    element.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'line'));
                 }
             } else if (dbElement.category === 'position') {
                 // Defensive position - coordinates format: [[lat, lng]]
@@ -1314,9 +1326,10 @@ class DefensePlanningManager {
         // Save to database
         this.saveDefenseElementToDatabase(this.defenseElements.get(elementId));
         
-        // Add click event
+        // Add click and right-click events
         const clickableElement = element.polyline || element;
         clickableElement.on('click', () => this.showDefenseElementDetails(elementId));
+        clickableElement.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, elementId, category));
         
         console.log(`✅ Created ${category} (${type}) with ID: ${elementId}`);
         
@@ -1354,8 +1367,9 @@ class DefensePlanningManager {
         // Save to database
         this.saveDefenseElementToDatabase(this.defenseElements.get(elementId));
         
-        // Add click event
+        // Add click and right-click events
         marker.on('click', () => this.showDefenseElementDetails(elementId));
+        marker.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, elementId, 'position'));
         
         console.log(`✅ Created defensive position (${type}) with ID: ${elementId}`);
         
