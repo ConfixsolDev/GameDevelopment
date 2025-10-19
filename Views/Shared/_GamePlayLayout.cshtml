@@ -99,6 +99,7 @@
     <!-- Scripts - Local versions -->
     <script src="~/assets/js/jquery.min.js"></script>
     <script src="~/assets/js/bootstrap.bundle.min.js"></script>
+    
 
     <!-- Map Libraries - Moved from head for better performance -->
     <script src="~/map/js/leaflet.js"></script>
@@ -235,6 +236,26 @@
             $(document).on('hide.bs.modal', '.modal', function () {
                 $('.modal-backdrop').remove();
                 $('body').removeClass('modal-open');
+            });
+            
+            // Global close button handler for ALL Bootstrap modals
+            $(document).on('click', '.modal .close, .modal [data-dismiss="modal"]', function(e) {
+                e.preventDefault();
+                var $modal = $(this).closest('.modal');
+                $modal.hide().removeClass('show');
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open');
+            });
+            
+            // Global escape key handler for ALL modals
+            $(document).on('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    $('.modal.show').each(function() {
+                        $(this).hide().removeClass('show');
+                    });
+                    $('.modal-backdrop').remove();
+                    $('body').removeClass('modal-open');
+                }
             });
         });
     </script>

@@ -33,8 +33,5 @@ namespace TechWebSol.Models
 
         [ForeignKey("TokenId")]
         public virtual Token Token { get; set; }
-
-        [ForeignKey("TeamId")]
-        public virtual Team Team { get; set; }
     }
 }

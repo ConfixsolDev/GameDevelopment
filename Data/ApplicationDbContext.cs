@@ -163,6 +163,10 @@ namespace TechWebSol.Data
                     .WithMany()
                     .HasForeignKey(e => e.BrigadeId)
                     .OnDelete(DeleteBehavior.SetNull);
+                
+                // OPTIMIZED: Composite index for common token summary query
+                entity.HasIndex(e => new { e.TokenId, e.BrigadeId, e.TeamId, e.IsActive })
+                    .HasDatabaseName("IX_Infantry_Token_Brigade_Team_Active");
             });
 
             modelBuilder.Entity<ArmouredRegiment>(entity =>
@@ -181,6 +185,10 @@ namespace TechWebSol.Data
                     .WithMany()
                     .HasForeignKey(e => e.BrigadeId)
                     .OnDelete(DeleteBehavior.SetNull);
+                
+                // OPTIMIZED: Composite index for common token summary query
+                entity.HasIndex(e => new { e.TokenId, e.BrigadeId, e.TeamId, e.IsActive })
+                    .HasDatabaseName("IX_Armoured_Token_Brigade_Team_Active");
             });
 
             modelBuilder.Entity<ArtilleryRegiment>(entity =>
@@ -199,6 +207,10 @@ namespace TechWebSol.Data
                     .WithMany()
                     .HasForeignKey(e => e.BrigadeId)
                     .OnDelete(DeleteBehavior.SetNull);
+                
+                // OPTIMIZED: Composite index for common token summary query
+                entity.HasIndex(e => new { e.TokenId, e.BrigadeId, e.TeamId, e.IsActive })
+                    .HasDatabaseName("IX_Artillery_Token_Brigade_Team_Active");
             });
 
             modelBuilder.Entity<LogisticsUnit>(entity =>
@@ -217,6 +229,10 @@ namespace TechWebSol.Data
                     .WithMany()
                     .HasForeignKey(e => e.BrigadeId)
                     .OnDelete(DeleteBehavior.SetNull);
+                
+                // OPTIMIZED: Composite index for common token summary query
+                entity.HasIndex(e => new { e.TokenId, e.BrigadeId, e.TeamId, e.IsActive })
+                    .HasDatabaseName("IX_Logistics_Token_Brigade_Team_Active");
             });
 
             modelBuilder.Entity<CombatEngineeringCompany>(entity =>
@@ -238,6 +254,10 @@ namespace TechWebSol.Data
                     .WithMany()
                     .HasForeignKey(e => e.BrigadeId)
                     .OnDelete(DeleteBehavior.SetNull);
+                
+                // OPTIMIZED: Composite index for common token summary query
+                entity.HasIndex(e => new { e.TokenId, e.BrigadeId, e.TeamId, e.IsActive })
+                    .HasDatabaseName("IX_Engineering_Token_Brigade_Team_Active");
             });
 
             modelBuilder.Entity<TerrainMobilityFactor>(entity =>
@@ -320,10 +340,10 @@ namespace TechWebSol.Data
                 entity.Property(e => e.Location).HasMaxLength(200);
                 entity.Property(e => e.Confidence).HasMaxLength(20);
 
-                entity.HasOne(e => e.Team)
-                    .WithMany()
-                    .HasForeignKey(e => e.TeamId)
-                    .OnDelete(DeleteBehavior.SetNull);
+                //entity.HasOne(e => e.Team)
+                //    .WithMany()
+                //    .HasForeignKey(e => e.TeamId)
+                //    .OnDelete(DeleteBehavior.SetNull);
 
                 entity.HasOne(e => e.Token)
                     .WithMany()
@@ -431,6 +451,12 @@ namespace TechWebSol.Data
                 entity.HasIndex(e => e.TokenId);
                 entity.HasIndex(e => e.GameSessionId);
                 entity.HasIndex(e => e.Status);
+                
+                // OPTIMIZED: Composite indexes for common query patterns
+                entity.HasIndex(e => new { e.TeamId, e.Status, e.CreatedDate })
+                    .HasDatabaseName("IX_DefenseElement_Team_Status_Date");
+                entity.HasIndex(e => new { e.GameSessionId, e.Status })
+                    .HasDatabaseName("IX_DefenseElement_Session_Status");
             });
 
             // Configure Map Data entities

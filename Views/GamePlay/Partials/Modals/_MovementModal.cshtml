@@ -1,20 +1,23 @@
 @*
-    Phase 01: Move / Assembly Modal
+    Phase 01: Move / Assembly Modal - Bootstrap Modal
     Implements the MoveConfirmModal with all required controls per Phase 01 specification
 *@
 
-<!-- Movement/Assembly Modal -->
-<div id="movementModal" class="gameplay-modal" style="display: none;">
-    <div class="gameplay-modal-content large-modal">
-        <div class="gameplay-modal-header">
-            <h3>
-                <i class="fas fa-route"></i>
-                <span id="movementModalTitle">Plan Movement / Assembly</span>
-            </h3>
-            <button class="gameplay-modal-close" onclick="closeMovementModal()">&times;</button>
-        </div>
+<!-- Movement/Assembly Modal - Bootstrap Modal -->
+<div class="modal fade" id="movementModal" tabindex="-1" role="dialog" aria-labelledby="movementModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="movementModalLabel">
+                    <i class="fas fa-route"></i>
+                    <span id="movementModalTitle">Plan Movement / Assembly</span>
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
         
-        <div class="gameplay-modal-body">
+        <div class="modal-body">
             <!-- Unit Information -->
             <div class="unit-info-section">
                 <div class="unit-display">
@@ -155,18 +158,19 @@
                 </div>
             </div>
         </div>
-        
-        <div class="gameplay-modal-footer">
-            <button class="btn btn-secondary" onclick="closeMovementModal()">
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">
                 <i class="fas fa-times"></i> Cancel
             </button>
-            <button class="btn btn-outline-primary" onclick="saveRouteDraft()" id="saveDraftBtn">
+            <button type="button" class="btn btn-outline-primary" onclick="saveRouteDraft()" id="saveDraftBtn">
                 <i class="fas fa-save"></i> Save Draft
             </button>
-            <button class="btn btn-primary" onclick="commitMovement()" id="commitMoveBtn" disabled>
+            <button type="button" class="btn btn-primary" onclick="commitMovement()" id="commitMoveBtn" disabled>
                 <i class="fas fa-check"></i> Commit Move
             </button>
         </div>
+    </div>
     </div>
 </div>
 
@@ -510,19 +514,38 @@ function openMovementModal(unitId) {
     // Load unit data
     loadUnitData(unitId);
     
-    // Show modal
-    document.getElementById('movementModal').style.display = 'flex';
+    // Show Bootstrap modal with forced display
+    $('#movementModal').css({
+        'display': 'block',
+        'opacity': '1',
+        'visibility': 'visible'
+    }).addClass('show').removeClass('fade');
+    
+    $('#movementModal').modal({
+        backdrop: false,
+        keyboard: true,
+        show: true
+    });
     
     // Initialize route planning
     initializeRoutePlanning();
 }
 
 function closeMovementModal() {
-    document.getElementById('movementModal').style.display = 'none';
+    $('#movementModal').hide().removeClass('show');
+    $('.modal-backdrop').remove();
+    $('body').removeClass('modal-open');
     currentSelectedUnit = null;
     currentWaypoints = [];
     currentRouteCost = 0;
 }
+
+// Event delegation for close buttons
+$(document).off('click', '#movementModal .close, #movementModal [data-dismiss="modal"]');
+$(document).on('click', '#movementModal .close, #movementModal [data-dismiss="modal"]', function(e) {
+    e.preventDefault();
+    closeMovementModal();
+});
 
 function loadUnitData(unitId) {
     // This would typically load from an API endpoint

@@ -6,16 +6,14 @@
     ViewData["Subtitle"] = "Strategic Command Center - Fox Land vs Blue Land";
 }
 
-<script>
-    // Set force type directly from server-side session
-    window.currentTeamInfo = {
-        forceType: '@(currentUser?.ForceType ?? "Neutral")'
-    };
-    
-    console.log('🎯 Force type set from session:', window.currentTeamInfo.forceType);
-</script>
 
 <div class="gameplay-container">
+    <!-- Instruction Banner (shown during attack mode) -->
+    <div id="attackInstructionBanner" style="display: none; position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 9998; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); color: white; padding: 15px 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 16px; font-weight: 600; text-align: center; min-width: 400px;">
+        <i class="fas fa-crosshairs"></i>
+        <span id="attackInstructionText">Click on your own token to select attacker</span>
+    </div>
+
     <!-- MAIN AREA -->
     <main class="game-main-area">
         <!-- MAP -->
@@ -23,14 +21,14 @@
             <div id="gameMap"></div>
         </div>
 
-        <!-- LEFT: Region Panel - Lazy Loaded -->
+        <!-- LEFT: Region Panel - Direct Include -->
         <div id="regionPanelContainer">
-            <!-- Will be lazy loaded -->
+            @await Html.PartialAsync("Partials/Controls/_RegionPanel")
         </div>
 
-        <!-- Overlay Controls - Lazy Loaded -->
+        <!-- Overlay Controls - Direct Include -->
         <div id="overlayControlsContainer">
-            <!-- Will be lazy loaded -->
+            @await Html.PartialAsync("Partials/Controls/_OverlayControls")
         </div>
 
         <!-- BOTTOM-LEFT: Coordinates -->
@@ -71,9 +69,12 @@
     </div>
 </div>
 
-<!-- Modal Container - All modals will be lazy loaded here -->
+<!-- Modal Container - All modals directly included for better performance -->
 <div id="modalsContainer">
-    <!-- Modals will be lazy loaded -->
+    @await Html.PartialAsync("Partials/Modals/_DataEntryModal")
+    @await Html.PartialAsync("Partials/Modals/_TokenSelectionModal")
+    @await Html.PartialAsync("Partials/Modals/_SuspectedTokenModal")
+    @await Html.PartialAsync("Partials/Modals/_MovementModal")
 </div>
 
 <!-- Scripts Container - Lazy Loaded -->
@@ -93,38 +94,49 @@
 <script src="~/lib/leaflet/js/turf.min.js"></script>
 <script src="~/lib/leaflet/js/leaflet-providers.js"></script>
 
-<!-- GamePlay Arena JavaScript Modules -->
+<!-- GamePlay Arena JavaScript Modules - OPTIMIZED LOADING -->
+<!-- Critical path scripts (synchronous - needed immediately) -->
 <script src="~/js/tileServerConfig.js"></script>
-<script src="~/js/lazy-loader.js"></script>
 <script src="~/js/MilitarySymbolRenderer.js"></script>
-<script src="~/js/AttackSymbolRenderer.js"></script>
-<script src="~/js/DefenseSymbolRenderer.js"></script>
-<script src="~/js/DefensePlanningManager.js"></script>
-<script src="~/js/NatoEffectivenessEngine.js"></script>
-<script src="~/js/CombatSimulationEngine.js"></script>
-<script src="~/js/SimulationResultsManager.js"></script>
-<script src="~/js/NatoTerrainEngine.js"></script>
-<script src="~/js/TerrainIntegrationService.js"></script>
-<script src="~/js/NatoAiAnalysisEngine.js"></script>
-<script src="~/js/AiIntegrationService.js"></script>
-<script src="~/js/HlaIntegrationAdapter.js"></script>
-<script src="~/js/InteroperabilityService.js"></script>
-<script src="~/js/NatoSystemIntegrator.js"></script>
 <script src="~/js/TokenManager.js"></script>
 <script src="~/js/TokenPlacementManager.js"></script>
-<script src="~/js/suspectedTokenManager.js"></script>
 <script src="~/js/TokenActionModeManager.js"></script>
-<script src="~/js/AttackVisualizationManager.js"></script>
-<script src="~/js/RegionManager.js"></script>
-<script src="~/js/regionControls.js"></script>
+<script src="~/js/DefenseSymbolRenderer.js"></script>
+<script src="~/js/DefensePlanningManager.js"></script>
 <script src="~/js/gamePlayManager.js"></script>
-<script src="~/js/mapControls.js"></script>
-<script src="~/js/scenarioPlanning.js"></script>
-<script src="~/js/militaryAdjudication.js"></script>
-<script src="~/js/combatSimulation.js"></script>
+
+<!-- Non-critical scripts (deferred - loaded after page interactive) -->
+<script defer src="~/js/AttackSymbolRenderer.js"></script>
+<script defer src="~/js/AttackVisualizationManager.js"></script>
+<script defer src="~/js/suspectedTokenManager.js"></script>
+<script defer src="~/js/RegionManager.js"></script>
+<script defer src="~/js/regionControls.js"></script>
+<script defer src="~/js/mapControls.js"></script>
+<script defer src="~/js/scenarioPlanning.js"></script>
+<script defer src="~/js/militaryAdjudication.js"></script>
+<script defer src="~/js/combatSimulation.js"></script>
+
+<!-- Heavy NATO systems (lowest priority - loaded last) -->
+<script defer src="~/js/NatoEffectivenessEngine.js"></script>
+<script defer src="~/js/CombatSimulationEngine.js"></script>
+<script defer src="~/js/SimulationResultsManager.js"></script>
+<script defer src="~/js/NatoTerrainEngine.js"></script>
+<script defer src="~/js/TerrainIntegrationService.js"></script>
+<script defer src="~/js/NatoAiAnalysisEngine.js"></script>
+<script defer src="~/js/AiIntegrationService.js"></script>
+<script defer src="~/js/HlaIntegrationAdapter.js"></script>
+<script defer src="~/js/InteroperabilityService.js"></script>
+<script defer src="~/js/NatoSystemIntegrator.js"></script>
 
 <!-- Defense Planning Functions -->
 <script>
+// Set force type directly from server-side session
+window.currentTeamInfo = {
+    forceType: '@(currentUser?.ForceType ?? "Neutral")'
+};
+
+console.log('🎯 Force type set from session:', window.currentTeamInfo.forceType);
+
 // Global defense planning functions
 function startKillZoneDrawing(type) {
     if (window.defensePlanningManager) {

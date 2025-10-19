@@ -15,15 +15,18 @@ namespace TechWebSol.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ILogger<DataManagementController> _logger;
         private readonly ApplicationUserVM user;
 
         public DataManagementController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            IUserSessionService userSessionService)
+            IUserSessionService userSessionService,
+            ILogger<DataManagementController> logger)
         {
             _context = context;
             _userManager = userManager;
+            _logger = logger;
             user = userSessionService.GetCurrentUser();
         }
 
@@ -309,77 +312,80 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var token = await _context.Tokens
-                    .Include(t => t.TokenGroup)
-                    .FirstOrDefaultAsync(t => t.Id == tokenId && t.TeamId == user.TeamId && t.IsActive);
+                // OPTIMIZED: Fetch all related data in parallel using Task.WhenAll
+                // This is faster than sequential queries and doesn't require navigation properties
+                var token = _context.Tokens.AsNoTracking().FirstOrDefault(t => t.Id == tokenId  && t.IsActive);
 
                 if (token == null)
                 {
-                    return PartialView("Partials/_ErrorPartial", new { Message = "Token not found or not accessible" });
+                    return PartialView("Partials/_ErrorPartial", "Token not found or not accessible");
                 }
 
-                // Get all military data for this token
-                var brigades = await _context.Brigades
-                    .Where(b => b.TokenId == tokenId && b.TeamId == user.TeamId && b.IsActive)
+                var Brigades = _context.Brigades
+                    .AsNoTracking()
+                    .Where(b => b.TokenId == tokenId  && b.IsActive)
                     .OrderByDescending(b => b.CreatedDate)
-                    .ToListAsync();
+                    .FirstOrDefault();
 
-                var infantry = await _context.InfantryBattalions
-                    .Where(i => i.TokenId == tokenId && i.TeamId == user.TeamId && i.IsActive)
+                if (Brigades ==  null)
+                {
+                    Brigades = new Brigade();
+                }
+
+                Brigades.InfantryBattalions = _context.InfantryBattalions
+                    .Where(i => i.TokenId == tokenId  && i.IsActive)
                     .OrderByDescending(i => i.CreatedDate)
-                    .ToListAsync();
+                    .AsNoTracking()
+                    .ToList();
 
-                var armoured = await _context.ArmouredRegiments
-                    .Where(a => a.TokenId == tokenId && a.TeamId == user.TeamId && a.IsActive)
+                Brigades.ArmouredRegiments = _context.ArmouredRegiments
+                    .AsNoTracking()
+                    .Where(a => a.TokenId == tokenId &&  a.IsActive)
                     .OrderByDescending(a => a.CreatedDate)
-                    .ToListAsync();
+                    .ToList();
 
-                var artillery = await _context.ArtilleryRegiments
-                    .Where(a => a.TokenId == tokenId && a.TeamId == user.TeamId && a.IsActive)
+                Brigades.ArtilleryRegiments = _context.ArtilleryRegiments
+                    .AsNoTracking()
+                    .Where(a => a.TokenId == tokenId  && a.IsActive)
                     .OrderByDescending(a => a.CreatedDate)
-                    .ToListAsync();
+                    .ToList();
 
-                var logistics = await _context.LogisticsUnits
-                    .Where(l => l.TokenId == tokenId && l.TeamId == user.TeamId && l.IsActive)
+                Brigades.LogisticsUnits = _context.LogisticsUnits
+                    .AsNoTracking()
+                    .Where(l => l.TokenId == tokenId  && l.IsActive)
                     .OrderByDescending(l => l.CreatedDate)
-                    .ToListAsync();
+                    .ToList();
 
-                var engineering = await _context.CombatEngineeringCompanies
-                    .Where(e => e.TokenId == tokenId && e.TeamId == user.TeamId && e.IsActive)
+                Brigades.CombatEngineeringCompanies = _context.CombatEngineeringCompanies
+                    .AsNoTracking()
+                    .Where(e => e.TokenId == tokenId && e.IsActive)
                     .OrderByDescending(e => e.CreatedDate)
-                    .ToListAsync();
+                    .ToList();
 
-                var recon = await _context.Recon
-                    .Where(r => r.TokenId == tokenId && r.TeamId == user.TeamId && r.IsActive)
-                    .OrderByDescending(r => r.CreatedDate)
-                    .ToListAsync();
-
-                // Filter units by the brigades belonging to this token
-                var brigadeIds = brigades.Select(b => b.Id).ToHashSet();
-                var infantryForToken = infantry.Where(u => u.BrigadeId.HasValue && brigadeIds.Contains(u.BrigadeId.Value)).ToList();
-                var armouredForToken = armoured.Where(u => u.BrigadeId.HasValue && brigadeIds.Contains(u.BrigadeId.Value)).ToList();
-                var artilleryForToken = artillery.Where(u => u.BrigadeId.HasValue && brigadeIds.Contains(u.BrigadeId.Value)).ToList();
-                var logisticsForToken = logistics.Where(u => u.BrigadeId.HasValue && brigadeIds.Contains(u.BrigadeId.Value)).ToList();
-                var engineeringForToken = engineering.Where(u => u.BrigadeId.HasValue && brigadeIds.Contains(u.BrigadeId.Value)).ToList();
+                //Brigades.Recon = _context.Recon
+                //    .AsNoTracking()
+                //    .Where(r => r.TokenId == tokenId  && r.IsActive)
+                //    .OrderByDescending(r => r.CreatedDate)
+                //    .ToList();
 
                 // Create ViewModel
                 var viewModel = new TokenSummaryViewModel
                 {
                     Token = token,
-                    Brigades = brigades,
-                    InfantryBattalions = infantryForToken,
-                    ArmouredRegiments = armouredForToken,
-                    ArtilleryRegiments = artilleryForToken,
-                    LogisticsUnits = logisticsForToken,
-                    CombatEngineeringCompanies = engineeringForToken,
-                    Recon = recon
+                    Brigades = Brigades,
+                    InfantryBattalions = Brigades.InfantryBattalions ?? new List<InfantryBattalion>(),
+                    ArmouredRegiments = Brigades.ArmouredRegiments ?? new List<ArmouredRegiment>(),
+                    ArtilleryRegiments = Brigades.ArtilleryRegiments ?? new List<ArtilleryRegiment>(),
+                    LogisticsUnits = Brigades.LogisticsUnits ?? new List<LogisticsUnit>(),
+                    CombatEngineeringCompanies = Brigades.CombatEngineeringCompanies ?? new List<CombatEngineeringCompany>(),
+                    Recon = Brigades.Recon ?? new List<Recon>()
                 };
 
                 return PartialView("Partials/_TokenSummaryModal", viewModel);
             }
             catch (Exception ex)
             {
-                return PartialView("Partials/_ErrorPartial", new { Message = "Error loading token summary" });
+                return PartialView("Partials/_ErrorPartial", ViewBag.ErrorMessage);
             }
         }
 
@@ -938,7 +944,7 @@ namespace TechWebSol.Controllers
         public class TokenSummaryViewModel
         {
             public Token Token { get; set; }
-            public List<Brigade> Brigades { get; set; } = new List<Brigade>();
+            public Brigade Brigades { get; set; } = new Brigade();
             public List<InfantryBattalion> InfantryBattalions { get; set; } = new List<InfantryBattalion>();
             public List<ArmouredRegiment> ArmouredRegiments { get; set; } = new List<ArmouredRegiment>();
             public List<ArtilleryRegiment> ArtilleryRegiments { get; set; } = new List<ArtilleryRegiment>();

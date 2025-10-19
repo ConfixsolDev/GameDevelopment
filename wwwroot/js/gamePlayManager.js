@@ -6,10 +6,20 @@ class GamePlayManager {
     constructor() {
         this.initialized = false;
         this.map = null;
-        this.lazyLoader = null;
         
-        // Core component IDs
-        this.coreComponents = ['region-panel', 'overlay-controls', 'unit-status-panel'];
+        // Performance optimization: Enable/disable verbose logging
+        this.verboseLogging = false; // Set to true only for debugging
+        
+        // Performance timing
+        this.performanceTimes = {
+            start: performance.now(),
+            map: 0,
+            managers: 0,
+            backgroundData: 0,
+            total: 0
+        };
+        
+        // Core components are now directly included in the view (no lazy loading)
         this.modalComponents = [
             'data-entry-modal', 'token-management-modal', 'token-selection-modal',
             'simulation-panel', 'unit-deployment-modal', 'movement-plan-modal',
@@ -18,71 +28,80 @@ class GamePlayManager {
         
         // Simple notification callback
         this.notificationCallback = (message, type) => {
-            console.log(`[${type.toUpperCase()}] ${message}`);
+            if (this.verboseLogging) {
+                console.log(`[${type.toUpperCase()}] ${message}`);
+            }
             // You can enhance this to show actual notifications if needed
         };
     }
+    
+    /**
+     * Conditional logging for performance
+     */
+    log(message, force = false) {
+        if (this.verboseLogging || force) {
+            console.log(message);
+        }
+    }
+    
+    /**
+     * Log performance milestone
+     */
+    logPerformance(milestone, force = true) {
+        const now = performance.now();
+        const elapsed = now - this.performanceTimes.start;
+        if (force) {
+            console.log(`⚡ ${milestone}: ${elapsed.toFixed(0)}ms`);
+        }
+        return now;
+    }
 
     /**
-     * Initialize the GamePlay Arena
+     * Initialize the GamePlay Arena (OPTIMIZED)
      */
     async init() {
         if (this.initialized) {
-            console.log('GamePlayManager already initialized');
+            this.log('GamePlayManager already initialized');
             return;
         }
 
         try {
-            console.log('🚀 Initializing Game Play Arena...');
+            console.log('🚀 Initializing Game Play Arena (Optimized)...');
+            this.logPerformance('START');
             
-            // Initialize lazy loader
-            if (typeof LazyLoader !== 'undefined') {
-                this.lazyLoader = new LazyLoader();
-            } else {
-                console.error('LazyLoader not available');
-                return;
-            }
-
-            // Load core components
-            await this.loadCoreComponents();
-            
-            // Initialize map
-            await this.initializeMap();
+            // PHASE 1: Critical path only - parallel where possible
+            await Promise.all([
+                this.loadCoreComponents(), // Direct includes, instant
+                this.initializeMap()       // Map initialization
+            ]);
+            this.performanceTimes.map = this.logPerformance('Phase 1: Map Ready');
             
             // Team info is already set from server-side session in the view
-            console.log('✅ Team info available from session:', window.currentTeamInfo);
+            this.log('✅ Team info available from session:', true);
             
-            // Initialize token manager (needed for token placement)
-            await this.initializeTokenManager();
+            // PHASE 2: Essential managers in parallel
+            await Promise.all([
+                this.initializeTokenManager(),
+                this.initializeTokenActionModeManager(),
+                this.initializeDefensePlanningManager()
+            ]);
+            this.performanceTimes.managers = this.logPerformance('Phase 2: Core Managers Ready');
             
-            // DEFER region/label/suspected token managers (not critical for initial load)
-            // These will be initialized in background
-            
-            // Initialize token action mode manager (lightweight)
-            await this.initializeTokenActionModeManager();
-            
-            // Initialize attack visualization manager (lightweight)
-            await this.initializeAttackVisualizationManager();
-            
-            // Initialize defense planning manager (lightweight)
-            await this.initializeDefensePlanningManager();
-            
-            // Setup control handlers (do this early!)
+            // PHASE 3: Setup UI (synchronous, fast)
             this.setupControlHandlers();
-            
-            // Initialize basemap dropdown with saved state
             this.initializeBasemapControls();
             
             this.initialized = true;
-            console.log('✅ Game Play Arena core initialized - loading data in background...');
+            console.log('✅ Game Play Arena core initialized');
+            this.logPerformance('Phase 3: UI Ready');
             
-            // Hide initial loading overlay
+            // Hide initial loading overlay ASAP
             this.hideInitialLoadingOverlay();
             
-            // DEFER heavy operations to background (non-blocking)
-            setTimeout(() => {
+            // PHASE 4: Background tasks (non-blocking) - fully parallel
+            requestIdleCallback(() => {
                 this.loadBackgroundData();
-            }, 100); // Small delay to let UI render first
+            }, { timeout: 2000 });
             
         } catch (error) {
             console.error('❌ Error initializing GamePlay Arena:', error);
@@ -115,29 +134,41 @@ class GamePlayManager {
     }
 
     /**
-     * Load background data (deferred, non-blocking)
+     * Load background data (deferred, non-blocking) - OPTIMIZED ORDER
      */
     async loadBackgroundData() {
-        console.log('📦 Loading background data (tokens, regions, orders, defense elements)...');
+        console.log('📦 Loading background data (optimized order)...');
+        const bgStart = performance.now();
         
         try {
-            // Initialize heavy managers FIRST (in parallel)
-            await Promise.allSettled([
-                this.initializeRegionManager(),
-                this.initializeLabelManager(),
-                this.initializeSuspectedTokenManager()
-            ]);
-            
-            console.log('✅ Managers initialized in background');
-            
-            // Then load data (also in parallel)
+            // PHASE 1: Load tokens and critical data first (these are needed by other systems)
             await Promise.allSettled([
                 this.restorePlacedTokens(),
+                this.initializeSuspectedTokenManager(),
                 this.loadDefenseElements(),
                 this.preloadCriticalModals()
             ]);
             
-            console.log('✅ Background data loaded');
+            this.log('✅ Phase 1: Tokens and data loaded', true);
+            
+            // PHASE 2: Load managers that depend on tokens (attack visualization needs tokens)
+            await Promise.allSettled([
+                this.initializeRegionManager(),
+                this.initializeLabelManager(),
+                this.initializeAttackVisualizationManager()
+            ]);
+            
+            const bgEnd = performance.now();
+            console.log(`✅ Background data loaded in ${(bgEnd - bgStart).toFixed(0)}ms`);
+            this.performanceTimes.backgroundData = bgEnd - this.performanceTimes.start;
+            this.performanceTimes.total = bgEnd - this.performanceTimes.start;
+            
+            console.log('📊 Total initialization time:', {
+                map: `${(this.performanceTimes.map - this.performanceTimes.start).toFixed(0)}ms`,
+                managers: `${(this.performanceTimes.managers - this.performanceTimes.map).toFixed(0)}ms`,
+                background: `${(this.performanceTimes.backgroundData - this.performanceTimes.managers).toFixed(0)}ms`,
+                total: `${this.performanceTimes.total.toFixed(0)}ms`
+            });
         } catch (error) {
             console.error('⚠️ Error loading background data:', error);
             // Don't fail the whole app, just log the error
@@ -168,35 +199,20 @@ class GamePlayManager {
     }
 
     /**
-     * Load core components
+     * Load core components (now directly included - no lazy loading)
      */
     async loadCoreComponents() {
-        console.log('📦 Loading core components...');
-        
-        // Load core components in parallel - much simpler now!
-        const coreLoads = [
-            this.lazyLoader.loadPartial('region-panel', '#regionPanelContainer', {
-                onLoaded: () => {
-                    console.log('📍 Region panel loaded');
-                    // Map selector is loaded separately by initializeBasemapControls()
-                }
-            }),
-            this.lazyLoader.loadPartial('overlay-controls', '#overlayControlsContainer', {
-                onLoaded: () => {
-                    console.log('🎮 Overlay controls loaded');
-                }
-            }),
-        ];
-        
-        await Promise.all(coreLoads);
-        console.log('✅ All core components loaded successfully');
+        this.log('📦 Core components already included in page (direct partial includes)');
+        // Partials are now directly included in the view for better performance and consistency
+        // No need to lazy load them via AJAX
+        this.log('✅ Core components ready');
     }
 
     /**
      * Initialize the map
      */
     async initializeMap() {
-        console.log('🗺️ Initializing map...');
+        this.log('🗺️ Initializing map...', true);
         
         if (typeof L !== 'undefined') {
             // Hide map container until properly loaded with bounds
@@ -431,34 +447,27 @@ class GamePlayManager {
     }
 
     /**
-     * Initialize attack visualization manager
+     * Initialize attack visualization manager (OPTIMIZED)
      */
     async initializeAttackVisualizationManager() {
-        console.log('🎯 Initializing attack visualization manager...');
-        
-        // Debug: Check what's available
-        console.log('🔍 Debug - AttackVisualizationManager class:', typeof AttackVisualizationManager);
-        console.log('🔍 Debug - window.attackVisualizationManager:', window.attackVisualizationManager);
-        console.log('🔍 Debug - Map instance:', this.map);
+        this.log('🎯 Initializing attack visualization manager...');
         
         if (typeof AttackVisualizationManager !== 'undefined' && window.attackVisualizationManager) {
             // Initialize with map
             await window.attackVisualizationManager.initialize(this.map);
+            this.log('✅ Attack visualization manager initialized');
             
-            console.log('✅ Attack visualization manager initialized');
-            
-            // Load attack orders after a short delay to ensure everything is ready
-            setTimeout(async () => {
+            // Defer attack lines loading to idle time
+            requestIdleCallback(async () => {
                 try {
                     await this.reloadAttackLines();
-                    console.log('✅ Attack lines loaded after initialization');
+                    this.log('✅ Attack lines loaded', true);
                 } catch (error) {
                     console.error('❌ Error loading attack lines:', error);
                 }
-            }, 2000);
+            }, { timeout: 3000 });
         } else {
-            console.warn('⚠️ Attack visualization manager not available');
-            console.log('🔍 Available window objects:', Object.keys(window).filter(key => key.includes('attack') || key.includes('Attack')));
+            this.log('⚠️ Attack visualization manager not available', true);
         }
     }
 
@@ -970,20 +979,11 @@ class GamePlayManager {
     }
 
     /**
-     * Preload critical modals in background
+     * Preload critical modals (now directly included - no preloading needed)
      */
     preloadCriticalModals() {
-        console.log('🚀 Preloading critical modals...');
-        
-        const criticalModals = [
-            'data-entry-modal', 
-            'token-selection-modal'
-            // Note: Data entry now uses AJAX to load server-rendered modals
-            // No need to preload token-brigade-data-modal as it's loaded via loadCoreComponents
-        ];
-        if (this.lazyLoader && this.lazyLoader.preloadPartials) {
-            this.lazyLoader.preloadPartials(criticalModals);
-        }
+        console.log('✅ Critical modals already included in page (no preloading needed)');
+        // All modals are now directly included in the view for instant availability
     }
 
     /**

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using System.Text.Json;
 using TechWebSol.DAL;
 using TechWebSol.Data;
@@ -19,15 +20,18 @@ namespace TechWebSol.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IUserSessionService _userSessionService;
         private readonly ILogger<DefenseElementApiController> _logger;
+        private readonly IMemoryCache _memoryCache;
 
         public DefenseElementApiController(
             ApplicationDbContext context,
             IUserSessionService userSessionService,
-            ILogger<DefenseElementApiController> logger)
+            ILogger<DefenseElementApiController> logger,
+            IMemoryCache memoryCache)
         {
             _context = context;
             _userSessionService = userSessionService;
             _logger = logger;
+            _memoryCache = memoryCache;
         }
 
         /// <summary>
@@ -57,6 +61,7 @@ namespace TechWebSol.Controllers
 
         /// <summary>
         /// Get visible defense elements for current user's team
+        /// OPTIMIZED: Uses short-term memory cache (10 seconds) to prevent redundant DB calls
         /// </summary>
         [HttpGet("visible/{gameSessionId}")]
         public async Task<IActionResult> GetVisibleDefenseElements(Guid gameSessionId)
@@ -67,8 +72,31 @@ namespace TechWebSol.Controllers
                 var teamId = currentUser.TeamId ?? Guid.Empty;
                 var forceType = currentUser.ForceType ?? "Blueland";
 
-                var dal = new DefenseElementDAL(_context);
-                var elements = await dal.GetVisibleDefenseElementsAsync(gameSessionId, teamId, forceType);
+                // Cache key includes gameSessionId, teamId and forceType for proper isolation
+                var cacheKey = $"DefenseElements_Visible_{gameSessionId}_{teamId}_{forceType}";
+                
+                // Try to get from cache first
+                if (!_memoryCache.TryGetValue(cacheKey, out List<DefenseElement> elements))
+                {
+                    _logger.LogInformation("📥 Cache MISS for {CacheKey} - fetching from database", cacheKey);
+                    
+                    // Cache miss - fetch from database
+                    var dal = new DefenseElementDAL(_context);
+                    elements = await dal.GetVisibleDefenseElementsAsync(gameSessionId, teamId, forceType);
+                    
+                    // Store in cache with short expiration (10 seconds)
+                    var cacheOptions = new MemoryCacheEntryOptions()
+                        .SetSlidingExpiration(TimeSpan.FromSeconds(10))
+                        .SetAbsoluteExpiration(TimeSpan.FromSeconds(30))
+                        .SetSize(1)
+                        .SetPriority(CacheItemPriority.Normal);
+                    
+                    _memoryCache.Set(cacheKey, elements, cacheOptions);
+                }
+                else
+                {
+                    _logger.LogDebug("⚡ Cache HIT for {CacheKey} - returning cached data", cacheKey);
+                }
 
                 return Ok(new
                 {
@@ -81,13 +109,14 @@ namespace TechWebSol.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting visible defense elements for session {GameSessionId}", gameSessionId);
+                _logger.LogError(ex, "❌ Error getting visible defense elements for session {GameSessionId}", gameSessionId);
                 return StatusCode(500, new { success = false, message = "Internal server error" });
             }
         }
 
         /// <summary>
         /// Get all visible defense elements for current user's team (no session filter)
+        /// OPTIMIZED: Uses short-term memory cache (10 seconds) to prevent redundant DB calls
         /// </summary>
         [HttpGet("team")]
         public async Task<IActionResult> GetTeamDefenseElements()
@@ -103,8 +132,32 @@ namespace TechWebSol.Controllers
                     return Ok(new { success = true, elements = new List<DefenseElement>(), count = 0 });
                 }
 
-                var dal = new DefenseElementDAL(_context);
-                var elements = await dal.GetTeamDefenseElementsAsync(teamId, forceType);
+                // Cache key includes teamId and forceType for proper isolation
+                var cacheKey = $"DefenseElements_Team_{teamId}_{forceType}";
+                
+                // Try to get from cache first
+                if (!_memoryCache.TryGetValue(cacheKey, out List<DefenseElement> elements))
+                {
+                    _logger.LogInformation("📥 Cache MISS for {CacheKey} - fetching from database", cacheKey);
+                    
+                    // Cache miss - fetch from database
+                    var dal = new DefenseElementDAL(_context);
+                    elements = await dal.GetTeamDefenseElementsAsync(teamId, forceType);
+                    
+                    // Store in cache with short expiration (10 seconds)
+                    // This prevents duplicate calls during page initialization
+                    var cacheOptions = new MemoryCacheEntryOptions()
+                        .SetSlidingExpiration(TimeSpan.FromSeconds(10))
+                        .SetAbsoluteExpiration(TimeSpan.FromSeconds(30))
+                        .SetSize(1) // For cache size management
+                        .SetPriority(CacheItemPriority.Normal);
+                    
+                    _memoryCache.Set(cacheKey, elements, cacheOptions);
+                }
+                else
+                {
+                    _logger.LogDebug("⚡ Cache HIT for {CacheKey} - returning cached data", cacheKey);
+                }
 
                 return Ok(new
                 {
@@ -117,7 +170,7 @@ namespace TechWebSol.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting team defense elements");
+                _logger.LogError(ex, "❌ Error getting team defense elements");
                 return StatusCode(500, new { success = false, message = "Internal server error" });
             }
         }

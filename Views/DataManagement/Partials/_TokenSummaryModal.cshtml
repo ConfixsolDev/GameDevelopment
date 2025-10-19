@@ -1,7 +1,6 @@
 @model TechWebSol.Controllers.DataManagementController.TokenSummaryViewModel
 
 <!-- Using unified dark theme - no additional CSS needed -->
-
 <!-- Token Summary Modal - Bootstrap Modal -->
 <div class="modal fade" id="tokenSummaryModal" tabindex="-1" role="dialog" aria-labelledby="tokenSummaryModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl" role="document">
@@ -13,47 +12,43 @@
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close" title="Close Modal">
                     <i class="fas fa-times"></i>
                 </button>
-        </div>
-        
-            <div class="modal-body">
-            <!-- Token Information -->
-            @* <div class="token-summary-section">
-                <h6><i class="fas fa-map-marker-alt"></i> Token Information</h6>
-                <div class="summary-item">
-                    <strong>Name:</strong> @(Model.Token?.Name ?? "Unknown Token")
-                    <span class="badge-military">@(Model.Token?.TokenGroup?.Name ?? "Generic")</span>
-                </div>
-                @if (Model.Token?.MapMarkers?.Any() == true)
-                {
-                    var activeMarker = Model.Token.MapMarkers.FirstOrDefault();
-                    if (activeMarker != null)
-                    {
-                        <div class="summary-item">
-                            <strong>Position:</strong> @(activeMarker.latitude), @(activeMarker.longitude)
-                        </div>
-                    }
-                }
-                <div class="summary-item">
-                    <strong>Status:</strong> <span class="badge-military">@(Model.Token?.IsActive == true ? "Active" : "Inactive")</span>
-                </div>
-            </div> *@
+            </div>
 
-            @if (Model.Brigades.Any() || Model.InfantryBattalions.Any() || Model.ArmouredRegiments.Any() || Model.ArtilleryRegiments.Any() || Model.LogisticsUnits.Any() || Model.CombatEngineeringCompanies.Any() || Model.Recon.Any())
-            {
-                <!-- Complete ORBAT (Order of Battle) -->
+            <div class="modal-body">
+               @*  <!-- Token Basic Info -->
                 <div class="token-summary-section">
-                    <h6><i class="fas fa-sitemap"></i> Complete ORBAT - Order of Battle</h6>
-                    
-                    @if (Model.Brigades.Any())
-                    {
-                        @foreach (var brigade in Model.Brigades)
+                    <h6><i class="fas fa-info-circle"></i> Token Information</h6>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <strong>Token ID:</strong> @Model.Token.Id
+                        </div>
+                        <div class="summary-item">
+                            <strong>Token Name:</strong> @Model.Token.Name
+                        </div>
+                        <div class="summary-item">
+                            <strong>Token Group:</strong> @(Model.Token.TokenGroup?.Name ?? "N/A")
+                        </div>
+                        <div class="summary-item">
+                            <strong>Status:</strong> <span class="badge-military">@(Model.Token.IsActive ? "Active" : "Inactive")</span>
+                        </div>
+                    </div>
+                </div> *@
+
+                @if (Model.Brigades != null || Model.InfantryBattalions.Any() || Model.ArmouredRegiments.Any() || Model.ArtilleryRegiments.Any() || Model.LogisticsUnits.Any() || Model.CombatEngineeringCompanies.Any() || Model.Recon.Any())
+                {
+                    <!-- Complete ORBAT (Order of Battle) -->
+                    <div class="token-summary-section">
+                        <h6><i class="fas fa-sitemap"></i> Complete ORBAT - Order of Battle</h6>
+
+                        @if (Model.Brigades != null)
                         {
+                            var brigade = Model.Brigades;
                             <div class="summary-item brigade">
                                 <div class="unit-header">
                                     <strong><i class="fas fa-flag"></i> Brigade:</strong> @(brigade.BrigadeCode ?? "No Code")
-                                <span class="badge-military">@(brigade.ForceType ?? "Unknown")</span>
+                                    <span class="badge-military">@(brigade.ForceType ?? "Unknown")</span>
                                 </div>
-                                
+
                                 <!-- Infantry Units under this Brigade -->
                                 @{
                                     var brigadeInfantry = Model.InfantryBattalions.Where(i => i.BrigadeId == brigade.Id).ToList();
@@ -66,7 +61,7 @@
                                             <div class="summary-item infantry">
                                                 <div class="unit-header">
                                                     <strong><i class="fas fa-walking"></i> Infantry Battalion:</strong> @(infantry.Name ?? "Unnamed Infantry")
-                                                <span class="badge-military">Strength: @(infantry.Strength)</span>
+                                                    <span class="badge-military">Strength: @(infantry.Strength)</span>
                                                     <span class="badge-military">Companies: @(infantry.Companies)</span>
                                                 </div>
                                                 <div class="unit-description">@(infantry.Description ?? "")</div>
@@ -91,7 +86,7 @@
                                         </div>
                                     }
                                 }
-                                
+
                                 <!-- Armoured Units under this Brigade -->
                                 @{
                                     var brigadeArmoured = Model.ArmouredRegiments.Where(a => a.BrigadeId == brigade.Id).ToList();
@@ -124,7 +119,7 @@
                                         </div>
                                     }
                                 }
-                                
+
                                 <!-- Artillery Units under this Brigade -->
                                 @{
                                     var brigadeArtillery = Model.ArtilleryRegiments.Where(a => a.BrigadeId == brigade.Id).ToList();
@@ -223,165 +218,173 @@
                                 }
                             </div>
                         }
+                    </div>
+
+
+                    @if (Model.Recon.Any())
+                    {
+                        <!-- Reconnaissance Reports -->
+                        <div class="token-summary-section">
+                            <h6><i class="fas fa-search"></i> Reconnaissance Reports (@Model.Recon.Count)</h6>
+                            @foreach (var reconItem in Model.Recon.Take(3))
+                            {
+                                <div class="summary-item recon">
+                                    <strong>@(reconItem.ReconType ?? "Untitled Recon")</strong>
+                                    <span class="badge-military">@(reconItem.Confidence ?? "Unknown Confidence")</span>
+                                    <div class="text-muted">Location: @(reconItem.Location ?? "Unknown")</div>
+                                    <div class="text-muted">@(reconItem.Description?.Length > 100 ? reconItem.Description.Substring(0, 100) + "..." : reconItem.Description ?? "")</div>
+                                </div>
+                            }
+                            @if (Model.Recon.Count > 3)
+                            {
+                                <div class="text-muted text-center">... and @(Model.Recon.Count - 3) more reconnaissance reports</div>
+                            }
+                        </div>
                     }
-                </div>
-                
-                
-                @if (Model.Recon.Any())
+                }
+                else
                 {
-                    <!-- Reconnaissance Reports -->
-                    <div class="token-summary-section">
-                        <h6><i class="fas fa-search"></i> Reconnaissance Reports (@Model.Recon.Count)</h6>
-                        @foreach (var reconItem in Model.Recon.Take(3))
-                        {
-                            <div class="summary-item recon">
-                                <strong>@(reconItem.ReconType ?? "Untitled Recon")</strong>
-                                <span class="badge-military">@(reconItem.Confidence ?? "Unknown Confidence")</span>
-                                <div class="text-muted">Location: @(reconItem.Location ?? "Unknown")</div>
-                                <div class="text-muted">@(reconItem.Description?.Length > 100 ? reconItem.Description.Substring(0, 100) + "..." : reconItem.Description ?? "")</div>
-                            </div>
-                        }
-                        @if (Model.Recon.Count > 3)
-                        {
-                            <div class="text-muted text-center">... and @(Model.Recon.Count - 3) more reconnaissance reports</div>
-                        }
+                    <!-- No Data Available -->
+                    <div class="no-data-message">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
+                        <h6>No Military Data Available</h6>
+                        <p>This token has not been linked to any military units, brigades, or reports yet.</p>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="addTokenData()">
+                            <i class="fas fa-plus"></i> Add Military Data
+                        </button>
                     </div>
                 }
-            }
-            else
-            {
-                <!-- No Data Available -->
-                <div class="no-data-message">
-                    <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
-                    <h6>No Military Data Available</h6>
-                    <p>This token has not been linked to any military units, brigades, or reports yet.</p>
-                    <button type="button" class="btn btn-primary btn-sm" onclick="addTokenData()">
-                        <i class="fas fa-plus"></i> Add Military Data
-                    </button>
-                </div>
-            }
-        </div>
-        
+            </div>
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">
                     <i class="fas fa-times"></i> Close
                 </button>
-                @if (Model.Brigades.Any() || Model.InfantryBattalions.Any() || Model.ArmouredRegiments.Any() || Model.ArtilleryRegiments.Any() || Model.LogisticsUnits.Any() || Model.CombatEngineeringCompanies.Any() || Model.Recon.Any())
+                @if (Model.Brigades!= null || Model.InfantryBattalions.Any() || Model.ArmouredRegiments.Any() || Model.ArtilleryRegiments.Any() || Model.LogisticsUnits.Any() || Model.CombatEngineeringCompanies.Any() || Model.Recon.Any())
                 {
                     <button type="button" class="btn btn-primary" onclick="editTokenData()">
-                    <i class="fas fa-edit"></i> Edit Data
-                </button>
-            }
-            else
-            {
+                        <i class="fas fa-edit"></i> Edit Data
+                    </button>
+                }
+                else
+                {
                     <button type="button" class="btn btn-success" onclick="addTokenData()">
-                    <i class="fas fa-plus"></i> Add Data
-                </button>
-            }
+                        <i class="fas fa-plus"></i> Add Data
+                    </button>
+                }
             </div>
         </div>
     </div>
 </div>
 
 <script>
-// Global token summary modal functions
-if (typeof currentTokenId === 'undefined') {
-    var currentTokenId = null;
-}
-
-function closeTokenSummaryModal() {
-    console.log('🔒 Closing token summary modal');
-    $('#tokenSummaryModal').modal('hide');
-        currentTokenId = null;
-}
-
-function editTokenData() {
-    if (currentTokenId) {
-        console.log('✏️ Opening data entry for token:', currentTokenId);
-        closeTokenSummaryModal();
-        // Open data entry flow for this token
-        openDataEntryForToken(currentTokenId);
+    // Global token summary modal functions
+    if (typeof currentTokenId === 'undefined') {
+        var currentTokenId = null;
     }
-}
 
-function addTokenData() {
-    if (currentTokenId) {
-        console.log('➕ Adding new data for token:', currentTokenId);
-        closeTokenSummaryModal();
-        // Open data entry flow for this token
-        openDataEntryForToken(currentTokenId);
+    function closeTokenSummaryModal() {
+        console.log('🔒 Closing token summary modal');
+        $('#tokenSummaryModal').modal('hide');
+            currentTokenId = null;
     }
-}
 
-function openDataEntryForToken(tokenId) {
-    // Navigate directly to the token data entry form
-    $("#loading").show();
-    
-    $.ajax({
-        url: '/DataManagement/TokenDataEntryForm',
-        type: 'GET',
-        data: { tokenId: tokenId },
-        success: function(data) {
-            console.log('✅ Direct data entry form loaded for token:', tokenId);
-            $('#tokenDataEntryModal').remove();
-            $('body').append(data);
-            document.getElementById('tokenDataEntryModal').style.display = 'flex';
-        },
-        error: function(xhr, status, error) {
-            console.error('❌ Error loading direct data entry form:', error);
-            alert('Failed to load data entry form');
-        },
-        complete: function() {
-            $("#loading").hide();
+    function editTokenData() {
+        if (currentTokenId) {
+            console.log('✏️ Opening data entry for token:', currentTokenId);
+            closeTokenSummaryModal();
+            // Open data entry flow for this token
+            openDataEntryForToken(currentTokenId);
         }
-    });
-}
+    }
 
-        // Set the current token ID when modal loads
-        @if (Model.Token != null)
-        {
-            <text>
-            currentTokenId = '@Model.Token.Id';
-            </text>
+    function addTokenData() {
+        if (currentTokenId) {
+            console.log('➕ Adding new data for token:', currentTokenId);
+            closeTokenSummaryModal();
+            // Open data entry flow for this token
+            openDataEntryForToken(currentTokenId);
         }
+    }
 
-        // Remove modal backdrop when modal is shown
-        $('#tokenSummaryModal').on('show.bs.modal', function () {
-            console.log('🎯 Modal showing - removing backdrop');
-            $('.modal-backdrop').remove();
+    function openDataEntryForToken(tokenId) {
+        // Navigate directly to the token data entry form
+        $("#loading").show();
+
+        $.ajax({
+            url: '/DataManagement/TokenDataEntryForm',
+            type: 'GET',
+            data: { tokenId: tokenId },
+            success: function(data) {
+                console.log('✅ Direct data entry form loaded for token:', tokenId);
+                $('#tokenDataEntryModal').remove();
+                $('body').append(data);
+                document.getElementById('tokenDataEntryModal').style.display = 'flex';
+            },
+            error: function(xhr, status, error) {
+                console.error('❌ Error loading direct data entry form:', error);
+                alert('Failed to load data entry form');
+            },
+            complete: function() {
+                $("#loading").hide();
+            }
         });
+    }
 
-        $('#tokenSummaryModal').on('shown.bs.modal', function () {
-            console.log('✅ Modal shown - ensuring backdrop removed');
-            $('.modal-backdrop').remove();
-            $('body').removeClass('modal-open');
-        });
+            // Set the current token ID when modal loads
+            @if (Model.Token != null)
+            {
+                    <text>
+                    currentTokenId = '@Model.Token.Id';
+                    </text>
+            }
 
-        $('#tokenSummaryModal').on('hide.bs.modal', function () {
-            console.log('🔒 Modal hiding - cleaning up');
-            $('.modal-backdrop').remove();
-            $('body').removeClass('modal-open');
-            currentTokenId = null;
-        });
+            // Remove modal backdrop when modal is shown
+            $('#tokenSummaryModal').on('show.bs.modal', function () {
+                console.log('🎯 Modal showing - removing backdrop');
+                $('.modal-backdrop').remove();
+            });
 
-        $('#tokenSummaryModal').on('hidden.bs.modal', function () {
-            console.log('✅ Modal hidden - final cleanup');
-            $('.modal-backdrop').remove();
-            $('body').removeClass('modal-open');
-            currentTokenId = null;
-        });
+            $('#tokenSummaryModal').on('shown.bs.modal', function () {
+                console.log('✅ Modal shown - ensuring backdrop removed');
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open');
+            });
 
-        // Ensure close button works
-        $('#tokenSummaryModal .close, #tokenSummaryModal [data-dismiss="modal"]').on('click', function() {
+            $('#tokenSummaryModal').on('hide.bs.modal', function () {
+                console.log('🔒 Modal hiding - cleaning up');
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open');
+                currentTokenId = null;
+            });
+
+            $('#tokenSummaryModal').on('hidden.bs.modal', function () {
+                console.log('✅ Modal hidden - final cleanup');
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open');
+                currentTokenId = null;
+            });
+
+        // Ensure close button works - use event delegation for dynamically added modals
+        $(document).off('click', '#tokenSummaryModal .close, #tokenSummaryModal [data-dismiss="modal"]');
+        $(document).on('click', '#tokenSummaryModal .close, #tokenSummaryModal [data-dismiss="modal"]', function(e) {
+            e.preventDefault();
             console.log('❌ Close button clicked');
-            $('#tokenSummaryModal').modal('hide');
+            $('#tokenSummaryModal').hide().removeClass('show');
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
+            currentTokenId = null;
         });
 
         // Add keyboard escape key handler
-        $(document).on('keydown', function(e) {
-            if (e.key === 'Escape' && $('#tokenSummaryModal').hasClass('show')) {
+        $(document).off('keydown.tokenSummary');
+        $(document).on('keydown.tokenSummary', function(e) {
+            if (e.key === 'Escape' && $('#tokenSummaryModal').is(':visible')) {
                 console.log('⌨️ Escape key pressed - closing modal');
-                $('#tokenSummaryModal').modal('hide');
+                $('#tokenSummaryModal').hide().removeClass('show');
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open');
+                currentTokenId = null;
             }
         });
 </script>

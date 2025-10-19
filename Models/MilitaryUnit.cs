@@ -438,11 +438,12 @@ namespace TechWebSol.Models
         public virtual Token Token { get; set; }
 
         // Navigation properties for units under this brigade
-        public virtual ICollection<InfantryBattalion> InfantryBattalions { get; set; } = new List<InfantryBattalion>();
-        public virtual ICollection<ArmouredRegiment> ArmouredRegiments { get; set; } = new List<ArmouredRegiment>();
-        public virtual ICollection<ArtilleryRegiment> ArtilleryRegiments { get; set; } = new List<ArtilleryRegiment>();
-        public virtual ICollection<LogisticsUnit> LogisticsUnits { get; set; } = new List<LogisticsUnit>();
-        public virtual ICollection<CombatEngineeringCompany> CombatEngineeringCompanies { get; set; } = new List<CombatEngineeringCompany>();
+        public List<InfantryBattalion> InfantryBattalions { get; set; } = new List<InfantryBattalion>();
+        public List<ArmouredRegiment> ArmouredRegiments { get; set; } = new List<ArmouredRegiment>();
+        public List<ArtilleryRegiment> ArtilleryRegiments { get; set; } = new List<ArtilleryRegiment>();
+        public List<LogisticsUnit> LogisticsUnits { get; set; } = new List<LogisticsUnit>();
+        public List<CombatEngineeringCompany> CombatEngineeringCompanies { get; set; } = new List<CombatEngineeringCompany>();
+        public List<Recon> Recon { get; set; } = new List<Recon>();
     }
     public class AdjudicateDTO 
     {

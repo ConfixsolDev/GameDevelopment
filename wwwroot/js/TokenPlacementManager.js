@@ -689,30 +689,24 @@ class TokenPlacementManager {
         console.log('🎯 showConfirmMoveModal called for token:', token.name, 'distance:', calculatedDistance);
         
         // Remove any existing modal first
-        const existingModal = document.getElementById('confirmMoveModal');
-        if (existingModal) {
-            existingModal.remove();
-        }
+        $('#confirmMoveModal').remove();
+        $('.modal-backdrop').remove();
         
-        const modal = document.createElement('div');
-        modal.className = 'gameplay-modal';
-        modal.id = 'confirmMoveModal';
-        modal.innerHTML = `
-            <div class="gameplay-modal-content">
-                <div class="gameplay-modal-header">
-                    <h3><i class="fas fa-route"></i> Movement Planning - ${token.name}</h3>
-                    <button class="gameplay-modal-close" onclick="this.closest('.gameplay-modal').remove()">&times;</button>
+        const modalHtml = `
+        <div class="modal fade" id="confirmMoveModal" tabindex="-1" role="dialog" aria-labelledby="confirmMoveModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl" role="document">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmMoveModalLabel">
+                        <i class="fas fa-route"></i> Movement Planning - ${token.name}
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-                <div class="gameplay-modal-body">
+                <div class="modal-body">
                     <div class="data-entry-container">
                         <div class="data-entry-form-section">
-                            <!-- Movement Planning Header -->
-                            <div class="brigade-header-section">
-                                <div class="brigade-name-display">
-                                    <h5><i class="fas fa-route"></i> Movement Planning — ${token.name}</h5>
-                                </div>
-                            </div>
-                            
                             <!-- Movement Planning Form -->
                             <div class="brigade-data-form">
                                 <!-- Movement Planning Section -->
@@ -863,7 +857,7 @@ class TokenPlacementManager {
                             
                             <!-- Action Buttons -->
                             <div class="add-unit-section">
-                                <button type="button" class="btn btn-outline-secondary" onclick="this.closest('.gameplay-modal').remove()" style="margin-right: 10px;">
+                                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal" style="margin-right: 10px;">
                                     <i class="fas fa-times"></i> Cancel
                                 </button>
                                 <button type="button" class="btn btn-primary" onclick="window.tokenPlacementManager.saveMoveOrder('${token.id}')">
@@ -873,9 +867,13 @@ class TokenPlacementManager {
                         </div>
                     </div>
                 </div>
-                <div class="gameplay-modal-footer">
-                    <button class="gameplay-btn" onclick="this.closest('.gameplay-modal').remove()">Close</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Close
+                    </button>
                 </div>
+            </div>
+            </div>
             </div>
             
             <style>
@@ -1060,15 +1058,26 @@ class TokenPlacementManager {
             </style>
         `;
         
-        document.body.appendChild(modal);
+        $('body').append(modalHtml);
         console.log('🎯 Movement modal added to DOM');
         
         // Make sure the function is globally accessible
         window.tokenPlacementManager = this;
         
-        // Show the modal
-        modal.style.display = 'block';
-        console.log('🎯 Movement modal should now be visible');
+        // Force show Bootstrap modal
+        $('#confirmMoveModal').css({
+            'display': 'block',
+            'opacity': '1',
+            'visibility': 'visible'
+        }).addClass('show').removeClass('fade');
+        
+        $('#confirmMoveModal').modal({
+            backdrop: false,
+            keyboard: true,
+            show: true
+        });
+        
+        console.log('✅ Movement modal displayed');
     }
 
     /**
@@ -2889,15 +2898,20 @@ class TokenPlacementManager {
      */
     openAttackPanel(attackerToken, targetToken) {
         try {
-            // Create attack panel modal
+            // Create attack panel modal - Bootstrap Modal
             const attackPanelHtml = `
-                <div id="attackPanelModal" class="gameplay-modal" style="display: block;">
-                    <div class="gameplay-modal-content">
-                        <div class="gameplay-modal-header">
-                            <h3><i class="fas fa-crosshairs"></i> Plan Attack</h3>
-                            <button class="gameplay-modal-close" onclick="tokenPlacementManager.closeAttackPanel()">&times;</button>
-                        </div>
-                        <div class="gameplay-modal-body">
+                <div class="modal fade" id="attackPanelModal" tabindex="-1" role="dialog" aria-labelledby="attackPanelModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="attackPanelModalLabel">
+                                    <i class="fas fa-crosshairs"></i> Plan Attack
+                                </h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="modal-body">
                             <div class="attack-planning-form">
                                 <div class="alert alert-info">
                                     <i class="fas fa-info-circle"></i>
@@ -2947,28 +2961,54 @@ class TokenPlacementManager {
                                 </div>
 
                                 <div class="form-actions">
-                                    <button class="gameplay-btn" onclick="tokenPlacementManager.previewAttack()">
+                                    <button type="button" class="btn btn-info" onclick="tokenPlacementManager.previewAttack()">
                                         <i class="fas fa-eye"></i> Preview
                                     </button>
-                                    <button class="gameplay-btn gameplay-btn-primary" onclick="tokenPlacementManager.executeAttack()">
+                                    <button type="button" class="btn btn-primary" onclick="tokenPlacementManager.executeAttack()">
                                         <i class="fas fa-play"></i> Execute Attack
                                     </button>
-                                    <button class="gameplay-btn" onclick="tokenPlacementManager.closeAttackPanel()">Cancel</button>
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </button>
                                 </div>
                             </div>
                         </div>
+                    </div>
                     </div>
                 </div>
             `;
 
             // Add to page
-            document.body.insertAdjacentHTML('beforeend', attackPanelHtml);
+            $('body').append(attackPanelHtml);
 
             // Store token references
             this.currentAttackerToken = attackerToken;
             this.currentTargetToken = targetToken;
 
-            console.log('Attack panel opened');
+            // Force show Bootstrap modal with setTimeout to ensure DOM is ready
+            setTimeout(function() {
+                const modalElement = document.getElementById('attackPanelModal');
+                console.log('Attack panel in DOM:', modalElement ? 'YES' : 'NO');
+                
+                if (modalElement) {
+                    $('#attackPanelModal').css({
+                        'display': 'block',
+                        'opacity': '1',
+                        'visibility': 'visible',
+                        'z-index': '9999'
+                    }).addClass('show').removeClass('fade');
+                    
+                    $('#attackPanelModal').modal({
+                        backdrop: false,
+                        keyboard: true,
+                        show: true
+                    });
+                    
+                    console.log('✅ Attack panel displayed');
+                } else {
+                    console.error('❌ Attack panel not found in DOM');
+                }
+            }, 100);
         } catch (err) {
             console.error('Error opening attack panel:', err);
         }
@@ -2979,10 +3019,10 @@ class TokenPlacementManager {
      */
     closeAttackPanel() {
         try {
-            const modal = document.getElementById('attackPanelModal');
-            if (modal) {
-                modal.remove();
-            }
+            $('#attackPanelModal').hide().removeClass('show');
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
+            $('#attackPanelModal').remove();
             this.currentAttackerToken = null;
             this.currentTargetToken = null;
         } catch (err) {

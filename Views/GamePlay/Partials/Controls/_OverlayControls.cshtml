@@ -8,7 +8,7 @@
                     <i class="fas fa-crosshairs"></i>
                     <span>Plan Attack</span>
                 </button>
-                <button class="overlay-btn token-action-btn" id="btnPanAttack" data-mode="pan-attack">
+                <button hidden class="overlay-btn token-action-btn" id="btnPanAttack" data-mode="pan-attack">
                     <i class="fas fa-bullseye"></i>
                     <span>Pan Attack</span>
                 </button>
@@ -16,9 +16,8 @@
                     <i class="fas fa-sync-alt"></i>
                     <span>Reload Attacks</span>
                 </button>
-            </div>
-            <div class="control-row">
-                <button class="overlay-btn" id="btnCheckAttackLines" onclick="checkAttackLines()" title="Check Attack Lines Status">
+            
+                <button hidden class="overlay-btn" id="btnCheckAttackLines" onclick="checkAttackLines()" title="Check Attack Lines Status">
                     <i class="fas fa-info-circle"></i>
                     <span>Check Status</span>
                 </button>
@@ -26,10 +25,9 @@
                     <i class="fas fa-route"></i>
                     <span>Plan Move</span>
                 </button>
-                <button class="overlay-btn" id="btnCancelMode" onclick="cancelTokenMode()">
-                    <i class="fas fa-times"></i>
-                    <span>Cancel Mode</span>
-                </button>
+            </div>
+            <div class="control-row">
+               
             </div>
             <div class="control-row" hidden>
                 <button class="overlay-btn token-action-btn" id="btnSelectToken" data-mode="select">
@@ -46,6 +44,10 @@
                 <button class="overlay-btn" onclick="openDataEntry()">
                     <i class="fas fa-database"></i>
                     <span>Token Preperation</span>
+                </button>
+                <button class="overlay-btn" id="btnCancelMode" onclick="cancelTokenMode()">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel Mode</span>
                 </button>
             </div>
         </div>

@@ -10,6 +10,7 @@ using Newtonsoft.Json.Serialization;
 using System.Globalization;
 using TechWebSol.Data;
 using TechWebSol.Filters;
+using TechWebSol.Middleware;
 using TechWebSol.Models;
 using TechWebSol.Services;
 using TechWebSol.Services.MapManagement;
@@ -29,6 +30,7 @@ builder.Services.AddHttpContextAccessor();
 
 // Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("ApplicationDbContext")
         ?? throw new InvalidOperationException("Connection string 'ApplicationDbContext' not found."),
@@ -38,7 +40,15 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 maxRetryCount: 5,
                 maxRetryDelay: TimeSpan.FromSeconds(30),
                 errorNumbersToAdd: null);
-        }));
+            // Optimize command timeout
+            sqlOptions.CommandTimeout(30);
+        });
+    
+            // Performance optimizations
+            options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking); // Default to no-tracking for better performance
+            options.EnableSensitiveDataLogging(false); // Disabled for performance
+            options.EnableDetailedErrors(builder.Environment.IsDevelopment()); // Only in development
+});
 
 
 // Configure Identity
@@ -68,17 +78,23 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 // MVC, JSON, and Custom Configurations
-builder.Services.AddControllersWithViews()
-    .AddRazorRuntimeCompilation()
-    .AddNewtonsoftJson(options =>
+var mvcBuilder = builder.Services.AddControllersWithViews();
+
+// Only enable Razor runtime compilation in development (huge performance overhead in production)
+if (builder.Environment.IsDevelopment())
+{
+    mvcBuilder.AddRazorRuntimeCompilation();
+}
+
+mvcBuilder.AddNewtonsoftJson(options =>
+{
+    options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+    options.SerializerSettings.ContractResolver = new DefaultContractResolver
     {
-        options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-        options.SerializerSettings.ContractResolver = new DefaultContractResolver
-        {
-            NamingStrategy = new CamelCaseNamingStrategy()
-        };
-        options.SerializerSettings.Converters.Add(new StringEnumConverter());
-    });
+        NamingStrategy = new CamelCaseNamingStrategy()
+    };
+    options.SerializerSettings.Converters.Add(new StringEnumConverter());
+});
 
 // Session, Cookie, and HttpContext Accessor
 builder.Services.AddSession(options =>
@@ -186,6 +202,33 @@ builder.Services.AddMvc(options =>
 // Response Caching for Map Tiles and Metadata
 builder.Services.AddResponseCaching();
 
+// Memory Cache for frequently accessed data
+builder.Services.AddMemoryCache(options =>
+{
+    options.SizeLimit = 1024; // Limit cache size
+    options.CompactionPercentage = 0.25; // Compact 25% when limit is reached
+});
+
+// Response Compression for better network performance
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
+    options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
+    options.MimeTypes = Microsoft.AspNetCore.ResponseCompression.ResponseCompressionDefaults.MimeTypes.Concat(
+        new[] { "application/json", "application/javascript", "text/css", "text/html" });
+});
+
+builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProviderOptions>(options =>
+{
+    options.Level = System.IO.Compression.CompressionLevel.Fastest;
+});
+
+builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProviderOptions>(options =>
+{
+    options.Level = System.IO.Compression.CompressionLevel.Fastest;
+});
+
 var app = builder.Build();
 
 // Initialize database with default data
@@ -219,8 +262,23 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 
 app.UseStatusCodePagesWithReExecute("/Error/{0}");
+
+// Response Compression (must be before static files)
+app.UseResponseCompression();
+
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+
+// Static Files with caching
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        // Cache static files for 7 days
+        const int durationInSeconds = 60 * 60 * 24 * 7;
+        ctx.Context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.CacheControl] =
+            "public,max-age=" + durationInSeconds;
+    }
+});
 
 app.UseRouting();
 

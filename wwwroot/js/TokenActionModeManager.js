@@ -172,13 +172,15 @@ class TokenActionModeManager {
     }
 
     enableTokenPlacement() {
-        if (window.tokenPlacementManager && window.tokenPlacementManager.startPlacementMode) {
-            window.tokenPlacementManager.startPlacementMode();
-        }
+        // Token placement is handled by TokenManager.selectTokenForPlacement()
+        // This method only sets up the environment (disable other interactions)
+        // The actual placement starts when a token is selected from the modal
         
         // Disable context menus and movement during placement mode
         this.disableTokenContextMenus();
         this.disableTokenMovement();
+        
+        console.log('✅ Placement mode environment ready (token will be selected from modal)');
     }
 
     enableTokenMovement() {
@@ -336,6 +338,13 @@ class TokenActionModeManager {
 
     handleTargetSelection(event) {
         const latlng = this.getLatLngFromEvent(event);
+        
+        // Safety check for valid latlng
+        if (!latlng || isNaN(latlng.lat) || isNaN(latlng.lng)) {
+            console.warn('⚠️ Invalid latlng in target selection:', latlng);
+            return;
+        }
+        
         const targetToken = this.findTokenAtLocation(latlng);
         
         if (targetToken) {
@@ -809,8 +818,17 @@ class TokenActionModeManager {
 
     getLatLngFromEvent(event) {
         // Convert click event to lat/lng using the map
-        if (this.map) {
-            return this.map.mouseEventToLatLng(event);
+        const map = this.map || window.gameMap;
+        if (map && map.mouseEventToLatLng) {
+            try {
+                return map.mouseEventToLatLng(event);
+            } catch (error) {
+                console.error('❌ Error converting event to LatLng:', error);
+                // Fallback: try to get latlng from event directly
+                if (event.latlng) {
+                    return event.latlng;
+                }
+            }
         }
         return null;
     }

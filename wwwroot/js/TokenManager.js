@@ -322,17 +322,42 @@ class TokenManager {
             type: 'GET',
             data: { tokenId: token.id },
             success: function(modalHtml) {
-                console.log('✅ Token summary loaded successfully');
-                console.log('Modal HTML length:', modalHtml.length);
+                console.log('✅ Modal loaded, length:', modalHtml.length);
                 
-                // Remove any existing modal and add the new one
+                // Remove any existing modal and backdrop
                 $('#tokenSummaryModal').remove();
+                $('.modal-backdrop').remove();
+                
+                // Append new modal
                 $('body').append(modalHtml);
                 
-                // Show the Bootstrap modal
-                $('#tokenSummaryModal').modal('show');
+                // Verify it was added
+                const modalExists = document.getElementById('tokenSummaryModal');
+                console.log('Modal in DOM:', modalExists ? 'YES' : 'NO');
+                
+                if (modalExists) {
+                    console.log('Showing modal...');
+                    
+                    // Force display first (override any CSS issues)
+                    $('#tokenSummaryModal').css({
+                        'display': 'block',
+                        'opacity': '1',
+                        'visibility': 'visible'
+                    }).addClass('show').removeClass('fade');
+                    
+                    // Then initialize Bootstrap modal
+                    $('#tokenSummaryModal').modal({
+                        backdrop: false,
+                        keyboard: true,
+                        show: true
+                    });
+                    
+                    console.log('✅ Modal displayed');
+                } else {
+                    console.error('❌ Modal not found in DOM after append!');
+                }
+                
                 window.currentTokenId = token.id;
-                console.log('✅ Token summary modal displayed successfully');
             },
             error: function(xhr, status, error) {
                 console.error('❌ Error loading token summary:', error);

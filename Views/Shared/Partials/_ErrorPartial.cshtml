@@ -1,0 +1,53 @@
+@model dynamic
+
+<div class="error-message-container" style="padding: 20px; text-align: center;">
+    <div class="error-icon" style="font-size: 48px; color: var(--danger-color, #dc3545); margin-bottom: 15px;">
+        <i class="fas fa-exclamation-triangle"></i>
+    </div>
+    <div class="error-message" style="color: var(--text-primary, #e0e0e0); font-size: 16px; margin-bottom: 10px;">
+        <strong>Error</strong>
+    </div>
+    <div class="error-details" style="color: var(--text-secondary, #b0b0b0); font-size: 14px;">
+        @{
+            string errorMessage = "An unexpected error occurred. Please try again.";
+            
+            try
+            {
+                // Try different ways to get the message
+                if (Model != null)
+                {
+                    // Try as anonymous object with Message property
+                    if (Model.GetType().GetProperty("Message") != null)
+                    {
+                        var msgValue = Model.GetType().GetProperty("Message").GetValue(Model, null);
+                        if (msgValue != null)
+                        {
+                            errorMessage = msgValue.ToString();
+                        }
+                    }
+                    // Try as dictionary
+                    else if (Model is System.Collections.IDictionary)
+                    {
+                        var dict = (System.Collections.IDictionary)Model;
+                        if (dict.Contains("Message"))
+                        {
+                            errorMessage = dict["Message"]?.ToString() ?? errorMessage;
+                        }
+                    }
+                    // Try as string
+                    else if (Model is string)
+                    {
+                        errorMessage = Model.ToString();
+                    }
+                }
+            }
+            catch
+            {
+                // Use default error message
+            }
+            
+            @errorMessage
+        }
+    </div>
+</div>
+
