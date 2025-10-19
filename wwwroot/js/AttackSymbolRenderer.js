@@ -252,7 +252,7 @@ class AttackSymbolRenderer {
         // Base line style with canvas rendering for better performance and fixed positioning
         let lineStyle = {
             color: arrowColor,
-            weight: 3,
+            weight: 6,
             opacity: 0.9,
             className: `nato-attack-line ${symbolConfig.className}`,
             renderer: L.canvas() // Use canvas renderer for better performance and fixed positioning
@@ -261,21 +261,21 @@ class AttackSymbolRenderer {
         // Customize line style based on attack type
         switch (attackType) {
             case 'attack-supporting':
-                lineStyle.weight = 2;
+                lineStyle.weight = 4;
                 lineStyle.opacity = 0.7;
                 lineStyle.dashArray = '5, 5';
                 break;
             case 'attack-feint':
-                lineStyle.weight = 2;
+                lineStyle.weight = 4;
                 lineStyle.opacity = 0.6;
                 lineStyle.dashArray = '10, 10';
                 break;
             case 'attack-envelopment':
-                lineStyle.weight = 4;
+                lineStyle.weight = 8;
                 lineStyle.opacity = 0.8;
                 break;
             case 'attack-ambush':
-                lineStyle.weight = 2;
+                lineStyle.weight = 4;
                 lineStyle.opacity = 0.8;
                 lineStyle.dashArray = '15, 5';
                 break;
@@ -289,7 +289,7 @@ class AttackSymbolRenderer {
         
         // Split path: parallel lines with gap before target, then arrowhead at END (near target)
         const endGap = 0.1; // 10% gap from target token
-        const arrowheadLength = 0.05; // Only 5% of path for ending arrowhead (much shorter)
+        const arrowheadLength = 0.01; // Only 1% of path for very short ending arrowhead
         const splitIndex = Math.max(1, Math.floor(path.length * (1 - arrowheadLength - endGap)));
         
         const bodyPath = path.slice(0, splitIndex + 1);
@@ -489,11 +489,11 @@ class AttackSymbolRenderer {
         const perpY = dirX;
         
         // Create a simple triangular arrowhead
-        // Base width proportional to spacing, but make it much larger for visibility
-        const arrowBaseWidth = spacing * 6; // Make arrowhead 6x wider than line spacing for bigger size
+        // Base width proportional to spacing, but keep it small - only 10px wider than lines
+        const arrowBaseWidth = spacing * 2; // Make arrowhead only 2x wider than line spacing for smaller size
         
         // Gap size to prevent overlap with parallel lines
-        const gapSize = spacing * 0.5; // 50% of line spacing for gap
+        const gapSize = spacing * 0.2; // 20% of line spacing for smaller gap
         
         // Base points (back of arrow) with gap so lines don't touch arrowhead
         const baseLeft = L.latLng(
@@ -505,8 +505,8 @@ class AttackSymbolRenderer {
             startPoint.lng - perpX * (arrowBaseWidth + gapSize)
         );
         
-        // Tip point (front of arrow) - fixed size arrowhead regardless of path length
-        const fixedTipExtension = 0.00005; // Fixed distance in degrees for consistent arrowhead size
+        // Tip point (front of arrow) - very short arrowhead for minimal appearance
+        const fixedTipExtension = 0.00001; // Very small distance in degrees for very short arrowhead
         const tip = L.latLng(
             endPoint.lat + dirY * fixedTipExtension,
             endPoint.lng + dirX * fixedTipExtension
@@ -517,10 +517,10 @@ class AttackSymbolRenderer {
         
         const arrowheadPolygon = L.polygon(arrowheadPoints, {
             color: color, // Outline color same as lines
-            fillColor: 'transparent', // Empty/transparent fill
-            fillOpacity: 0.0, // No fill - empty arrowhead
-            weight: 3, // Thick border for visibility
-            className: 'nato-attack-arrowhead-empty',
+            fillColor: color, // Fill with same color as lines
+            fillOpacity: 0.9, // Solid fill
+            weight: 2, // Thinner border for smaller appearance
+            className: 'nato-attack-arrowhead-filled',
             renderer: L.canvas() // Use canvas renderer for better performance and fixed positioning
         });
         

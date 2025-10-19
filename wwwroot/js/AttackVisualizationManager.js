@@ -572,16 +572,16 @@ class AttackVisualizationManager {
         
         const arrowIcon = L.divIcon({
             html: `<div class="attack-arrow-fallback" style="transform: rotate(${angle}deg);">
-                <svg width="60" height="50" viewBox="0 0 60 50">
-                    <path d="M 5,25 L 45,5 L 45,18 L 55,18 L 55,32 L 45,32 L 45,45 Z" 
-                          fill="#ff4444" stroke="#000" stroke-width="2"/>
-                    <text x="25" y="30" text-anchor="middle" dominant-baseline="middle" 
-                          fill="#FFF" font-size="14" font-weight="bold">${symbolNumber}</text>
+                <svg width="25" height="20" viewBox="0 0 25 20">
+                    <path d="M 5,10 L 20,6 L 20,8 L 23,10 L 20,12 L 20,14 L 5,12 Z" 
+                          fill="#ff4444" stroke="#000" stroke-width="1"/>
+                    <text x="14" y="10" text-anchor="middle" dominant-baseline="middle" 
+                          fill="#FFF" font-size="6" font-weight="bold">${symbolNumber}</text>
                 </svg>
             </div>`,
             className: 'attack-arrow-marker',
-            iconSize: [60, 50],
-            iconAnchor: [5, 25]  // Anchor at left side
+            iconSize: [25, 20],
+            iconAnchor: [5, 10]  // Anchor at left side
         });
         
         // Position arrowhead near the ATTACKER (at the start)
