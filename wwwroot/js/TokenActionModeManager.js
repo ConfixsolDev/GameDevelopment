@@ -412,24 +412,19 @@ class TokenActionModeManager {
                 // Enable target selection mode
                 this.enableTargetSelectionMode();
             } else {
-                // Second click - this is the target, open attack panel
+                // Second click - this is the target, open attack planning modal
                 console.log('🎯 Target selected:', token.name);
                 console.log('🎯 Selected attacker:', this.selectedAttacker?.name);
                 this.hideAttackInstructions();
                 
-                // Open attack panel with attacker and target
-                if (window.tokenPlacementManager && window.tokenPlacementManager.openAttackPanel) {
-                    console.log('🎯 Calling openAttackPanel with:', this.selectedAttacker?.name, '->', token.name);
-                    window.tokenPlacementManager.openAttackPanel(this.selectedAttacker, token);
-                } else {
-                    console.error('❌ tokenPlacementManager.openAttackPanel not available');
-                    console.log('🎯 tokenPlacementManager exists:', !!window.tokenPlacementManager);
-                    console.log('🎯 openAttackPanel method exists:', !!(window.tokenPlacementManager && window.tokenPlacementManager.openAttackPanel));
-                }
+                // Open attack planning modal with attacker and target
+                console.log('🎯 Opening attack planning modal:', this.selectedAttacker?.name, '->', token.name);
+                this.openAttackPlanningModal(this.selectedAttacker, token);
                 
-                // Reset attacker selection
-                this.selectedAttacker = null;
-                this.map.getContainer().style.cursor = 'default';
+                // DON'T reset attacker selection or cursor - keep attack mode active while modal is open
+                // The user will need to close the modal or click Cancel Mode button to exit attack mode
+                // this.selectedAttacker = null;
+                // this.map.getContainer().style.cursor = 'default';
             }
         } else {
             console.log('No token found at click location for attack');
@@ -593,8 +588,20 @@ class TokenActionModeManager {
                                 if (attackerNameEl) attackerNameEl.textContent = attackerToken.name;
                                 if (targetNameEl) targetNameEl.textContent = targetToken.name;
                                 
-                                // Show the modal
-                                modal.style.display = 'block';
+                                // Show the Bootstrap modal
+                                $('#attackPlanningModal').css({
+                                    'display': 'block',
+                                    'opacity': '1',
+                                    'visibility': 'visible',
+                                    'z-index': '9999'
+                                }).addClass('show').removeClass('fade');
+                                
+                                $('#attackPlanningModal').modal({
+                                    backdrop: false,
+                                    keyboard: true,
+                                    show: true
+                                });
+                                
                                 console.log('✅ Attack planning modal shown');
                                 
                                 // Initialize the modal using our new function
@@ -1432,6 +1439,14 @@ class TokenActionModeManager {
         if (modal) {
             modal.style.display = 'none';
             console.log('✅ Attack planning modal closed');
+            
+            // Reset attack mode when modal is closed
+            this.selectedAttacker = null;
+            this.saveSelectedAttacker(null);
+            this.map.getContainer().style.cursor = 'default';
+            
+            // Exit attack mode
+            this.cancelMode();
         }
     }
 }
