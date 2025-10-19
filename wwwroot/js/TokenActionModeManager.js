@@ -62,8 +62,11 @@ class TokenActionModeManager {
             if (e.target.closest('.token-action-btn')) {
                 const button = e.target.closest('.token-action-btn');
                 const mode = button.dataset.mode;
+                console.log('🎯 Token action button clicked:', button.id, 'mode:', mode);
                 if (mode) {
                     this.setMode(mode);
+                } else {
+                    console.error('❌ No mode found on button:', button);
                 }
             }
         });
@@ -84,6 +87,7 @@ class TokenActionModeManager {
     }
 
     setMode(mode) {
+        console.log('🎯 setMode called with mode:', mode);
         if (this.modes[mode]) {
             this.currentMode = mode;
             this.saveModeToStorage();
@@ -91,7 +95,10 @@ class TokenActionModeManager {
             this.updateMapCursor();
             
             // Trigger existing functionality based on mode
+            console.log('🎯 Triggering mode action for:', mode);
             this.triggerModeAction(mode);
+        } else {
+            console.error('❌ Invalid mode:', mode);
         }
     }
 
@@ -101,6 +108,9 @@ class TokenActionModeManager {
             this.selectedAttacker = null;
             this.saveSelectedAttacker(null); // Clear from storage
         }
+        
+        // Hide all instruction banners
+        this.hideAllInstructions();
         
         this.currentMode = null;
         this.saveModeToStorage();
@@ -220,18 +230,76 @@ class TokenActionModeManager {
     }
     
     showAttackInstructions(message) {
+        console.log('🎯 showAttackInstructions called with message:', message);
         const banner = document.getElementById('attackInstructionBanner');
         const textSpan = document.getElementById('attackInstructionText');
+        console.log('🎯 Banner element:', banner);
+        console.log('🎯 Text span element:', textSpan);
+        
         if (banner && textSpan) {
             textSpan.textContent = message;
             banner.style.display = 'block';
+            console.log('✅ Attack instructions banner should be visible now');
+        } else {
+            console.error('❌ Banner or text span not found!');
         }
     }
-    
+
     hideAttackInstructions() {
         const banner = document.getElementById('attackInstructionBanner');
         if (banner) {
             banner.style.display = 'none';
+        }
+    }
+
+    showMovementInstructions(message) {
+        console.log('🎯 showMovementInstructions called with message:', message);
+        const banner = document.getElementById('attackInstructionBanner');
+        const textSpan = document.getElementById('attackInstructionText');
+        console.log('🎯 Banner element:', banner);
+        console.log('🎯 Text span element:', textSpan);
+        
+        if (banner && textSpan) {
+            // Change banner style for movement mode
+            banner.style.background = '#28a745';
+            banner.style.border = '2px solid #90ee90';
+            const titleSpan = banner.querySelector('span:first-child');
+            if (titleSpan) {
+                titleSpan.textContent = 'Planning Movement';
+            }
+            textSpan.textContent = message;
+            banner.style.display = 'block';
+            console.log('✅ Movement instructions banner should be visible now');
+        } else {
+            console.error('❌ Banner or text span not found!');
+        }
+    }
+
+    showDefenseInstructions(message, type) {
+        const banner = document.getElementById('attackInstructionBanner');
+        const textSpan = document.getElementById('attackInstructionText');
+        if (banner && textSpan) {
+            // Change banner style for defense mode
+            banner.style.background = '#ffc107';
+            banner.style.border = '2px solid #ffeaa7';
+            banner.style.color = '#000';
+            const titleSpan = banner.querySelector('span:first-child');
+            if (titleSpan) {
+                titleSpan.textContent = `Drawing ${type}`;
+            }
+            textSpan.textContent = message;
+            banner.style.display = 'block';
+        }
+    }
+
+    hideAllInstructions() {
+        const banner = document.getElementById('attackInstructionBanner');
+        if (banner) {
+            banner.style.display = 'none';
+            // Reset to default attack styling
+            banner.style.background = '#007bff';
+            banner.style.border = '2px solid #87ceeb';
+            banner.style.color = 'white';
         }
     }
 
@@ -281,6 +349,9 @@ class TokenActionModeManager {
         // Re-enable right-click context menus for default mode
         this.enableTokenContextMenus();
         
+        // Show movement instructions for default mode
+        this.showMovementInstructions('Click and drag tokens to move them, or click to view details');
+        
         console.log('Default mode enabled - token details and dragging available');
     }
 
@@ -324,19 +395,40 @@ class TokenActionModeManager {
         // Find token at location
         const token = this.findTokenAtLocation(latlng);
         if (token) {
-            // Immediately start attack mode with this token as attacker
-            this.selectedAttacker = token;
-            
-            // Save attacker to storage
-            this.saveSelectedAttacker(token);
-            
-            this.notificationCallback(`Selected ${token.name} as attacker. Click on target token to plan attack.`, 'info');
-            
-            // Change cursor to arrow shape
-            this.map.getContainer().style.cursor = 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ff4444\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z\'></path><path d=\'M13 13l6 6\'></path></svg>"), auto';
-            
-            // Enable target selection mode
-            this.enableTargetSelectionMode();
+            // Check if this is the first click (selecting attacker) or second click (selecting target)
+            if (!this.selectedAttacker) {
+                // First click - select attacker (own token)
+                this.selectedAttacker = token;
+                
+                // Save attacker to storage
+                this.saveSelectedAttacker(token);
+                
+                // Update instruction banner
+                this.showAttackInstructions(`Attacker selected: ${token.name}. Now click on suspected/enemy token to select target`);
+                
+                this.notificationCallback(`Selected ${token.name} as attacker. Click on target token to plan attack.`, 'info');
+                
+                // Change cursor to crosshair for target selection
+                this.map.getContainer().style.cursor = 'crosshair';
+                
+                // Enable target selection mode
+                this.enableTargetSelectionMode();
+            } else {
+                // Second click - this is the target, open attack panel
+                console.log('Target selected:', token.name);
+                this.hideAttackInstructions();
+                
+                // Open attack panel with attacker and target
+                if (window.tokenPlacementManager && window.tokenPlacementManager.openAttackPanel) {
+                    window.tokenPlacementManager.openAttackPanel(this.selectedAttacker, token);
+                } else {
+                    console.error('❌ tokenPlacementManager.openAttackPanel not available');
+                }
+                
+                // Reset attacker selection
+                this.selectedAttacker = null;
+                this.map.getContainer().style.cursor = 'default';
+            }
         } else {
             console.log('No token found at click location for attack');
             this.notificationCallback('No token found at this location. Please click on a valid token.', 'warning');
@@ -367,6 +459,8 @@ class TokenActionModeManager {
         const targetToken = this.findTokenAtLocation(latlng);
         
         if (targetToken) {
+            // Hide instruction banner
+            this.hideAttackInstructions();
             // Store target token globally for combat simulation
             this.selectedTarget = targetToken;
             window.selectedTargetToken = targetToken;

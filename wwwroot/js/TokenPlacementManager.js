@@ -60,6 +60,12 @@ class TokenPlacementManager {
         this.isPlacementMode = true;
         this.selectedTokenForPlacement = token;
         this.map.getContainer().style.cursor = 'crosshair';
+        
+        // Show instruction banner
+        if (window.tokenActionModeManager && window.tokenActionModeManager.showDefenseInstructions) {
+            window.tokenActionModeManager.showDefenseInstructions(`Click on the map to place "${token.name}"`, 'Placing Token');
+        }
+        
         this.notificationCallback(`Click on the map to place "${token.name}"`, 'info');
     }
 
@@ -70,6 +76,11 @@ class TokenPlacementManager {
         this.isPlacementMode = false;
         this.selectedTokenForPlacement = null;
         this.map.getContainer().style.cursor = 'default';
+        
+        // Hide instruction banner
+        if (window.tokenActionModeManager && window.tokenActionModeManager.hideAllInstructions) {
+            window.tokenActionModeManager.hideAllInstructions();
+        }
         
         if (this.tempMarker) {
             this.map.removeLayer(this.tempMarker);
@@ -180,6 +191,12 @@ class TokenPlacementManager {
         this.isMovingToken = true;
         this.movingToken = tokenInfo;
         this.map.getContainer().style.cursor = 'move';
+        
+        // Show movement instructions in banner
+        if (window.tokenActionModeManager && window.tokenActionModeManager.showMovementInstructions) {
+            window.tokenActionModeManager.showMovementInstructions(`Click on the map to move "${tokenInfo.token.name}"`);
+        }
+        
         this.notificationCallback(`Click on the map to move "${tokenInfo.token.name}"`, 'info');
     }
 
@@ -190,6 +207,11 @@ class TokenPlacementManager {
         this.isMovingToken = false;
         this.movingToken = null;
         this.map.getContainer().style.cursor = 'default';
+        
+        // Hide movement instructions when cancelling move mode
+        if (window.tokenActionModeManager && window.tokenActionModeManager.hideAllInstructions) {
+            window.tokenActionModeManager.hideAllInstructions();
+        }
     }
 
     /**
@@ -426,6 +448,12 @@ class TokenPlacementManager {
 			this.isDraggingMarker = true;
 			this.originalPosition = e.target.getLatLng();
 			console.log('🎯 Original position set to:', this.originalPosition);
+			
+			// Show movement instructions in banner
+			if (window.tokenActionModeManager && window.tokenActionModeManager.showMovementInstructions) {
+				window.tokenActionModeManager.showMovementInstructions(`Dragging "${token.name}" to new position`);
+			}
+			
 			this.startDragToMove(token, e.target);
 		});
 
@@ -440,6 +468,12 @@ class TokenPlacementManager {
 				console.log('🎯 Drag end event triggered for token:', token.name);
 				const newLatLng = e.target.getLatLng();
 				console.log('🎯 New position:', newLatLng);
+				
+				// Hide movement instructions immediately when drag ends
+				if (window.tokenActionModeManager && window.tokenActionModeManager.hideAllInstructions) {
+					window.tokenActionModeManager.hideAllInstructions();
+				}
+				
 				this.endDragToMove(token, e.target, newLatLng);
 			} catch (err) {
 				console.error('Error in drag end:', err);
@@ -525,6 +559,11 @@ class TokenPlacementManager {
         
         // Save directly without showing modal
         await this.saveTokenPositionDirectly(token.id, newPosition);
+        
+        // Hide movement instructions after successful move
+        if (window.tokenActionModeManager && window.tokenActionModeManager.hideAllInstructions) {
+            window.tokenActionModeManager.hideAllInstructions();
+        }
     }
 
     /**

@@ -1184,7 +1184,7 @@ namespace TechWebSol.Controllers
                         tokenGroupId = t.TokenGroupId,
                         tokenGroupName = t.TokenGroup != null ? t.TokenGroup.Name : null,
                         assetImagePath = t.AssetImagePath,
-                        position = t.MapMarkers.Where(m => m.IsActive).Select(m => new { lat = m.latitude, lng = m.longitude }).FirstOrDefault(),
+                        position = t.MapMarkers.Where(m => m.IsActive).OrderByDescending(m => m.CreatedDate).Select(m => new { lat = m.latitude, lng = m.longitude }).FirstOrDefault(),
                         isActive = t.IsActive,
                         isManualToken = t.IsManualToken,
                         lastUsed = t.LastUsed,
@@ -1632,7 +1632,7 @@ namespace TechWebSol.Controllers
                         name = t.Name,
                         type = t.TokenGroup != null ? t.TokenGroup.Name : "Unit",
                         strength = 100, // Default strength
-                        position = t.MapMarkers.Where(m => m.IsActive).Select(m => new { lat = m.latitude, lng = m.longitude }).FirstOrDefault(),
+                        position = t.MapMarkers.Where(m => m.IsActive).OrderByDescending(m => m.CreatedDate).Select(m => new { lat = m.latitude, lng = m.longitude }).FirstOrDefault(),
                         status = "Deployed",
                         teamId = t.TeamId,
                         isActive = t.IsActive
@@ -1744,7 +1744,7 @@ namespace TechWebSol.Controllers
                             id = t.Id,
                             name = t.Name,
                             type = t.TokenGroup != null ? t.TokenGroup.Name : "Unit",
-                            currentPosition = t.MapMarkers.Where(m => m.IsActive).Select(m => new { lat = decimal.Parse(m.latitude), lng = decimal.Parse(m.longitude) }).FirstOrDefault()
+                            currentPosition = t.MapMarkers.Where(m => m.IsActive).OrderByDescending(m => m.CreatedDate).Select(m => new { lat = decimal.Parse(m.latitude), lng = decimal.Parse(m.longitude) }).FirstOrDefault()
                         },
                         movementHistory = t.MapMarkers.Select(m => new
                         {

@@ -785,6 +785,15 @@ class DefensePlanningManager {
         
         console.log(`🖊️ Started drawing ${category} (${type})`);
         
+        // Show instruction banner
+        if (window.tokenActionModeManager && window.tokenActionModeManager.showDefenseInstructions) {
+            const instructionText = category === 'killzone' ? 'Drawing Kill Zone (primary)' : 
+                                   category === 'minefield' ? 'Drawing Minefield' : 
+                                   category === 'defensezone' ? 'Drawing Defense Zone' : 
+                                   'Drawing Defense Element';
+            window.tokenActionModeManager.showDefenseInstructions(`Click 4 points, then double-click/Enter/right-click to finish`, instructionText);
+        }
+        
         // Remove any existing event listeners first
         this.map.off('click', this.handlePolygonClick);
         this.map.off('dblclick', this.finishPolygonDrawing);
@@ -868,6 +877,12 @@ class DefensePlanningManager {
      * Hide drawing instructions
      */
     hideDrawingInstructions() {
+        // Hide instruction banner
+        if (window.tokenActionModeManager && window.tokenActionModeManager.hideAllInstructions) {
+            window.tokenActionModeManager.hideAllInstructions();
+        }
+        
+        // Also remove any old instruction elements
         const instructions = document.getElementById('defenseDrawingInstructions');
         if (instructions) {
             instructions.remove();
@@ -884,6 +899,15 @@ class DefensePlanningManager {
         this.map.getContainer().style.cursor = 'crosshair';
         
         console.log(`🖊️ Started drawing ${category} (${type})`);
+        
+        // Show instruction banner
+        if (window.tokenActionModeManager && window.tokenActionModeManager.showDefenseInstructions) {
+            const instructionText = category === 'obstacle' ? 'Drawing Obstacle' : 
+                                   category === 'withdrawal' ? 'Drawing Withdrawal Route' : 
+                                   category === 'defensiveline' ? 'Drawing Defensive Line' : 
+                                   'Drawing Line';
+            window.tokenActionModeManager.showDefenseInstructions(`Click points to draw line, double-click/Enter/right-click to finish`, instructionText);
+        }
         
         this.map.on('click', this.handlePolylineClick.bind(this));
         this.map.on('dblclick', this.finishPolylineDrawing.bind(this));

@@ -9,10 +9,33 @@
 
 <div class="gameplay-container">
     <!-- Instruction Banner (shown during attack mode) -->
-    <div id="attackInstructionBanner" style="display: none; position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 9998; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); color: white; padding: 15px 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 16px; font-weight: 600; text-align: center; min-width: 400px;">
-        <i class="fas fa-crosshairs"></i>
-        <span id="attackInstructionText">Click on your own token to select attacker</span>
+    <div id="attackInstructionBanner" style="display: none; position: fixed; top: 120px; left: 10px; width: 280px; z-index: 9998; background: #007bff; color: white; padding: 15px 20px; border-radius: 8px; border: 2px solid #87ceeb; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 16px; font-weight: bold; text-align: left; font-family: sans-serif;">
+        <div style="display: flex; align-items: center; justify-content: flex-start; gap: 10px;">
+            <div style="width: 24px; height: 24px; background: linear-gradient(90deg, #0056b3 50%, #87ceeb 50%); border-radius: 4px; position: relative; flex-shrink: 0;">
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 16px; height: 16px; background: white; border-radius: 2px;"></div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-start; min-width: 0;">
+                <span style="font-size: 16px; font-weight: bold;">Planning Movement</span>
+                <span id="attackInstructionText" style="font-size: 14px; font-weight: normal; word-wrap: break-word;">Click and drag tokens to move them, or click to view details</span>
+            </div>
+        </div>
     </div>
+    
+    <!-- Debug: Show banner by default for testing -->
+    <script>
+        console.log('🔍 Checking instruction banner...');
+        document.addEventListener('DOMContentLoaded', function() {
+            const banner = document.getElementById('attackInstructionBanner');
+            if (banner) {
+                console.log('✅ Instruction banner found in DOM');
+                // Show banner by default for testing
+                banner.style.display = 'block';
+                console.log('🎯 Banner should be visible now');
+            } else {
+                console.error('❌ Instruction banner not found in DOM');
+            }
+        });
+    </script>
 
     <!-- MAIN AREA -->
     <main class="game-main-area">
