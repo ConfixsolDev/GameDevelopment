@@ -212,8 +212,27 @@ class TokenActionModeManager {
         // Disable right-click context menus for all tokens
         this.disableTokenContextMenus();
         
+        // Show instruction banner
+        this.showAttackInstructions('Click on your own token to select attacker');
+        
         // Attack mode will be activated when user clicks on a token
         console.log('Attack mode activated - click on a token to start attack planning');
+    }
+    
+    showAttackInstructions(message) {
+        const banner = document.getElementById('attackInstructionBanner');
+        const textSpan = document.getElementById('attackInstructionText');
+        if (banner && textSpan) {
+            textSpan.textContent = message;
+            banner.style.display = 'block';
+        }
+    }
+    
+    hideAttackInstructions() {
+        const banner = document.getElementById('attackInstructionBanner');
+        if (banner) {
+            banner.style.display = 'none';
+        }
     }
 
     enablePanAttackMode() {
