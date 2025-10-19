@@ -105,7 +105,7 @@ function updateRouteVisualizations(results) {
 }
 
 /**
- * Show comprehensive adjudication results modal
+ * Show comprehensive adjudication results modal - Bootstrap Version
  */
 function showAdjudicationResultsModal(data) {
     // Remove existing modal if any
@@ -116,8 +116,11 @@ function showAdjudicationResultsModal(data) {
     
     const modal = document.createElement('div');
     modal.id = 'militaryAdjudicationModal';
-    modal.className = 'gameplay-modal';
-    modal.style.display = 'flex';
+    modal.className = 'modal fade';
+    modal.setAttribute('tabindex', '-1');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-labelledby', 'militaryAdjudicationModalLabel');
+    modal.setAttribute('aria-hidden', 'true');
     
     // Build results HTML
     let resultsHTML = '';
@@ -355,16 +358,19 @@ function showAdjudicationResultsModal(data) {
     });
     
     modal.innerHTML = `
-        <div class="gameplay-modal-content" style="width: 1000px; max-width: 95vw; max-height: 90vh;">
-            <div class="gameplay-modal-header">
-                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
-                    <i class="fas fa-chart-line"></i> 
-                    Military Movement Adjudication
-                </h2>
-                <button class="gameplay-modal-close" onclick="this.closest('.gameplay-modal').remove()">&times;</button>
-            </div>
-            
-            <div class="gameplay-modal-body" style="max-height: 75vh; overflow-y: auto; padding: 20px;">
+        <div class="modal-dialog modal-xl" role="document" style="max-width: 1200px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="militaryAdjudicationModalLabel" style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-chart-line"></i> 
+                        Military Movement Adjudication
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                
+                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
                 <!-- Executive Summary -->
                 <div class="executive-summary" style="background: #1a1a1a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 2px solid #00ff00;">
                     <h3 style="margin: 0 0 15px 0; color: #00ff00; font-size: 16px;">
@@ -401,20 +407,35 @@ function showAdjudicationResultsModal(data) {
                     </h3>
                     ${resultsHTML}
                 </div>
-            </div>
-            
-            <div class="gameplay-modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #2a2a2a; border-top: 1px solid #444;">
-                <div style="color: #666; font-size: 12px;">
-                    Analysis completed at ${new Date(data.timestamp).toLocaleString()}
                 </div>
-                <button class="gameplay-btn" onclick="this.closest('.gameplay-modal').remove()">
-                    <i class="fas fa-check"></i> Close
-                </button>
+                
+                <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="color: #666; font-size: 12px;">
+                        Analysis completed at ${new Date(data.timestamp).toLocaleString()}
+                    </div>
+                    <button type="button" class="btn btn-success" data-dismiss="modal">
+                        <i class="fas fa-check"></i> Close
+                    </button>
+                </div>
             </div>
         </div>
     `;
     
     document.body.appendChild(modal);
+    
+    // Show modal using Bootstrap
+    $('#militaryAdjudicationModal').modal({
+        backdrop: false,
+        keyboard: true,
+        show: true
+    });
+    
+    // Force display for large screens
+    $('#militaryAdjudicationModal').css({
+        'display': 'block',
+        'opacity': '1',
+        'visibility': 'visible'
+    }).addClass('show');
 }
 
 /**

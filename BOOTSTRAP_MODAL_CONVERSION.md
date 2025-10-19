@@ -30,6 +30,14 @@
 - **Size**: `modal-lg` (70% width)
 - **Status**: ✅ Converted to Bootstrap with forced display
 
+### 5. War Adjudication Modal
+- **File**: `wwwroot/js/militaryAdjudication.js`
+- **ID**: `#militaryAdjudicationModal`
+- **Method**: `showAdjudicationResultsModal()`
+- **Size**: `modal-xl` (custom 1200px max-width)
+- **Status**: ✅ Converted to Bootstrap with forced display
+- **Features**: Comprehensive military movement analysis with executive summary, terrain analysis, and tactical recommendations
+
 ---
 
 ## 🎯 Bootstrap Modal Advantages for Large Screens
