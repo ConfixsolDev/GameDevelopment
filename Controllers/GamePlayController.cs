@@ -5,6 +5,7 @@ using TechWebSol.Data;
 using TechWebSol.Filters;
 using TechWebSol.Models;
 using TechWebSol.Services;
+using TechWebSol.Services.MapManagement;
 using TechWebSol.Services.TokenManagement;
 using TechWebSol.ViewModels;
 
@@ -38,6 +39,44 @@ namespace TechWebSol.Controllers
             ViewData["Title"] = "Game Play Arena";
             ViewData["Subtitle"] = "Strategic Command Center - Fox Land vs Blue Land";
             return View();
+        }
+
+        /// <summary>
+        /// Set the current terrain database path in session
+        /// </summary>
+        [HttpPost]
+        public IActionResult SetTerrainDatabase([FromBody] SetTerrainDatabaseRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.TerrainDbPath))
+                {
+                    return BadRequest(new { success = false, message = "Terrain database path is required" });
+                }
+                
+                // Validate that the terrain database exists
+                var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                var normalizedPath = request.TerrainDbPath.Replace('/', Path.DirectorySeparatorChar);
+                var dbPath = Path.Combine(wwwRoot, normalizedPath);
+                
+                if (!System.IO.File.Exists(dbPath))
+                {
+                    _logger.LogWarning("Terrain database not found at path: {Path}", dbPath);
+                    return NotFound(new { success = false, message = "Terrain database not found" });
+                }
+                
+                // Store in session
+                HttpContext.Session.SetString("CurrentTerrainDb", request.TerrainDbPath);
+                
+                _logger.LogInformation("Terrain database set in session: {Path}", request.TerrainDbPath);
+                
+                return Json(new { success = true, message = "Terrain database set successfully", path = request.TerrainDbPath });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error setting terrain database");
+                return StatusCode(500, new { success = false, message = "Error setting terrain database" });
+            }
         }
 
         /// <summary>
@@ -729,21 +768,61 @@ namespace TechWebSol.Controllers
                 {
                     try
                     {
-                        // Get current terrain database from session or default
-                        var terrainDb = HttpContext.Session.GetString("CurrentTerrainDb") ?? "default/terrain.db";
+                        // Get current terrain database from header, session, or null
+                        var terrainDb = Request.Headers["X-Terrain-Database"].FirstOrDefault() 
+                                        ?? HttpContext.Session.GetString("CurrentTerrainDb") 
+                                        ?? null;
                         
-                        // Create elevation lookup request
+                        _logger.LogInformation($"Terrain analysis - Header: {Request.Headers["X-Terrain-Database"].FirstOrDefault()}, Session: {HttpContext.Session.GetString("CurrentTerrainDb")}, Final: {terrainDb}");
+                        
+                        if (string.IsNullOrEmpty(terrainDb))
+                        {
+                            _logger.LogWarning("No terrain database specified for terrain analysis");
+                            // Skip elevation lookup - will use fallback analysis below
+                        }
+                        else
+                        {
+                        // Build detailed route points with intermediate sampling (like TacticalViewer)
+                        var detailedPoints = new List<object>();
+                        
+                        for (int i = 0; i < markers.Count - 1; i++)
+                        {
+                            var startLat = double.Parse(markers[i].latitude);
+                            var startLng = double.Parse(markers[i].longitude);
+                            var endLat = double.Parse(markers[i + 1].latitude);
+                            var endLng = double.Parse(markers[i + 1].longitude);
+                            
+                            // Calculate distance between waypoints
+                            var distance = CalculateDistance(startLat, startLng, endLat, endLng);
+                            
+                            // Determine number of segments (adaptive ~100m spacing, min 10, max 300)
+                            var segments = Math.Max(10, Math.Min(300, (int)Math.Floor(distance / 0.1))); // 0.1km = 100m
+                            
+                            // Add intermediate points
+                            for (int j = 0; j <= segments; j++)
+                            {
+                                var ratio = (double)j / segments;
+                                detailedPoints.Add(new
+                                {
+                                    latitude = startLat + (endLat - startLat) * ratio,
+                                    longitude = startLng + (endLng - startLng) * ratio
+                                });
+                            }
+                        }
+                        
+                        _logger.LogInformation($"Sampling {detailedPoints.Count} points along route for terrain analysis");
+                        
+                        // Create elevation lookup request with detailed points
                         var elevationRequest = new
                         {
-                            locations = markers.Select(m => new
-                            {
-                                latitude = double.Parse(m.latitude),
-                                longitude = double.Parse(m.longitude)
-                            }).ToList()
+                            locations = detailedPoints
                         };
 
                         // Call elevation lookup API
+                        _logger.LogInformation($"Calling elevation lookup API with {detailedPoints.Count} points, terrainDb: {terrainDb}");
                         var elevationResponse = await CallElevationLookup(elevationRequest, terrainDb);
+                        
+                        _logger.LogInformation($"Elevation lookup response: success={elevationResponse?.success}, results count={elevationResponse?.results?.Count ?? 0}");
                         
                         if (elevationResponse != null && elevationResponse.success == true && elevationResponse.results != null)
                         {
@@ -762,17 +841,16 @@ namespace TechWebSol.Controllers
                                 // Like TacticalViewer: Heavy vehicles struggle on slopes > 25°, trucks > 35°
                                 var slopeLimit = vehicleWeight > 20 ? 25.0 : 35.0;
                                 
+                                // Calculate slopes between consecutive detailed points
                                 for (int i = 0; i < elevations.Count - 1; i++)
                                 {
-                                    var distance = CalculateDistance(
-                                        double.Parse(markers[i].latitude), double.Parse(markers[i].longitude),
-                                        double.Parse(markers[i + 1].latitude), double.Parse(markers[i + 1].longitude)
-                                    );
+                                    // Calculate distance between consecutive detailed points (~100m spacing)
+                                    var pointDistance = 0.1; // 100m in km
                                     
-                                    if (distance > 0)
+                                    if (pointDistance > 0)
                                     {
                                         var elevationDiff = Math.Abs(elevations[i + 1] - elevations[i]);
-                                        var slope = Math.Atan(elevationDiff / (distance * 1000)) * 180 / Math.PI;
+                                        var slope = Math.Atan(elevationDiff / (pointDistance * 1000)) * 180 / Math.PI;
                                         maxSlope = Math.Max(maxSlope, slope);
                                         
                                         // Check if slope is impassable for this vehicle
@@ -789,6 +867,7 @@ namespace TechWebSol.Controllers
                                 }
                             }
                         }
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -801,17 +880,28 @@ namespace TechWebSol.Controllers
                 {
                     try
                     {
-                        var terrainDb = HttpContext.Session.GetString("CurrentTerrainDb") ?? "default/terrain.db";
+                        var terrainDb = Request.Headers["X-Terrain-Database"].FirstOrDefault() 
+                                        ?? HttpContext.Session.GetString("CurrentTerrainDb") 
+                                        ?? null;
                         
-                        // Calculate bounding box for the route
+                        if (string.IsNullOrEmpty(terrainDb))
+                        {
+                            _logger.LogWarning("No terrain database specified for terrain features");
+                            // Skip terrain features lookup - will use fallback analysis below
+                        }
+                        else
+                        {
+                        // Calculate bounding box for the detailed route (more accurate)
                         var lats = markers.Select(m => double.Parse(m.latitude)).ToList();
                         var lngs = markers.Select(m => double.Parse(m.longitude)).ToList();
                         
+                        // Add buffer for detailed sampling
+                        var buffer = 0.005; // 500m buffer
                         var bbox = new double[] {
-                            lngs.Min() - 0.01, // minLng
-                            lats.Min() - 0.01, // minLat  
-                            lngs.Max() + 0.01, // maxLng
-                            lats.Max() + 0.01  // maxLat
+                            lngs.Min() - buffer, // minLng
+                            lats.Min() - buffer, // minLat  
+                            lngs.Max() + buffer, // maxLng
+                            lats.Max() + buffer  // maxLat
                         };
 
                         // Get terrain features
@@ -925,6 +1015,7 @@ namespace TechWebSol.Controllers
                                 }
                             }
                         }
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -935,6 +1026,7 @@ namespace TechWebSol.Controllers
                 // Fallback to basic analysis if no real data available
                 if (elevations.Count == 0)
                 {
+                    _logger.LogWarning("No elevation data received, using basic fallback analysis");
                     startElevation = double.Parse(markers[0].latitude) * 100; // Basic fallback
                     endElevation = double.Parse(markers[markers.Count - 1].latitude) * 100;
                     
@@ -1021,16 +1113,64 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Add("X-Terrain-Database", terrainDb);
+                _logger.LogInformation($"Calling elevation lookup with terrainDb: {terrainDb}");
                 
-                var json = System.Text.Json.JsonSerializer.Serialize(request);
-                var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                if (string.IsNullOrEmpty(terrainDb))
+                {
+                    _logger.LogWarning("Terrain database path is empty");
+                    return new { success = false, error = "Terrain database path is empty" };
+                }
+
+                var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                // Convert web path (forward slashes) to OS path
+                var normalizedTerrainDb = terrainDb.Replace('/', Path.DirectorySeparatorChar);
+                var dbPath = Path.Combine(wwwRoot, normalizedTerrainDb);
+
+                if (!System.IO.File.Exists(dbPath))
+                {
+                    _logger.LogWarning($"Terrain database not found at: {dbPath}");
+                    return new { success = false, error = "Terrain database not found" };
+                }
+
+                using var context = new Services.MapManagement.TerrainDataContext(dbPath);
+                await context.InitializeDatabaseAsync();
+
+                var datasetId = await GetTerrainDatasetIdAsync(context);
+                if (datasetId == Guid.Empty)
+                {
+                    _logger.LogWarning("No terrain dataset found in database");
+                    return new { success = false, error = "No terrain dataset found in database" };
+                }
+
+                var results = new List<object>();
+                var locations = ((dynamic)request).locations;
                 
-                var response = await httpClient.PostAsync("/api/v1/elevation/lookup", content);
-                var responseJson = await response.Content.ReadAsStringAsync();
-                
-                return System.Text.Json.JsonSerializer.Deserialize<dynamic>(responseJson);
+                foreach (var loc in locations)
+                {
+                    var lat = (double)loc.latitude;
+                    var lng = (double)loc.longitude;
+                    
+                    var elevationPoints = await context.QueryElevationPointsAsync(
+                        lat - 0.01,
+                        lat + 0.01,
+                        lng - 0.01,
+                        lng + 0.01,
+                        datasetId
+                    );
+                    
+                    double elevation = 0;
+                    if (elevationPoints.Any())
+                    {
+                        var closest = elevationPoints
+                            .OrderBy(p => Math.Pow(p.Latitude - lat, 2) + Math.Pow(p.Longitude - lng, 2))
+                            .First();
+                        elevation = closest.ElevationMeters;
+                    }
+                    results.Add(new { latitude = lat, longitude = lng, elevation });
+                }
+
+                _logger.LogInformation($"Elevation lookup successful, returning {results.Count} results");
+                return new { success = true, results = results };
             }
             catch (Exception ex)
             {
@@ -1039,26 +1179,85 @@ namespace TechWebSol.Controllers
             }
         }
 
+        private async Task<Guid> GetTerrainDatasetIdAsync(Services.MapManagement.TerrainDataContext context)
+        {
+            var conn = context.GetConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT id FROM terrain_datasets LIMIT 1";
+            var result = await cmd.ExecuteScalarAsync();
+            if (result != null && Guid.TryParse(result.ToString(), out var id)) return id;
+            return Guid.Empty;
+        }
+
         private async Task<dynamic> CallTerrainFeatures(double[] bbox, string terrainDb)
         {
             try
             {
-                var httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Add("X-Terrain-Database", terrainDb);
+                _logger.LogInformation($"Calling terrain features with terrainDb: {terrainDb}");
                 
-                var request = new { bbox = bbox };
-                var json = System.Text.Json.JsonSerializer.Serialize(request);
-                var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                if (string.IsNullOrEmpty(terrainDb))
+                {
+                    _logger.LogWarning("Terrain database path is empty for terrain features");
+                    return new { success = false, error = "Terrain database path is empty" };
+                }
+
+                var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                var normalizedTerrainDb = terrainDb.Replace('/', Path.DirectorySeparatorChar);
+                var dbPath = Path.Combine(wwwRoot, normalizedTerrainDb);
+
+                if (!System.IO.File.Exists(dbPath))
+                {
+                    _logger.LogWarning($"Terrain database not found at: {dbPath}");
+                    return new { success = false, error = "Terrain database not found" };
+                }
+
+                using var context = new Services.MapManagement.TerrainDataContext(dbPath);
+                await context.InitializeDatabaseAsync();
                 
-                var response = await httpClient.PostAsync("/api/terrain/features", content);
-                var responseJson = await response.Content.ReadAsStringAsync();
-                
-                return System.Text.Json.JsonSerializer.Deserialize<dynamic>(responseJson);
+                var datasetId = await GetTerrainDatasetIdAsync(context);
+                if (datasetId == Guid.Empty)
+                {
+                    _logger.LogWarning("No terrain dataset found in database for terrain features");
+                    return new { success = false, error = "No terrain dataset found in database" };
+                }
+
+                var features = await context.QueryTerrainFeaturesAsync(
+                    bbox[0], bbox[2], bbox[1], bbox[3], datasetId, null
+                );
+
+                var elements = features.Select(f => new
+                {
+                    id = f.OsmId,
+                    type = "way",
+                    tags = string.IsNullOrEmpty(f.TagsJson)
+                        ? new Dictionary<string, string>()
+                        : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(f.TagsJson),
+                    geometry = ParseGeometryToOverpassFormat(f.GeometryJson)
+                }).ToList();
+
+                _logger.LogInformation($"Terrain features lookup successful, returning {elements.Count} features");
+                return new { success = true, elements = elements };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error calling terrain features API");
                 return new { success = false, error = ex.Message };
+            }
+        }
+
+        private object ParseGeometryToOverpassFormat(string geometryJson)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(geometryJson))
+                    return new { type = "LineString", coordinates = new double[0][] };
+
+                var geometry = System.Text.Json.JsonSerializer.Deserialize<dynamic>(geometryJson);
+                return geometry;
+            }
+            catch
+            {
+                return new { type = "LineString", coordinates = new double[0][] };
             }
         }
 
@@ -1913,5 +2112,10 @@ namespace TechWebSol.Controllers
     public class RemoveTokenRequest
     {
         public Guid TokenId { get; set; }
+    }
+
+    public class SetTerrainDatabaseRequest
+    {
+        public string TerrainDbPath { get; set; }
     }
 }

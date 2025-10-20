@@ -9,6 +9,17 @@
 async function runMilitaryAdjudication() {
     console.log('🎯 Running military adjudication...');
     
+    // Check if terrain database is available
+    console.log('🔍 Current terrain database:', window.currentTerrainDb);
+    if (!window.currentTerrainDb) {
+        console.warn('⚠️ No terrain database available - analysis will use basic calculations');
+        if (typeof toastr !== 'undefined') {
+            toastr.warning('No terrain data available. Analysis will use basic calculations.', 'Limited Data', { timeOut: 3000 });
+        }
+    } else {
+        console.log('✅ Terrain database available:', window.currentTerrainDb);
+    }
+    
     // Show loading notification
     if (typeof toastr !== 'undefined') {
         toastr.info('Analyzing all token movements...', 'Military Adjudication');
@@ -17,13 +28,32 @@ async function runMilitaryAdjudication() {
     try {
         const response = await fetch('/GamePlay/AdjudicateAllMovements', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-Terrain-Database': window.currentTerrainDb || ''
+            }
         });
         
         const result = await response.json();
         
         if (result.success) {
             console.log('✅ Adjudication completed:', result);
+            
+            // Collect all recommendations from individual results
+            const allRecommendations = [];
+            if (result.results && Array.isArray(result.results)) {
+                result.results.forEach(tokenResult => {
+                    if (tokenResult.recommendations && Array.isArray(tokenResult.recommendations)) {
+                        allRecommendations.push(...tokenResult.recommendations);
+                    }
+                });
+            }
+            
+            // Add recommendations to summary
+            if (!result.summary) {
+                result.summary = {};
+            }
+            result.summary.recommendations = allRecommendations;
             
             // Update route visualizations on map
             updateRouteVisualizations(result.results);
@@ -217,7 +247,13 @@ function showAdjudicationResultsModal(data) {
                                 ${result.terrainAnalysis.blockageReason}
                             </div>
                         </div>
-                    ` : ''}
+                    ` : `
+                        <div style="padding: 10px; background: #00ff00; border-radius: 4px; margin-bottom: 12px; border: 2px solid #fff;">
+                            <div style="font-size: 14px; color: #000; font-weight: bold; text-align: center;">
+                                ✅ ROUTE CLEAR - MOVEMENT POSSIBLE
+                            </div>
+                        </div>
+                    `}
                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px;">
                         <div style="text-align: center;">
                             <div style="font-size: 16px; color: #ffaa00; font-weight: bold;">${result.terrainAnalysis.startElevation}m</div>
@@ -238,15 +274,19 @@ function showAdjudicationResultsModal(data) {
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px;">
                         <div style="text-align: center;">
-                            <div style="font-size: 14px; color: #ffaa00; font-weight: bold;">${result.terrainAnalysis.elevationGain}m</div>
+                            <div style="font-size: 16px; color: ${result.terrainAnalysis.elevationGain >= 0 ? '#00ff00' : '#ff6600'}; font-weight: bold;">${result.terrainAnalysis.elevationGain >= 0 ? '+' : ''}${result.terrainAnalysis.elevationGain}m</div>
                             <div style="font-size: 10px; color: #666;">Elevation Gain</div>
                         </div>
                         <div style="text-align: center;">
-                            <div style="font-size: 14px; color: #ffaa00; font-weight: bold;">${result.terrainAnalysis.difficulty}</div>
+                            <div style="font-size: 14px; color: ${result.terrainAnalysis.maxSlope > 20 ? '#ff0000' : result.terrainAnalysis.maxSlope > 10 ? '#ffaa00' : '#00ff00'}; font-weight: bold;">${result.terrainAnalysis.maxSlope}°</div>
+                            <div style="font-size: 10px; color: #666;">Max Slope</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 14px; color: ${result.terrainAnalysis.difficulty === 'High' ? '#ff0000' : result.terrainAnalysis.difficulty === 'Moderate' ? '#ffaa00' : '#00ff00'}; font-weight: bold;">${result.terrainAnalysis.difficulty}</div>
                             <div style="font-size: 10px; color: #666;">Difficulty</div>
                         </div>
                         <div style="text-align: center;">
-                            <div style="font-size: 14px; color: #ffaa00; font-weight: bold;">${result.terrainAnalysis.elevationPoints}</div>
+                            <div style="font-size: 14px; color: ${result.terrainAnalysis.elevationPoints > 50 ? '#00ff00' : result.terrainAnalysis.elevationPoints > 10 ? '#ffaa00' : '#ff0000'}; font-weight: bold;">${result.terrainAnalysis.elevationPoints}</div>
                             <div style="font-size: 10px; color: #666;">Data Points</div>
                         </div>
                     </div>
@@ -331,28 +371,6 @@ function showAdjudicationResultsModal(data) {
                     </div>
                 </div>
                 
-                <!-- Recommendations -->
-                ${result.recommendations.length > 0 ? `
-                    <div>
-                        <h5 style="color: #00ff00; font-size: 14px; margin-bottom: 10px;">Tactical Recommendations</h5>
-                        <div class="recommendations-list">
-                            ${result.recommendations.map(rec => {
-                                const priorityColor = rec.priority === 'high' ? '#ff0000' : 
-                                                     rec.priority === 'medium' ? '#ffaa00' : '#00ff00';
-                                return `
-                                    <div style="display: flex; gap: 10px; padding: 10px; background: #1a1a1a; margin: 5px 0; border-left: 3px solid ${priorityColor}; border-radius: 4px;">
-                                        <div style="color: ${priorityColor}; font-weight: bold; min-width: 60px; font-size: 11px; text-transform: uppercase;">
-                                            ${rec.priority}
-                                        </div>
-                                        <div style="color: #ccc; font-size: 12px; flex: 1;">
-                                            ${rec.message}
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-                ` : ''}
             </div>
         `;
     });
@@ -371,6 +389,32 @@ function showAdjudicationResultsModal(data) {
                 </div>
                 
                 <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <!-- Tactical Recommendations -->
+                <div class="tactical-recommendations" style="background: #1a1a1a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 2px solid #ffaa00;">
+                    <h3 style="margin: 0 0 15px 0; color: #ffaa00; font-size: 16px;">
+                        <i class="fas fa-lightbulb"></i> Tactical Recommendations
+                    </h3>
+                    <div class="recommendations-list">
+                        ${data.summary.recommendations && data.summary.recommendations.length > 0 ? 
+                            data.summary.recommendations.map(rec => {
+                                const priorityColor = rec.priority === 'high' ? '#ff0000' : 
+                                                     rec.priority === 'medium' ? '#ffaa00' : '#00ff00';
+                                return `
+                                    <div style="display: flex; gap: 10px; padding: 10px; background: #2a2a2a; margin: 5px 0; border-left: 3px solid ${priorityColor}; border-radius: 4px;">
+                                        <div style="color: ${priorityColor}; font-weight: bold; min-width: 60px; font-size: 11px; text-transform: uppercase;">
+                                            ${rec.priority}
+                                        </div>
+                                        <div style="color: #ccc; font-size: 12px; flex: 1;">
+                                            ${rec.message}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('') : 
+                            '<div style="color: #666; font-size: 12px; text-align: center; padding: 20px;">No specific recommendations at this time.</div>'
+                        }
+                    </div>
+                </div>
+                
                 <!-- Executive Summary -->
                 <div class="executive-summary" style="background: #1a1a1a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 2px solid #00ff00;">
                     <h3 style="margin: 0 0 15px 0; color: #00ff00; font-size: 16px;">

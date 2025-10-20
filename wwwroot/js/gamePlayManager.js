@@ -939,8 +939,10 @@ class GamePlayManager {
                     if (maps.length > 0) {
                         const defaultMap = maps[0].path;
                         console.log(`🗺️ Auto-loading default map: ${defaultMap}`);
+                        console.log('🔍 About to call switchGamePlayMap for auto-load...');
                         selector.value = defaultMap;
                         await window.switchGamePlayMap(defaultMap);
+                        console.log('🔍 switchGamePlayMap auto-load completed');
                     }
                 } else {
                     selector.innerHTML = '<option value="">No offline maps available</option>';
@@ -958,6 +960,50 @@ class GamePlayManager {
             }
         } finally {
             this.isLoadingMapSelector = false;
+        }
+    }
+
+    /**
+     * Load terrain database for the current map
+     * @param {string} mapPath - Path to MBTiles file (e.g., "job-123/map.mbtiles")
+     */
+    async loadTerrainDatabase(mapPath) {
+        try {
+            // Extract folder name from path
+            const folderName = mapPath.split('/')[0];
+            console.log(`🗺️ Loading terrain database for folder: ${folderName}`);
+            
+            // Find terrain database with matching folder
+            const terrainResponse = await fetch('/terrain/list');
+            const terrainFiles = await terrainResponse.json();
+            
+            console.log('🔍 Available terrain files:', terrainFiles);
+            console.log('🔍 Looking for mapFolder:', folderName);
+            
+            const terrainDb = terrainFiles.find(f => f.mapFolder === folderName);
+            
+            if (terrainDb) {
+                // Store globally for use in adjudication
+                window.currentTerrainDb = terrainDb.path;
+                
+                // Also set in session on server-side
+                await fetch('/GamePlay/SetTerrainDatabase', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ terrainDbPath: terrainDb.path })
+                });
+                
+                console.log(`✅ Terrain database loaded: ${terrainDb.path}`);
+                this.log(`Terrain data loaded for ${folderName}`, true);
+            } else {
+                window.currentTerrainDb = null;
+                console.warn(`⚠️ No terrain database found for folder: ${folderName}`);
+                console.warn('Available mapFolders:', terrainFiles.map(f => f.mapFolder));
+                this.log('⚠️ No terrain data available for this map', false);
+            }
+        } catch (error) {
+            console.error('❌ Failed to load terrain database:', error);
+            window.currentTerrainDb = null;
         }
     }
 
@@ -1348,6 +1394,7 @@ window.switchGamePlayMap = async function(mapPath) {
     if (!mapPath) return;
     
     console.log('🗺️ Switching to map:', mapPath);
+    console.log('🔍 switchGamePlayMap called with mapPath:', mapPath);
     
     // Show loading overlay
     const loadingOverlay = document.createElement('div');
@@ -1476,6 +1523,16 @@ window.switchGamePlayMap = async function(mapPath) {
         // Update map zoom limits
         window.gameMap.setMinZoom(minZoom);
         window.gameMap.setMaxZoom(maxZoom);
+        
+        // Load terrain database for this map
+        console.log('🔍 About to call loadTerrainDatabase with mapPath:', mapPath);
+        if (window.gamePlayManager) {
+            console.log('🔍 gamePlayManager exists, calling loadTerrainDatabase...');
+            await window.gamePlayManager.loadTerrainDatabase(mapPath);
+            console.log('🔍 loadTerrainDatabase call completed');
+        } else {
+            console.warn('⚠️ gamePlayManager not found, cannot load terrain database');
+        }
         
         // Create new tile layer with BALANCED settings (performance + reliability)
         // Use TileServerConfig to get the correct tile URL based on mode
