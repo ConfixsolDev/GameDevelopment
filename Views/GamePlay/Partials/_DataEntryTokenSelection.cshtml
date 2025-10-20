@@ -1,54 +1,59 @@
 @model List<Token>
 
-<!-- Data Entry Token Selection Modal - Exact copy of place token modal styling -->
-<div id="dataEntryTokenModal" class="gameplay-modal" style="display: none;">
-    <div class="gameplay-modal-content">
-        <div class="gameplay-modal-header">
-            <h3><i class="fas fa-database"></i> Click Token to Enter Data</h3>
-            <button class="gameplay-modal-close" onclick="closeDataEntryTokenModal()">&times;</button>
-        </div>
-        <div class="gameplay-modal-body">
-            <div class="token-selection-container">
-                <div class="token-search-container">
-                    <input type="text" id="tokenSearchInput" placeholder="Search tokens..." class="form-control" />
-                </div>
-                <div id="tokenSelectionGrid" class="token-selection-grid">
-                    @if (Model != null && Model.Any())
-                    {
-                        @foreach (var token in Model)
+<!-- Data Entry Token Selection Modal - Bootstrap Modal -->
+<div class="modal fade" id="dataEntryTokenModal" tabindex="-1" role="dialog" aria-labelledby="dataEntryTokenModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dataEntryTokenModalLabel">
+                    <i class="fas fa-database"></i> Click Token to Enter Data
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="token-selection-container">
+                    <div class="token-search-container">
+                        <input type="text" id="tokenSearchInput" placeholder="Search tokens..." class="form-control" />
+                    </div>
+                    <div id="tokenSelectionGrid" class="token-selection-grid">
+                        @if (Model != null && Model.Any())
                         {
-                            <div class="token-selection-card" onclick="selectTokenForDataEntry('@token.Id', '@token.Name')" data-token-id="@token.Id">
-                                <div class="token-status-indicator created"></div>
-                                @if (!string.IsNullOrEmpty(token.AssetImagePath))
-                                {
-                                    <img src="@token.AssetImagePath" alt="@token.Name" class="token-card-image" title="@token.Name" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    <div class="token-placeholder" style="display:none;">
-                                        <i class="fas fa-crosshairs"></i>
-                                    </div>
+                            @foreach (var token in Model)
+                            {
+                                <div class="token-selection-card" onclick="selectTokenForDataEntry('@token.Id', '@token.Name')" data-token-id="@token.Id">
+                                    <div class="token-status-indicator created"></div>
+                                    @if (!string.IsNullOrEmpty(token.AssetImagePath))
+                                    {
+                                        <img src="@token.AssetImagePath" alt="@token.Name" class="token-card-image" title="@token.Name" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="token-placeholder" style="display:none;">
+                                            <i class="fas fa-crosshairs"></i>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="token-placeholder">
+                                            <i class="fas fa-crosshairs"></i>
+                                        </div>
+                                    }
                                     <div class="token-name-overlay">@token.Name</div>
-                                }
-                                else
-                                {
-                                    <div class="token-placeholder">
-                                        <i class="fas fa-crosshairs"></i>
-                                    </div>
-                                    <div class="token-name-overlay">@token.Name</div>
-                                }
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="loading-tokens">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <p>No tokens found for your team.</p>
                             </div>
                         }
-                    }
-                    else
-                    {
-                        <div class="loading-tokens">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <p>No tokens found for your team.</p>
-                        </div>
-                    }
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="gameplay-modal-footer">
-            <button class="gameplay-btn" onclick="closeDataEntryTokenModal()">Cancel</button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
         </div>
     </div>
 </div>
@@ -57,7 +62,7 @@
 // Close data entry token modal function
 function closeDataEntryTokenModal() {
     console.log('🔒 Closing data entry token modal');
-    document.getElementById('dataEntryTokenModal').style.display = 'none';
+    $('#dataEntryTokenModal').modal('hide');
 }
 
 // Token search functionality - using same approach as place token modal

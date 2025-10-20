@@ -1,30 +1,36 @@
-<!-- Token Selection Modal for Placing Tokens -->
-<div id="tokenSelectionModal" class="gameplay-modal" style="display: none;">
-    <div class="gameplay-modal-content">
-        <div class="gameplay-modal-header">
-            <h3><i class="fas fa-crosshairs"></i> Click Token to Place on Map</h3>
-            <button class="gameplay-modal-close" onclick="closeTokenSelectionModal()">&times;</button>
-        </div>
-        <div class="gameplay-modal-body">
-            <div class="token-selection-container">
-                <div class="token-tabs">
-                    <button type="button" id="tokenTabAvailable" class="token-tab active">Available</button>
-                    <button type="button" id="tokenTabPlaced" class="token-tab">Placed</button>
-                </div>
-                <div class="token-search-container">
-                    <input type="text" id="tokenSearchInput" placeholder="Search tokens..." class="form-control" />
-                </div>
-                <div id="tokenSelectionGrid" class="token-selection-grid">
-                    <!-- Token options will be populated here -->
-                    <div class="loading-tokens">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <p>Loading available tokens...</p>
+<!-- Token Selection Modal for Placing Tokens - Bootstrap Modal -->
+<div class="modal fade" id="tokenSelectionModal" tabindex="-1" role="dialog" aria-labelledby="tokenSelectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="tokenSelectionModalLabel">
+                    <i class="fas fa-crosshairs"></i> Click Token to Place on Map
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="token-selection-container">
+                    <div class="token-tabs">
+                        <button type="button" id="tokenTabAvailable" class="token-tab active">Available</button>
+                        <button type="button" id="tokenTabPlaced" class="token-tab">Placed</button>
+                    </div>
+                    <div class="token-search-container">
+                        <input type="text" id="tokenSearchInput" placeholder="Search tokens..." class="form-control" />
+                    </div>
+                    <div id="tokenSelectionGrid" class="token-selection-grid">
+                        <!-- Token options will be populated here -->
+                        <div class="loading-tokens">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading available tokens...</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="gameplay-modal-footer">
-            <button class="gameplay-btn" onclick="closeTokenSelectionModal()">Cancel</button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
         </div>
     </div>
 </div>

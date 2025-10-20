@@ -974,22 +974,20 @@ class TokenManager {
     }
 
     /**
-     * Open modal utility
+     * Open modal utility - Bootstrap Modal
      */
     openModal(modalId) {
         const modal = document.getElementById(modalId);
         if (modal) {
-            modal.style.display = 'block';
-            document.body.classList.add('modal-open');
+            $(`#${modalId}`).modal('show');
             console.log(`✅ Modal opened: ${modalId}`);
         } else {
             // Try camelCase version
             const camelCaseId = modalId.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
             const camelModal = document.getElementById(camelCaseId);
             if (camelModal) {
-                camelModal.style.display = 'block';
-                document.body.classList.add('modal-open');
-                console.log(`✅ Modal opened: ${camelCaseId}`);
+                $(`#${camelCaseId}`).modal('show');
+                console.log(`✅ Modal opened (camelCase): ${camelCaseId}`);
             } else {
                 console.error(`❌ Modal not found: ${modalId} or ${camelCaseId}`);
             }
@@ -997,22 +995,20 @@ class TokenManager {
     }
 
     /**
-     * Close modal utility
+     * Close modal utility - Bootstrap Modal
      */
     closeModal(modalId) {
         const modal = document.getElementById(modalId);
         if (modal) {
-            modal.style.display = 'none';
-            document.body.classList.remove('modal-open');
+            $(`#${modalId}`).modal('hide');
             console.log(`✅ Modal closed: ${modalId}`);
         } else {
             // Try camelCase version
             const camelCaseId = modalId.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
             const camelModal = document.getElementById(camelCaseId);
             if (camelModal) {
-                camelModal.style.display = 'none';
-                document.body.classList.remove('modal-open');
-                console.log(`✅ Modal closed: ${camelCaseId}`);
+                $(`#${camelCaseId}`).modal('hide');
+                console.log(`✅ Modal closed (camelCase): ${camelCaseId}`);
             } else {
                 console.error(`❌ Modal not found: ${modalId} or ${camelCaseId}`);
             }

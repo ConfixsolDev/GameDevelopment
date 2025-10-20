@@ -1336,15 +1336,9 @@ function openDataEntry() {
             // Add the new modal to the body
             $('body').append(data);
             
-            // Show the modal using same method as place token modal
-            const modal = document.getElementById('dataEntryTokenModal');
-            if (modal) {
-                modal.style.display = 'flex';
-                console.log('✅ Data entry modal loaded and displayed successfully');
-            } else {
-                console.error('❌ Modal element not found after append');
-                console.error('Error: Modal element not found');
-            }
+            // Show the modal using Bootstrap modal method
+            $('#dataEntryTokenModal').modal('show');
+            console.log('✅ Data entry modal loaded and displayed successfully');
         },
         error: function(xhr, status, error) {
             console.error('❌ Error loading data entry modal:');
