@@ -180,13 +180,59 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var attackorderlist =  _context.EnhancedAttackOrders
-                    .Where(o => o.AttackerTokenId != Guid.Empty && o.TargetTokenId != Guid.Empty )
-                    .Select(o => new
+                IEnumerable<object> attackOrders;
+
+                if (user.TeamId != Guid.Empty && user.TeamId != null)
+                {
+                    // Team users: Show attack orders with their team's suspected tokens
+                    var attackorderlist = _context.EnhancedAttackOrders
+                                                .Where(o => o.AttackerTokenId != Guid.Empty && o.TargetTokenId != Guid.Empty )
+                                                .Where(x => x.TeamId == user.TeamId)
+                                                .Select(o => new
+                                                {
+                                                    Id = o.Id,
+                                                    AttackerTokenId = o.AttackerTokenId,
+                                                    TargetTokenId = o.TargetTokenId,
+                                                    IntentJson = o.IntentJson,
+                                                    TimingJson = o.TimingJson,
+                                                    MovementJson = o.MovementJson,
+                                                    FiresJson = o.FiresJson,
+                                                    FogOfWarJson = o.FogOfWarJson,
+                                                    LogisticsJson = o.LogisticsJson,
+                                                    ROEJson = o.ROEJson,
+                                                    CreatedDate = o.CreatedDate,
+                                                    UpdatedDate = o.UpdatedDate,
+                                                    TeamId = o.TeamId
+                                                });
+                    
+                    attackOrders = await attackorderlist.ToListAsync();
+                }
+                else
+                {
+                    // Control users: Map suspected tokens to their real/original tokens
+                    _logger.LogInformation("Control user accessing attack orders - mapping suspected tokens to real tokens");
+                    
+                    var allAttackOrders = await _context.EnhancedAttackOrders
+                                                .Where(o => o.AttackerTokenId != Guid.Empty && o.TargetTokenId != Guid.Empty)
+                                                .ToListAsync();
+                    
+                    // Get all suspected token mappings to real tokens
+                    var suspectedTokenMappings = await _context.SuspectedTokens
+                                                .Where(st => st.RealToken != null && st.RealTokenId != Guid.Empty)
+                                                .Select(st => new { st.Id, st.RealTokenId })
+                                                .ToDictionaryAsync(x => x.Id, x => x.RealTokenId);
+                    
+                    // Map attack orders to use real tokens instead of suspected tokens
+                    attackOrders = allAttackOrders.Select(o => new
                     {
                         Id = o.Id,
-                        AttackerTokenId = o.AttackerTokenId,
-                        TargetTokenId = o.TargetTokenId,
+                        // Map suspected token IDs to real token IDs for Control
+                        AttackerTokenId = suspectedTokenMappings.ContainsKey(o.AttackerTokenId) 
+                                        ? suspectedTokenMappings[o.AttackerTokenId] 
+                                        : o.AttackerTokenId,
+                        TargetTokenId = suspectedTokenMappings.ContainsKey(o.TargetTokenId) 
+                                      ? suspectedTokenMappings[o.TargetTokenId] 
+                                      : o.TargetTokenId,
                         IntentJson = o.IntentJson,
                         TimingJson = o.TimingJson,
                         MovementJson = o.MovementJson,
@@ -197,14 +243,11 @@ namespace TechWebSol.Controllers
                         CreatedDate = o.CreatedDate,
                         UpdatedDate = o.UpdatedDate,
                         TeamId = o.TeamId
-                    })
-                    .AsQueryable();
-
-                if (user.TeamId != Guid.Empty && user.TeamId != null)
-                {
-                    attackorderlist = attackorderlist.Where(x => x.TeamId == user.TeamId).AsQueryable();
+                    }).ToList();
+                    
+                    _logger.LogInformation($"Control user: Mapped {allAttackOrders.Count} attack orders with real token IDs");
                 }
-                var attackOrders = await attackorderlist.ToListAsync();
+
                 return Json(new { success = true, attackOrders });
             }
             catch (Exception ex)

@@ -1773,6 +1773,7 @@ class TokenPlacementManager {
 
     /**
      * Create 4-sided polygon from front/rear/side radius values
+     * Now creates an oval/elliptical shape with more points for smoother appearance
      */
     create4SidedPolygon(centerLatLng, frontKm, rearKm, sideKm, rotationDegrees, fillColor, strokeColor, opacity = 0.2) {
         // Convert km to degrees (approximate)
@@ -1783,16 +1784,80 @@ class TokenPlacementManager {
         // Calculate rotation in radians
         const rotationRad = (rotationDegrees * Math.PI) / 180;
         
-        // Create 4 points for diamond/rhombus shape
-        const points = [
-            // Front point (North)
-            [centerLatLng.lat + frontDegrees, centerLatLng.lng],
-            // Right side point (East)
-            [centerLatLng.lat, centerLatLng.lng + sideDegrees],
-            // Rear point (South)
-            [centerLatLng.lat - rearDegrees, centerLatLng.lng],
-            // Left side point (West)
-            [centerLatLng.lat, centerLatLng.lng - sideDegrees]
+        // Create oval/elliptical shape with multiple points for smoother curves
+        const numPoints = 32; // More points = smoother oval
+        const points = [];
+        
+        for (let i = 0; i < numPoints; i++) {
+            const angle = (i / numPoints) * 2 * Math.PI;
+            
+            // Use different radii for front/rear to create elongated oval
+            let radiusLat, radiusLng;
+            
+            // Front half (0 to PI)
+            if (angle <= Math.PI) {
+                radiusLat = frontDegrees * Math.sin(angle);
+                radiusLng = sideDegrees * Math.cos(angle);
+            } else {
+                // Rear half (PI to 2*PI)
+                radiusLat = rearDegrees * Math.sin(angle);
+                radiusLng = sideDegrees * Math.cos(angle);
+            }
+            
+            let lat = centerLatLng.lat + radiusLat;
+            let lng = centerLatLng.lng + radiusLng;
+            
+            // Apply rotation if needed
+            if (rotationRad !== 0) {
+                const cos = Math.cos(rotationRad);
+                const sin = Math.sin(rotationRad);
+                const x = lng - centerLatLng.lng;
+                const y = lat - centerLatLng.lat;
+                
+                const rotatedX = x * cos - y * sin;
+                const rotatedY = x * sin + y * cos;
+                
+                lat = centerLatLng.lat + rotatedY;
+                lng = centerLatLng.lng + rotatedX;
+            }
+            
+            points.push([lat, lng]);
+        }
+        
+        // Create the main polygon
+        const polygon = L.polygon(points, {
+            color: strokeColor,
+            fillColor: fillColor,
+            fillOpacity: opacity,
+            opacity: 0.6,
+            weight: 2
+        }).addTo(this.map);
+        
+        // Add parallel lines (||) on the sides for Blue Land tokens
+        if (fillColor === '#0000ff' || strokeColor === '#0000cc') {
+            this.addParallelLinesToOval(centerLatLng, sideDegrees, frontDegrees, rearDegrees, rotationRad, strokeColor);
+        }
+        
+        return polygon;
+    }
+    
+    /**
+     * Add parallel lines (||) decoration on the front side of the oval for Blue Land tokens
+     * Returns array of polyline layers for cleanup
+     */
+    addParallelLinesToOval(centerLatLng, sideDegrees, frontDegrees, rearDegrees, rotationRad, strokeColor) {
+        const lineSpacing = frontDegrees * 0.1; // Space between the two parallel lines
+        const lineWidth = sideDegrees * 0.6; // Width of the parallel lines
+        
+        // Position at the front (north) of the oval
+        const frontPosition = centerLatLng.lat + frontDegrees * 0.75; // 75% towards front edge
+        
+        // Create two horizontal parallel lines at the front
+        const lines = [
+            // First line (outer/front)
+            [[frontPosition, centerLatLng.lng - lineWidth/2], [frontPosition, centerLatLng.lng + lineWidth/2]],
+            // Second line (inner, slightly behind the first)
+            [[frontPosition - lineSpacing, centerLatLng.lng - lineWidth/2], [frontPosition - lineSpacing, centerLatLng.lng + lineWidth/2]]
         ];
         
         // Apply rotation if needed
@@ -1800,26 +1865,33 @@ class TokenPlacementManager {
             const cos = Math.cos(rotationRad);
             const sin = Math.sin(rotationRad);
             
-            points.forEach(point => {
-                const x = point[1] - centerLatLng.lng; // lng offset
-                const y = point[0] - centerLatLng.lat; // lat offset
-            
-            // Apply rotation
-                const rotatedX = x * cos - y * sin;
-                const rotatedY = x * sin + y * cos;
-                
-                point[0] = centerLatLng.lat + rotatedY;
-                point[1] = centerLatLng.lng + rotatedX;
+            lines.forEach(line => {
+                line.forEach(point => {
+                    const x = point[1] - centerLatLng.lng;
+                    const y = point[0] - centerLatLng.lat;
+                    
+                    const rotatedX = x * cos - y * sin;
+                    const rotatedY = x * sin + y * cos;
+                    
+                    point[0] = centerLatLng.lat + rotatedY;
+                    point[1] = centerLatLng.lng + rotatedX;
+                });
             });
         }
         
-        return L.polygon(points, {
-            color: strokeColor,
-            fillColor: fillColor,
-            fillOpacity: opacity,
-            opacity: 0.6,
-            weight: 2
-        }).addTo(this.map);
+        // Draw the parallel lines and store references
+        const polylines = [];
+        lines.forEach(lineCoords => {
+            const polyline = L.polyline(lineCoords, {
+                color: strokeColor,
+                weight: 2,
+                opacity: 0.8
+            }).addTo(this.map);
+            polylines.push(polyline);
+        });
+        
+        console.log('✅ Added parallel lines (||) decoration to front of Blue Land coverage area');
+        return polylines;
     }
 
 	/**

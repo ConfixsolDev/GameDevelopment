@@ -1418,7 +1418,7 @@ namespace TechWebSol.Controllers
                             }).ToList()
                     }).AsQueryable();
 
-                if (user.TeamId != null)
+                if (user.TeamId != Guid.Empty && user.TeamId != null)
                 {
                     placedTokensvar = placedTokensvar.Where(t => t.TeamId == user.TeamId && t.isActive);
                 }
