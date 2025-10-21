@@ -10,7 +10,7 @@ using TechWebSol.ViewModels;
 
 namespace TechWebSol.Controllers
 {
-    [AuthorizeDynamic]
+    [Authorize]
     public class DataManagementController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -99,11 +99,11 @@ namespace TechWebSol.Controllers
                         .FirstOrDefaultAsync(c => c.TokenId == tokenId && c.BrigadeId == existingBrigade.Id && c.TeamId == user.TeamId && c.IsActive);
                 }
 
-                // Load Reconnaissance (not tied to brigade)
-                viewModel.ExistingRecon = await _context.Recon
-                    .Where(r => r.TokenId == tokenId && r.TeamId == user.TeamId && r.IsActive)
-                    .OrderByDescending(r => r.CreatedDate)
-                    .ToListAsync();
+                //// Load Reconnaissance (not tied to brigade)
+                //viewModel.ExistingRecon = await _context.Recon
+                //    .Where(r => r.TokenId == tokenId && r.TeamId == user.TeamId && r.IsActive)
+                //    .OrderByDescending(r => r.CreatedDate)
+                //    .ToListAsync();
 
                 return PartialView("Partials/_TokenDataEntryForm", viewModel);
             }

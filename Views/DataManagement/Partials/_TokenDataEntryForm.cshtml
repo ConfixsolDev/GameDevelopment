@@ -1,14 +1,19 @@
 @using static TechWebSol.Controllers.DataManagementController
 @model TokenDataEntryViewModel
 
-<!-- Token Data Entry Form Modal - Simple and Clean -->
-<div id="tokenDataEntryModal" class="gameplay-modal" style="display: none;">
-    <div class="gameplay-modal-content">
-        <div class="gameplay-modal-header">
-            <h3><i class="fas fa-database"></i> Data Entry - @Model.Token.Name</h3>
-            <button class="gameplay-modal-close" onclick="closeTokenDataEntryModal()">&times;</button>
-        </div>
-        <div class="gameplay-modal-body">
+<!-- Token Data Entry Form Modal - Simple and Clean - Bootstrap Modal -->
+<div class="modal fade" id="tokenDataEntryModal" tabindex="-1" role="dialog" aria-labelledby="tokenDataEntryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="tokenDataEntryModalLabel">
+                    <i class="fas fa-database"></i> Data Entry - @Model.Token.Name
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
             <div class="data-entry-container">
                 <!-- Data Entry Form -->
                 <div class="data-entry-form-section">
@@ -332,9 +337,12 @@
                 </div>
             </div>
         </div>
-        <div class="gameplay-modal-footer">
-            <button class="gameplay-btn" onclick="closeTokenDataEntryModal()">Close</button>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                <i class="fas fa-times"></i> Close
+            </button>
         </div>
+    </div>
     </div>
 </div>
 
@@ -658,10 +666,10 @@ hr {
 </style>
 
 <script>
-// Close token data entry modal
+// Close token data entry modal - Bootstrap Modal API
 function closeTokenDataEntryModal() {
     console.log('🔒 Closing token data entry modal');
-    document.getElementById('tokenDataEntryModal').style.display = 'none';
+    $('#tokenDataEntryModal').modal('hide');
 }
 
 // Show different data tabs
@@ -720,8 +728,10 @@ function createNewBrigadeData(tokenId) {
             // Add the new modal to the body
             $('body').append(data);
             
-            // Show the modal
-            document.getElementById('newBrigadeDataEntryModal').style.display = 'flex';
+            // Show the modal using Bootstrap modal API
+            setTimeout(() => {
+                $('#newBrigadeDataEntryModal').modal('show');
+            }, 100);
             
             console.log('✅ New brigade form displayed successfully');
         },
@@ -828,8 +838,10 @@ function loadSingleUnitForm(unitType, tokenId, brigadeId) {
             // Add the new modal to the body
             $('body').append(data);
             
-            // Show the modal
-            document.getElementById('singleUnitModal').style.display = 'flex';
+            // Show the modal using Bootstrap modal API
+            setTimeout(() => {
+                $('#singleUnitModal').modal('show');
+            }, 100);
             
             console.log('✅ Single unit form displayed successfully');
         },

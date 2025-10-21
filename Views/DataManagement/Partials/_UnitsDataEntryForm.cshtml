@@ -1,14 +1,19 @@
 @using static TechWebSol.Controllers.DataManagementController
 @model UnitsDataEntryViewModel
 
-<!-- Units Data Entry Form Modal -->
-<div id="unitsDataEntryModal" class="gameplay-modal" style="display: none;">
-    <div class="gameplay-modal-content large-modal">
-        <div class="gameplay-modal-header">
-            <h3><i class="fas fa-users"></i> Add Units to Brigade: @Model.Brigade.BrigadeCode (@Model.Token.Name)</h3>
-            <button class="gameplay-modal-close" onclick="closeUnitsDataEntryModal()">&times;</button>
-        </div>
-        <div class="gameplay-modal-body">
+<!-- Units Data Entry Form Modal - Bootstrap Modal -->
+<div class="modal fade" id="unitsDataEntryModal" tabindex="-1" role="dialog" aria-labelledby="unitsDataEntryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="unitsDataEntryModalLabel">
+                    <i class="fas fa-users"></i> Add Units to Brigade: @Model.Brigade.BrigadeCode (@Model.Token.Name)
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
             <!-- Hidden fields -->
             <input type="hidden" id="tokenId" value="@Model.Token.Id" />
             <input type="hidden" id="brigadeId" value="@Model.Brigade.Id" />
@@ -1577,11 +1582,12 @@
             </div>
         </div>
         
-        <div class="gameplay-modal-footer">
-            <button class="gameplay-btn gameplay-btn-success" onclick="closeUnitsDataEntryModal()">
+        <div class="modal-footer">
+            <button type="button" class="btn btn-success" onclick="closeUnitsDataEntryModal()">
                 <i class="fas fa-check"></i> Done Adding Units
             </button>
         </div>
+    </div>
     </div>
 </div>
 
@@ -1592,7 +1598,7 @@
     max-height: 90vh;
 }
 
-.gameplay-modal-body {
+.modal-body {
     max-height: 70vh;
     overflow-y: auto;
 }
@@ -1814,10 +1820,10 @@
 </style>
 
 <script>
-// Close units data entry modal
+// Close units data entry modal - Bootstrap Modal API
 function closeUnitsDataEntryModal() {
     console.log('🔒 Closing units data entry modal');
-    document.getElementById('unitsDataEntryModal').style.display = 'none';
+    $('#unitsDataEntryModal').modal('hide');
 }
 
 // Show different unit tabs

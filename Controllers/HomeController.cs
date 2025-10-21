@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using TechWebSol.Filters;
 using TechWebSol.ViewModels;
 
 namespace TechWebSol.Controllers
 {
-    [Authorize]
+    [AuthorizeDynamic]
     public class HomeController : Controller
     {
         public IActionResult Index()

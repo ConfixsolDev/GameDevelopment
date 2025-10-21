@@ -260,8 +260,8 @@ window.initializeAttackPlanning = function(attackerTokenId, targetTokenId, attac
     document.getElementById('attackerName').textContent = attackerName || 'Unknown';
     document.getElementById('targetName').textContent = targetName || 'Unknown';
     
-    // Show modal
-    document.getElementById('attackPlanningModal').style.display = 'block';
+    // Show modal using Bootstrap modal API
+    $('#attackPlanningModal').modal('show');
     
     // Load first tab
     switchAttackTab('intent');
@@ -429,8 +429,8 @@ window.closeAttackPlanningModal = function() {
         clearInterval(currentAttackOrder.autoSaveInterval);
     }
     
-    // Hide modal
-    document.getElementById('attackPlanningModal').style.display = 'none';
+    // Hide modal using Bootstrap modal API
+    $('#attackPlanningModal').modal('hide');
     
     // Reset state
     currentAttackOrder = {

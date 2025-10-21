@@ -11,7 +11,7 @@ using TechWebSol.ViewModels;
 
 namespace TechWebSol.Controllers
 {
-    [AuthorizeDynamic]
+    [Authorize]
     public class GamePlayController : Controller
     {
         private readonly ApplicationDbContext _context;

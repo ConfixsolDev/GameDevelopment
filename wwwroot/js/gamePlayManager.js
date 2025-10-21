@@ -902,10 +902,17 @@ class GamePlayManager {
             const selector = document.getElementById('mapSelector');
             
             if (!selector) {
-                console.warn('⚠️ Map selector element not found - will retry later');
+                console.warn('⚠️ Map selector element not found');
                 this.isLoadingMapSelector = false;
-                // Retry after a delay
-                setTimeout(() => this.loadMapSelector(), 1000);
+                // Don't retry infinitely - element may not exist on this page
+                if (!this.mapSelectorRetryCount) this.mapSelectorRetryCount = 0;
+                if (this.mapSelectorRetryCount < 3) {
+                    this.mapSelectorRetryCount++;
+                    console.log(`⚠️ Retry attempt ${this.mapSelectorRetryCount}/3`);
+                    setTimeout(() => this.loadMapSelector(), 1000);
+                } else {
+                    console.log('⚠️ Map selector not found after 3 retries - stopping');
+                }
                 return;
             }
             

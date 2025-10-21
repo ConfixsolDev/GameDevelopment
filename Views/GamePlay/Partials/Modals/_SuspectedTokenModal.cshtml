@@ -1,11 +1,16 @@
-<!-- Suspected Token Placement Modal (Fog of War Intelligence) -->
-<div id="suspectedTokenModal" class="gameplay-modal" style="display: none;">
-    <div class="gameplay-modal-content">
-        <div class="gameplay-modal-header">
-            <h3><i class="fas fa-crosshairs"></i> Add Enemy Token</h3>
-            <button class="gameplay-modal-close" onclick="closeSuspectedTokenModal()">&times;</button>
-        </div>
-        <div class="gameplay-modal-body">
+<!-- Suspected Token Placement Modal (Fog of War Intelligence) - Bootstrap Modal -->
+<div class="modal fade" id="suspectedTokenModal" tabindex="-1" role="dialog" aria-labelledby="suspectedTokenModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="suspectedTokenModalLabel">
+                    <i class="fas fa-crosshairs"></i> Add Enemy Token
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
             <div class="suspected-token-form">
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle"></i>
@@ -60,40 +65,52 @@
                     <textarea id="suspectedTokenNotes" class="form-control" rows="3" placeholder="Additional intelligence details..."></textarea>
                 </div>
 
-                <div class="form-actions">
-                    <button class="gameplay-btn gameplay-btn-primary" onclick="startSuspectedTokenPlacement()">
-                        <i class="fas fa-crosshairs"></i> Click Map to Place
-                    </button>
-                    <button class="gameplay-btn" onclick="closeSuspectedTokenModal()">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
                 </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-primary" onclick="startSuspectedTokenPlacement()">
+                    <i class="fas fa-crosshairs"></i> Click Map to Place
+                </button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Suspected Tokens List Modal -->
-<div id="suspectedTokensListModal" class="gameplay-modal" style="display: none;">
-    <div class="gameplay-modal-content">
-        <div class="gameplay-modal-header">
-            <h3><i class="fas fa-list-ul"></i> Enemy Tokens Management</h3>
-            <button class="gameplay-modal-close" onclick="closeSuspectedTokensListModal()">&times;</button>
-        </div>
-        <div class="gameplay-modal-body">
-            <div class="suspected-tokens-list-container">
-                <div class="list-header">
-                    <input type="text" id="suspectedTokenSearch" class="form-control" placeholder="Search enemy tokens..." />
-                    <button class="gameplay-btn gameplay-btn-primary" onclick="closeSuspectedTokensListModal(); openSuspectedTokenModal();">
-                        <i class="fas fa-plus-circle"></i> Add New
-                    </button>
-                </div>
-                <div id="suspectedTokensList" class="suspected-tokens-list">
-                    <div class="loading-tokens">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <p>Loading enemy tokens...</p>
+<!-- Suspected Tokens List Modal - Bootstrap Modal -->
+<div class="modal fade" id="suspectedTokensListModal" tabindex="-1" role="dialog" aria-labelledby="suspectedTokensListModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="suspectedTokensListModalLabel">
+                    <i class="fas fa-list-ul"></i> Enemy Tokens Management
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="suspected-tokens-list-container">
+                    <div class="list-header" style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <input type="text" id="suspectedTokenSearch" class="form-control" placeholder="Search enemy tokens..." style="flex: 1;" />
+                        <button type="button" class="btn btn-primary" onclick="$('#suspectedTokensListModal').modal('hide'); $('#suspectedTokenModal').modal('show');">
+                            <i class="fas fa-plus-circle"></i> Add New
+                        </button>
+                    </div>
+                    <div id="suspectedTokensList" class="suspected-tokens-list">
+                        <div class="loading-tokens">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading enemy tokens...</p>
+                        </div>
                     </div>
                 </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Close
+                </button>
             </div>
         </div>
     </div>

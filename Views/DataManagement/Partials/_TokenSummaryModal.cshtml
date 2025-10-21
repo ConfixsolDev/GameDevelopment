@@ -319,7 +319,10 @@
                 console.log('✅ Direct data entry form loaded for token:', tokenId);
                 $('#tokenDataEntryModal').remove();
                 $('body').append(data);
-                document.getElementById('tokenDataEntryModal').style.display = 'flex';
+                // Add slight delay for DOM rendering before showing modal
+                setTimeout(() => {
+                    $('#tokenDataEntryModal').modal('show');
+                }, 100);
             },
             error: function(xhr, status, error) {
                 console.error('❌ Error loading direct data entry form:', error);

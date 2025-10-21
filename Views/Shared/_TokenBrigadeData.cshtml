@@ -1,14 +1,21 @@
-<!-- Token Brigade Data Entry Partial View -->
-<div id="tokenBrigadeDataModal" class="gameplay-modal">
-    <div class="gameplay-modal-content extra-large">
-        <div class="gameplay-modal-header">
-            <h3><i class="fas fa-flag"></i> Brigade Data Entry</h3>
-            <div class="token-info">
-                <span id="selectedTokenName">Token Name</span> - <span id="selectedTokenId">Token ID</span>
+<!-- Token Brigade Data Entry Partial View - Bootstrap Modal -->
+<div class="modal fade" id="tokenBrigadeDataModal" tabindex="-1" role="dialog" aria-labelledby="tokenBrigadeDataModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div style="flex: 1;">
+                    <h5 class="modal-title" id="tokenBrigadeDataModalLabel">
+                        <i class="fas fa-flag"></i> Brigade Data Entry
+                    </h5>
+                    <div class="token-info" style="font-size: 14px; color: #888; margin-top: 5px;">
+                        <span id="selectedTokenName">Token Name</span> - <span id="selectedTokenId">Token ID</span>
+                    </div>
+                </div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
-            <button class="gameplay-modal-close" onclick="closeTokenBrigadeModal()">&times;</button>
-        </div>
-        <div class="gameplay-modal-body">
+            <div class="modal-body">
             <!-- Brigade Data Tabs -->
             <div class="brigade-data-tabs">
                 <div class="tab-buttons">
@@ -217,12 +224,15 @@
                 </div>
             </div>
         </div>
-        <div class="gameplay-modal-footer">
-            <button class="gameplay-btn" onclick="closeTokenBrigadeModal()">Close</button>
-            <button class="gameplay-btn primary" onclick="saveAllBrigadeData()">
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                <i class="fas fa-times"></i> Close
+            </button>
+            <button type="button" class="btn btn-primary" onclick="saveAllBrigadeData()">
                 <i class="fas fa-save"></i> Save All Data
             </button>
         </div>
+    </div>
     </div>
 </div>
 
@@ -415,11 +425,11 @@
         $('#brigadeTokenId').val(tokenId);
         
         loadTokenBrigadeData(tokenId);
-        openModal('tokenBrigadeDataModal');
+        $('#tokenBrigadeDataModal').modal('show');
     }
 
     function closeTokenBrigadeModal() {
-        closeModal('tokenBrigadeDataModal');
+        $('#tokenBrigadeDataModal').modal('hide');
         currentTokenId = null;
         currentBrigadeData = null;
     }

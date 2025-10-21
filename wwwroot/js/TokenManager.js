@@ -268,11 +268,11 @@ class TokenManager {
                         ${t.tokenGroupName ? `<div class="deployed-unit-group">Group: ${t.tokenGroupName}</div>` : ''}
                     </div>
                     <div class="deployed-unit-actions">
-                        ${status === 'created' ? `<button class="btn btn-sm btn-primary" onclick="placeTokenOnMap('${t.id}')">Place on Map</button>` : ''}
-                        ${status === 'placed' ? `<button class="btn btn-sm btn-info" onclick="tokenManager.tokenPlacementManager.startMoveMode('${t.id}')">Move</button>` : ''}
-                        ${status === 'placed' ? `<button class="btn btn-sm btn-warning" onclick="tokenManager.tokenPlacementManager.removeTokenFromMap('${t.id}'); refreshTokenList()">Remove from Map</button>` : ''}
-                        ${status === 'created' ? `<button class="btn btn-sm btn-warning" onclick="openTokenDataEntryModal('${t.id}')">Data Entry</button>` : ''}
-                        <button class="btn btn-sm btn-danger" onclick="deleteTokenById('${t.id}'); refreshTokenList()">Delete</button>
+                        ${status === 'created' ? `<button class="btn btn-sm btn-primary" onclick="placeTokenOnMap('${t.id}')"><i class="fas fa-map-marker-alt"></i> Place on Map</button>` : ''}
+                        ${status === 'placed' ? `<button class="btn btn-sm btn-info" onclick="tokenManager.tokenPlacementManager.startMoveMode('${t.id}')"><i class="fas fa-arrows-alt"></i> Move</button>` : ''}
+                        ${status === 'placed' ? `<button class="btn btn-sm btn-warning" onclick="removeTokenFromMapBtn('${t.id}')"><i class="fas fa-map-marker-times"></i> Remove from Map</button>` : ''}
+                        ${status === 'created' ? `<button class="btn btn-sm btn-warning" onclick="openTokenDataEntryModal('${t.id}')"><i class="fas fa-edit"></i> Data Entry</button>` : ''}
+                        <button class="btn btn-sm btn-danger" onclick="deleteTokenById('${t.id}'); refreshTokenList()"><i class="fas fa-trash"></i> Delete</button>
                     </div>
                 </div>`;
             });
@@ -610,11 +610,16 @@ class TokenManager {
             const result = await response.json();
 
             if (result.success) {
+                console.log(`🗑️ Token deleted successfully: ${tokenId}`);
+                
                 // Remove from local tokens array
                 this.tokens = this.tokens.filter(t => t.id !== tokenId);
                 
+                // Remove all map markers for this token
+                this.removeAllMarkersForToken(tokenId);
+                
                 if (typeof showNotification === 'function') {
-                    showNotification('Token deleted successfully', 'success');
+                    showNotification('Token and all markers deleted successfully', 'success');
                 }
                 
                 // Refresh the token list
@@ -629,6 +634,91 @@ class TokenManager {
             if (typeof showNotification === 'function') {
                 showNotification('Error deleting token', 'error');
             }
+        }
+    }
+    
+    /**
+     * Remove all markers from map for a specific token
+     * This includes: token markers, coverage areas, route lines, waypoint markers
+     */
+    removeAllMarkersForToken(tokenId) {
+        console.log(`🧹 Cleaning up all markers for token: ${tokenId}`);
+        
+        try {
+            // 1. Remove from TokenPlacementManager if available
+            if (this.tokenPlacementManager) {
+                const tokenInfo = this.tokenPlacementManager.placedTokens.get(tokenId);
+                if (tokenInfo) {
+                    // Remove main marker
+                    if (tokenInfo.marker && this.map) {
+                        this.map.removeLayer(tokenInfo.marker);
+                        console.log(`  ✅ Removed token marker for ${tokenId}`);
+                    }
+                    
+                    // Remove coverage areas
+                    this.tokenPlacementManager.removeCoverageAreas(tokenId);
+                    console.log(`  ✅ Removed coverage areas for ${tokenId}`);
+                    
+                    // Remove route lines
+                    if (tokenInfo.routeLines) {
+                        tokenInfo.routeLines.forEach(line => {
+                            if (this.map && this.map.hasLayer(line)) {
+                                this.map.removeLayer(line);
+                            }
+                        });
+                        console.log(`  ✅ Removed ${tokenInfo.routeLines.length} route lines`);
+                    }
+                    
+                    // Remove waypoint markers
+                    if (tokenInfo.waypointMarkers) {
+                        tokenInfo.waypointMarkers.forEach(marker => {
+                            if (this.map && this.map.hasLayer(marker)) {
+                                this.map.removeLayer(marker);
+                            }
+                        });
+                        console.log(`  ✅ Removed ${tokenInfo.waypointMarkers.length} waypoint markers`);
+                    }
+                    
+                    // Remove from tracking
+                    this.tokenPlacementManager.placedTokens.delete(tokenId);
+                }
+            }
+            
+            // 2. Scan entire map and remove any markers with matching tokenId
+            if (this.map) {
+                const markersToRemove = [];
+                this.map.eachLayer((layer) => {
+                    if (layer.tokenId === tokenId || 
+                        (layer.tokenData && layer.tokenData.id === tokenId) ||
+                        (layer.options && layer.options.tokenId === tokenId)) {
+                        markersToRemove.push(layer);
+                    }
+                });
+                
+                markersToRemove.forEach(layer => {
+                    this.map.removeLayer(layer);
+                });
+                
+                if (markersToRemove.length > 0) {
+                    console.log(`  ✅ Removed ${markersToRemove.length} additional layers from map scan`);
+                }
+            }
+            
+            // 3. Remove DOM elements with matching token ID
+            const domElements = document.querySelectorAll(`[data-token-id="${tokenId}"], [data-id="${tokenId}"], [data-token-guid="${tokenId}"]`);
+            domElements.forEach(el => {
+                if (el.parentElement) {
+                    el.parentElement.removeChild(el);
+                }
+            });
+            if (domElements.length > 0) {
+                console.log(`  ✅ Removed ${domElements.length} DOM elements with token ID`);
+            }
+            
+            console.log(`🎉 Successfully cleaned up all markers for token ${tokenId}`);
+            
+        } catch (error) {
+            console.error(`❌ Error cleaning up markers for token ${tokenId}:`, error);
         }
     }
 
@@ -943,33 +1033,48 @@ class TokenManager {
      * Quick remove a placed token from the map and refresh lists
      */
     async quickRemoveFromMap(tokenId) {
+        console.log(`🗑️ Quick remove from map requested for token: ${tokenId}`);
+        
         try {
-            if (this.tokenPlacementManager) {
-                await this.tokenPlacementManager.removeTokenFromMap(tokenId);
+            if (!this.tokenPlacementManager) {
+                throw new Error('TokenPlacementManager not initialized');
             }
-            // no cache
+            
+            // Call the removeTokenFromMap which will handle server call and cleanup
+            await this.tokenPlacementManager.removeTokenFromMap(tokenId);
+            
+            console.log(`✅ Token ${tokenId} removed successfully`);
 
-            // Refresh current tab
+            // Refresh current tab after removal
             const placedBtn = document.getElementById('tokenTabPlaced');
             const availableBtn = document.getElementById('tokenTabAvailable');
+            
             if (placedBtn && placedBtn.classList.contains('active')) {
+                console.log('🔄 Refreshing placed tokens list');
                 const tokens = await this.getAllPlacedTokens();
                 this.populateTokenSelection((tokens || []).filter(t => t.position && t.position.lat != null && t.position.lng != null));
             } else if (availableBtn && availableBtn.classList.contains('active')) {
+                console.log('🔄 Refreshing available tokens list');
                 await this.loadAvailableTokens();
             } else {
-                // Default to refreshing available list
+                console.log('🔄 Refreshing default tokens list');
                 await this.loadAvailableTokens();
             }
 
+            // Show success notification
             if (typeof showNotification === 'function') {
-                showNotification('Token removed from map', 'success');
+                showNotification('Token removed from map successfully', 'success');
             }
+            
+            return true;
         } catch (error) {
-            console.error('Error removing token from map:', error);
+            console.error('❌ Error removing token from map:', error);
+            
             if (typeof showNotification === 'function') {
-                showNotification('Error removing token from map', 'error');
+                showNotification(`Error removing token: ${error.message}`, 'error');
             }
+            
+            throw error; // Re-throw so button handler can catch it
         }
     }
 
@@ -1199,6 +1304,45 @@ const tokenManager = new TokenManager();
 
 // Make globally accessible
 window.tokenManager = tokenManager;
+
+// Global wrapper function for remove from map button
+window.removeTokenFromMapBtn = async function(tokenId) {
+    console.log(`🔘 Remove button clicked for token: ${tokenId}`);
+    
+    try {
+        await window.tokenManager.quickRemoveFromMap(tokenId);
+        
+        // Refresh the token list
+        if (typeof window.refreshTokenList === 'function') {
+            await window.refreshTokenList();
+        }
+        
+        console.log(`✅ Token ${tokenId} removal completed`);
+    } catch (error) {
+        console.error(`❌ Failed to remove token ${tokenId}:`, error);
+    }
+};
+
+// Global modal functions - Bootstrap Modal API
+window.openModal = function(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        $(`#${modalId}`).modal('show');
+        console.log(`✅ Modal opened: ${modalId}`);
+    } else {
+        console.error(`❌ Modal not found: ${modalId}`);
+    }
+};
+
+window.closeModal = function(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        $(`#${modalId}`).modal('hide');
+        console.log(`✅ Modal closed: ${modalId}`);
+    } else {
+        console.error(`❌ Modal not found: ${modalId}`);
+    }
+};
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {

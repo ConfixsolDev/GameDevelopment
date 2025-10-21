@@ -112,6 +112,37 @@
 <script src="~/js/DefensePlanningManager.js"></script>
 <script src="~/js/gamePlayManager.js"></script>
 
+<!-- Global Modal Close Handler - Must be after Bootstrap and TokenManager -->
+<script>
+    $(document).ready(function () {
+        console.log('🎯 Initializing global modal close handlers');
+        
+        // Ensure ALL [data-dismiss="modal"] buttons work
+        $(document).on('click', '[data-dismiss="modal"]', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var $modal = $(this).closest('.modal');
+            if ($modal.length) {
+                console.log('🔒 Closing modal via data-dismiss:', $modal.attr('id'));
+                $modal.modal('hide');
+            }
+        });
+        
+        // ESC key handler for modals
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape' || e.keyCode === 27) {
+                var $openModals = $('.modal.show');
+                if ($openModals.length) {
+                    console.log('🔒 Closing modal via ESC key');
+                    $openModals.modal('hide');
+                }
+            }
+        });
+        
+        console.log('✅ Modal close handlers initialized');
+    });
+</script>
+
 <!-- Non-critical scripts (deferred - loaded after page interactive) -->
 <script defer src="~/js/AttackSymbolRenderer.js"></script>
 <script defer src="~/js/AttackVisualizationManager.js"></script>

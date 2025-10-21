@@ -224,28 +224,18 @@ namespace TechWebSol.Services.TokenManagement
                 }
 
                 // Remove map marker
-                var mapMarker = await _context.MapMarkers
-                    .FirstOrDefaultAsync(m => m.TokenId == tokenId && m.IsActive);
-
-                if (mapMarker != null)
-                {
-                    mapMarker.IsActive = false;
-                }
+                var mapMarker =  _context.MapMarkers.Where(m => m.TokenId == tokenId).ToList();
+                _context.RemoveRange(mapMarker);
 
                 // Token no longer stores position; nothing to clear on token entity
 
                 // Remove area coverages
                 var areaCoverages = await _context.TokenAreaCoverages
-                    .Where(tac => tac.TokenId == tokenId && tac.IsDynamic)
+                    .Where(tac => tac.TokenId == tokenId)
                     .ToListAsync();
 
-                foreach (var coverage in areaCoverages)
-                {
-                    coverage.IsActive = false;
-                    coverage.LastUpdated = DateTime.UtcNow;
-                }
-
-                await _context.SaveChangesAsync();
+                _context.RemoveRange(areaCoverages);
+                _context.SaveChanges();
 
                 _logger.LogInformation("Token {TokenId} removed from map", tokenId);
 
@@ -254,7 +244,7 @@ namespace TechWebSol.Services.TokenManagement
                     Success = true,
                     Message = $"Token '{token.Name}' removed from map",
                     Token = token,
-                    MapMarker = mapMarker,
+                    MapMarker = mapMarker.FirstOrDefault(),
                     AreaCoverages = areaCoverages
                 };
             }

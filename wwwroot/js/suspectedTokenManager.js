@@ -353,10 +353,8 @@ class SuspectedTokenManager {
                 // Cancel placement mode
                 this.cancelPlacementMode();
                 
-                // Close modal
-                if (typeof closeSuspectedTokenModal === 'function') {
-                    closeSuspectedTokenModal();
-                }
+                // Close modal using Bootstrap modal API
+                $('#suspectedTokenModal').modal('hide');
             } else {
                 this.notificationCallback(result.message, 'error');
             }
@@ -481,29 +479,26 @@ class SuspectedTokenManager {
     }
 }
 
-// Global functions for modal interactions
+// Global functions for modal interactions - Bootstrap Modal API
 function openSuspectedTokenModal() {
     if (typeof lazyLoader !== 'undefined') {
         lazyLoader.loadPartial('suspected-token-modal', '#modalsContainer', {
             onLoaded: () => {
-                document.getElementById('suspectedTokenModal').style.display = 'block';
+                $('#suspectedTokenModal').modal('show');
             }
         });
     }
 }
 
 function closeSuspectedTokenModal() {
-    const modal = document.getElementById('suspectedTokenModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
+    $('#suspectedTokenModal').modal('hide');
 }
 
 function openSuspectedTokensListModal() {
     if (typeof lazyLoader !== 'undefined') {
         lazyLoader.loadPartial('suspected-token-modal', '#modalsContainer', {
             onLoaded: async () => {
-                document.getElementById('suspectedTokensListModal').style.display = 'block';
+                $('#suspectedTokensListModal').modal('show');
                 
                 // Load and display suspected tokens
                 if (window.suspectedTokenManager) {
@@ -516,10 +511,7 @@ function openSuspectedTokensListModal() {
 }
 
 function closeSuspectedTokensListModal() {
-    const modal = document.getElementById('suspectedTokensListModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
+    $('#suspectedTokensListModal').modal('hide');
 }
 
 function startSuspectedTokenPlacement() {

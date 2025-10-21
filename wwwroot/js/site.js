@@ -696,6 +696,21 @@ $(document).on("click", ".action_mail", function (e) {
 });
 
 $(document).ready(function () {
+    // Ensure global modal close buttons work
+    $(document).on('click', '[data-dismiss="modal"]', function(e) {
+        var $modal = $(this).closest('.modal');
+        if ($modal.length) {
+            $modal.modal('hide');
+        }
+    });
+    
+    // ESC key handler for modals
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+            $('.modal.show').modal('hide');
+        }
+    });
+    
     $('select.select2').each(function () {
         var $select = $(this);
         var placeholderText = $select.find('option:first').text(); 

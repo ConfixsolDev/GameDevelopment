@@ -289,6 +289,20 @@ a:hover {
 
 .modal {
   backdrop-filter: none !important;
+  z-index: 9999 !important;
+}
+
+.modal.fade .modal-dialog {
+  transition: transform 0.3s ease-out !important;
+}
+
+.modal.show {
+  display: block !important;
+  opacity: 1 !important;
+}
+
+.modal.show .modal-dialog {
+  transform: none !important;
 }
 
 /* Force remove any backdrop that might be created by JavaScript */
@@ -319,6 +333,9 @@ body.modal-open .modal-backdrop {
   align-items: center !important;
   justify-content: space-between !important;
   padding: 1rem 1.5rem !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: 1 !important;
 }
 
 .modal-title {
@@ -343,6 +360,9 @@ body.modal-open .modal-backdrop {
   justify-content: center !important;
   width: 40px !important;
   height: 40px !important;
+  pointer-events: auto !important;
+  z-index: 10 !important;
+  position: relative !important;
 }
 
 .modal-header .close:hover {
@@ -355,6 +375,12 @@ body.modal-open .modal-backdrop {
 .modal-header .close:focus {
   outline: 2px solid var(--accent-amber) !important;
   outline-offset: 2px !important;
+}
+
+/* Ensure close button span is also clickable */
+.modal-header .close span {
+  pointer-events: none !important;
+  display: block !important;
 }
 
 .modal-body {

@@ -104,10 +104,36 @@ function selectTokenForDataEntry(tokenId, tokenName) {
             // Add the new modal to the body
             $('body').append(data);
             
-            // Show the modal
-            document.getElementById('tokenDataEntryModal').style.display = 'flex';
-            
-            console.log('✅ Data entry form displayed successfully');
+            // Show the modal using Bootstrap modal API with a slight delay for DOM rendering
+            setTimeout(() => {
+                const $modal = $('#tokenDataEntryModal');
+                console.log('📊 Modal element exists:', $modal.length > 0);
+                console.log('📊 Modal jQuery object:', $modal);
+                
+                // Manually ensure modal is visible
+                $modal.css({
+                    'display': 'block',
+                    'opacity': '1',
+                    'visibility': 'visible'
+                });
+                $modal.addClass('show');
+                $modal.attr('aria-hidden', 'false');
+                $('body').addClass('modal-open');
+                
+                // Also try Bootstrap modal API
+                if (typeof $modal.modal === 'function') {
+                    $modal.modal({backdrop: false, keyboard: false});
+                    $modal.modal('show');
+                    console.log('✅ Bootstrap modal.show() called');
+                } else {
+                    console.log('⚠️ Bootstrap modal function not available');
+                }
+                
+                console.log('✅ Data entry form displayed successfully');
+                console.log('📊 Modal display:', $modal.css('display'));
+                console.log('📊 Modal visibility:', $modal.css('visibility'));
+                console.log('📊 Modal has show class:', $modal.hasClass('show'));
+            }, 150);
         },
         error: function(xhr, status, error) {
             console.error('❌ Error loading data entry form:', error);

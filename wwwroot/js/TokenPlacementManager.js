@@ -351,7 +351,10 @@ class TokenPlacementManager {
      */
     async removeTokenFromMap(tokenId) {
         const tokenInfo = this.placedTokens.get(tokenId);
-        if (!tokenInfo) return;
+        if (!tokenInfo) {
+            console.warn(`⚠️ Token ${tokenId} not found in placedTokens`);
+            return;
+        }
 
         if (!confirm(`Are you sure you want to remove "${tokenInfo.token.name}" from the map?`)) {
             return;
@@ -371,22 +374,53 @@ class TokenPlacementManager {
             const result = await response.json();
 
             if (result.success) {
-                // Remove marker from map
-                this.map.removeLayer(tokenInfo.marker);
+                console.log(`✅ Server confirmed removal of token: ${tokenId}`);
+                
+                // Use comprehensive cleanup from TokenManager if available
+                if (window.tokenManager && typeof window.tokenManager.removeAllMarkersForToken === 'function') {
+                    console.log(`🧹 Using comprehensive cleanup from TokenManager`);
+                    window.tokenManager.removeAllMarkersForToken(tokenId);
+                } else {
+                    // Fallback to basic cleanup
+                    console.log(`⚠️ Using fallback cleanup`);
+                    
+                    // Remove marker from map
+                    if (tokenInfo.marker && this.map) {
+                        this.map.removeLayer(tokenInfo.marker);
+                    }
 
-                // Remove coverage areas
-                this.removeCoverageAreas(tokenId);
+                    // Remove coverage areas
+                    this.removeCoverageAreas(tokenId);
+                    
+                    // Remove route lines
+                    if (tokenInfo.routeLines) {
+                        tokenInfo.routeLines.forEach(line => {
+                            if (this.map && this.map.hasLayer(line)) {
+                                this.map.removeLayer(line);
+                            }
+                        });
+                    }
+                    
+                    // Remove waypoint markers
+                    if (tokenInfo.waypointMarkers) {
+                        tokenInfo.waypointMarkers.forEach(marker => {
+                            if (this.map && this.map.hasLayer(marker)) {
+                                this.map.removeLayer(marker);
+                            }
+                        });
+                    }
 
-                // Remove from tracking
-                this.placedTokens.delete(tokenId);
+                    // Remove from tracking
+                    this.placedTokens.delete(tokenId);
+                }
 
                 this.notificationCallback(result.message, 'success');
             } else {
-                this.notificationCallback(result.message, 'error');
+                this.notificationCallback(result.message || 'Failed to remove token', 'error');
             }
         } catch (error) {
-            console.error('Error removing token:', error);
-            this.notificationCallback('Error removing token', 'error');
+            console.error('❌ Error removing token:', error);
+            this.notificationCallback('Error removing token from map', 'error');
         }
     }
 

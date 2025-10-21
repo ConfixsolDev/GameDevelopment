@@ -1,11 +1,16 @@
-<!-- Data Entry Modal -->
-<div id="dataEntryModal" class="gameplay-modal">
-    <div class="gameplay-modal-content large">
-        <div class="gameplay-modal-header">
-            <h3><i class="fas fa-database"></i> Data Management</h3>
-            <button class="gameplay-modal-close" onclick="closeModal('dataEntryModal')">&times;</button>
-        </div>
-        <div class="gameplay-modal-body">
+<!-- Data Entry Modal - Bootstrap Modal -->
+<div class="modal fade" id="dataEntryModal" tabindex="-1" role="dialog" aria-labelledby="dataEntryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dataEntryModalLabel">
+                    <i class="fas fa-database"></i> Data Management
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
             <!-- Data Management Tabs -->
             <div class="data-management-tabs">
                 <div class="tab-buttons">
@@ -250,14 +255,17 @@
                 </div>
             </div>
         </div>
-        <div class="gameplay-modal-footer">
-            <button class="gameplay-btn" onclick="exportDataManagement()">
+        <div class="modal-footer">
+            <button type="button" class="btn btn-info" onclick="exportDataManagement()">
                 <i class="fas fa-download"></i> Export Data
             </button>
-            <button class="gameplay-btn" onclick="importDataManagement()">
+            <button type="button" class="btn btn-info" onclick="importDataManagement()">
                 <i class="fas fa-upload"></i> Import Data
             </button>
-            <button class="gameplay-btn" onclick="closeModal('dataEntryModal')">Close</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                <i class="fas fa-times"></i> Close
+            </button>
         </div>
+    </div>
     </div>
 </div>

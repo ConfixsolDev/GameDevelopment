@@ -1,18 +1,21 @@
 @using static TechWebSol.Controllers.DataManagementController
 @model SingleUnitFormViewModel
 
-<!-- Single Unit Form Modal -->
-<div id="singleUnitModal" class="gameplay-modal" style="display: none;">
-    <div class="gameplay-modal-content large-modal">
-        <div class="gameplay-modal-header">
-            <h3>
-                <i class="fas fa-@(Model.UnitType == UnitType.Infantry ? "user-shield" : Model.UnitType == UnitType.Armoured ? "shield-alt" : Model.UnitType == UnitType.Artillery ? "crosshairs" : "binoculars")"></i>
-                Add New @(Model.UnitType == UnitType.Infantry ? "Infantry Battalion" : Model.UnitType == UnitType.Armoured ? "Armoured Regiment" : Model.UnitType == UnitType.Artillery ? "Artillery Regiment" : "Reconnaissance")
-            </h3>
-            <button class="gameplay-modal-close" onclick="closeSingleUnitModal()">&times;</button>
-        </div>
-        
-        <div class="gameplay-modal-body">
+<!-- Single Unit Form Modal - Bootstrap Modal -->
+<div class="modal fade" id="singleUnitModal" tabindex="-1" role="dialog" aria-labelledby="singleUnitModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="singleUnitModalLabel">
+                    <i class="fas fa-@(Model.UnitType == UnitType.Infantry ? "user-shield" : Model.UnitType == UnitType.Armoured ? "shield-alt" : Model.UnitType == UnitType.Artillery ? "crosshairs" : "binoculars")"></i>
+                    Add New @(Model.UnitType == UnitType.Infantry ? "Infantry Battalion" : Model.UnitType == UnitType.Armoured ? "Armoured Regiment" : Model.UnitType == UnitType.Artillery ? "Artillery Regiment" : "Reconnaissance")
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            
+            <div class="modal-body">
             <!-- Hidden fields -->
             <input type="hidden" id="unitType" value="@Model.UnitType.ToString().ToLower()" />
             <input type="hidden" id="tokenId" value="@Model.Token.Id" />
@@ -437,9 +440,11 @@
             }
         </div>
         
-        <div class="gameplay-modal-footer">
-            <button class="gameplay-btn" onclick="closeSingleUnitModal()">Cancel</button>
-            <button class="gameplay-btn gameplay-btn-primary" onclick="saveSingleUnit()">
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button type="button" class="btn btn-primary" onclick="saveSingleUnit()">
                 <i class="fas fa-save"></i> Save @(Model.UnitType == UnitType.Infantry ? "Battalion" : Model.UnitType == UnitType.Armoured ? "Regiment" : Model.UnitType == UnitType.Artillery ? "Regiment" : "Reconnaissance")
             </button>
         </div>
@@ -651,10 +656,10 @@ label[for$="Description"]:after {
 </style>
 
 <script>
-// Close single unit modal
+// Close single unit modal - Bootstrap Modal API
 function closeSingleUnitModal() {
     console.log('🔒 Closing single unit modal');
-    document.getElementById('singleUnitModal').style.display = 'none';
+    $('#singleUnitModal').modal('hide');
 }
 
 // Save single unit
