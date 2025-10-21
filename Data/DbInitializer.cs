@@ -545,7 +545,7 @@ namespace TechWebSol.Data
                     var blueToken = new Token
                     {
                         Id = Guid.NewGuid(),
-                        Name = $"Blue Force Token {i}",
+                        Name =10,
                         ForceType = "Blue",
                         TeamId = blueTeam.Id,
                         TrainingConsistency = 85.0m,
