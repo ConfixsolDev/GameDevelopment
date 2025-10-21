@@ -1,7 +1,6 @@
 @model TechWebSol.ViewModels.CreateTokenViewModel
 @{
     ViewData["Title"] = "Edit Token";
-    Layout = "~/Views/Shared/_Layout.cshtml";
     var tokenId = ViewData["TokenId"];
     var currentImagePath = ViewData["CurrentImagePath"] as string;
 }
@@ -39,7 +38,7 @@
 
                     <div class="row">
                         <div class="col-md-8">
-                            <form asp-action="Edit" asp-controller="AdminToken" asp-route-id="@tokenId" method="post" enctype="multipart/form-data">
+                            <form asp-action="Edit" asp-controller="AdminToken" asp-route-id="@tokenId" method="post" >
                                 @Html.AntiForgeryToken()
                                 
                                 <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
@@ -220,12 +219,6 @@
                                     <button type="button" class="btn btn-warning" id="resetFormBtn">
                                         <i class="fas fa-undo"></i> Reset Changes
                                     </button>
-                                    <a href="@Url.Action("Index", "AdminToken")" class="btn btn-outline-secondary">
-                                        <i class="fas fa-arrow-left"></i> Cancel
-                                    </a>
-                                    <button type="button" class="btn btn-outline-danger" onclick="confirmDelete()">
-                                        <i class="fas fa-trash"></i> Delete Token
-                                    </button>
                                 </div>
                             </form>
                         </div>
@@ -283,45 +276,5 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 
     
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Store original form values for reset functionality
-            const form = document.querySelector('form');
-            const originalFormData = new FormData(form);
-            
-            // Reset form functionality
-            const resetBtn = document.getElementById('resetFormBtn');
-            if (resetBtn) {
-                resetBtn.addEventListener('click', function() {
-                    if (confirm('Are you sure you want to reset all changes? This will revert to the original values.')) {
-                        // Reset all form fields to their original values
-                        form.reset();
-                        
-                        // Manually set back the values from the model (since reset() only works with default HTML values)
-                        document.getElementById('Name').value = '@Html.Raw(Model.Name)';
-                        document.getElementById('TokenGroupId').value = '@(Model.TokenGroupId?.ToString() ?? "")';
-                        document.getElementById('FrontCoverageKm').value = '@(Model.FrontCoverageKm?.ToString() ?? "")';
-                        document.getElementById('RearCoverageKm').value = '@(Model.RearCoverageKm?.ToString() ?? "")';
-                        document.getElementById('SideCoverageKm').value = '@(Model.SideCoverageKm?.ToString() ?? "")';
-                        
-                        // Reset military classification fields
-                        document.getElementById('OrganizationLevel').value = '@(Model.OrganizationLevel?.ToString() ?? "")';
-                        document.getElementById('UnitType').value = '@(Model.UnitType?.ToString() ?? "")';
-                        document.getElementById('UnitDesignation').value = '@Html.Raw(Model.UnitDesignation ?? "")';
-                        document.getElementById('ForceType').value = '@Html.Raw(Model.ForceType ?? "")';
-                        
-                        // Position is managed via MapMarkers
-                    }
-                });
-            }
-        });
-
-        function confirmDelete() {
-            if (confirm('Are you sure you want to delete this token? This action cannot be undone.')) {
-                // Implement delete functionality
-                window.location.href = '/AdminToken/Delete/@tokenId';
-            }
-        }
-    </script>
-}

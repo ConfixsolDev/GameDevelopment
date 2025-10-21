@@ -93,36 +93,58 @@ namespace TechWebSol.Controllers
         [HttpPost]
         public async Task<IActionResult> ToggleActive([FromQuery] Guid id, [FromQuery] bool active)
         {
-            var token = await _context.Tokens.FirstOrDefaultAsync(x => x.Id == id);
-            if (token == null) return NotFound(new { success = false, message = "Token not found" });
-            token.IsActive = active;
-            await _context.SaveChangesAsync();
-            return Json(new { success = true, message = active ? "Token activated" : "Token deactivated" });
+            try
+            {
+                _logger.LogInformation("ToggleActive called for token {TokenId} to {Active} by user {UserId}", 
+                    id, active, user?.ApplicationUserId);
+                
+                var token = await _context.Tokens.FirstOrDefaultAsync(x => x.Id == id);
+                if (token == null) 
+                {
+                    _logger.LogWarning("Token {TokenId} not found", id);
+                    return NotFound(new { success = false, message = "Token not found" });
+                }
+                
+                token.IsActive = active;
+                await _context.SaveChangesAsync();
+                
+                _logger.LogInformation("Token {TokenId} status updated to {Active}", id, active);
+                return Json(new { success = true, message = active ? "Token activated" : "Token deactivated" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in ToggleActive for token {TokenId}", id);
+                return Json(new { success = false, message = "Error updating token status" });
+            }
         }
 
         [HttpGet]
         public async Task<IActionResult> GetTokens()
         {
-            var placedTokensvar = _context.Tokens
-                                            .Include(t => t.TokenGroup)
-                                            .OrderBy(t => t.Name)
-                                            .Select(t => new TokenListItemDto
-                                            {
-                                                Id = t.Id,
-                                                Name = t.Name,
-                                                TokenGroupId = t.TokenGroupId,
-                                                TokenGroupName = t.TokenGroup != null ? t.TokenGroup.Name : null,
-                                                IsActive = t.IsActive,
-                                                IsManualToken = t.IsManualToken,
-                                                LastUsed = t.LastUsed,
-                                                UsageCount = t.UsageCount,
-                                                Notes = t.Notes,
-                                                AssetImagePath = t.AssetImagePath,
-                                                FrontCoverageKm = t.FrontCoverageKm,
-                RearCoverageKm = t.RearCoverageKm,
-                SideCoverageKm = t.SideCoverageKm,
-                                                TeamId = t.TeamId,
-                                            }).AsQueryable();
+            try
+            {
+                _logger.LogInformation("GetTokens called by user {UserId}", user?.ApplicationUserId);
+                
+                var placedTokensvar = _context.Tokens
+                                                .Include(t => t.TokenGroup)
+                                                .OrderBy(t => t.Name)
+                                                .Select(t => new TokenListItemDto
+                                                {
+                                                    Id = t.Id,
+                                                    Name = t.Name,
+                                                    TokenGroupId = t.TokenGroupId,
+                                                    TokenGroupName = t.TokenGroup != null ? t.TokenGroup.Name : null,
+                                                    IsActive = t.IsActive,
+                                                    IsManualToken = t.IsManualToken,
+                                                    LastUsed = t.LastUsed,
+                                                    UsageCount = t.UsageCount,
+                                                    Notes = t.Notes,
+                                                    AssetImagePath = t.AssetImagePath,
+                                                    FrontCoverageKm = t.FrontCoverageKm,
+                    RearCoverageKm = t.RearCoverageKm,
+                    SideCoverageKm = t.SideCoverageKm,
+                                                    TeamId = t.TeamId,
+                                                }).AsQueryable();
 
             if (user.TeamId != Guid.Empty && user.TeamId != null)
             {
@@ -133,9 +155,16 @@ namespace TechWebSol.Controllers
                 placedTokensvar = placedTokensvar.Where(t => t.IsActive);
             }
 
-            var tokens = await placedTokensvar.ToListAsync();
-
-            return Json(tokens);
+                var tokens = await placedTokensvar.ToListAsync();
+                
+                _logger.LogInformation("Returning {Count} tokens", tokens.Count);
+                return Json(tokens);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in GetTokens");
+                return Json(new { success = false, message = "Error loading tokens" });
+            }
         }
 
         [HttpGet]

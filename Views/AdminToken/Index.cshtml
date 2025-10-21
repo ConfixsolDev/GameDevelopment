@@ -59,8 +59,10 @@
                 });
 
                 function loadTokens() {
+                    console.log('Loading tokens...');
                     $.get(getApiUrl('AdminToken', 'GetTokens'))
                         .done(function (tokens) {
+                            console.log('Tokens loaded:', tokens);
                             const tbody = $('#tokensTable tbody');
                             tbody.empty();
 
@@ -159,12 +161,14 @@
                         ]
                     });
                         })
-                        .fail(function () {
-                            showAlert('Error loading tokens', 'danger');
+                        .fail(function (xhr, status, error) {
+                            console.error('Error loading tokens:', error, xhr.responseText);
+                            showAlert('Error loading tokens: ' + error, 'danger');
                         });
                 }
 
                 function toggleActive(id, makeActive) {
+                    console.log('Toggling token active status:', id, makeActive);
                     const msg = makeActive
                         ? 'Activate this token?'
                         : 'Deactivate this token?';
@@ -172,9 +176,11 @@
                     if (!confirm(msg)) return;
 
             const url = `/AdminToken/ToggleActive?id=${id}&active=${makeActive}`;
+            console.log('Toggle URL:', url);
             
             $.post(url)
                 .done(function (response) {
+                    console.log('Toggle response:', response);
                     if (response.success) {
                         showAlert(response.message || 'Status updated successfully', 'success');
                                 loadTokens();
@@ -182,8 +188,9 @@
                         showAlert(response.message || 'Unable to update status', 'danger');
                             }
                         })
-                        .fail(function () {
-                    showAlert('Error updating token status', 'danger');
+                        .fail(function (xhr, status, error) {
+                    console.error('Toggle error:', error, xhr.responseText);
+                    showAlert('Error updating token status: ' + error, 'danger');
                 });
         }
 
