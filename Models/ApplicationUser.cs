@@ -63,9 +63,6 @@ namespace TechWebSol.Models
 
         public bool IsDeleted { get; set; } = false;
 
-        // Concurrency token to prevent optimistic concurrency failures
-        [Timestamp]
-        public byte[] RowVersion { get; set; } = new byte[8];
     }
 }
 
