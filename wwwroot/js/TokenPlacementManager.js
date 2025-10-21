@@ -120,7 +120,19 @@ class TokenPlacementManager {
 				sideKm
 			);
 			const radiusMeters = maxRadius * 1000;
-			const plus = this.createPlusCoverage(latlng, radiusMeters, '#3388ff', 3, 0.5, '5, 5');
+			
+			// Determine color based on force type
+			let previewColor = '#3388ff'; // Default blue
+			if (this.selectedTokenForPlacement.forceType) {
+				const forceTypeLower = this.selectedTokenForPlacement.forceType.toLowerCase();
+				if (forceTypeLower.includes('fox') || forceTypeLower.includes('red')) {
+					previewColor = '#ff0000'; // Red for Fox Land
+				} else if (forceTypeLower.includes('blue') || forceTypeLower.includes('friendly')) {
+					previewColor = '#0000ff'; // Blue for Blue Land
+				}
+			}
+			
+			const plus = this.createPlusCoverage(latlng, radiusMeters, previewColor, 3, 0.5, '5, 5');
 			this.tempMarker.coveragePreview = plus.addTo(this.map);
 		}
     }
@@ -550,9 +562,20 @@ class TokenPlacementManager {
             originalPosition: this.originalPosition
         };
         
+        // Determine route color based on force type
+        let routeColor = '#ff6b6b'; // Default red
+        if (token && token.forceType) {
+            const forceTypeLower = token.forceType.toLowerCase();
+            if (forceTypeLower.includes('fox') || forceTypeLower.includes('red')) {
+                routeColor = '#ff0000'; // Red for Fox Land
+            } else if (forceTypeLower.includes('blue') || forceTypeLower.includes('friendly')) {
+                routeColor = '#0000ff'; // Blue for Blue Land
+            }
+        }
+        
         // Create ghost route line
         this.dragPreview.routeLine = L.polyline([this.originalPosition], {
-            color: '#ff6b6b',
+            color: routeColor,
             weight: 2,
             opacity: 0.6,
             dashArray: '5, 5'
@@ -1349,9 +1372,20 @@ class TokenPlacementManager {
                     typeof m.longitude === 'string' ? parseFloat(m.longitude) : m.longitude
                 ]);
                 
+                // Determine route color based on force type
+                let routeColor = '#4299e1'; // Default blue
+                if (tokenData && tokenData.token && tokenData.token.forceType) {
+                    const forceTypeLower = tokenData.token.forceType.toLowerCase();
+                    if (forceTypeLower.includes('fox') || forceTypeLower.includes('red')) {
+                        routeColor = '#ff0000'; // Red for Fox Land
+                    } else if (forceTypeLower.includes('blue') || forceTypeLower.includes('friendly')) {
+                        routeColor = '#0000ff'; // Blue for Blue Land
+                    }
+                }
+                
                 // Create the complete route line
                 const routeLine = L.polyline(positions, {
-                    color: '#4299e1',
+                    color: routeColor,
                     weight: 3,
                     opacity: 0.7,
                     dashArray: '10, 10',
@@ -1391,9 +1425,20 @@ class TokenPlacementManager {
             tokenData.routeLines = [];
         }
         
+        // Determine route color based on force type
+        let routeColor = '#4299e1'; // Default blue
+        if (tokenData && tokenData.token && tokenData.token.forceType) {
+            const forceTypeLower = tokenData.token.forceType.toLowerCase();
+            if (forceTypeLower.includes('fox') || forceTypeLower.includes('red')) {
+                routeColor = '#ff0000'; // Red for Fox Land
+            } else if (forceTypeLower.includes('blue') || forceTypeLower.includes('friendly')) {
+                routeColor = '#0000ff'; // Blue for Blue Land
+            }
+        }
+        
         // Create a single continuous route line (matching refresh behavior)
         const routeLine = L.polyline([this.originalPosition, tokenData.marker.getLatLng()], {
-            color: '#4299e1',
+            color: routeColor,
             weight: 3,
             opacity: 0.7,
             dashArray: '10, 10', // Match the refresh pattern
