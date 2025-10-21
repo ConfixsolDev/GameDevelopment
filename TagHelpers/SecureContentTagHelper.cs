@@ -50,8 +50,9 @@ namespace TechWebSol.TagHelpers
 
             if (!hasAccess)
             {
-                output.SuppressOutput();
+                //output.SuppressOutput();
             }
+            //Remove this when demo done
         }
     }
 

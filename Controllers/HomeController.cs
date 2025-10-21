@@ -6,7 +6,7 @@ using TechWebSol.ViewModels;
 
 namespace TechWebSol.Controllers
 {
-    [AuthorizeDynamic]
+    [Authorize]
     public class HomeController : Controller
     {
         public IActionResult Index()

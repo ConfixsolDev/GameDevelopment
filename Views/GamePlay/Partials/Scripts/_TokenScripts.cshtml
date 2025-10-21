@@ -52,8 +52,18 @@ function cancelTokenPlacement() {
 // Load available tokens from server
 async function loadAvailableTokens() {
     try {
-        const response = await fetch('/GamePlay/GetTeamTokens');
+        // Add cache-busting parameter to ensure fresh data
+        const timestamp = Date.now();
+        const response = await fetch(`/GamePlay/GetTeamTokens?t=${timestamp}`, {
+            cache: 'no-cache',
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        });
         const data = await response.json();
+        
+        console.log('🔄 Loaded tokens with forceType data:', data.tokens?.map(t => ({ name: t.name, forceType: t.forceType })));
         
         if (data.success) {
             availableTokens = data.tokens;
@@ -73,6 +83,10 @@ function populateTokenSelection() {
     if (!container) return;
     
     container.innerHTML = '';
+    
+    // Add cache-busting timestamp to ensure fresh data
+    const timestamp = Date.now();
+    console.log('🔄 Loading tokens with cache-busting timestamp:', timestamp);
     
     availableTokens.forEach(token => {
         const tokenElement = document.createElement('div');
@@ -169,18 +183,40 @@ function createTokenIconHTML(token) {
 
 // Get display name for force type
 function getForceTypeDisplayName(forceType) {
-    if (!forceType) return 'Unknown';
+    console.log('🔍 getForceTypeDisplayName called with:', forceType, 'type:', typeof forceType);
+    
+    if (!forceType) {
+        console.log('⚠️ No forceType provided, returning Unknown');
+        return 'Unknown';
+    }
     
     const forceTypeLower = forceType.toLowerCase();
+    console.log('🔍 forceTypeLower:', forceTypeLower);
     
     // Return the actual force type name
-    if (forceTypeLower.includes('fox')) return 'Fox Land';
-    if (forceTypeLower.includes('blue')) return 'Blue Land';
-    if (forceTypeLower.includes('neutral')) return 'Neutral';
-    if (forceTypeLower.includes('hostile')) return 'Hostile';
-    if (forceTypeLower.includes('friendly')) return 'Friendly';
+    if (forceTypeLower.includes('fox')) {
+        console.log('🦊 Fox Land detected');
+        return 'Fox Land';
+    }
+    if (forceTypeLower.includes('blue')) {
+        console.log('🔵 Blue Land detected');
+        return 'Blue Land';
+    }
+    if (forceTypeLower.includes('neutral')) {
+        console.log('🟢 Neutral detected');
+        return 'Neutral';
+    }
+    if (forceTypeLower.includes('hostile')) {
+        console.log('🔴 Hostile detected');
+        return 'Hostile';
+    }
+    if (forceTypeLower.includes('friendly')) {
+        console.log('🤝 Friendly detected');
+        return 'Friendly';
+    }
     
     // Return as-is if no match
+    console.log('❓ No match found, returning as-is:', forceType);
     return forceType;
 }
 
