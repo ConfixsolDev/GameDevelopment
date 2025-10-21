@@ -209,8 +209,6 @@ namespace TechWebSol.Controllers
                 }
                 else
                 {
-                    // Control users: Map suspected tokens to their real/original tokens
-                    _logger.LogInformation("Control user accessing attack orders - mapping suspected tokens to real tokens");
                     
                     var allAttackOrders = await _context.EnhancedAttackOrders
                                                 .Where(o => o.AttackerTokenId != Guid.Empty && o.TargetTokenId != Guid.Empty)
@@ -245,7 +243,6 @@ namespace TechWebSol.Controllers
                         TeamId = o.TeamId
                     }).ToList();
                     
-                    _logger.LogInformation($"Control user: Mapped {allAttackOrders.Count} attack orders with real token IDs");
                 }
 
                 return Json(new { success = true, attackOrders });
