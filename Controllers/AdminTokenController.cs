@@ -704,6 +704,7 @@ namespace TechWebSol.Controllers
                 // Update position if provided
                 var positionChanged = model.CurrentLatitude.HasValue && model.CurrentLongitude.HasValue;
 
+                _context.Update(token);
                 await _context.SaveChangesAsync();
 
                 // Update coverage area if position or coverage changed
