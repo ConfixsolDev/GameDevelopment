@@ -200,7 +200,7 @@ namespace TechWebSol.Controllers
                     })
                     .AsQueryable();
 
-                if (user.TeamId != Guid.Empty)
+                if (user.TeamId != Guid.Empty && user.TeamId != null)
                 {
                     attackorderlist = attackorderlist.Where(x => x.TeamId == user.TeamId).AsQueryable();
                 }
