@@ -802,4 +802,291 @@ body.modal-open .modal-backdrop {
   100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
+/* ========================================
+   ADMIN TOKEN MANAGEMENT - BLACK & GREY THEME
+   ======================================== */
+
+/* AdminToken Index Page Styling */
+.admin-token-container {
+  background-color: var(--bg-primary);
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.admin-token-card {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.admin-token-card .card-header {
+  background-color: var(--bg-quaternary);
+  border-bottom: 1px solid var(--border-primary);
+  color: var(--text-primary);
+}
+
+.admin-token-card .card-title {
+  color: var(--accent-orange) !important;
+  font-weight: var(--font-weight-bold);
+}
+
+.admin-token-card .card-body {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+/* AdminToken Table Styling */
+.admin-token-table {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.admin-token-table thead th {
+  background-color: var(--bg-quaternary);
+  color: var(--accent-orange) !important;
+  border-bottom: 2px solid var(--border-primary);
+  font-weight: var(--font-weight-bold);
+  padding: 12px 8px;
+}
+
+.admin-token-table tbody tr {
+  background-color: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.admin-token-table tbody tr:nth-child(even) {
+  background-color: var(--bg-quaternary);
+}
+
+.admin-token-table tbody tr:hover {
+  background-color: var(--bg-quaternary);
+  transition: background-color 0.2s ease;
+}
+
+.admin-token-table tbody td {
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-primary);
+  padding: 12px 8px;
+  vertical-align: middle;
+}
+
+/* AdminToken Button Styling */
+.admin-token-btn-primary {
+  background-color: var(--accent-orange);
+  border-color: var(--accent-orange);
+  color: var(--text-primary);
+}
+
+.admin-token-btn-primary:hover {
+  background-color: #e55a2b;
+  border-color: #e55a2b;
+}
+
+.admin-token-btn-outline-secondary {
+  color: var(--text-primary);
+  border-color: var(--border-primary);
+  background-color: transparent;
+}
+
+.admin-token-btn-outline-secondary:hover {
+  background-color: var(--bg-quaternary);
+  border-color: var(--border-secondary);
+  color: var(--text-primary);
+}
+
+.admin-token-btn-outline-primary {
+  color: var(--status-info);
+  border-color: var(--status-info);
+  background-color: transparent;
+}
+
+.admin-token-btn-outline-primary:hover {
+  background-color: var(--status-info);
+  border-color: var(--status-info);
+  color: var(--text-primary);
+}
+
+.admin-token-btn-outline-danger {
+  color: var(--status-error);
+  border-color: var(--status-error);
+  background-color: transparent;
+}
+
+.admin-token-btn-outline-danger:hover {
+  background-color: var(--status-error);
+  border-color: var(--status-error);
+  color: var(--text-primary);
+}
+
+.admin-token-btn-outline-success {
+  color: var(--status-success);
+  border-color: var(--status-success);
+  background-color: transparent;
+}
+
+.admin-token-btn-outline-success:hover {
+  background-color: var(--status-success);
+  border-color: var(--status-success);
+  color: var(--text-primary);
+}
+
+.admin-token-btn-outline-info {
+  color: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+  background-color: transparent;
+}
+
+.admin-token-btn-outline-info:hover {
+  background-color: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+  color: var(--text-primary);
+}
+
+/* AdminToken Badge Styling */
+.admin-token-badge-success {
+  background-color: var(--status-success) !important;
+  color: var(--text-primary);
+}
+
+.admin-token-badge-secondary {
+  background-color: var(--text-muted) !important;
+  color: var(--text-primary);
+}
+
+.admin-token-badge-info {
+  background-color: var(--status-info) !important;
+  color: var(--text-primary);
+}
+
+.admin-token-badge-primary {
+  background-color: var(--accent-orange) !important;
+  color: var(--text-primary);
+}
+
+/* AdminToken Token Thumbnail Styling */
+.admin-token-thumbnail {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-primary);
+}
+
+.admin-token-placeholder {
+  width: 40px;
+  height: 40px;
+  background-color: var(--bg-quaternary);
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  font-size: 16px;
+}
+
+/* AdminToken DataTable Customization */
+.admin-token-datatable .dataTables_wrapper {
+  color: var(--text-primary);
+}
+
+.admin-token-datatable .dataTables_filter input {
+  background-color: var(--bg-quaternary);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+}
+
+.admin-token-datatable .dataTables_filter input:focus {
+  background-color: var(--bg-quaternary);
+  border-color: var(--accent-orange);
+  color: var(--text-primary);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.25);
+}
+
+.admin-token-datatable .dataTables_length select {
+  background-color: var(--bg-quaternary);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+}
+
+.admin-token-datatable .dataTables_info {
+  color: var(--text-primary);
+}
+
+.admin-token-datatable .dataTables_paginate .paginate_button {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-quaternary) !important;
+  border: 1px solid var(--border-secondary) !important;
+  border-radius: var(--radius-sm);
+  margin: 0 2px;
+}
+
+.admin-token-datatable .dataTables_paginate .paginate_button:hover {
+  background-color: var(--border-secondary) !important;
+  border-color: var(--border-accent) !important;
+  color: var(--text-primary) !important;
+}
+
+.admin-token-datatable .dataTables_paginate .paginate_button.current {
+  background-color: var(--accent-orange) !important;
+  border-color: var(--accent-orange) !important;
+  color: var(--text-primary) !important;
+}
+
+/* AdminToken Alert Styling */
+.admin-token-alert {
+  border-radius: var(--radius-sm);
+  border: none;
+}
+
+.admin-token-alert-success {
+  background-color: var(--status-success);
+  color: var(--text-primary);
+}
+
+.admin-token-alert-danger {
+  background-color: var(--status-error);
+  color: var(--text-primary);
+}
+
+/* AdminToken Responsive Adjustments */
+@media (max-width: 768px) {
+  .admin-token-container {
+    padding: 10px;
+  }
+  
+  .admin-token-card .card-tools {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .admin-token-table .btn-group-sm {
+    flex-direction: column;
+  }
+  
+  .admin-token-table .table-responsive {
+    font-size: 0.875rem;
+  }
+}
+
+/* AdminToken Loading State */
+.admin-token-table tbody tr.loading {
+  background-color: var(--bg-quaternary);
+  opacity: 0.7;
+}
+
+.admin-token-table tbody tr.loading td {
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 /* Responsive design removed - focusing on large screens (1100px+) */

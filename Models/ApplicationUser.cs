@@ -62,6 +62,7 @@ namespace TechWebSol.Models
         public bool isSuperAdmin { get; set; } = false;
 
         public bool IsDeleted { get; set; } = false;
+
     }
 }
 
