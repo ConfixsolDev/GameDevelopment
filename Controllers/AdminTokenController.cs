@@ -540,20 +540,12 @@ namespace TechWebSol.Controllers
 
             try
             {
-                var currentUser = _userSessionService.GetCurrentUser();
-                if (currentUser == null)
-                {
-                    ModelState.AddModelError("", "User not authenticated");
-                    return View(model);
-                }
-
-
-                // Handle image upload if provided
-                string? imagePath = null;
-                if (model.AssetImage != null && model.AssetImage.Length > 0)
-                {
-                    imagePath = await UploadAssetImage(model.AssetImage, model.Name);
-                }
+                //// Handle image upload if provided
+                //string? imagePath = null;
+                //if (model.AssetImage != null && model.AssetImage.Length > 0)
+                //{
+                //    imagePath = await UploadAssetImage(model.AssetImage, model.Name);
+                //}
 
                 var token = new Token
                 {
@@ -561,7 +553,7 @@ namespace TechWebSol.Controllers
                     TokenGroupId = model.TokenGroupId,
                     IsManualToken = true,
                     IsActive = true,
-                    AssetImagePath = imagePath,
+                    AssetImagePath = "",
                     FrontCoverageKm = model.FrontCoverageKm,
                     RearCoverageKm = model.RearCoverageKm,
                     SideCoverageKm = model.SideCoverageKm,
@@ -587,8 +579,6 @@ namespace TechWebSol.Controllers
                     }
                 }
 
-                _logger.LogInformation("Created token: {TokenName} by user {UserId}",
-                    model.Name, currentUser.ApplicationUserId);
 
                 TempData["SuccessMessage"] = "Token created successfully!";
                 return RedirectToAction("Index");
@@ -673,14 +663,6 @@ namespace TechWebSol.Controllers
 
             try
             {
-                var currentUser = _userSessionService.GetCurrentUser();
-                if (currentUser == null)
-                {
-                    ModelState.AddModelError("", "User not authenticated");
-                    ViewData["TokenId"] = id;
-                    return View(model);
-                }
-
                 var token = await _context.Tokens.FirstOrDefaultAsync(t => t.Id == id);
                 if (token == null)
                 {
@@ -688,27 +670,27 @@ namespace TechWebSol.Controllers
                     return RedirectToAction("Index");
                 }
 
-                // Handle image upload if new image provided
-                string? imagePath = token.AssetImagePath; // Keep existing image by default
-                if (model.AssetImage != null && model.AssetImage.Length > 0)
-                {
-                    // Delete old image if it exists
-                    if (!string.IsNullOrEmpty(token.AssetImagePath))
-                    {
-                        var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, token.AssetImagePath.TrimStart('/'));
-                        if (System.IO.File.Exists(oldImagePath))
-                        {
-                            System.IO.File.Delete(oldImagePath);
-                        }
-                    }
+                //// Handle image upload if new image provided
+                //string? imagePath = token.AssetImagePath; // Keep existing image by default
+                //if (model.AssetImage != null && model.AssetImage.Length > 0)
+                //{
+                //    // Delete old image if it exists
+                //    if (!string.IsNullOrEmpty(token.AssetImagePath))
+                //    {
+                //        var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, token.AssetImagePath.TrimStart('/'));
+                //        if (System.IO.File.Exists(oldImagePath))
+                //        {
+                //            System.IO.File.Delete(oldImagePath);
+                //        }
+                //    }
 
-                    imagePath = await UploadAssetImage(model.AssetImage, model.Name);
-                }
+                //    imagePath = await UploadAssetImage(model.AssetImage, model.Name);
+                //}
 
                 // Update token properties
                 token.Name = model.Name;
                 token.TokenGroupId = model.TokenGroupId;
-                token.AssetImagePath = imagePath;
+                token.AssetImagePath = "";
                 token.FrontCoverageKm = model.FrontCoverageKm;
                 token.RearCoverageKm = model.RearCoverageKm;
                 token.SideCoverageKm = model.SideCoverageKm;
@@ -732,9 +714,6 @@ namespace TechWebSol.Controllers
                         model.CurrentLongitude.Value, model.FrontCoverageKm.Value, 
                         model.RearCoverageKm.Value, model.SideCoverageKm);
                 }
-
-                _logger.LogInformation("Updated token: {TokenName} by user {UserId}",
-                    model.Name, currentUser.ApplicationUserId);
 
                 TempData["SuccessMessage"] = "Token updated successfully!";
                 return RedirectToAction("Index");

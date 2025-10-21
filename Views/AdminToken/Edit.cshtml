@@ -182,7 +182,7 @@
                                         <div class="col-md-4">
                                             <div class="mb-3">
                                                 <label asp-for="FrontCoverageKm" class="form-label">Front Coverage (km)</label>
-                                                <input asp-for="FrontCoverageKm" class="form-control" type="number" step="0.1" min="0.1" max="1000" placeholder="e.g., 8.0" />
+                                                <input asp-for="FrontCoverageKm" class="form-control" type="number"  max="1000" placeholder="e.g., 8.0" />
                                                 <span asp-validation-for="FrontCoverageKm" class="text-danger"></span>
                                                 <div class="form-text">Forward coverage distance</div>
                                             </div>
@@ -190,7 +190,7 @@
                                         <div class="col-md-4">
                                             <div class="mb-3">
                                                 <label asp-for="RearCoverageKm" class="form-label">Rear Coverage (km)</label>
-                                                <input asp-for="RearCoverageKm" class="form-control" type="number" step="0.1" min="0.1" max="1000" placeholder="e.g., 3.0" />
+                                                <input asp-for="RearCoverageKm" class="form-control" type="number"  max="1000" placeholder="e.g., 3.0" />
                                                 <span asp-validation-for="RearCoverageKm" class="text-danger"></span>
                                                 <div class="form-text">Rearward coverage distance</div>
                                             </div>
@@ -198,7 +198,7 @@
                                         <div class="col-md-4">
                                             <div class="mb-3">
                                                 <label asp-for="SideCoverageKm" class="form-label">Side Coverage (km)</label>
-                                                <input asp-for="SideCoverageKm" class="form-control" type="number" step="0.1" min="0.1" max="1000" placeholder="e.g., 5.0" />
+                                                <input asp-for="SideCoverageKm" class="form-control" type="number"  max="1000" placeholder="e.g., 5.0" />
                                                 <span asp-validation-for="SideCoverageKm" class="text-danger"></span>
                                                 <div class="form-text">Lateral coverage distance</div>
                                             </div>
