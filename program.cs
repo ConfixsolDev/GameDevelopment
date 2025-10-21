@@ -132,7 +132,7 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 // Custom Services - Local implementations
 builder.Services.AddSingleton<IMvcControllerDiscovery, MvcControllerDiscovery>();
 builder.Services.AddScoped<IUserSessionService, UserSessionService>();
-builder.Services.AddScoped<DbInitializer>();
+//builder.Services.AddScoped<DbInitializer>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 
 // Token Management Services
