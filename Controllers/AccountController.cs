@@ -136,10 +136,7 @@ namespace TechWebSol.Controllers
 
                 _logger.LogInformation("User logged in.");
 
-                if (user.TeamId != Guid.Empty)
-                {
-                    var team = await _Appcontext.Teams.Include(t => t.TeamType).AsNoTracking().FirstOrDefaultAsync(t => t.TeamId == user.TeamId);
-                }
+             
 
                 var role = await (
                     from usr in _Appcontext.Users

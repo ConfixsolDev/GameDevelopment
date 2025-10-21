@@ -12,8 +12,8 @@ using TechWebSol.Data;
 namespace TechWebSol.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250927064407_Initial4")]
-    partial class Initial4
+    [Migration("20251021164506_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -225,14 +225,6 @@ namespace TechWebSol.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Department")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("Designation")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -241,6 +233,10 @@ namespace TechWebSol.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("FirstName")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("ForceType")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
@@ -297,17 +293,8 @@ namespace TechWebSol.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("SubTeamCode")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TeamCode")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<Guid?>("TeamId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("TeamTypeCode")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
@@ -360,12 +347,19 @@ namespace TechWebSol.Migrations
                     b.Property<decimal>("CombatAdvanceSpeed")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<double>("CombatPower")
+                        .HasColumnType("float");
+
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("CurrentTerrain")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
@@ -377,6 +371,9 @@ namespace TechWebSol.Migrations
 
                     b.Property<int>("Drones")
                         .HasColumnType("int");
+
+                    b.Property<double>("EffectiveCombatPower")
+                        .HasColumnType("float");
 
                     b.Property<string>("ForceType")
                         .IsRequired()
@@ -401,10 +398,16 @@ namespace TechWebSol.Migrations
                     b.Property<int>("Mortars120mm")
                         .HasColumnType("int");
 
+                    b.Property<double>("MovementPoints")
+                        .HasColumnType("float");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<double>("RemainingMovement")
+                        .HasColumnType("float");
 
                     b.Property<int>("Squadrons")
                         .HasColumnType("int");
@@ -412,10 +415,25 @@ namespace TechWebSol.Migrations
                     b.Property<int>("Strength")
                         .HasColumnType("int");
 
+                    b.Property<double>("StrengthPercentage")
+                        .HasColumnType("float");
+
+                    b.Property<double>("SupplyModifier")
+                        .HasColumnType("float");
+
+                    b.Property<int>("SupplyState")
+                        .HasColumnType("int");
+
                     b.Property<int>("Tanks")
                         .HasColumnType("int");
 
                     b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("TerrainModifier")
+                        .HasColumnType("float");
+
+                    b.Property<Guid?>("TokenId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UnitCode")
@@ -442,6 +460,9 @@ namespace TechWebSol.Migrations
 
                     b.HasIndex("TeamId");
 
+                    b.HasIndex("TokenId", "BrigadeId", "TeamId", "IsActive")
+                        .HasDatabaseName("IX_Armoured_Token_Brigade_Team_Active");
+
                     b.ToTable("ArmouredRegiments");
                 });
 
@@ -460,12 +481,19 @@ namespace TechWebSol.Migrations
                     b.Property<Guid?>("BrigadeId1")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<double>("CombatPower")
+                        .HasColumnType("float");
+
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("CurrentTerrain")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
@@ -477,6 +505,9 @@ namespace TechWebSol.Migrations
 
                     b.Property<int>("Drones")
                         .HasColumnType("int");
+
+                    b.Property<double>("EffectiveCombatPower")
+                        .HasColumnType("float");
 
                     b.Property<string>("ForceType")
                         .IsRequired()
@@ -498,15 +529,36 @@ namespace TechWebSol.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<double>("MovementPoints")
+                        .HasColumnType("float");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<double>("RemainingMovement")
+                        .HasColumnType("float");
+
                     b.Property<int>("Strength")
                         .HasColumnType("int");
 
+                    b.Property<double>("StrengthPercentage")
+                        .HasColumnType("float");
+
+                    b.Property<double>("SupplyModifier")
+                        .HasColumnType("float");
+
+                    b.Property<int>("SupplyState")
+                        .HasColumnType("int");
+
                     b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("TerrainModifier")
+                        .HasColumnType("float");
+
+                    b.Property<Guid?>("TokenId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UnitCode")
@@ -533,7 +585,612 @@ namespace TechWebSol.Migrations
 
                     b.HasIndex("TeamId");
 
+                    b.HasIndex("TokenId", "BrigadeId", "TeamId", "IsActive")
+                        .HasDatabaseName("IX_Artillery_Token_Brigade_Team_Active");
+
                     b.ToTable("ArtilleryRegiments");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.AttackOrder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ArtilleryAttached")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("AttackerTokenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AxisId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("DetectionConfidence")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<int>("DurationTurns")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ExecutedUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ExecutionMode")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("ExpectedStartTurn")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsLowConfidence")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("MpReservePercent")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("PayloadJson")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Posture")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("TargetTokenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AttackerTokenId");
+
+                    b.HasIndex("ExpectedStartTurn");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TargetTokenId");
+
+                    b.HasIndex("TeamId");
+
+                    b.ToTable("AttackOrders");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.AttackPlanning.AbortCriteria", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("FogOfWarId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FogOfWarId");
+
+                    b.ToTable("AbortCriteria");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.AttackPlanning.AttackIntent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AttackIntensity")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AttackPreparation")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CoordinationType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DesiredEffect")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("NatoAttackType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AttackIntents");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.AttackPlanning.AttackLogistics", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ExpectedSupplyConsumption")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("MinimumSupplyRequired")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<bool>("ResupplyAvailable")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("ResupplyTurn")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SupplyThreshold")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AttackLogistics");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.AttackPlanning.AttackMovement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("MpReservePercent")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AttackMovements");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.AttackPlanning.AttackTiming", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DurationTurns")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("Posture")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StartTurn")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AttackTimings");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.AttackPlanning.EnhancedAttackOrder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AttackerTokenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ExecutedUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ExecutionMode")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("ExecutionNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("FiresJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FogOfWarJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IntentJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LogisticsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MovementJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ROEJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("TargetTokenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TimingJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("EnhancedAttackOrders");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.AttackPlanning.FiresSupport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ArtilleryAttached")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ArtilleryTask")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EngineerUnits")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("EngineersPresent")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FiresSupports");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.AttackPlanning.FogOfWar", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("CommitWithUncertainty")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("DetectionConfidence")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FogOfWars");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.AttackPlanning.RulesOfEngagement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("CivilianPopulationDensity")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("CivilianPopulationPresent")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("CollateralSensitivity")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("InfrastructurePresent")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("InfrastructureTypes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("WeaponRestrictions")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RulesOfEngagements");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.AttackPlanning.Waypoint", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AttackMovementId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("DistanceToNext")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("float");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AttackMovementId");
+
+                    b.ToTable("Waypoint");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.Battle", b =>
@@ -710,10 +1367,6 @@ namespace TechWebSol.Migrations
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
                     b.Property<string>("ForceType")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -721,11 +1374,6 @@ namespace TechWebSol.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
 
                     b.Property<Guid?>("TeamId")
                         .HasColumnType("uniqueidentifier");
@@ -747,6 +1395,169 @@ namespace TechWebSol.Migrations
                     b.HasIndex("TokenId");
 
                     b.ToTable("Brigades");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.CombatEngineeringCompany", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ATGMS")
+                        .HasColumnType("int");
+
+                    b.Property<string>("BridgeBuildingCapacity")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("BridgeLayingVehicles")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("BrigadeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("BrigadeId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Bulldozers")
+                        .HasColumnType("int");
+
+                    b.Property<double>("CombatPower")
+                        .HasColumnType("float");
+
+                    b.Property<decimal>("ConstructionMaterials")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Cranes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CurrentTerrain")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("DemolitionCharges")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<double>("EffectiveCombatPower")
+                        .HasColumnType("float");
+
+                    b.Property<int>("EngineerVehicles")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("EngineeringWorkSpeed")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Excavators")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ForceType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("FortificationBuildingCapacity")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("HMG")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("LMG")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("MarchingSpeedCrossCountry")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MarchingSpeedRoads")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("MineClearingVehicles")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MineDetectionEquipment")
+                        .HasColumnType("int");
+
+                    b.Property<double>("MovementPoints")
+                        .HasColumnType("float");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ObstacleClearingCapacity")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Platoons")
+                        .HasColumnType("int");
+
+                    b.Property<double>("RemainingMovement")
+                        .HasColumnType("float");
+
+                    b.Property<int>("Strength")
+                        .HasColumnType("int");
+
+                    b.Property<double>("StrengthPercentage")
+                        .HasColumnType("float");
+
+                    b.Property<double>("SupplyModifier")
+                        .HasColumnType("float");
+
+                    b.Property<int>("SupplyState")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("TerrainModifier")
+                        .HasColumnType("float");
+
+                    b.Property<Guid?>("TokenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UnitCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("UnitType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BrigadeId");
+
+                    b.HasIndex("BrigadeId1");
+
+                    b.HasIndex("TeamId");
+
+                    b.HasIndex("TokenId", "BrigadeId", "TeamId", "IsActive")
+                        .HasDatabaseName("IX_Engineering_Token_Brigade_Team_Active");
+
+                    b.ToTable("CombatEngineeringCompanies");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.CombatResult", b =>
@@ -823,6 +1634,103 @@ namespace TechWebSol.Migrations
                     b.HasIndex("BattleId");
 
                     b.ToTable("CombatResults");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.DefenseElement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Coordinates")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<double>("Effectiveness")
+                        .HasColumnType("float");
+
+                    b.Property<Guid>("ElementId")
+                        .HasMaxLength(100)
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("GameSessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Metadata")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("Strength")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("TokenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Visibility")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category");
+
+                    b.HasIndex("ElementId");
+
+                    b.HasIndex("GameSessionId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TokenId");
+
+                    b.HasIndex("GameSessionId", "Status")
+                        .HasDatabaseName("IX_DefenseElement_Session_Status");
+
+                    b.HasIndex("TeamId", "Status", "CreatedDate")
+                        .HasDatabaseName("IX_DefenseElement_Team_Status_Date");
+
+                    b.ToTable("DefenseElements");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.ForceProtection", b =>
@@ -936,6 +1844,79 @@ namespace TechWebSol.Migrations
                     b.ToTable("GameSessions");
                 });
 
+            modelBuilder.Entity("TechWebSol.Models.ISRMission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AssetType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("ConfidenceGain")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<decimal?>("CostFuel")
+                        .HasColumnType("decimal(8,2)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("EndTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("ExposureRisk")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("RequestedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Results")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("StartTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid?>("SuspectedTokenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SuspectedTokenId");
+
+                    b.ToTable("ISRMissions");
+                });
+
             modelBuilder.Entity("TechWebSol.Models.InfantryBattalion", b =>
                 {
                     b.Property<Guid>("Id")
@@ -954,6 +1935,9 @@ namespace TechWebSol.Migrations
                     b.Property<decimal>("CombatAdvanceSpeed")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<double>("CombatPower")
+                        .HasColumnType("float");
+
                     b.Property<int>("Companies")
                         .HasColumnType("int");
 
@@ -963,6 +1947,10 @@ namespace TechWebSol.Migrations
 
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("CurrentTerrain")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
@@ -974,6 +1962,9 @@ namespace TechWebSol.Migrations
 
                     b.Property<int>("Drones")
                         .HasColumnType("int");
+
+                    b.Property<double>("EffectiveCombatPower")
+                        .HasColumnType("float");
 
                     b.Property<string>("ForceType")
                         .IsRequired()
@@ -1016,10 +2007,16 @@ namespace TechWebSol.Migrations
                     b.Property<int>("Mortars81mm")
                         .HasColumnType("int");
 
+                    b.Property<double>("MovementPoints")
+                        .HasColumnType("float");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<double>("RemainingMovement")
+                        .HasColumnType("float");
 
                     b.Property<int>("RocketLauncher")
                         .HasColumnType("int");
@@ -1027,7 +2024,22 @@ namespace TechWebSol.Migrations
                     b.Property<int>("Strength")
                         .HasColumnType("int");
 
+                    b.Property<double>("StrengthPercentage")
+                        .HasColumnType("float");
+
+                    b.Property<double>("SupplyModifier")
+                        .HasColumnType("float");
+
+                    b.Property<int>("SupplyState")
+                        .HasColumnType("int");
+
                     b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("TerrainModifier")
+                        .HasColumnType("float");
+
+                    b.Property<Guid?>("TokenId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UnitCode")
@@ -1053,6 +2065,9 @@ namespace TechWebSol.Migrations
                     b.HasIndex("BrigadeId1");
 
                     b.HasIndex("TeamId");
+
+                    b.HasIndex("TokenId", "BrigadeId", "TeamId", "IsActive")
+                        .HasDatabaseName("IX_Infantry_Token_Brigade_Team_Active");
 
                     b.ToTable("InfantryBattalions");
                 });
@@ -1113,6 +2128,160 @@ namespace TechWebSol.Migrations
                     b.HasIndex("TokenId");
 
                     b.ToTable("Intelligence");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.LogisticsUnit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("AmmunitionStorage")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("AmmunitionTrucks")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("BrigadeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("BrigadeId1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("CombatPower")
+                        .HasColumnType("float");
+
+                    b.Property<int>("Companies")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("ConvoySpeed")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CurrentTerrain")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<double>("EffectiveCombatPower")
+                        .HasColumnType("float");
+
+                    b.Property<string>("ForceType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("FuelCapacity")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("FuelTrucks")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HMG")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("LMG")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaintenanceVehicles")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("MarchingSpeedCrossCountry")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MarchingSpeedRoads")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("MobileWorkshops")
+                        .HasColumnType("int");
+
+                    b.Property<double>("MovementPoints")
+                        .HasColumnType("float");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("RecoveryVehicles")
+                        .HasColumnType("int");
+
+                    b.Property<double>("RemainingMovement")
+                        .HasColumnType("float");
+
+                    b.Property<int>("Strength")
+                        .HasColumnType("int");
+
+                    b.Property<double>("StrengthPercentage")
+                        .HasColumnType("float");
+
+                    b.Property<decimal>("SupplyCapacity")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<double>("SupplyModifier")
+                        .HasColumnType("float");
+
+                    b.Property<int>("SupplyState")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SupplyTrucks")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("TerrainModifier")
+                        .HasColumnType("float");
+
+                    b.Property<Guid?>("TokenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UnitCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("UnitType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("WaterCapacity")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("WaterTrucks")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BrigadeId");
+
+                    b.HasIndex("BrigadeId1");
+
+                    b.HasIndex("TeamId");
+
+                    b.HasIndex("TokenId", "BrigadeId", "TeamId", "IsActive")
+                        .HasDatabaseName("IX_Logistics_Token_Brigade_Team_Active");
+
+                    b.ToTable("LogisticsUnits");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.Map.MapDocument", b =>
@@ -1274,39 +2443,62 @@ namespace TechWebSol.Migrations
 
             modelBuilder.Entity("TechWebSol.Models.MapMarker", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CreatedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime?>("LastUpdated")
-                        .HasColumnType("datetime2");
+                    b.Property<bool>("IsSelected")
+                        .HasColumnType("bit");
 
-                    b.Property<string>("Location")
+                    b.Property<string>("MarkerType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Position")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Notes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("TokenId")
                         .IsRequired()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("TokenName")
+                    b.Property<Guid>("TokenId_GUID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ZIndex")
+                        .HasColumnType("int");
+
+                    b.Property<string>("latitude")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("longitude")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -1472,6 +2664,9 @@ namespace TechWebSol.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("EngagementRule")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("EstimatedArrival")
                         .HasColumnType("datetime2");
 
@@ -1490,6 +2685,9 @@ namespace TechWebSol.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Speed")
                         .HasColumnType("decimal(18,2)");
@@ -1652,6 +2850,9 @@ namespace TechWebSol.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("BrigadeId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Confidence")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
@@ -1697,11 +2898,90 @@ namespace TechWebSol.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TeamId");
+                    b.HasIndex("BrigadeId");
 
                     b.HasIndex("TokenId");
 
                     b.ToTable("Recon");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.RoutesDraft", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CommittedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("CreatedByUser")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EstimatedTimeTurns")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsCommitted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("RouteName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("RouteType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<decimal>("SupplyImpact")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("TotalDistanceKm")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("UnitId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("WaypointsJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TeamId");
+
+                    b.HasIndex("UnitId");
+
+                    b.ToTable("RoutesDrafts");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.SimulationEvent", b =>
@@ -1786,6 +3066,97 @@ namespace TechWebSol.Migrations
                     b.ToTable("StabilityInfo");
                 });
 
+            modelBuilder.Entity("TechWebSol.Models.SuspectedToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Confidence")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FirstDetectedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastConfirmedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Latitude")
+                        .HasColumnType("decimal(10,7)");
+
+                    b.Property<decimal>("Longitude")
+                        .HasColumnType("decimal(10,7)");
+
+                    b.Property<string>("MarkerStyle")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal?>("MatchingConfidence")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("PlacerSide")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("PositionAccuracyMeters")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("RealTokenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Source")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("SuspectedType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("VisibleTo")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RealTokenId");
+
+                    b.ToTable("SuspectedTokens");
+                });
+
             modelBuilder.Entity("TechWebSol.Models.Team", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1815,6 +3186,10 @@ namespace TechWebSol.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<string>("ForceType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -1835,12 +3210,6 @@ namespace TechWebSol.Migrations
                     b.Property<Guid?>("TeamId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("TeamTypeId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("TeamTypeId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("UpdatedBy")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
@@ -1849,8 +3218,6 @@ namespace TechWebSol.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("TeamTypeId1");
 
                     b.ToTable("Teams");
                 });
@@ -2006,15 +3373,15 @@ namespace TechWebSol.Migrations
                     b.ToTable("TerrainMobilityFactors");
                 });
 
-            modelBuilder.Entity("TechWebSol.Models.Token", b =>
+            modelBuilder.Entity("TechWebSol.Models.TerrainType", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Category")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<decimal>("CombatModifier")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(255)
@@ -2026,6 +3393,77 @@ namespace TechWebSol.Migrations
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsImpassableToVehicles")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPassable")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("MovementCostCrossCountry")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MovementCostRoad")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TerrainCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("VisibilityModifier")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TeamId");
+
+                    b.ToTable("TerrainTypes");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.Token", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AssetImagePath")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ForceType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal?>("FrontCoverageKm")
+                        .HasColumnType("decimal(8,2)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -2045,6 +3483,15 @@ namespace TechWebSol.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<int?>("OrganizationLevel")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("RearCoverageKm")
+                        .HasColumnType("decimal(8,2)");
+
+                    b.Property<decimal?>("SideCoverageKm")
+                        .HasColumnType("decimal(8,2)");
+
                     b.Property<Guid?>("TeamId")
                         .HasColumnType("uniqueidentifier");
 
@@ -2053,6 +3500,13 @@ namespace TechWebSol.Migrations
 
                     b.Property<decimal>("TrainingConsistency")
                         .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("UnitDesignation")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("UnitType")
+                        .HasColumnType("int");
 
                     b.Property<string>("UpdatedBy")
                         .HasMaxLength(255)
@@ -2071,6 +3525,84 @@ namespace TechWebSol.Migrations
                     b.HasIndex("TokenGroupId");
 
                     b.ToTable("Tokens");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.TokenAreaCoverage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("AreaKm2")
+                        .HasColumnType("decimal(18,6)");
+
+                    b.Property<string>("CoverageType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal?>("FrontRadiusKm")
+                        .HasColumnType("decimal(8,2)");
+
+                    b.Property<string>("Geometry")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDynamic")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal?>("RearRadiusKm")
+                        .HasColumnType("decimal(8,2)");
+
+                    b.Property<decimal?>("RotationDegrees")
+                        .HasColumnType("decimal(8,2)");
+
+                    b.Property<string>("ShapeType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal?>("SideRadiusKm")
+                        .HasColumnType("decimal(8,2)");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TokenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenId");
+
+                    b.ToTable("TokenAreaCoverages");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.TokenGroup", b =>
@@ -2266,6 +3798,13 @@ namespace TechWebSol.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<double>("CombatPower")
+                        .HasColumnType("float");
+
+                    b.Property<double>("CombatPowerIndex")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("float(18)");
+
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
@@ -2276,7 +3815,22 @@ namespace TechWebSol.Migrations
                     b.Property<int>("CurrentStrength")
                         .HasColumnType("int");
 
+                    b.Property<string>("CurrentTerrain")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<decimal?>("DetectionProbability")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<double>("EffectiveCombatPower")
+                        .HasColumnType("float");
+
+                    b.Property<double>("EffectiveCombatPower_RO")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("float(18)");
+
                     b.Property<decimal>("Fatigue")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("ForceType")
@@ -2295,11 +3849,24 @@ namespace TechWebSol.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Morale")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<double>("MovementPoints")
+                        .HasColumnType("float");
+
+                    b.Property<int>("MovementPointsPerTurn")
+                        .HasColumnType("int");
 
                     b.Property<string>("Position")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("RemainingMovement")
+                        .HasColumnType("float");
+
+                    b.Property<int>("RemainingMovementPoints")
+                        .HasColumnType("int");
 
                     b.Property<Guid?>("ScenarioId")
                         .IsRequired()
@@ -2309,7 +3876,30 @@ namespace TechWebSol.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<double>("StrengthPercentage")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("float(18)");
+
+                    b.Property<double>("SupplyModifier")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("float(18)");
+
+                    b.Property<string>("SupplyState")
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
+                    b.Property<int>("SupplyStateInt")
+                        .HasColumnType("int");
+
                     b.Property<Guid?>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("TerrainModifier")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("float(18)");
+
+                    b.Property<Guid?>("TokenId")
+                        .IsRequired()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("UnitId")
@@ -2337,7 +3927,7 @@ namespace TechWebSol.Migrations
 
                     b.HasIndex("ScenarioId");
 
-                    b.ToTable("UnitDeployments");
+                    b.ToTable("UnitDeployment");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.WarGameScenario", b =>
@@ -2504,6 +4094,46 @@ namespace TechWebSol.Migrations
                     b.Navigation("Team");
                 });
 
+            modelBuilder.Entity("TechWebSol.Models.AttackOrder", b =>
+                {
+                    b.HasOne("TechWebSol.Models.Token", "AttackerToken")
+                        .WithMany()
+                        .HasForeignKey("AttackerTokenId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TechWebSol.Models.Token", "TargetToken")
+                        .WithMany()
+                        .HasForeignKey("TargetTokenId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TechWebSol.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("AttackerToken");
+
+                    b.Navigation("TargetToken");
+
+                    b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.AttackPlanning.AbortCriteria", b =>
+                {
+                    b.HasOne("TechWebSol.Models.AttackPlanning.FogOfWar", null)
+                        .WithMany("AbortCriteria")
+                        .HasForeignKey("FogOfWarId");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.AttackPlanning.Waypoint", b =>
+                {
+                    b.HasOne("TechWebSol.Models.AttackPlanning.AttackMovement", null)
+                        .WithMany("Waypoints")
+                        .HasForeignKey("AttackMovementId");
+                });
+
             modelBuilder.Entity("TechWebSol.Models.Battle", b =>
                 {
                     b.HasOne("TechWebSol.Models.WarGameScenario", "Scenario")
@@ -2551,6 +4181,27 @@ namespace TechWebSol.Migrations
                     b.Navigation("Token");
                 });
 
+            modelBuilder.Entity("TechWebSol.Models.CombatEngineeringCompany", b =>
+                {
+                    b.HasOne("TechWebSol.Models.Brigade", "Brigade")
+                        .WithMany()
+                        .HasForeignKey("BrigadeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TechWebSol.Models.Brigade", null)
+                        .WithMany("CombatEngineeringCompanies")
+                        .HasForeignKey("BrigadeId1");
+
+                    b.HasOne("TechWebSol.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Brigade");
+
+                    b.Navigation("Team");
+                });
+
             modelBuilder.Entity("TechWebSol.Models.CombatResult", b =>
                 {
                     b.HasOne("TechWebSol.Models.Battle", "Battle")
@@ -2562,6 +4213,30 @@ namespace TechWebSol.Migrations
                     b.Navigation("Battle");
                 });
 
+            modelBuilder.Entity("TechWebSol.Models.DefenseElement", b =>
+                {
+                    b.HasOne("TechWebSol.Models.GameSession", "GameSession")
+                        .WithMany()
+                        .HasForeignKey("GameSessionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TechWebSol.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TechWebSol.Models.Token", "Token")
+                        .WithMany()
+                        .HasForeignKey("TokenId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("GameSession");
+
+                    b.Navigation("Team");
+
+                    b.Navigation("Token");
+                });
+
             modelBuilder.Entity("TechWebSol.Models.ForceProtection", b =>
                 {
                     b.HasOne("TechWebSol.Models.Team", "Team")
@@ -2570,6 +4245,16 @@ namespace TechWebSol.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.ISRMission", b =>
+                {
+                    b.HasOne("TechWebSol.Models.SuspectedToken", "SuspectedToken")
+                        .WithMany("ISRMissions")
+                        .HasForeignKey("SuspectedTokenId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("SuspectedToken");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.InfantryBattalion", b =>
@@ -2608,6 +4293,27 @@ namespace TechWebSol.Migrations
                     b.Navigation("Team");
 
                     b.Navigation("Token");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.LogisticsUnit", b =>
+                {
+                    b.HasOne("TechWebSol.Models.Brigade", "Brigade")
+                        .WithMany()
+                        .HasForeignKey("BrigadeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TechWebSol.Models.Brigade", null)
+                        .WithMany("LogisticsUnits")
+                        .HasForeignKey("BrigadeId1");
+
+                    b.HasOne("TechWebSol.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Brigade");
+
+                    b.Navigation("Team");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.MapMarker", b =>
@@ -2660,19 +4366,33 @@ namespace TechWebSol.Migrations
 
             modelBuilder.Entity("TechWebSol.Models.Recon", b =>
                 {
-                    b.HasOne("TechWebSol.Models.Team", "Team")
-                        .WithMany()
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                    b.HasOne("TechWebSol.Models.Brigade", null)
+                        .WithMany("Recon")
+                        .HasForeignKey("BrigadeId");
 
                     b.HasOne("TechWebSol.Models.Token", "Token")
                         .WithMany()
                         .HasForeignKey("TokenId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.Navigation("Token");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.RoutesDraft", b =>
+                {
+                    b.HasOne("TechWebSol.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TechWebSol.Models.UnitDeployment", "UnitDeployment")
+                        .WithMany()
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Team");
 
-                    b.Navigation("Token");
+                    b.Navigation("UnitDeployment");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.SimulationEvent", b =>
@@ -2697,13 +4417,13 @@ namespace TechWebSol.Migrations
                     b.Navigation("TokenSignature");
                 });
 
-            modelBuilder.Entity("TechWebSol.Models.Team", b =>
+            modelBuilder.Entity("TechWebSol.Models.SuspectedToken", b =>
                 {
-                    b.HasOne("TechWebSol.Models.TeamType", "TeamType")
+                    b.HasOne("TechWebSol.Models.Token", "RealToken")
                         .WithMany()
-                        .HasForeignKey("TeamTypeId1");
+                        .HasForeignKey("RealTokenId");
 
-                    b.Navigation("TeamType");
+                    b.Navigation("RealToken");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.TeamTokenGroupAssignment", b =>
@@ -2733,6 +4453,16 @@ namespace TechWebSol.Migrations
                     b.Navigation("Team");
                 });
 
+            modelBuilder.Entity("TechWebSol.Models.TerrainType", b =>
+                {
+                    b.HasOne("TechWebSol.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Team");
+                });
+
             modelBuilder.Entity("TechWebSol.Models.Token", b =>
                 {
                     b.HasOne("TechWebSol.Models.Team", null)
@@ -2744,6 +4474,17 @@ namespace TechWebSol.Migrations
                         .HasForeignKey("TokenGroupId");
 
                     b.Navigation("TokenGroup");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.TokenAreaCoverage", b =>
+                {
+                    b.HasOne("TechWebSol.Models.Token", "Token")
+                        .WithMany("AreaCoverages")
+                        .HasForeignKey("TokenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Token");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.TokenSignature", b =>
@@ -2800,6 +4541,16 @@ namespace TechWebSol.Migrations
                     b.Navigation("GameSession");
                 });
 
+            modelBuilder.Entity("TechWebSol.Models.AttackPlanning.AttackMovement", b =>
+                {
+                    b.Navigation("Waypoints");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.AttackPlanning.FogOfWar", b =>
+                {
+                    b.Navigation("AbortCriteria");
+                });
+
             modelBuilder.Entity("TechWebSol.Models.Battle", b =>
                 {
                     b.Navigation("CombatResults");
@@ -2813,7 +4564,18 @@ namespace TechWebSol.Migrations
 
                     b.Navigation("ArtilleryRegiments");
 
+                    b.Navigation("CombatEngineeringCompanies");
+
                     b.Navigation("InfantryBattalions");
+
+                    b.Navigation("LogisticsUnits");
+
+                    b.Navigation("Recon");
+                });
+
+            modelBuilder.Entity("TechWebSol.Models.SuspectedToken", b =>
+                {
+                    b.Navigation("ISRMissions");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.Team", b =>
@@ -2827,6 +4589,8 @@ namespace TechWebSol.Migrations
 
             modelBuilder.Entity("TechWebSol.Models.Token", b =>
                 {
+                    b.Navigation("AreaCoverages");
+
                     b.Navigation("MapMarkers");
 
                     b.Navigation("Signature");

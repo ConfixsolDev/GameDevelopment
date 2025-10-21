@@ -11,9 +11,8 @@ namespace TechWebSol.Models
         [DisplayName("Route Name")]
         public string RouteName { get; set; }
 
-        [Required]
         [DisplayName("Unit ID")]
-        public Guid UnitId { get; set; }
+        public Guid? UnitId { get; set; }
 
         [ForeignKey("UnitId")]
         public virtual UnitDeployment UnitDeployment { get; set; }

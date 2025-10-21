@@ -13,7 +13,7 @@ using TechWebSol.ViewModels;
 
 namespace TechWebSol.Areas.Identity.Controllers
 {
-    [AuthorizeDynamic]
+    //[AuthorizeDynamic]
     [Area("Identity")]
     [DisplayName("Role Management: Assign to Super Admin")]
     public class RoleController : Controller

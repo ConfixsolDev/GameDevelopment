@@ -231,21 +231,21 @@ builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.GzipCompress
 var app = builder.Build();
 
 // Initialize database with default data
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var initializer = scope.ServiceProvider.GetRequiredService<DbInitializer>();
-        await initializer.InitializeAsync();
+//using (var scope = app.Services.CreateScope())
+//{
+//    var services = scope.ServiceProvider;
+//    try
+//    {
+//        var initializer = scope.ServiceProvider.GetRequiredService<DbInitializer>();
+//        await initializer.InitializeAsync();
 
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while initializing the database.");
-    }
-}
+//    }
+//    catch (Exception ex)
+//    {
+//        var logger = services.GetRequiredService<ILogger<Program>>();
+//        logger.LogError(ex, "An error occurred while initializing the database.");
+//    }
+//}
 
 // Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())

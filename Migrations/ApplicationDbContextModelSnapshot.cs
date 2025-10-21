@@ -457,6 +457,9 @@ namespace TechWebSol.Migrations
 
                     b.HasIndex("TeamId");
 
+                    b.HasIndex("TokenId", "BrigadeId", "TeamId", "IsActive")
+                        .HasDatabaseName("IX_Armoured_Token_Brigade_Team_Active");
+
                     b.ToTable("ArmouredRegiments");
                 });
 
@@ -578,6 +581,9 @@ namespace TechWebSol.Migrations
                     b.HasIndex("BrigadeId1");
 
                     b.HasIndex("TeamId");
+
+                    b.HasIndex("TokenId", "BrigadeId", "TeamId", "IsActive")
+                        .HasDatabaseName("IX_Artillery_Token_Brigade_Team_Active");
 
                     b.ToTable("ArtilleryRegiments");
                 });
@@ -1545,6 +1551,9 @@ namespace TechWebSol.Migrations
 
                     b.HasIndex("TeamId");
 
+                    b.HasIndex("TokenId", "BrigadeId", "TeamId", "IsActive")
+                        .HasDatabaseName("IX_Engineering_Token_Brigade_Team_Active");
+
                     b.ToTable("CombatEngineeringCompanies");
                 });
 
@@ -1710,9 +1719,13 @@ namespace TechWebSol.Migrations
 
                     b.HasIndex("Status");
 
-                    b.HasIndex("TeamId");
-
                     b.HasIndex("TokenId");
+
+                    b.HasIndex("GameSessionId", "Status")
+                        .HasDatabaseName("IX_DefenseElement_Session_Status");
+
+                    b.HasIndex("TeamId", "Status", "CreatedDate")
+                        .HasDatabaseName("IX_DefenseElement_Team_Status_Date");
 
                     b.ToTable("DefenseElements");
                 });
@@ -2050,6 +2063,9 @@ namespace TechWebSol.Migrations
 
                     b.HasIndex("TeamId");
 
+                    b.HasIndex("TokenId", "BrigadeId", "TeamId", "IsActive")
+                        .HasDatabaseName("IX_Infantry_Token_Brigade_Team_Active");
+
                     b.ToTable("InfantryBattalions");
                 });
 
@@ -2258,6 +2274,9 @@ namespace TechWebSol.Migrations
                     b.HasIndex("BrigadeId1");
 
                     b.HasIndex("TeamId");
+
+                    b.HasIndex("TokenId", "BrigadeId", "TeamId", "IsActive")
+                        .HasDatabaseName("IX_Logistics_Token_Brigade_Team_Active");
 
                     b.ToTable("LogisticsUnits");
                 });
@@ -2828,6 +2847,9 @@ namespace TechWebSol.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("BrigadeId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Confidence")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
@@ -2873,7 +2895,7 @@ namespace TechWebSol.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TeamId");
+                    b.HasIndex("BrigadeId");
 
                     b.HasIndex("TokenId");
 
@@ -2936,7 +2958,7 @@ namespace TechWebSol.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<Guid>("UnitId")
+                    b.Property<Guid?>("UnitId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UpdatedBy")
@@ -3185,12 +3207,6 @@ namespace TechWebSol.Migrations
                     b.Property<Guid?>("TeamId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("TeamTypeId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("TeamTypeId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("UpdatedBy")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
@@ -3199,8 +3215,6 @@ namespace TechWebSol.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("TeamTypeId1");
 
                     b.ToTable("Teams");
                 });
@@ -3910,7 +3924,7 @@ namespace TechWebSol.Migrations
 
                     b.HasIndex("ScenarioId");
 
-                    b.ToTable("UnitDeployments");
+                    b.ToTable("UnitDeployment");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.WarGameScenario", b =>
@@ -4349,17 +4363,14 @@ namespace TechWebSol.Migrations
 
             modelBuilder.Entity("TechWebSol.Models.Recon", b =>
                 {
-                    b.HasOne("TechWebSol.Models.Team", "Team")
-                        .WithMany()
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                    b.HasOne("TechWebSol.Models.Brigade", null)
+                        .WithMany("Recon")
+                        .HasForeignKey("BrigadeId");
 
                     b.HasOne("TechWebSol.Models.Token", "Token")
                         .WithMany()
                         .HasForeignKey("TokenId")
                         .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Team");
 
                     b.Navigation("Token");
                 });
@@ -4374,8 +4385,7 @@ namespace TechWebSol.Migrations
                     b.HasOne("TechWebSol.Models.UnitDeployment", "UnitDeployment")
                         .WithMany()
                         .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Team");
 
@@ -4411,15 +4421,6 @@ namespace TechWebSol.Migrations
                         .HasForeignKey("RealTokenId");
 
                     b.Navigation("RealToken");
-                });
-
-            modelBuilder.Entity("TechWebSol.Models.Team", b =>
-                {
-                    b.HasOne("TechWebSol.Models.TeamType", "TeamType")
-                        .WithMany()
-                        .HasForeignKey("TeamTypeId1");
-
-                    b.Navigation("TeamType");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.TeamTokenGroupAssignment", b =>
@@ -4565,6 +4566,8 @@ namespace TechWebSol.Migrations
                     b.Navigation("InfantryBattalions");
 
                     b.Navigation("LogisticsUnits");
+
+                    b.Navigation("Recon");
                 });
 
             modelBuilder.Entity("TechWebSol.Models.SuspectedToken", b =>

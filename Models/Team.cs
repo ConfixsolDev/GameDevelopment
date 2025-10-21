@@ -39,9 +39,6 @@ namespace TechWebSol.Models
         public virtual ICollection<ApplicationUser> Users { get; set; } = new List<ApplicationUser>();
         public virtual ICollection<Token> Tokens { get; set; } = new List<Token>();
         public virtual ICollection<TeamTokenGroupAssignment> TokenGroupAssignments { get; set; } = new List<TeamTokenGroupAssignment>();
-
-        public TeamType TeamType { get; set; }
-        public Guid? TeamTypeId { get; set; }
     }
 
     public class TeamType : BaseEntity
