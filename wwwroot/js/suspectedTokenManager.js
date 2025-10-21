@@ -287,17 +287,27 @@ class SuspectedTokenManager {
      * Start placement mode for suspected token
      */
     startPlacementMode(data) {
+        console.log('🎯 Starting suspected token placement mode with data:', data);
         this.isPlacementMode = true;
         this.placementData = data;
         this.map.getContainer().style.cursor = 'crosshair';
         
         // Add click handler to map
         this.mapClickHandler = (e) => {
+            console.log('🎯 Map clicked for suspected token placement at:', e.latlng);
             this.placeSuspectedToken(e.latlng);
         };
         this.map.on('click', this.mapClickHandler);
 
         this.notificationCallback('Click on the map to place suspected contact', 'info');
+        
+        // Close the modal immediately after starting placement mode
+        const modal = bootstrap.Modal.getInstance(document.getElementById('suspectedTokenModal'));
+        if (modal) {
+            modal.hide();
+        } else {
+            $('#suspectedTokenModal').modal('hide');
+        }
     }
 
     /**
@@ -353,8 +363,13 @@ class SuspectedTokenManager {
                 // Cancel placement mode
                 this.cancelPlacementMode();
                 
-                // Close modal using Bootstrap modal API
-                $('#suspectedTokenModal').modal('hide');
+                // Close modal using Bootstrap 5 modal API
+                const modal = bootstrap.Modal.getInstance(document.getElementById('suspectedTokenModal'));
+                if (modal) {
+                    modal.hide();
+                } else {
+                    $('#suspectedTokenModal').modal('hide');
+                }
             } else {
                 this.notificationCallback(result.message, 'error');
             }
@@ -481,40 +496,55 @@ class SuspectedTokenManager {
 
 // Global functions for modal interactions - Bootstrap Modal API
 function openSuspectedTokenModal() {
-    if (typeof lazyLoader !== 'undefined') {
-        lazyLoader.loadPartial('suspected-token-modal', '#modalsContainer', {
-            onLoaded: () => {
-                $('#suspectedTokenModal').modal('show');
-            }
-        });
+    console.log('🎯 Opening suspected token modal');
+    const modalElement = document.getElementById('suspectedTokenModal');
+    if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    } else {
+        $('#suspectedTokenModal').modal('show');
     }
 }
 
 function closeSuspectedTokenModal() {
-    $('#suspectedTokenModal').modal('hide');
+    const modal = bootstrap.Modal.getInstance(document.getElementById('suspectedTokenModal'));
+    if (modal) {
+        modal.hide();
+    } else {
+        $('#suspectedTokenModal').modal('hide');
+    }
 }
 
 function openSuspectedTokensListModal() {
-    if (typeof lazyLoader !== 'undefined') {
-        lazyLoader.loadPartial('suspected-token-modal', '#modalsContainer', {
-            onLoaded: async () => {
-                $('#suspectedTokensListModal').modal('show');
-                
-                // Load and display suspected tokens
-                if (window.suspectedTokenManager) {
-                    const tokens = await window.suspectedTokenManager.loadSuspectedTokens();
-                    displaySuspectedTokensList(tokens);
-                }
-            }
-        });
+    console.log('🎯 Opening suspected tokens list modal');
+    const modalElement = document.getElementById('suspectedTokensListModal');
+    if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+        
+        // Load and display suspected tokens
+        if (window.suspectedTokenManager) {
+            window.suspectedTokenManager.loadSuspectedTokens().then(tokens => {
+                displaySuspectedTokensList(tokens);
+            });
+        }
+    } else {
+        $('#suspectedTokensListModal').modal('show');
     }
 }
 
 function closeSuspectedTokensListModal() {
-    $('#suspectedTokensListModal').modal('hide');
+    const modal = bootstrap.Modal.getInstance(document.getElementById('suspectedTokensListModal'));
+    if (modal) {
+        modal.hide();
+    } else {
+        $('#suspectedTokensListModal').modal('hide');
+    }
 }
 
 function startSuspectedTokenPlacement() {
+    console.log('🎯 startSuspectedTokenPlacement called');
+    
     const data = {
         name: document.getElementById('suspectedTokenName').value || `Contact-${Date.now()}`,
         source: document.getElementById('suspectedTokenSource').value,
@@ -523,8 +553,14 @@ function startSuspectedTokenPlacement() {
         notes: document.getElementById('suspectedTokenNotes').value
     };
 
+    console.log('🎯 Suspected token data collected:', data);
+    console.log('🎯 SuspectedTokenManager available:', !!window.suspectedTokenManager);
+
     if (window.suspectedTokenManager) {
         window.suspectedTokenManager.startPlacementMode(data);
+    } else {
+        console.error('❌ SuspectedTokenManager not available');
+        alert('Suspected token manager not available. Please refresh the page and try again.');
     }
 }
 

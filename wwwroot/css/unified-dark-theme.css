@@ -189,6 +189,136 @@ a:hover {
   color: var(--text-primary);
 }
 
+.btn-danger:hover {
+  background: var(--status-error);
+  opacity: 0.9;
+}
+
+/* ========================================
+   BOOTSTRAP ENHANCEMENTS - Outline Buttons
+   ======================================== */
+.btn-outline-primary {
+  color: var(--accent-amber);
+  border-color: var(--accent-amber);
+  background-color: transparent;
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--accent-amber);
+  border-color: var(--accent-amber);
+  color: var(--bg-primary);
+}
+
+.btn-outline-secondary {
+  color: var(--text-primary);
+  border-color: var(--border-primary);
+  background-color: transparent;
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-secondary);
+  color: var(--text-primary);
+}
+
+.btn-outline-success {
+  color: var(--status-success);
+  border-color: var(--status-success);
+  background-color: transparent;
+}
+
+.btn-outline-success:hover {
+  background-color: var(--status-success);
+  border-color: var(--status-success);
+  color: var(--text-primary);
+}
+
+.btn-outline-danger {
+  color: var(--status-error);
+  border-color: var(--status-error);
+  background-color: transparent;
+}
+
+.btn-outline-danger:hover {
+  background-color: var(--status-error);
+  border-color: var(--status-error);
+  color: var(--text-primary);
+}
+
+.btn-outline-warning {
+  color: var(--status-warning);
+  border-color: var(--status-warning);
+  background-color: transparent;
+}
+
+.btn-outline-warning:hover {
+  background-color: var(--status-warning);
+  border-color: var(--status-warning);
+  color: var(--bg-primary);
+}
+
+.btn-outline-info {
+  color: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+  background-color: transparent;
+}
+
+.btn-outline-info:hover {
+  background-color: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+  color: var(--text-primary);
+}
+
+/* ========================================
+   BOOTSTRAP ENHANCEMENTS - Button Sizes
+   ======================================== */
+.btn-sm {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  border-radius: var(--radius-sm);
+}
+
+.btn-lg {
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: var(--font-size-md);
+  border-radius: var(--radius-lg);
+}
+
+.btn-block {
+  width: 100%;
+  display: block;
+}
+
+/* ========================================
+   BOOTSTRAP ENHANCEMENTS - Navbar/Topbar
+   ======================================== */
+#page-topbar {
+  background: var(--bg-secondary) !important;
+  border-bottom: 1px solid var(--border-primary) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+.navbar-header {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+.navbar-brand-box {
+  background: var(--bg-secondary) !important;
+}
+
+.navbar-brand-box .logo {
+  color: var(--text-primary) !important;
+}
+
+.navbar-nav .nav-link {
+  color: var(--text-primary) !important;
+}
+
+.navbar-nav .nav-link:hover {
+  color: var(--accent-amber) !important;
+}
+
 /* ========================================
    BOOTSTRAP ENHANCEMENTS - Tables
    ======================================== */
@@ -221,6 +351,27 @@ a:hover {
 
 .table tbody tr:hover {
   background: var(--bg-tertiary);
+}
+
+/* Override Bootstrap table striping for dark theme */
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+.table-striped tbody tr:nth-of-type(even) {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+.table-striped tbody tr:nth-of-type(odd) td {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+.table-striped tbody tr:nth-of-type(even) td {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
 }
 
 /* ========================================
@@ -844,6 +995,16 @@ body.modal-open .modal-backdrop {
   border-spacing: 0;
 }
 
+/* Remove any default table striping */
+.admin-token-table tbody tr {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.admin-token-table tbody tr:nth-child(odd),
+.admin-token-table tbody tr:nth-child(even) {
+  background-color: var(--bg-tertiary) !important;
+}
+
 .admin-token-table thead th {
   background-color: var(--bg-quaternary);
   color: var(--accent-orange) !important;
@@ -857,8 +1018,9 @@ body.modal-open .modal-backdrop {
   border-bottom: 1px solid var(--border-primary);
 }
 
+/* Remove striped pattern - all rows same dark color */
 .admin-token-table tbody tr:nth-child(even) {
-  background-color: var(--bg-quaternary);
+  background-color: var(--bg-tertiary);
 }
 
 .admin-token-table tbody tr:hover {
@@ -868,9 +1030,15 @@ body.modal-open .modal-backdrop {
 
 .admin-token-table tbody td {
   color: var(--text-primary);
+  background-color: var(--bg-tertiary);
   border-bottom: 1px solid var(--border-primary);
   padding: 12px 8px;
   vertical-align: middle;
+}
+
+/* Ensure all table cells have dark background */
+.admin-token-table tbody tr:nth-child(even) td {
+  background-color: var(--bg-tertiary);
 }
 
 /* AdminToken Button Styling */
@@ -991,6 +1159,30 @@ body.modal-open .modal-backdrop {
 /* AdminToken DataTable Customization */
 .admin-token-datatable .dataTables_wrapper {
   color: var(--text-primary);
+}
+
+/* Override Bootstrap table striping for dark theme */
+.admin-token-table.table-striped tbody tr:nth-of-type(odd) {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.admin-token-table.table-striped tbody tr:nth-of-type(even) {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Force dark theme on all table rows */
+.admin-token-table tbody tr,
+.admin-token-table tbody tr:nth-child(odd),
+.admin-token-table tbody tr:nth-child(even) {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+
+.admin-token-table tbody tr td,
+.admin-token-table tbody tr:nth-child(odd) td,
+.admin-token-table tbody tr:nth-child(even) td {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
 }
 
 .admin-token-datatable .dataTables_filter input {
