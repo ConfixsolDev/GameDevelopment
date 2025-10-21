@@ -230,7 +230,7 @@ class SuspectedTokenManager {
                 </div>
                 
                 <div class="popup-actions">
-                    <button class="btn btn-sm btn-danger" onclick="suspectedTokenManager.removeSuspectedToken('${tokenData.id}'); event.stopPropagation();">
+                    <button class="btn btn-sm btn-danger" onclick="removeSuspectedToken('${tokenData.id}'); event.stopPropagation();">
                         <i class="fas fa-trash-alt"></i> Remove
                     </button>
                 </div>
@@ -433,11 +433,15 @@ class SuspectedTokenManager {
      * Remove suspected token
      */
     async removeSuspectedToken(tokenId) {
+        console.log('🗑️ Attempting to remove suspected token:', tokenId);
+        
         if (!confirm('Are you sure you want to remove this suspected contact?')) {
+            console.log('❌ User cancelled removal');
             return;
         }
 
         try {
+            console.log('🗑️ Sending remove request for token:', tokenId);
             const response = await fetch('/SuspectedToken/RemoveSuspectedToken', {
                 method: 'POST',
                 headers: {
@@ -449,17 +453,21 @@ class SuspectedTokenManager {
             });
 
             const result = await response.json();
+            console.log('🗑️ Remove response:', result);
 
             if (result.success) {
                 // Remove marker from map
                 const tokenData = this.suspectedTokens.get(tokenId);
                 if (tokenData && tokenData.marker) {
+                    console.log('🗑️ Removing marker from map');
                     this.map.removeLayer(tokenData.marker);
                 }
                 this.suspectedTokens.delete(tokenId);
 
                 this.notificationCallback(result.message, 'success');
+                console.log('✅ Suspected token removed successfully');
             } else {
+                console.error('❌ Failed to remove suspected token:', result.message);
                 this.notificationCallback(result.message, 'error');
             }
         } catch (error) {
@@ -564,6 +572,17 @@ function startSuspectedTokenPlacement() {
     }
 }
 
+// Global fallback function for remove suspected token
+function removeSuspectedToken(tokenId) {
+    console.log('🗑️ Global removeSuspectedToken called for:', tokenId);
+    if (window.suspectedTokenManager) {
+        window.suspectedTokenManager.removeSuspectedToken(tokenId);
+    } else {
+        console.error('❌ SuspectedTokenManager not available for removal');
+        alert('Suspected token manager not available. Please refresh the page and try again.');
+    }
+}
+
 function displaySuspectedTokensList(tokens) {
     const container = document.getElementById('suspectedTokensList');
     if (!container) return;
@@ -620,13 +639,13 @@ function displaySuspectedTokensList(tokens) {
                 </div>
             </div>
             <div class="token-actions-column">
-                <button class="btn btn-sm btn-info" onclick="suspectedTokenManager.planISRMission('${token.id}')">
+                <button class="btn btn-sm btn-info" onclick="window.suspectedTokenManager.planISRMission('${token.id}')">
                     <i class="fas fa-satellite"></i> Plan ISR
                 </button>
-                <button class="btn btn-sm btn-warning" onclick="suspectedTokenManager.editSuspectedToken('${token.id}')">
+                <button class="btn btn-sm btn-warning" onclick="window.suspectedTokenManager.editSuspectedToken('${token.id}')">
                     <i class="fas fa-edit"></i> Edit
                 </button>
-                <button class="btn btn-sm btn-danger" onclick="suspectedTokenManager.removeSuspectedToken('${token.id}')">
+                <button class="btn btn-sm btn-danger" onclick="removeSuspectedToken('${token.id}')">
                     <i class="fas fa-trash-alt"></i> Remove
                 </button>
             </div>

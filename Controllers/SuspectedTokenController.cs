@@ -308,11 +308,16 @@ namespace TechWebSol.Controllers
         {
             try
             {
+                _logger.LogInformation("RemoveSuspectedToken called for token {TokenId} by user {UserId}", 
+                    request.TokenId, user?.ApplicationUserId);
+                
                 var suspectedToken = await _context.SuspectedTokens
                     .FirstOrDefaultAsync(st => st.Id == request.TokenId && st.TeamId == user.TeamId);
 
                 if (suspectedToken == null)
                 {
+                    _logger.LogWarning("Suspected token {TokenId} not found for team {TeamId}", 
+                        request.TokenId, user.TeamId);
                     return Json(new { success = false, message = "Suspected token not found" });
                 }
 
@@ -321,6 +326,8 @@ namespace TechWebSol.Controllers
                 suspectedToken.UpdatedDate = DateTime.Now;
 
                 await _context.SaveChangesAsync();
+                
+                _logger.LogInformation("Suspected token {TokenId} removed successfully", request.TokenId);
 
                 return Json(new
                 {
