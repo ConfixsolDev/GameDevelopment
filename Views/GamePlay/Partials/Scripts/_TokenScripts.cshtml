@@ -110,14 +110,19 @@ function createTokenIconHTML(token) {
         forceClass = 'force-hostile';
         frameType = 'frame-hostile';
         borderColor = '#ff0000'; // Red
+        console.log(`🔴 Fox/Hostile token detected: ${token.name} (${forceType})`);
     } else if (forceTypeLower.includes('blue') || forceTypeLower.includes('friendly')) {
         forceClass = 'force-friendly';
         frameType = 'frame-friendly';
         borderColor = '#0000ff'; // Blue
+        console.log(`🔵 Blue/Friendly token detected: ${token.name} (${forceType})`);
     } else if (forceTypeLower.includes('neutral') || forceTypeLower.includes('green')) {
         forceClass = 'force-neutral';
         frameType = 'frame-neutral';
         borderColor = '#00AA00'; // Green
+        console.log(`🟢 Neutral token detected: ${token.name} (${forceType})`);
+    } else {
+        console.log(`⚠️ Unknown force type for token: ${token.name} (${forceType})`);
     }
     
     // Get organization symbol
@@ -430,27 +435,31 @@ if (typeof showNotification === 'undefined') {
         background: rgba(0, 0, 0, 0.7);
     }
     
-    /* Force type frame shapes */
+    /* Force type frame shapes - with higher specificity */
+    .military-token-small .nato-frame-small.frame-friendly,
     .nato-frame-small.frame-friendly {
-        border-color: #0080ff;
+        border-color: #0080ff !important;
         clip-path: none;
         border-radius: 4px;
     }
     
+    .military-token-small .nato-frame-small.frame-hostile,
     .nato-frame-small.frame-hostile {
-        border-color: #ff0000;
+        border-color: #ff0000 !important;
         clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
         border-radius: 0;
     }
     
+    .military-token-small .nato-frame-small.frame-neutral,
     .nato-frame-small.frame-neutral {
-        border-color: #00AA00;
+        border-color: #00AA00 !important;
         clip-path: none;
         border-radius: 4px;
     }
     
+    .military-token-small .nato-frame-small.frame-unknown,
     .nato-frame-small.frame-unknown {
-        border-color: #FFAA00;
+        border-color: #FFAA00 !important;
         clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
         border-radius: 0;
     }

@@ -15,7 +15,7 @@
 
 /* NATO Standard 3D Military Token */
     .military-token.nato-standard {
-        padding-top: 20px;
+        /*padding-top: 20px;*/
     }
 
 .military-token.nato-standard:hover {

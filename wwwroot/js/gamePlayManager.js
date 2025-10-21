@@ -671,13 +671,23 @@ class GamePlayManager {
             
             // Determine color based on force type (Fox Land / Blue Land)
             let lineColor = '#4299e1'; // Default blue
+            console.log(`🎨 Token forceType received: "${forceType}" (type: ${typeof forceType})`);
+            
             if (forceType) {
                 const forceTypeLower = forceType.toLowerCase();
-                if (forceTypeLower.includes('fox')) {
+                console.log(`🎨 Force type lowercase: "${forceTypeLower}"`);
+                
+                if (forceTypeLower.includes('fox') || forceTypeLower.includes('red') || forceTypeLower.includes('hostile')) {
                     lineColor = '#ff0000'; // Red for Fox Land
-                } else if (forceTypeLower.includes('blue')) {
+                    console.log(`🔴 Setting RED color for Fox/Red/Hostile token`);
+                } else if (forceTypeLower.includes('blue') || forceTypeLower.includes('friendly')) {
                     lineColor = '#0000ff'; // Blue for Blue Land
+                    console.log(`🔵 Setting BLUE color for Blue/Friendly token`);
+                } else {
+                    console.log(`⚠️ Force type "${forceType}" not recognized, using default blue`);
                 }
+            } else {
+                console.log(`⚠️ No forceType provided, using default blue`);
             }
             
             // Create route lines for each movement

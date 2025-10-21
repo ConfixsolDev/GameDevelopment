@@ -1634,19 +1634,26 @@ class TokenPlacementManager {
         let fillColor, strokeColor, opacity;
         
         // Use force type color for single coverage area
+        console.log(`🎨 Coverage area - forceType: "${forceType}"`);
         if (forceType) {
             const forceTypeLower = forceType.toLowerCase();
-            if (forceTypeLower.includes('fox')) {
+            console.log(`🎨 Coverage area - forceTypeLower: "${forceTypeLower}"`);
+            
+            if (forceTypeLower.includes('fox') || forceTypeLower.includes('red') || forceTypeLower.includes('hostile')) {
                 fillColor = '#ff0000'; // Red for Fox Land
                 strokeColor = '#cc0000';
-            } else if (forceTypeLower.includes('blue')) {
+                console.log(`🔴 Setting RED coverage for Fox/Red/Hostile`);
+            } else if (forceTypeLower.includes('blue') || forceTypeLower.includes('friendly')) {
                 fillColor = '#0000ff'; // Blue for Blue Land
                 strokeColor = '#0000cc';
+                console.log(`🔵 Setting BLUE coverage for Blue/Friendly`);
                 } else {
                     fillColor = '#3388ff'; // Default light blue
                     strokeColor = '#2266dd';
+                    console.log(`⚠️ Using default blue - forceType not recognized`);
                 }
             } else {
+                console.log(`⚠️ No forceType provided for coverage area`);
                 // Fallback to coverage type color
             switch (coverage.coverageType) {
                 case 'Frontside':
