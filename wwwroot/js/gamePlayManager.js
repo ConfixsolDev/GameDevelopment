@@ -126,11 +126,26 @@ class GamePlayManager {
         // Update the zoom value in coordinates display
         const zoomElement = document.getElementById('zoomVal');
         if (zoomElement) {
-            zoomElement.textContent = zoomLevel;
+            zoomElement.textContent = Math.round(zoomLevel);
         }
         
         // Also show in console for debugging
         console.log(`🔍 Zoom display updated to: ${zoomLevel}`);
+    }
+    
+    /**
+     * Update coordinates display (latitude & longitude)
+     */
+    updateCoordinatesDisplay(lat, lng) {
+        const latElement = document.getElementById('latVal');
+        const lngElement = document.getElementById('lngVal');
+        
+        if (latElement) {
+            latElement.textContent = lat.toFixed(6);
+        }
+        if (lngElement) {
+            lngElement.textContent = lng.toFixed(6);
+        }
     }
 
     /**
@@ -255,14 +270,19 @@ class GamePlayManager {
             });
             this.map.zoomControl.setPosition('bottomright');
             
-        // Add debounced zoom change event listener to reduce logging
+        // Add zoom event listener for real-time updates during zoom
+        this.map.on('zoom', () => {
+            const currentZoom = this.map.getZoom();
+            this.updateZoomDisplay(currentZoom);
+        });
+        
+        // Add debounced zoom change event listener for logging
         let zoomTimeout;
         this.map.on('zoomend', () => {
             clearTimeout(zoomTimeout);
             zoomTimeout = setTimeout(() => {
                 const currentZoom = this.map.getZoom();
                 console.log(`🔍 Current zoom level: ${currentZoom}`);
-                this.updateZoomDisplay(currentZoom);
             }, 100);
         });
         
@@ -286,6 +306,16 @@ class GamePlayManager {
                 console.log(`🔄 Map view reset - Zoom: ${currentZoom}`);
             }, 100);
         });
+        
+        // Add mousemove event to update coordinates display
+        this.map.on('mousemove', (e) => {
+            this.updateCoordinatesDisplay(e.latlng.lat, e.latlng.lng);
+        });
+        
+        // Initialize coordinates display with map center
+        const initialCenter = this.map.getCenter();
+        this.updateCoordinatesDisplay(initialCenter.lat, initialCenter.lng);
+        this.updateZoomDisplay(this.map.getZoom());
             
             console.log(`🔍 Map initialized with default zoom: ${this.map.getZoom()}`);
             

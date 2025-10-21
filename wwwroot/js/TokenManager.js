@@ -37,7 +37,9 @@ class TokenManager {
             // Initialize TokenPlacementManager if available
             if (typeof TokenPlacementManager !== 'undefined' && map) {
                 this.tokenPlacementManager = new TokenPlacementManager(map, notificationCallback);
-                console.log('TokenPlacementManager initialized');
+                // Make it globally accessible for TokenActionModeManager
+                window.tokenPlacementManager = this.tokenPlacementManager;
+                console.log('TokenPlacementManager initialized and set globally');
             }
 
             // Don't load tokens here - only load when needed (lazy loading)
@@ -915,29 +917,26 @@ class TokenManager {
     }
 
     /**
-     * Create token card HTML
+     * Create token card HTML with military symbols
      */
     createTokenCard(token, index) {
-        const hasImage = token.assetImagePath && token.assetImagePath.trim() !== '';
         const status = token.status || 'created';
         const isPlaced = this.isTokenAlreadyPlaced(token);
         
-        // Image thumbnail with fallback and name overlay
-        const imageThumbnail = hasImage 
-            ? `<img src="${token.assetImagePath}" alt="${token.name}" class="token-card-image" title="${token.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-               <div class="token-placeholder" style="display:none;">
-                   <i class="${this.getTokenIcon(token)}"></i>
-               </div>
-               <div class="token-name-overlay">${token.name || 'Unnamed Token'}</div>`
-            : `<div class="token-placeholder">
-                   <i class="${this.getTokenIcon(token)}"></i>
-               </div>
-               <div class="token-name-overlay">${token.name || 'Unnamed Token'}</div>`;
+        // Create military symbol
+        const militarySymbol = this.createMilitarySymbolHTML(token);
+        
+        // Get display name for force type
+        const forceTypeDisplay = this.getForceTypeDisplayName(token.forceType);
         
         const cardHtml = `
-            <div class="token-selection-card" ${!isPlaced ? `onclick=\"tokenManager.selectTokenForPlacement(${JSON.stringify(token).replace(/"/g, '&quot;')})\"` : ''} data-token-id="${token.id}">
+            <div class="token-selection-card-military" ${!isPlaced ? `onclick=\"tokenManager.selectTokenForPlacement(${JSON.stringify(token).replace(/"/g, '&quot;')})\"` : ''} data-token-id="${token.id}">
                 <div class="token-status-indicator ${status}"></div>
-                ${imageThumbnail}
+                <div class="military-token-card-wrapper">
+                    ${militarySymbol}
+                </div>
+                <div class="token-name-overlay">${token.name || 'Unnamed Token'}</div>
+                <div class="token-force-badge">${forceTypeDisplay}</div>
             </div>`;
 
         if (!isPlaced) {
@@ -949,7 +948,88 @@ class TokenManager {
             <div>
                 ${cardHtml}
                 <div style="margin-top:8px; text-align:center;">
-                    <button type="button" class="gameplay-btn" onclick="tokenManager.quickRemoveFromMap('${token.id}')">Remove from map</button>
+                    <button type="button" class="btn btn-sm btn-warning" onclick="removeTokenFromMapBtn('${token.id}')">
+                        <i class="fas fa-map-marker-times"></i> Remove from map
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Get display name for force type
+     */
+    getForceTypeDisplayName(forceType) {
+        if (!forceType) return 'Unknown';
+        
+        const forceTypeLower = forceType.toLowerCase();
+        
+        // Return the actual force type name, preserving original naming
+        if (forceTypeLower.includes('fox')) return 'Fox Land';
+        if (forceTypeLower.includes('blue')) return 'Blue Land';
+        if (forceTypeLower.includes('neutral')) return 'Neutral';
+        if (forceTypeLower.includes('hostile')) return 'Hostile';
+        if (forceTypeLower.includes('friendly')) return 'Friendly';
+        
+        // Return as-is if no match
+        return forceType;
+    }
+    
+    /**
+     * Create military symbol HTML for token cards
+     */
+    createMilitarySymbolHTML(token) {
+        // Determine force class and frame type
+        const forceType = token.forceType || '';
+        const forceTypeLower = forceType.toLowerCase();
+        
+        let forceClass = 'force-unknown';
+        let frameType = 'frame-unknown';
+        
+        if (forceTypeLower.includes('fox') || forceTypeLower.includes('hostile') || forceTypeLower.includes('red')) {
+            forceClass = 'force-hostile';
+            frameType = 'frame-hostile';
+        } else if (forceTypeLower.includes('blue') || forceTypeLower.includes('friendly')) {
+            forceClass = 'force-friendly';
+            frameType = 'frame-friendly';
+        } else if (forceTypeLower.includes('neutral') || forceTypeLower.includes('green')) {
+            forceClass = 'force-neutral';
+            frameType = 'frame-neutral';
+        }
+        
+        // Get organization symbol
+        const orgLevel = token.organizationLevel || '';
+        let orgSymbol = '●';
+        if (orgLevel.includes('Brigade')) orgSymbol = '✕✕';
+        else if (orgLevel.includes('Division')) orgSymbol = '✕✕✕';
+        else if (orgLevel.includes('Corps')) orgSymbol = '✕✕✕✕';
+        else if (orgLevel.includes('Army')) orgSymbol = '✕✕✕✕✕';
+        else if (orgLevel.includes('Battalion')) orgSymbol = '|||';
+        else if (orgLevel.includes('Company')) orgSymbol = '|';
+        else if (orgLevel.includes('Platoon')) orgSymbol = '●●●';
+        else if (orgLevel.includes('Squad')) orgSymbol = '●';
+        
+        // Get unit type symbol
+        const unitType = token.unitType || 'Infantry';
+        let unitSymbol = '○'; // Infantry default
+        if (unitType.includes('Armoured') || unitType.includes('Armor')) unitSymbol = '⊗';
+        else if (unitType.includes('Artillery')) unitSymbol = '◆';
+        else if (unitType.includes('Aviation')) unitSymbol = '▲';
+        else if (unitType.includes('Engineer')) unitSymbol = '⚒';
+        else if (unitType.includes('Mechanized')) unitSymbol = '⊕';
+        
+        const unitDesignation = token.unitDesignation || 'N/A';
+        
+        return `
+            <div class="military-token-card ${forceClass}">
+                <div class="nato-frame-card ${frameType}">
+                    ${forceClass === 'force-hostile' ? '<div class="hostile-content-frame-card">' : ''}
+                        <div class="org-level-top-card">${orgSymbol}</div>
+                        <div class="unit-symbol-center-card">
+                            <span class="unit-symbol-card">${unitSymbol}</span>
+                            <span class="unit-designation-card">${unitDesignation}</span>
+                        </div>
+                    ${forceClass === 'force-hostile' ? '</div>' : ''}
                 </div>
             </div>
         `;

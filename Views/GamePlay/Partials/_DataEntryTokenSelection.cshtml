@@ -22,22 +22,81 @@
                         {
                             @foreach (var token in Model)
                             {
-                                <div class="token-selection-card" onclick="selectTokenForDataEntry('@token.Id', '@token.Name')" data-token-id="@token.Id">
-                                    <div class="token-status-indicator created"></div>
-                                    @if (!string.IsNullOrEmpty(token.AssetImagePath))
-                                    {
-                                        <img src="@token.AssetImagePath" alt="@token.Name" class="token-card-image" title="@token.Name" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                        <div class="token-placeholder" style="display:none;">
-                                            <i class="fas fa-crosshairs"></i>
+                                var forceType = token.ForceType ?? "Unknown";
+                                var forceClass = "force-unknown";
+                                var frameType = "frame-unknown";
+                                
+                                if (forceType.Contains("Fox", StringComparison.OrdinalIgnoreCase) || 
+                                    forceType.Contains("Hostile", StringComparison.OrdinalIgnoreCase) || 
+                                    forceType.Contains("Red", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    forceClass = "force-hostile";
+                                    frameType = "frame-hostile";
+                                }
+                                else if (forceType.Contains("Blue", StringComparison.OrdinalIgnoreCase) || 
+                                         forceType.Contains("Friendly", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    forceClass = "force-friendly";
+                                    frameType = "frame-friendly";
+                                }
+                                else if (forceType.Contains("Neutral", StringComparison.OrdinalIgnoreCase) || 
+                                         forceType.Contains("Green", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    forceClass = "force-neutral";
+                                    frameType = "frame-neutral";
+                                }
+                                
+                                var orgLevel = token.OrganizationLevel?.ToString() ?? "";
+                                var orgSymbol = "●";
+                                if (orgLevel.Contains("Brigade")) orgSymbol = "✕✕";
+                                else if (orgLevel.Contains("Division")) orgSymbol = "✕✕✕";
+                                else if (orgLevel.Contains("Corps")) orgSymbol = "✕✕✕✕";
+                                else if (orgLevel.Contains("Army")) orgSymbol = "✕✕✕✕✕";
+                                else if (orgLevel.Contains("Battalion")) orgSymbol = "|||";
+                                else if (orgLevel.Contains("Company")) orgSymbol = "|";
+                                else if (orgLevel.Contains("Platoon")) orgSymbol = "●●●";
+                                
+                                var unitType = token.UnitType?.ToString() ?? "Infantry";
+                                var unitSymbol = "○";
+                                if (unitType.Contains("Armour") || unitType.Contains("Armor")) unitSymbol = "⊗";
+                                else if (unitType.Contains("Artillery")) unitSymbol = "◆";
+                                else if (unitType.Contains("Aviation")) unitSymbol = "▲";
+                                else if (unitType.Contains("Engineer")) unitSymbol = "⚒";
+                                else if (unitType.Contains("Mechanized")) unitSymbol = "⊕";
+                                
+                                var unitDesignation = token.UnitDesignation ?? "N/A";
+                                
+                                <div class="token-selection-card-military" 
+                                     onclick="selectTokenForDataEntry('@token.Id', '@token.Name')" 
+                                     data-token-id="@token.Id"
+                                     data-force-type="@forceType"
+                                     data-org-level="@orgLevel"
+                                     data-unit-type="@unitType"
+                                     data-unit-designation="@unitDesignation">
+                                    <div class="military-token-card @forceClass">
+                                        <div class="nato-frame-card @frameType">
+                                            @if (forceClass == "force-hostile")
+                                            {
+                                                <div class="hostile-content-frame-card">
+                                                    <div class="org-level-top-card">@Html.Raw(orgSymbol)</div>
+                                                    <div class="unit-symbol-center-card">
+                                                        <span class="unit-symbol-card">@Html.Raw(unitSymbol)</span>
+                                                        <span class="unit-designation-card">@unitDesignation</span>
+                                                    </div>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="org-level-top-card">@Html.Raw(orgSymbol)</div>
+                                                <div class="unit-symbol-center-card">
+                                                    <span class="unit-symbol-card">@Html.Raw(unitSymbol)</span>
+                                                    <span class="unit-designation-card">@unitDesignation</span>
+                                                </div>
+                                            }
                                         </div>
-                                    }
-                                    else
-                                    {
-                                        <div class="token-placeholder">
-                                            <i class="fas fa-crosshairs"></i>
-                                        </div>
-                                    }
+                                    </div>
                                     <div class="token-name-overlay">@token.Name</div>
+                                    <div class="token-force-badge">@forceType</div>
                                 </div>
                             }
                         }
@@ -69,7 +128,7 @@ function closeDataEntryTokenModal() {
 $(document).ready(function() {
     $('#tokenSearchInput').on('keyup', function() {
         var searchTerm = $(this).val().toLowerCase();
-        $('.token-selection-card').each(function() {
+        $('.token-selection-card-military').each(function() {
             var tokenName = $(this).find('.token-name-overlay').text().toLowerCase();
             if (tokenName.includes(searchTerm)) {
                 $(this).show();
@@ -155,3 +214,153 @@ function selectTokenForDataEntry(tokenId, tokenName) {
     });
 }
 </script>
+
+<style>
+/* Military Token Cards for Data Entry */
+.token-selection-card-military {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    border: 2px solid #444;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(26, 26, 26, 0.8);
+    position: relative;
+}
+
+.token-selection-card-military:hover {
+    background: rgba(255, 176, 0, 0.1);
+    border-color: #ffb000;
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(255, 176, 0, 0.4);
+}
+
+.military-token-card {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.nato-frame-card {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border: 4px solid;
+    background: rgba(0, 0, 0, 0.7);
+}
+
+/* Frame shapes for different force types */
+.nato-frame-card.frame-friendly {
+    border-color: #0080ff;
+    clip-path: none;
+    border-radius: 4px;
+}
+
+.nato-frame-card.frame-hostile {
+    border-color: #ff0000;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    border-radius: 0;
+}
+
+.nato-frame-card.frame-neutral {
+    border-color: #00AA00;
+    clip-path: none;
+    border-radius: 4px;
+}
+
+.nato-frame-card.frame-unknown {
+    border-color: #FFAA00;
+    clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
+    border-radius: 0;
+}
+
+.hostile-content-frame-card {
+    width: 85%;
+    height: 85%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.org-level-top-card {
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+.unit-symbol-center-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.unit-symbol-card {
+    font-size: 28px;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+.unit-designation-card {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+/* Force type background colors */
+.force-friendly .nato-frame-card {
+    border-color: #0080ff;
+    background: rgba(0, 128, 255, 0.15);
+}
+
+.force-hostile .nato-frame-card {
+    border-color: #ff0000;
+    background: rgba(255, 0, 0, 0.15);
+}
+
+.force-neutral .nato-frame-card {
+    border-color: #00AA00;
+    background: rgba(0, 170, 0, 0.15);
+}
+
+.force-unknown .nato-frame-card {
+    border-color: #FFAA00;
+    background: rgba(255, 170, 0, 0.15);
+}
+
+.token-name-overlay {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffb000;
+    text-align: center;
+    margin-top: 8px;
+}
+
+.token-force-badge {
+    font-size: 10px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+}
+</style>

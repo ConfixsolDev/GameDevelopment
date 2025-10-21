@@ -174,9 +174,8 @@ namespace TechWebSol.DAL
             if (element == null)
                 return false;
 
-            element.Status = "inactive";
-            element.UpdatedDate = DateTime.UtcNow;
 
+            _context.Remove(element);
             await _context.SaveChangesAsync();
             return true;
         }

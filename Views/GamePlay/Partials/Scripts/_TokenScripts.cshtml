@@ -77,18 +77,106 @@ function populateTokenSelection() {
     availableTokens.forEach(token => {
         const tokenElement = document.createElement('div');
         tokenElement.className = 'token-option';
+        
+        // Create military symbol icon matching map tokens
+        const militaryIcon = createTokenIconHTML(token);
+        
         tokenElement.innerHTML = `
-            <div class="token-icon">
-                <i class="fas fa-chess-knight"></i>
+            <div class="token-icon-military">
+                ${militaryIcon}
             </div>
             <div class="token-info">
                 <h5>${token.name}</h5>
-                <p>${token.type || 'Unit'}</p>
+                <p>${token.unitDesignation || token.type || 'Unit'}</p>
+                <span class="token-force-type">${getForceTypeDisplayName(token.forceType)}</span>
             </div>
         `;
         tokenElement.onclick = () => selectTokenForPlacement(token);
         container.appendChild(tokenElement);
     });
+}
+
+// Create token icon HTML matching map display
+function createTokenIconHTML(token) {
+    // Determine force class and frame type
+    const forceType = token.forceType || '';
+    const forceTypeLower = forceType.toLowerCase();
+    
+    let forceClass = 'force-unknown';
+    let frameType = 'frame-unknown';
+    let borderColor = '#FFAA00'; // Default yellow for unknown
+    
+    if (forceTypeLower.includes('fox') || forceTypeLower.includes('hostile') || forceTypeLower.includes('red')) {
+        forceClass = 'force-hostile';
+        frameType = 'frame-hostile';
+        borderColor = '#ff0000'; // Red
+    } else if (forceTypeLower.includes('blue') || forceTypeLower.includes('friendly')) {
+        forceClass = 'force-friendly';
+        frameType = 'frame-friendly';
+        borderColor = '#0000ff'; // Blue
+    } else if (forceTypeLower.includes('neutral') || forceTypeLower.includes('green')) {
+        forceClass = 'force-neutral';
+        frameType = 'frame-neutral';
+        borderColor = '#00AA00'; // Green
+    }
+    
+    // Get organization symbol
+    const orgLevel = token.organizationLevel || '';
+    let orgSymbol = '●';
+    if (orgLevel.includes('Brigade') || orgLevel.includes('Brigade')) orgSymbol = '✕✕';
+    else if (orgLevel.includes('Division')) orgSymbol = '✕✕✕';
+    else if (orgLevel.includes('Corps')) orgSymbol = '✕✕✕✕';
+    else if (orgLevel.includes('Army')) orgSymbol = '✕✕✕✕✕';
+    else if (orgLevel.includes('Battalion')) orgSymbol = '|||';
+    else if (orgLevel.includes('Company')) orgSymbol = '|';
+    else if (orgLevel.includes('Platoon')) orgSymbol = '●●●';
+    else if (orgLevel.includes('Squad')) orgSymbol = '●';
+    
+    // Get unit type symbol
+    const unitType = token.unitType || 'Infantry';
+    let unitSymbol = '○'; // Infantry default
+    if (unitType.includes('Armoured') || unitType.includes('Armor')) unitSymbol = '⊗';
+    else if (unitType.includes('Artillery')) unitSymbol = '◆';
+    else if (unitType.includes('Aviation')) unitSymbol = '▲';
+    else if (unitType.includes('Engineer')) unitSymbol = '⚒';
+    else if (unitType.includes('Mechanized')) unitSymbol = '⊕';
+    
+    const unitDesignation = token.unitDesignation || 'N/A';
+    
+    return `
+        <div class="military-token-small nato-standard ${forceClass}">
+            <div class="nato-frame-small ${frameType}">
+                ${forceClass === 'force-hostile' ? '<div class="hostile-content-frame-small">' : ''}
+                    <div class="org-level-top-small">
+                        <div class="org-symbol-small">${orgSymbol}</div>
+                    </div>
+                    <div class="unit-symbol-center-small">
+                        <div class="unit-symbol-small">${unitSymbol}</div>
+                        <div class="unit-designation-right-small">
+                            <div class="unit-designation-small">${unitDesignation}</div>
+                        </div>
+                    </div>
+                ${forceClass === 'force-hostile' ? '</div>' : ''}
+            </div>
+        </div>
+    `;
+}
+
+// Get display name for force type
+function getForceTypeDisplayName(forceType) {
+    if (!forceType) return 'Unknown';
+    
+    const forceTypeLower = forceType.toLowerCase();
+    
+    // Return the actual force type name
+    if (forceTypeLower.includes('fox')) return 'Fox Land';
+    if (forceTypeLower.includes('blue')) return 'Blue Land';
+    if (forceTypeLower.includes('neutral')) return 'Neutral';
+    if (forceTypeLower.includes('hostile')) return 'Hostile';
+    if (forceTypeLower.includes('friendly')) return 'Friendly';
+    
+    // Return as-is if no match
+    return forceType;
 }
 
 // Select token for placement
@@ -115,11 +203,16 @@ function createTokenCursorIndicator(token) {
     // Remove existing indicator
     $('.token-cursor-indicator').remove();
     
-    // Create new indicator
+    // Create military symbol for cursor
+    const militaryIcon = createTokenIconHTML(token);
+    
+    // Create new indicator with military symbol
     const indicator = $(`
         <div class="token-cursor-indicator">
-            <i class="fas fa-chess-knight"></i>
-            <span>${token.name}</span>
+            <div class="cursor-token-preview">
+                ${militaryIcon}
+            </div>
+            <div class="cursor-token-name">${token.name}</div>
         </div>
     `);
     
@@ -129,8 +222,8 @@ function createTokenCursorIndicator(token) {
     $(document).on('mousemove.tokenPlacement', function(e) {
         if (isTokenPlacementMode && selectedTokenForPlacement) {
             indicator.css({
-                left: e.pageX + 10,
-                top: e.pageY - 10
+                left: e.pageX + 15,
+                top: e.pageY - 15
             });
         }
     });
@@ -265,45 +358,193 @@ if (typeof showNotification === 'undefined') {
     .token-option {
         display: flex;
         align-items: center;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        margin: 5px;
+        padding: 15px;
+        border: 2px solid #444;
+        border-radius: 8px;
+        margin: 8px;
         cursor: pointer;
-        transition: background-color 0.2s;
+        transition: all 0.3s ease;
+        background: rgba(26, 26, 26, 0.8);
     }
     
     .token-option:hover {
-        background-color: #f5f5f5;
+        background: rgba(255, 176, 0, 0.1);
+        border-color: #ffb000;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 176, 0, 0.3);
     }
     
-    .token-icon {
-        margin-right: 10px;
-        font-size: 24px;
-        color: #007bff;
+    .token-icon-military {
+        margin-right: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .token-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
     }
     
     .token-info h5 {
         margin: 0;
-        font-size: 14px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #ffb000;
     }
     
     .token-info p {
         margin: 0;
-        font-size: 12px;
-        color: #666;
+        font-size: 13px;
+        color: #ccc;
+    }
+    
+    .token-force-type {
+        font-size: 11px;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Small military token styles for selection modal */
+    .military-token-small {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    
+    .nato-frame-small {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        border: 3px solid;
+        background: rgba(0, 0, 0, 0.7);
+    }
+    
+    /* Force type frame shapes */
+    .nato-frame-small.frame-friendly {
+        border-color: #0080ff;
+        clip-path: none;
+        border-radius: 4px;
+    }
+    
+    .nato-frame-small.frame-hostile {
+        border-color: #ff0000;
+        clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+        border-radius: 0;
+    }
+    
+    .nato-frame-small.frame-neutral {
+        border-color: #00AA00;
+        clip-path: none;
+        border-radius: 4px;
+    }
+    
+    .nato-frame-small.frame-unknown {
+        border-color: #FFAA00;
+        clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
+        border-radius: 0;
+    }
+    
+    .hostile-content-frame-small {
+        width: 85%;
+        height: 85%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .org-level-top-small {
+        position: absolute;
+        top: 2px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 10px;
+        font-weight: bold;
+        color: #fff;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+    
+    .unit-symbol-center-small {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        font-size: 20px;
+        color: #fff;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+    
+    .unit-designation-right-small {
+        position: absolute;
+        right: 4px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 9px;
+        font-weight: bold;
+        color: #fff;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+    
+    /* Force type colors */
+    .force-friendly .nato-frame-small {
+        border-color: #0080ff;
+        background: rgba(0, 128, 255, 0.15);
+    }
+    
+    .force-hostile .nato-frame-small {
+        border-color: #ff0000;
+        background: rgba(255, 0, 0, 0.15);
+    }
+    
+    .force-neutral .nato-frame-small {
+        border-color: #00AA00;
+        background: rgba(0, 170, 0, 0.15);
+    }
+    
+    .force-unknown .nato-frame-small {
+        border-color: #FFAA00;
+        background: rgba(255, 170, 0, 0.15);
     }
     
     .token-cursor-indicator {
         position: fixed;
         pointer-events: none;
-        z-index: 9999;
-        background: rgba(0, 123, 255, 0.9);
-        color: white;
-        padding: 4px 8px;
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .cursor-token-preview {
+        background: rgba(0, 0, 0, 0.9);
+        border: 2px solid #ffb000;
+        border-radius: 8px;
+        padding: 8px;
+        box-shadow: 0 4px 12px rgba(255, 176, 0, 0.5);
+    }
+    
+    .cursor-token-name {
+        background: rgba(0, 0, 0, 0.9);
+        color: #ffb000;
+        padding: 4px 12px;
         border-radius: 4px;
         font-size: 12px;
+        font-weight: 600;
         white-space: nowrap;
+        text-shadow: 0 0 10px rgba(255, 176, 0, 0.5);
+        border: 1px solid #ffb000;
     }
     
     .notification {

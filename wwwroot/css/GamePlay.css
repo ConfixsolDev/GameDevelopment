@@ -1207,54 +1207,89 @@ html, body {
 }
 
 /* ========================================
-   SUPER ADMIN BUTTON
+   TEAM COMMAND HEADER - Integrated into Region Panel
    ======================================== */
 
-.super-admin-button {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 1000;
-    background: linear-gradient(135deg, #ff6b35, #f7931e);
-    border: 2px solid #ff6b35;
-    border-radius: 25px;
-    padding: 12px 20px;
+.team-command-header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    cursor: pointer;
+    gap: 12px;
+    padding: 15px;
+    margin: -12px -12px 12px -12px;
+    background: linear-gradient(135deg, rgba(10, 10, 10, 0.8) 0%, rgba(20, 20, 20, 0.9) 100%);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px 12px 0 0;
+    animation: teamHeaderSlideIn 0.6s ease-out;
+}
+
+@keyframes teamHeaderSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.team-command-header .team-badge-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255, 255, 255, 0.2);
     transition: all 0.3s ease;
-    box-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 700;
-    font-size: 12px;
+    animation: teamIconPulse 3s ease-in-out infinite;
+}
+
+@keyframes teamIconPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.team-command-header .team-badge-icon i {
+    font-size: 22px;
     color: #ffffff;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.team-command-header .team-badge-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+
+.team-command-header .team-badge-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.5);
     text-transform: uppercase;
-    letter-spacing: 1px;
-    user-select: none;
+    letter-spacing: 1.5px;
 }
 
-.super-admin-button:hover {
-    background: linear-gradient(135deg, #ff7b45, #ffa31e);
-    border-color: #ff7b45;
-    transform: translateY(-2px);
-    box-shadow: 0 0 30px rgba(255, 107, 53, 0.7);
-}
-
-.super-admin-button.active {
-    background: linear-gradient(135deg, #00ff88, #00cc6a);
-    border-color: #00ff88;
-    box-shadow: 0 0 30px rgba(0, 255, 136, 0.7);
-}
-
-.super-admin-button i {
+.team-command-header .team-badge-name {
+    font-family: 'Orbitron', sans-serif;
     font-size: 16px;
-    color: #ffffff;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    filter: brightness(1.2);
 }
 
-.super-admin-button span {
-    font-size: 11px;
-    font-weight: 700;
+/* Legacy styles - kept for backward compatibility */
+.super-admin-button,
+.team-display-badge,
+.team-command-badge {
+    display: none !important;
 }
 
 /* ========================================
@@ -1539,13 +1574,11 @@ html, body {
     cursor: pointer;
     transition: all 0.2s ease;
     z-index: 500;
-    box-shadow: 0 6px 14px rgba(0,0,0,0.45);
     overflow: hidden;
 }
 
 .token-marker:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.55);
+    transform: translateY(-1px);
 }
 
 .token-marker.fox-land {
@@ -1908,6 +1941,156 @@ html, body {
     transform: translateY(-6px) scale(1.01);
     box-shadow: 0 14px 30px rgba(0, 255, 136, 0.3);
     border: 2px solid #00ff88;
+}
+
+/* Military Token Cards - NATO Symbols */
+.token-selection-card-military {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    border: 2px solid #444;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(26, 26, 26, 0.8);
+    position: relative;
+    aspect-ratio: 4/3;
+}
+
+.token-selection-card-military:hover {
+    background: rgba(255, 176, 0, 0.1);
+    border-color: #ffb000;
+    transform: translateY(-6px) scale(1.01);
+    box-shadow: 0 14px 30px rgba(255, 176, 0, 0.4);
+}
+
+.military-token-card-wrapper {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.token-force-badge {
+    font-size: 10px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+}
+
+/* NATO Frame Styles for Token Cards */
+.military-token-card {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nato-frame-card {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border: 4px solid;
+    background: rgba(0, 0, 0, 0.7);
+}
+
+/* Frame shapes for different force types */
+.nato-frame-card.frame-friendly {
+    border-color: #0080ff;
+    clip-path: none;
+    border-radius: 4px;
+}
+
+.nato-frame-card.frame-hostile {
+    border-color: #ff0000;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    border-radius: 0;
+}
+
+.nato-frame-card.frame-neutral {
+    border-color: #00AA00;
+    clip-path: none;
+    border-radius: 4px;
+}
+
+.nato-frame-card.frame-unknown {
+    border-color: #FFAA00;
+    clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
+    border-radius: 0;
+}
+
+.hostile-content-frame-card {
+    width: 85%;
+    height: 85%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.org-level-top-card {
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+.unit-symbol-center-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.unit-symbol-card {
+    font-size: 28px;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+.unit-designation-card {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+/* Force type background colors */
+.force-friendly .nato-frame-card {
+    border-color: #0080ff;
+    background: rgba(0, 128, 255, 0.15);
+}
+
+.force-hostile .nato-frame-card {
+    border-color: #ff0000;
+    background: rgba(255, 0, 0, 0.15);
+}
+
+.force-neutral .nato-frame-card {
+    border-color: #00AA00;
+    background: rgba(0, 170, 0, 0.15);
+}
+
+.force-unknown .nato-frame-card {
+    border-color: #FFAA00;
+    background: rgba(255, 170, 0, 0.15);
 }
 
 .token-card-image {
