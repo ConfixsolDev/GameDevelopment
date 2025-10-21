@@ -300,7 +300,17 @@ namespace TechWebSol.Controllers
 
                 user.TeamId = request.TeamId;
                 user.AssignDate = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
+                
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    _logger.LogWarning("Concurrency conflict when assigning user {UserId} to team {TeamId}", 
+                        request.UserId, request.TeamId);
+                    return Json(new { success = false, message = "User data has been modified by another user. Please refresh and try again." });
+                }
 
                 _logger.LogInformation("Assigned user {UserId} to team {TeamId} by user {CurrentUserId}", 
                     request.UserId, request.TeamId, currentUser.ApplicationUserId);
@@ -339,7 +349,16 @@ namespace TechWebSol.Controllers
                 // Unassign user from team
                 user.TeamId = null;
 
-                await _context.SaveChangesAsync();
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    _logger.LogWarning("Concurrency conflict when removing user {UserId} from team {TeamId}", 
+                        userId, teamId);
+                    return Json(new { success = false, message = "User data has been modified by another user. Please refresh and try again." });
+                }
 
                 _logger.LogInformation("Removed user {UserId} from team {TeamId} by {AdminUserId}",
                     userId, teamId, currentUser.ApplicationUserId);

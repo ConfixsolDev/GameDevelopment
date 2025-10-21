@@ -62,6 +62,10 @@ namespace TechWebSol.Models
         public bool isSuperAdmin { get; set; } = false;
 
         public bool IsDeleted { get; set; } = false;
+
+        // Concurrency token to prevent optimistic concurrency failures
+        [Timestamp]
+        public byte[] RowVersion { get; set; } = new byte[8];
     }
 }
 
