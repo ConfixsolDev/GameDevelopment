@@ -1,6 +1,7 @@
 @inject IUserSessionService _userSessionService;
 @{
     var currentUser = _userSessionService.GetCurrentUser();
+    bool isControlUser = (currentUser?.TeamId == null || currentUser?.TeamId == Guid.Empty);
     Layout = "_GamePlayLayout";
     ViewData["Title"] = "Game Play Arena";
     ViewData["Subtitle"] = "Strategic Command Center - Fox Land vs Blue Land";
@@ -47,9 +48,12 @@
 
         <!-- BOTTOM-RIGHT: Quick Actions -->
         <div class="quick-actions slide-up">
-            <button id="adjudicateMoveBtn" class="action-btn action-btn-primary" title="Adjudicate Military Movements" onclick="runMilitaryAdjudication()">
-                <i class="fas fa-chart-line"></i>
-            </button>
+            @if (isControlUser)
+            {
+                <button id="adjudicateMoveBtn" class="action-btn action-btn-primary" title="Adjudicate Military Movements" onclick="runMilitaryAdjudication()">
+                    <i class="fas fa-chart-line"></i>
+                </button>
+            }
             <button id="clearSelectionBtn" class="action-btn" title="Clear Selection">
                 <i class="fas fa-times-circle"></i>
             </button>

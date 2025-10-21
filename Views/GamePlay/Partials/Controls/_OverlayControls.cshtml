@@ -1,3 +1,9 @@
+@inject IUserSessionService _userSessionService
+@{
+    var currentUser = _userSessionService.GetCurrentUser();
+    bool isControlUser = (currentUser?.TeamId == null || currentUser?.TeamId == Guid.Empty);
+}
+
 <div class="map-overlay-controls">
     <div class="overlay-control-group">
         <h6>War Game Tools</h6>
@@ -170,20 +176,23 @@
         </div>
     </div>
 
-    <div class="overlay-control-group">
-        <h6>Military Analysis</h6>
-        <div class="control-row">
-            <button class="overlay-btn overlay-btn-analysis" onclick="runMilitaryAdjudication()">
-                <i class="fas fa-chart-line"></i>
-                <span>Adjudicate Movements</span>
-            </button>
-      
-            <button class="overlay-btn overlay-btn-combat" onclick="runCombatSimulation()">
-                <i class="fas fa-crosshairs"></i>
-                <span>Combat Simulation</span>
-            </button>
+    @if (isControlUser)
+    {
+        <div class="overlay-control-group">
+            <h6>Military Analysis</h6>
+            <div class="control-row">
+                <button class="overlay-btn overlay-btn-analysis" onclick="runMilitaryAdjudication()">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Adjudicate Movements</span>
+                </button>
+          
+                <button class="overlay-btn overlay-btn-combat" onclick="runCombatSimulation()">
+                    <i class="fas fa-crosshairs"></i>
+                    <span>Combat Simulation</span>
+                </button>
+            </div>
         </div>
-    </div>
+    }
 
     <div class="overlay-control-group">
         <h6>View Controls</h6>
