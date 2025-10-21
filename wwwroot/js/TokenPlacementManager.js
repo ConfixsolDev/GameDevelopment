@@ -1989,14 +1989,15 @@ class TokenPlacementManager {
         menu.className = 'token-context-menu';
         menu.style.cssText = `
             position: fixed;
-            background: white;
-            border: 1px solid #ccc;
+            background: #2a2a2a;
+            border: 1px solid #444;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
             z-index: 10000;
             min-width: 200px;
             padding: 8px 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #fff;
         `;
         
         // Menu items
@@ -2042,7 +2043,7 @@ class TokenPlacementManager {
             `;
             
             menuItem.addEventListener('mouseenter', () => {
-                menuItem.style.backgroundColor = '#f5f5f5';
+                menuItem.style.backgroundColor = '#3a3a3a';
             });
             
             menuItem.addEventListener('mouseleave', () => {

@@ -700,8 +700,50 @@ function linkSelectedBrigade(tokenId) {
     }
     
     console.log('🔗 Linking brigade', brigadeId, 'to token', tokenId);
-    // Implementation will be added later
-    alert('Brigade linking functionality to be implemented');
+    
+    // Show loading
+    $("#loading").show();
+    
+    // Make AJAX call to link brigade to token
+    $.ajax({
+        url: '/DataManagement/LinkBrigadeToToken',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            TokenId: tokenId,
+            BrigadeId: brigadeId
+        }),
+        success: function(response) {
+            console.log('✅ Brigade linked successfully:', response);
+            
+            if (response.success) {
+                alert('Brigade linked to token successfully!');
+                closeTokenDataEntryModal();
+                
+                // Refresh the map or token display if needed
+                if (window.location.reload) {
+                    location.reload();
+                }
+            } else {
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('❌ Error linking brigade:', error);
+            console.error('   Status Code:', xhr.status);
+            console.error('   Response Text:', xhr.responseText);
+            
+            let errorMessage = 'Failed to link brigade to token';
+            if (xhr.status === 404) {
+                errorMessage = 'Brigade linking endpoint not found (404)';
+            } else if (xhr.status === 500) {
+                errorMessage = 'Server error linking brigade (500)';
+            }
+            
+        },
+        complete: function() {
+            $("#loading").hide();
+        }
+    });
 }
 
 // Create new brigade data
@@ -747,7 +789,6 @@ function createNewBrigadeData(tokenId) {
                 errorMessage = 'Server error loading new brigade form (500)';
             }
             
-            alert(errorMessage);
         },
         complete: function() {
             $("#loading").hide();
@@ -847,7 +888,6 @@ function loadSingleUnitForm(unitType, tokenId, brigadeId) {
         },
         error: function(xhr, status, error) {
             console.error('❌ Error loading single unit form:', error);
-            alert('Failed to load unit form. Please try again.');
         },
         complete: function() {
             $("#loading").hide();

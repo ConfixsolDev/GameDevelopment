@@ -1,118 +1,144 @@
 ﻿@model IEnumerable<ApplicationUser>
 @{
-    ViewData["Title"] = "User Accounts";
+    ViewData["Title"] = "User Management";
 }
 
-@section Styles {
-    <partial name="_datatablestylepartial" />
-}
-<div class="card card-shadow">
-    <div class="card-body">
-
-        <div class="row">
-            <div class="col-lg-3 mb-3">
-                <a class="btn btn-primary action_link" asp-area="Identity" asp-controller="AccountAdmin" asp-action="Register">
-                    <i class="fas fa-plus me-1"></i> Add New
-                </a>
-            </div>
-            <div class="input-group col-lg-9 mb-3 ms-2">
-                <input type="text" id="searchFilter" class="form-control" placeholder="Search by user, role, designation...">
-                <button class="btn btn-warning" onclick="resetFields()" id="resetBtn" title="Reset Search Filters"><i class="fas fa-undo"></i></button>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">User Management</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-lg-3">
+                            <button class="btn btn-primary" onclick="openAddUserModal()">
+                                <i class="fas fa-plus"></i> Add New User
+                            </button>
+                        </div>
+                        <div class="col-lg-9">
+                            <div class="input-group">
+                                <input type="text" id="searchFilter" class="form-control" placeholder="Search by user, email, role...">
+                                <button class="btn btn-warning" onclick="resetSearch()" title="Reset Search">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="userTable" class="table table-bordered w-100">
+                            <thead>
+                                <tr>
+                                    <th>User Name</th>
+                                    <th>Email</th>
+                                    <th>Team</th>
+                                    <th>Role</th>
+                                    <th>Last Login</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td>@item.UserName</td>
+                                        <td>@item.Email</td>
+                                        <td>@(item.TeamId?.ToString() ?? "N/A")</td>
+                                        <td>@(item.RoleName ?? "N/A")</td>
+                                        <td>@(item.LastLoginDate?.ToString("dd/MM/yyyy HH:mm") ?? "Never")</td>
+                                        <td>
+                                            @if (item.IsActive)
+                                            {
+                                                <span class="badge badge-success">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-danger">Locked</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <secure-content asp-area="Identity" asp-controller="AccountAdmin" asp-action="EditRegister">
+                                                <a asp-area="Identity" asp-controller="AccountAdmin" asp-action="EditRegister" 
+                                                   class="btn btn-sm btn-primary" title="Edit" asp-route-id="@item.Id">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            </secure-content>
+                                            @if (item.IsActive == false)
+                                            {
+                                                <secure-content asp-area="Identity" asp-controller="AccountAdmin" asp-action="Activate">
+                                                    <a asp-action="Activate" class="btn btn-sm btn-success" title="Activate User" asp-route-id="@item.Id">
+                                                        <i class="fas fa-unlock"></i>
+                                                    </a>
+                                                </secure-content>
+                                            }
+                                            else
+                                            {
+                                                <secure-content asp-area="Identity" asp-controller="AccountAdmin" asp-action="Delete">
+                                                    <a asp-action="Delete" class="btn btn-sm btn-danger" title="Lock User" asp-route-id="@item.Id">
+                                                        <i class="fas fa-lock"></i>
+                                                    </a>
+                                                </secure-content>
+                                            }
+                                            <secure-content asp-area="Identity" asp-controller="AccountAdmin" asp-action="AdminPasswordReset">
+                                                <a asp-area="Identity" asp-controller="AccountAdmin" asp-action="AdminPasswordReset" 
+                                                   asp-route-id="@item.Id" class="btn btn-sm btn-warning" title="Reset Password">
+                                                    <i class="fas fa-key"></i>
+                                                </a>
+                                            </secure-content>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
-        <table aria-label="User Management Table" role="grid" id="TableIndex" class="table table-striped w-100">
-            <thead>
-                <tr>
-                    <th scope="col" style="width: 10%;">User Name</th>
-                    <th scope="col" style="width: 10%;">Designation</th>
-                    <th scope="col" style="width: 10%;">Apps</th>
-                    <th scope="col" style="width: 15%;">Last Login</th>
-                    <th scope="col" style="width: 5%;">Count</th>
-                    <th scope="col" style="width: 5%;">Status</th>
-                    <th scope="col" style="width: 25%;">Role</th>
-                    <th scope="col" style="width: 25%;">Email</th>
-                    <th scope="col" style="width: 10%;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td>@Html.DisplayFor(modelItem => item.UserName)</td>
-                        <td>@Html.DisplayFor(modelItem => item.TeamId)</td>
-                        <td>@Html.DisplayFor(modelItem => item.LastLoginDate)</td>
-                        <td>@Html.DisplayFor(modelItem => item.LoginCount)</td>
-                        <td>@Html.DisplayFor(modelItem => item.IsActive)</td>
-                        <td>@Html.DisplayFor(modelItem => item.RoleName)</td>
-                        <td>@Html.DisplayFor(modelItem => item.Email)</td>
-                        <td>
-                            <div class="btn-group" aria-label="Basic Basic example" role="group">
-                                <secure-content asp-area="Identity" asp-controller="AccountAdmin" asp-action="EditRegister">
-                                    <a asp-area="Identity" asp-controller="AccountAdmin" asp-action="EditRegister" class="btn btn-warning action_link" title="Edit" asp-route-id="@item.Id">
-                                        <i class="fas fa-edit me-1"></i>
-                                    </a>
-                                </secure-content>
-                                &nbsp;
-                                @if (item.IsActive == false)
-                                {
-                                    <secure-content asp-area="Identity" asp-controller="AccountAdmin" asp-action="Delete">
-                                        <a asp-action="Activate" class="btn btn-danger " title="unlock this User" asp-route-id="@item.Id"><i class="fas fa-lock me-1"></i></a>
-                                    </secure-content>
-                                }
-                                else
-                                {
-                                    <secure-content asp-area="Identity" asp-controller="AccountAdmin" asp-action="Activate">
-                                        <a asp-action="Delete" class="btn btn-success " title="lock this User" asp-route-id="@item.Id"><i class="fas fa-lock-open me-1"></i></a>
-                                    </secure-content>
-                                }
-                                &nbsp;
-                                <secure-content asp-area="Identity" asp-controller="AccountAdmin" asp-action="AdminPasswordReset">
-                                    <a asp-area="Identity"
-                                       asp-controller="AccountAdmin"
-                                       asp-action="AdminPasswordReset"
-                                       asp-route-id="@item.Id"
-                                       class="btn btn-danger action_link"
-                                       title="Reset Password">
-                                        <i class="fas fa-sync me-1"></i>
-                                    </a>
-                                </secure-content>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" id="addUserModalContent">
+            <!-- Content will be loaded via AJAX -->
+        </div>
     </div>
 </div>
 
 
-@section Breadcrump {
-    <li class="breadcrumb-item"><a asp-area="" asp-action="Index" asp-controller="Home">Home</a></li>
-    <li class="breadcrumb-item"><a asp-area="" asp-action="Index" asp-controller="Settings">Config</a></li>
-    <li class="breadcrumb-item active">List</li>
-}
-
-<script>
-    $(document).ready(function () {
-        $("#searchBtn").click(function () {
-            var value = $("#searchFilter").val().toLowerCase();
-            $("#TableIndex tbody tr").filter(function () {
-                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-            });
-        });
-
-        // Optionally: Trigger search when typing
-        $("#searchFilter").on("keyup", function () {
-            var value = $(this).val().toLowerCase();
-            $("#TableIndex tbody tr").filter(function () {
-                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-            });
-        });
-    });
-</script>
-
-
-
 @section Scripts {
-    <partial name="_DatatableScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            // Search filter functionality
+            $("#searchFilter").on("keyup", function () {
+                var value = $(this).val().toLowerCase();
+                $("#userTable tbody tr").filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+                });
+            });
+        });
+
+        function openAddUserModal() {
+            // Load the Register form via AJAX
+            $.ajax({
+                url: '@Url.Action("Register", "AccountAdmin", new { area = "Identity" })',
+                method: 'GET',
+                success: function(data) {
+                    $('#addUserModalContent').html(data);
+                    $('#addUserModal').modal('show');
+                },
+                error: function() {
+                    alert('Failed to load user registration form');
+                }
+            });
+        }
+
+        function resetSearch() {
+            $("#searchFilter").val('');
+            $("#userTable tbody tr").show();
+        }
+    </script>
 }

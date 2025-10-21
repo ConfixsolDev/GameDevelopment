@@ -683,35 +683,35 @@ function saveInfantryBattalion() {
     console.log('💾 Saving Infantry Battalion...');
     
      const infantryData = {
-         brigadeId: document.getElementById('brigadeId').value,
-         tokenId: document.getElementById('tokenId').value,
-         teamId: document.getElementById('teamId').value,
-         forceType: document.getElementById('forceType').value,
-         name: document.getElementById('infantryName').value,
-         unitCode: document.getElementById('infantryCode').value,
-         strength: parseInt(document.getElementById('infantryStrength').value) || 0,
-         companies: parseInt(document.getElementById('infantryCompanies').value) || 0,
-         description: document.getElementById('infantryDescription').value,
-         atgms: parseInt(document.getElementById('infantryATGMS').value) || 0,
-         rocketLauncher: parseInt(document.getElementById('infantryRocketLauncher').value) || 0,
-         mortars81mm: parseInt(document.getElementById('infantryMortars81mm').value) || 0,
-         mortars120mm: parseInt(document.getElementById('infantryMortars120mm').value) || 0,
-         grenadeLaunchers: parseInt(document.getElementById('infantryGrenadeLaunchers').value) || 0,
-         hmg_AGL: parseInt(document.getElementById('infantryHMG_AGL').value) || 0,
-         mg_LMG: parseInt(document.getElementById('infantryMG_LMG').value) || 0,
-         manpads: parseInt(document.getElementById('infantryMANPADS').value) || 0,
-         grenades: parseInt(document.getElementById('infantryGrenades').value) || 0,
-         drones: parseInt(document.getElementById('infantryDrones').value) || 0,
-         droneTypes: document.getElementById('infantryDroneTypes').value,
-         marchingSpeedTrucksRoads: parseFloat(document.getElementById('infantryMarchingSpeedTrucksRoads').value) || 30,
-         marchingSpeedAPCs: parseFloat(document.getElementById('infantryMarchingSpeedAPCs').value) || 20,
-         marchingSpeedCrossCountry: parseFloat(document.getElementById('infantryMarchingSpeedCrossCountry').value) || 5,
-         marchingSpeedAPCsCrossCountry: parseFloat(document.getElementById('infantryMarchingSpeedAPCsCrossCountry').value) || 10,
-         combatAdvanceSpeed: parseFloat(document.getElementById('infantryCombatAdvanceSpeed').value) || 1
+         BrigadeId: document.getElementById('brigadeId').value,
+         TokenId: document.getElementById('tokenId').value,
+         TeamId: document.getElementById('teamId').value,
+         ForceType: document.getElementById('forceType').value,
+         Name: document.getElementById('infantryName').value,
+         UnitCode: document.getElementById('infantryCode').value,
+         Strength: parseInt(document.getElementById('infantryStrength').value) || 0,
+         Companies: parseInt(document.getElementById('infantryCompanies').value) || 0,
+         Description: document.getElementById('infantryDescription').value,
+         ATGMS: parseInt(document.getElementById('infantryATGMS').value) || 0,
+         RocketLauncher: parseInt(document.getElementById('infantryRocketLauncher').value) || 0,
+         Mortars81mm: parseInt(document.getElementById('infantryMortars81mm').value) || 0,
+         Mortars120mm: parseInt(document.getElementById('infantryMortars120mm').value) || 0,
+         GrenadeLaunchers: parseInt(document.getElementById('infantryGrenadeLaunchers').value) || 0,
+         HMG_AGL: parseInt(document.getElementById('infantryHMG_AGL').value) || 0,
+         MG_LMG: parseInt(document.getElementById('infantryMG_LMG').value) || 0,
+         MANPADS: parseInt(document.getElementById('infantryMANPADS').value) || 0,
+         Grenades: parseInt(document.getElementById('infantryGrenades').value) || 0,
+         Drones: parseInt(document.getElementById('infantryDrones').value) || 0,
+         DroneTypes: document.getElementById('infantryDroneTypes').value,
+         MarchingSpeedTrucksRoads: parseFloat(document.getElementById('infantryMarchingSpeedTrucksRoads').value) || 30,
+         MarchingSpeedAPCs: parseFloat(document.getElementById('infantryMarchingSpeedAPCs').value) || 20,
+         MarchingSpeedCrossCountry: parseFloat(document.getElementById('infantryMarchingSpeedCrossCountry').value) || 5,
+         MarchingSpeedAPCsCrossCountry: parseFloat(document.getElementById('infantryMarchingSpeedAPCsCrossCountry').value) || 10,
+         CombatAdvanceSpeed: parseFloat(document.getElementById('infantryCombatAdvanceSpeed').value) || 1
      };
     
     // Validation
-    if (!infantryData.name || !infantryData.unitCode) {
+    if (!infantryData.Name || !infantryData.UnitCode) {
         alert('Please fill in Battalion Name and Unit Code');
         return;
     }
@@ -725,28 +725,28 @@ function saveArmouredRegiment() {
     console.log('💾 Saving Armoured Regiment...');
     
      const armouredData = {
-         brigadeId: document.getElementById('brigadeId').value,
-         tokenId: document.getElementById('tokenId').value,
-         teamId: document.getElementById('teamId').value,
-         forceType: document.getElementById('forceType').value,
-         name: document.getElementById('armouredName').value,
-         unitCode: document.getElementById('armouredCode').value,
-         strength: parseInt(document.getElementById('armouredStrength').value) || 0,
-         squadrons: parseInt(document.getElementById('armouredSquadrons').value) || 0,
-         description: document.getElementById('armouredDescription').value,
-         tanks: parseInt(document.getElementById('armouredTanks').value) || 0,
-         atgms: parseInt(document.getElementById('armouredATGMS').value) || 0,
-         mortars120mm: parseInt(document.getElementById('armouredMortars120mm').value) || 0,
-         hmg: parseInt(document.getElementById('armouredHMG').value) || 0,
-         drones: parseInt(document.getElementById('armouredDrones').value) || 0,
-         droneTypes: document.getElementById('armouredDroneTypes').value,
-         marchingSpeedRoads: parseFloat(document.getElementById('armouredMarchingSpeedRoads').value) || 15,
-         marchingSpeedCrossCountry: parseFloat(document.getElementById('armouredMarchingSpeedCrossCountry').value) || 10,
-         combatAdvanceSpeed: parseFloat(document.getElementById('armouredCombatAdvanceSpeed').value) || 1
+         BrigadeId: document.getElementById('brigadeId').value,
+         TokenId: document.getElementById('tokenId').value,
+         TeamId: document.getElementById('teamId').value,
+         ForceType: document.getElementById('forceType').value,
+         Name: document.getElementById('armouredName').value,
+         UnitCode: document.getElementById('armouredCode').value,
+         Strength: parseInt(document.getElementById('armouredStrength').value) || 0,
+         Squadrons: parseInt(document.getElementById('armouredSquadrons').value) || 0,
+         Description: document.getElementById('armouredDescription').value,
+         Tanks: parseInt(document.getElementById('armouredTanks').value) || 0,
+         ATGMS: parseInt(document.getElementById('armouredATGMS').value) || 0,
+         Mortars120mm: parseInt(document.getElementById('armouredMortars120mm').value) || 0,
+         HMG: parseInt(document.getElementById('armouredHMG').value) || 0,
+         Drones: parseInt(document.getElementById('armouredDrones').value) || 0,
+         DroneTypes: document.getElementById('armouredDroneTypes').value,
+         MarchingSpeedRoads: parseFloat(document.getElementById('armouredMarchingSpeedRoads').value) || 15,
+         MarchingSpeedCrossCountry: parseFloat(document.getElementById('armouredMarchingSpeedCrossCountry').value) || 10,
+         CombatAdvanceSpeed: parseFloat(document.getElementById('armouredCombatAdvanceSpeed').value) || 1
      };
     
     // Validation
-    if (!armouredData.name || !armouredData.unitCode) {
+    if (!armouredData.Name || !armouredData.UnitCode) {
         alert('Please fill in Regiment Name and Unit Code');
         return;
     }
@@ -760,25 +760,25 @@ function saveArtilleryRegiment() {
     console.log('💾 Saving Artillery Regiment...');
     
      const artilleryData = {
-         brigadeId: document.getElementById('brigadeId').value,
-         tokenId: document.getElementById('tokenId').value,
-         teamId: document.getElementById('teamId').value,
-         forceType: document.getElementById('forceType').value,
-         name: document.getElementById('artilleryName').value,
-         unitCode: document.getElementById('artilleryCode').value,
-         strength: parseInt(document.getElementById('artilleryStrength').value) || 0,
-         batteries: parseInt(document.getElementById('artilleryBatteries').value) || 0,
-         description: document.getElementById('artilleryDescription').value,
-         guns: parseInt(document.getElementById('artilleryGuns').value) || 0,
-         gunRange: parseFloat(document.getElementById('artilleryGunRange').value) || 0,
-         gunCaliber: document.getElementById('artilleryGunCaliber').value,
-         hmg: parseInt(document.getElementById('artilleryHMG').value) || 0,
-         drones: parseInt(document.getElementById('artilleryDrones').value) || 0,
-         droneTypes: document.getElementById('artilleryDroneTypes').value
+         BrigadeId: document.getElementById('brigadeId').value,
+         TokenId: document.getElementById('tokenId').value,
+         TeamId: document.getElementById('teamId').value,
+         ForceType: document.getElementById('forceType').value,
+         Name: document.getElementById('artilleryName').value,
+         UnitCode: document.getElementById('artilleryCode').value,
+         Strength: parseInt(document.getElementById('artilleryStrength').value) || 0,
+         Batteries: parseInt(document.getElementById('artilleryBatteries').value) || 0,
+         Description: document.getElementById('artilleryDescription').value,
+         Guns: parseInt(document.getElementById('artilleryGuns').value) || 0,
+         GunRange: parseFloat(document.getElementById('artilleryGunRange').value) || 0,
+         GunCaliber: document.getElementById('artilleryGunCaliber').value,
+         HMG: parseInt(document.getElementById('artilleryHMG').value) || 0,
+         Drones: parseInt(document.getElementById('artilleryDrones').value) || 0,
+         DroneTypes: document.getElementById('artilleryDroneTypes').value
      };
     
     // Validation
-    if (!artilleryData.name || !artilleryData.unitCode) {
+    if (!artilleryData.Name || !artilleryData.UnitCode) {
         alert('Please fill in Regiment Name and Unit Code');
         return;
     }
@@ -793,15 +793,15 @@ function saveReconnaissance() {
     console.log('💾 Saving Reconnaissance...');
     
     const reconData = {
-        tokenId: document.getElementById('tokenId').value,
-        reconType: document.getElementById('reconType').value,
-        location: document.getElementById('reconLocation').value,
-        confidence: document.getElementById('reconConfidence').value,
-        description: document.getElementById('reconDescription').value
+        TokenId: document.getElementById('tokenId').value,
+        ReconType: document.getElementById('reconType').value,
+        Location: document.getElementById('reconLocation').value,
+        Confidence: document.getElementById('reconConfidence').value,
+        Description: document.getElementById('reconDescription').value
     };
     
     // Validation
-    if (!reconData.reconType) {
+    if (!reconData.ReconType) {
         alert('Please fill in Reconnaissance Type');
         return;
     }

@@ -183,19 +183,15 @@ function closeNewBrigadeDataEntryModal() {
 function saveBrigadeOnly() {
     console.log('💾 Saving brigade only...');
     
-    // Collect brigade form data
+    // Collect brigade form data - Use PascalCase to match controller
     const brigadeData = {
-        tokenId: document.getElementById('tokenId').value,
-        teamId: document.getElementById('teamId').value,
-        brigadeName: document.getElementById('brigadeName').value,
-        brigadeCode: document.getElementById('brigadeCode').value,
-        forceType: document.getElementById('forceType').value,
-        brigadeDescription: document.getElementById('brigadeDescription').value
+        TokenId: document.getElementById('tokenId').value,
+        BrigadeCode: document.getElementById('brigadeCode').value
     };
     
     // Basic validation
-    if (!brigadeData.brigadeName || !brigadeData.brigadeCode) {
-        alert('Please fill in Brigade Name and Brigade Code');
+    if (!brigadeData.BrigadeCode) {
+        alert('Please fill in Brigade Code');
         return;
     }
     
@@ -216,7 +212,7 @@ function saveBrigadeOnly() {
                 closeNewBrigadeDataEntryModal();
                 
                 // Load the units form for this newly created brigade
-                loadUnitsDataEntryForm(brigadeData.tokenId, response.brigadeId);
+                loadUnitsDataEntryForm(brigadeData.TokenId, response.data.id);
             } else {
                 alert('Error saving brigade: ' + response.message);
             }

@@ -9,22 +9,138 @@
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Military Unit Data Management</h3>
-                    <div class="card-tools">
+                </div>
+                <div class="card-body">
+                    <!-- Navigation Tabs -->
+                    <ul class="nav nav-tabs" role="tablist" id="dataManagementTabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="brigades-tab" href="#brigades" onclick="switchTab('brigades'); return false;">
+                                <i class="fas fa-flag"></i> Brigades
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="infantry-tab" href="#infantry" onclick="switchTab('infantry'); return false;">
+                                <i class="fas fa-user-shield"></i> Infantry Battalions
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="armoured-tab" href="#armoured" onclick="switchTab('armoured'); return false;">
+                                <i class="fas fa-shield-alt"></i> Armoured Regiments
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="artillery-tab" href="#artillery" onclick="switchTab('artillery'); return false;">
+                                <i class="fas fa-crosshairs"></i> Artillery Regiments
+                            </a>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content mt-3">
+                        <!-- Brigades Tab -->
+                        <div class="tab-pane fade show active" id="brigades" role="tabpanel">
+                            <div class="mb-3">
                         <button class="btn btn-primary" onclick="openBrigadeModal()">
                             <i class="fas fa-plus"></i> Add Brigade
                         </button>
                     </div>
-                </div>
-                <div class="card-body">
-                    <!-- Brigade Management Tab -->
-                    <div class="tab-content">
-                        <div class="tab-pane active" id="brigades">
                             <div class="table-responsive">
-                                <table id="brigadesTable" class="table table-bordered">
+                                <table id="brigadesTable" class="table table-bordered ">
                                     <thead>
                                         <tr>
                                             <th>Brigade Code</th>
                                             <th>Force Type</th>
+                                            <th>Token</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Infantry Battalions Tab -->
+                        <div class="tab-pane fade" id="infantry" role="tabpanel">
+                            <div class="mb-3">
+                                <button class="btn btn-primary" onclick="openInfantryModal()">
+                                    <i class="fas fa-plus"></i> Add Infantry Battalion
+                                </button>
+                            </div>
+                            <div id="infantryLoading" class="text-center py-5" style="display:none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                                <p class="mt-2">Loading Infantry Battalions...</p>
+                            </div>
+                            <div class="table-responsive">
+                                <table id="infantryTable" class="table table-bordered ">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Unit Code</th>
+                                            <th>Strength</th>
+                                            <th>Companies</th>
+                                            <th>Brigade</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Armoured Regiments Tab -->
+                        <div class="tab-pane fade" id="armoured" role="tabpanel">
+                            <div class="mb-3">
+                                <button class="btn btn-primary" onclick="openArmouredModal()">
+                                    <i class="fas fa-plus"></i> Add Armoured Regiment
+                                </button>
+                            </div>
+                            <div id="armouredLoading" class="text-center py-5" style="display:none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                                <p class="mt-2">Loading Armoured Regiments...</p>
+                            </div>
+                            <div class="table-responsive">
+                                <table id="armouredTable" class="table table-bordered ">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Unit Code</th>
+                                            <th>Strength</th>
+                                            <th>Tanks</th>
+                                            <th>Brigade</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Artillery Regiments Tab -->
+                        <div class="tab-pane fade" id="artillery" role="tabpanel">
+                            <div class="mb-3">
+                                <button class="btn btn-primary" onclick="openArtilleryModal()">
+                                    <i class="fas fa-plus"></i> Add Artillery Regiment
+                                </button>
+                            </div>
+                            <div id="artilleryLoading" class="text-center py-5" style="display:none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                                <p class="mt-2">Loading Artillery Regiments...</p>
+                            </div>
+                            <div class="table-responsive">
+                                <table id="artilleryTable" class="table table-bordered ">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Unit Code</th>
+                                            <th>Strength</th>
+                                            <th>Guns</th>
+                                            <th>Brigade</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -49,24 +165,19 @@
             </div>
             <div class="modal-body">
                 <form id="brigadeForm">
+                    <input type="hidden" id="brigadeId" value="">
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <div class="form-group">
-                                <label>Brigade Name</label>
-                                <input type="text" class="form-control" id="brigadeName" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Brigade Code</label>
+                                <label>Brigade Code *</label>
                                 <input type="text" class="form-control" id="brigadeCode" required>
                             </div>
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <div class="form-group">
-                                <label>Force Type</label>
+                                <label>Force Type *</label>
                                 <select class="form-control" id="forceType" required>
                                     <option value="">Select Force Type</option>
                                     <option value="Blue">Blue Force</option>
@@ -74,10 +185,6 @@
                                 </select>
                             </div>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Description</label>
-                        <textarea class="form-control" id="brigadeDescription" rows="3"></textarea>
                     </div>
                 </form>
             </div>
@@ -89,24 +196,526 @@
     </div>
 </div>
 
+<!-- Infantry Battalion Modal -->
+<div class="modal fade" id="infantryModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="infantryModalTitle">Infantry Battalion Details</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="infantryForm">
+                    <input type="hidden" id="infantryId" value="">
+                    
+                    <!-- Basic Information -->
+                    <h6 class="border-bottom pb-2 mb-3">Basic Information</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Name *</label>
+                                <input type="text" class="form-control" id="infantryName" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Unit Code *</label>
+                                <input type="text" class="form-control" id="infantryUnitCode" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Strength</label>
+                                <input type="number" class="form-control" id="infantryStrength" value="0" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Companies</label>
+                                <input type="number" class="form-control" id="infantryCompanies" value="0" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Force Type *</label>
+                                <select class="form-control" id="infantryForceType" required>
+                                    <option value="Blue">Blue Force</option>
+                                    <option value="Red">Red Force</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea class="form-control" id="infantryDescription" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Assign to Brigade (Optional)</label>
+                                <select class="form-control" id="infantryBrigadeId">
+                                    <option value="">-- No Brigade --</option>
+                                </select>
+                                <small class="form-text text-muted">Select a brigade to assign this battalion to</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Equipment & Weapons -->
+                    <h6 class="border-bottom pb-2 mb-3 mt-3">Equipment & Weapons</h6>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>ATGMS</label>
+                                <input type="number" class="form-control" id="infantryATGMS" value="0" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Rocket Launchers</label>
+                                <input type="number" class="form-control" id="infantryRocketLauncher" value="0" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>81mm Mortars</label>
+                                <input type="number" class="form-control" id="infantryMortars81mm" value="0" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>120mm Mortars</label>
+                                <input type="number" class="form-control" id="infantryMortars120mm" value="0" min="0">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Grenade Launchers</label>
+                                <input type="number" class="form-control" id="infantryGrenadeLaunchers" value="0" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>HMG/AGL</label>
+                                <input type="number" class="form-control" id="infantryHMG_AGL" value="0" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>MG/LMG</label>
+                                <input type="number" class="form-control" id="infantryMG_LMG" value="0" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>MANPADS</label>
+                                <input type="number" class="form-control" id="infantryMANPADS" value="0" min="0">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Grenades</label>
+                                <input type="number" class="form-control" id="infantryGrenades" value="0" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Drones</label>
+                                <input type="number" class="form-control" id="infantryDrones" value="0" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Drone Types</label>
+                                <input type="text" class="form-control" id="infantryDroneTypes">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobility Data -->
+                    <h6 class="border-bottom pb-2 mb-3 mt-3">Mobility Data (km/h)</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Marching Speed - Trucks on Roads</label>
+                                <input type="number" class="form-control" id="infantryMarchingSpeedTrucksRoads" value="30" step="0.1">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Marching Speed - APCs</label>
+                                <input type="number" class="form-control" id="infantryMarchingSpeedAPCs" value="20" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Marching Speed - Cross Country</label>
+                                <input type="number" class="form-control" id="infantryMarchingSpeedCrossCountry" value="5" step="0.1">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Marching Speed - APCs Cross Country</label>
+                                <input type="number" class="form-control" id="infantryMarchingSpeedAPCsCrossCountry" value="10" step="0.1">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Combat Advance Speed</label>
+                                <input type="number" class="form-control" id="infantryCombatAdvanceSpeed" value="1" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveInfantry()">Save Infantry Battalion</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Armoured Regiment Modal -->
+<div class="modal fade" id="armouredModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="armouredModalTitle">Armoured Regiment Details</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="armouredForm">
+                    <input type="hidden" id="armouredId" value="">
+                    
+                    <!-- Basic Information -->
+                    <h6 class="border-bottom pb-2 mb-3">Basic Information</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Name *</label>
+                                <input type="text" class="form-control" id="armouredName" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Unit Code *</label>
+                                <input type="text" class="form-control" id="armouredUnitCode" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Strength</label>
+                                <input type="number" class="form-control" id="armouredStrength" value="0" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Squadrons</label>
+                                <input type="number" class="form-control" id="armouredSquadrons" value="0" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Force Type *</label>
+                                <select class="form-control" id="armouredForceType" required>
+                                    <option value="Blue">Blue Force</option>
+                                    <option value="Red">Red Force</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea class="form-control" id="armouredDescription" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Assign to Brigade (Optional)</label>
+                                <select class="form-control" id="armouredBrigadeId">
+                                    <option value="">-- No Brigade --</option>
+                                </select>
+                                <small class="form-text text-muted">Select a brigade to assign this regiment to</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Equipment & Weapons -->
+                    <h6 class="border-bottom pb-2 mb-3 mt-3">Equipment & Weapons</h6>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Tanks</label>
+                                <input type="number" class="form-control" id="armouredTanks" value="0" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>ATGMS</label>
+                                <input type="number" class="form-control" id="armouredATGMS" value="0" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>120mm Mortars</label>
+                                <input type="number" class="form-control" id="armouredMortars120mm" value="0" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>HMG</label>
+                                <input type="number" class="form-control" id="armouredHMG" value="0" min="0">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Drones</label>
+                                <input type="number" class="form-control" id="armouredDrones" value="0" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label>Drone Types</label>
+                                <input type="text" class="form-control" id="armouredDroneTypes">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobility Data -->
+                    <h6 class="border-bottom pb-2 mb-3 mt-3">Mobility Data (km/h)</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Marching Speed - Roads</label>
+                                <input type="number" class="form-control" id="armouredMarchingSpeedRoads" value="15" step="0.1">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Marching Speed - Cross Country</label>
+                                <input type="number" class="form-control" id="armouredMarchingSpeedCrossCountry" value="10" step="0.1">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Combat Advance Speed</label>
+                                <input type="number" class="form-control" id="armouredCombatAdvanceSpeed" value="1" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveArmoured()">Save Armoured Regiment</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Artillery Regiment Modal -->
+<div class="modal fade" id="artilleryModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="artilleryModalTitle">Artillery Regiment Details</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="artilleryForm">
+                    <input type="hidden" id="artilleryId" value="">
+                    
+                    <!-- Basic Information -->
+                    <h6 class="border-bottom pb-2 mb-3">Basic Information</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Name *</label>
+                                <input type="text" class="form-control" id="artilleryName" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Unit Code *</label>
+                                <input type="text" class="form-control" id="artilleryUnitCode" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Strength</label>
+                                <input type="number" class="form-control" id="artilleryStrength" value="0" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Batteries</label>
+                                <input type="number" class="form-control" id="artilleryBatteries" value="0" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Force Type *</label>
+                                <select class="form-control" id="artilleryForceType" required>
+                                    <option value="Blue">Blue Force</option>
+                                    <option value="Red">Red Force</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea class="form-control" id="artilleryDescription" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Assign to Brigade (Optional)</label>
+                                <select class="form-control" id="artilleryBrigadeId">
+                                    <option value="">-- No Brigade --</option>
+                                </select>
+                                <small class="form-text text-muted">Select a brigade to assign this regiment to</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Equipment & Weapons -->
+                    <h6 class="border-bottom pb-2 mb-3 mt-3">Equipment & Weapons</h6>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Guns</label>
+                                <input type="number" class="form-control" id="artilleryGuns" value="0" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Gun Range (km)</label>
+                                <input type="number" class="form-control" id="artilleryGunRange" value="0" step="0.1" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Gun Caliber</label>
+                                <input type="text" class="form-control" id="artilleryGunCaliber" value="155mm SP">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>HMG</label>
+                                <input type="number" class="form-control" id="artilleryHMG" value="0" min="0">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Drones</label>
+                                <input type="number" class="form-control" id="artilleryDrones" value="0" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Drone Types</label>
+                                <input type="text" class="form-control" id="artilleryDroneTypes">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveArtillery()">Save Artillery Regiment</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         $(document).ready(function() {
+            console.log('Data Management Page Initialized');
+            
+            // Load initial data
             loadBrigades();
         });
+
+        // Manual tab switching function
+        function switchTab(tabName) {
+            console.log('Switching to tab:', tabName);
+            
+            // Remove active class from all tabs
+            $('.nav-link').removeClass('active');
+            
+            // Add active class to clicked tab
+            $('#' + tabName + '-tab').addClass('active');
+            
+            // Hide all tab panes
+            $('.tab-pane').removeClass('show active');
+            
+            // Show selected tab pane
+            $('#' + tabName).addClass('show active');
+            
+            // Load data for the selected tab
+            if (tabName === 'brigades') {
+                loadBrigades();
+            } else if (tabName === 'infantry') {
+                loadInfantryBattalions();
+            } else if (tabName === 'armoured') {
+                loadArmouredRegiments();
+            } else if (tabName === 'artillery') {
+                loadArtilleryRegiments();
+            }
+        }
 
         function loadBrigades() {
             $.get('/DataManagement/GetBrigades')
                 .done(function(data) {
                     $('#brigadesTable tbody').empty();
+                    if (data.length === 0) {
+                        $('#brigadesTable tbody').append(`
+                            <tr>
+                                <td colspan="4" class="text-center">No brigades found</td>
+                            </tr>
+                        `);
+                        return;
+                    }
                     data.forEach(function(brigade) {
+                        const tokenInfo = brigade.tokenId ? `<span class="badge badge-info">Linked</span>` : `<span class="badge badge-secondary">Standalone</span>`;
                         $('#brigadesTable tbody').append(`
                             <tr>
                                 <td>${brigade.brigadeCode}</td>
                                 <td>${brigade.forceType}</td>
+                                <td>${tokenInfo}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-primary" onclick="editBrigade('${brigade.id}')">Edit</button>
-                                    <button class="btn btn-sm btn-danger" onclick="deleteBrigade('${brigade.id}')">Delete</button>
+                                    <button class="btn btn-sm btn-primary" onclick="editBrigade('${brigade.id}')"><i class="fas fa-edit"></i></button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteBrigade('${brigade.id}')"><i class="fas fa-trash"></i></button>
                                 </td>
                             </tr>
                         `);
@@ -117,36 +726,702 @@
                 });
         }
 
+        function loadInfantryBattalions() {
+            // Show loading indicator
+            $('#infantryLoading').show();
+            $('#infantryTable').hide();
+            
+            $.get('/DataManagement/GetInfantryBattalions')
+                .done(function(data) {
+                    $('#infantryTable tbody').empty();
+                    if (data.length === 0) {
+                        $('#infantryTable tbody').append(`
+                            <tr>
+                                <td colspan="6" class="text-center">No infantry battalions found</td>
+                            </tr>
+                        `);
+                    } else {
+                        data.forEach(function(battalion) {
+                            const brigadeDisplay = battalion.brigadeCode 
+                                ? `<span class="badge badge-success">${battalion.brigadeCode}</span>` 
+                                : '<span class="badge badge-warning">Unassigned</span>';
+                            
+                            $('#infantryTable tbody').append(`
+                                <tr>
+                                    <td>${battalion.name}</td>
+                                    <td>${battalion.unitCode}</td>
+                                    <td>${battalion.strength}</td>
+                                    <td>${battalion.companies}</td>
+                                    <td>${brigadeDisplay}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" onclick="viewInfantryDetails('${battalion.id}')" title="View"><i class="fas fa-eye"></i></button>
+                                        <button class="btn btn-sm btn-primary" onclick="editInfantry('${battalion.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteInfantry('${battalion.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            `);
+                        });
+                    }
+                })
+                .fail(function() {
+                    $('#infantryTable tbody').empty();
+                    $('#infantryTable tbody').append(`
+                        <tr>
+                            <td colspan="6" class="text-center text-danger">Failed to load infantry battalions</td>
+                        </tr>
+                    `);
+                })
+                .always(function() {
+                    // Hide loading indicator
+                    $('#infantryLoading').hide();
+                    $('#infantryTable').show();
+                });
+        }
+
+        function loadArmouredRegiments() {
+            // Show loading indicator
+            $('#armouredLoading').show();
+            $('#armouredTable').hide();
+            
+            $.get('/DataManagement/GetArmouredRegiments')
+                .done(function(data) {
+                    $('#armouredTable tbody').empty();
+                    if (data.length === 0) {
+                        $('#armouredTable tbody').append(`
+                            <tr>
+                                <td colspan="6" class="text-center">No armoured regiments found</td>
+                            </tr>
+                        `);
+                    } else {
+                        data.forEach(function(regiment) {
+                            const brigadeDisplay = regiment.brigadeCode 
+                                ? `<span class="badge badge-success">${regiment.brigadeCode}</span>` 
+                                : '<span class="badge badge-warning">Unassigned</span>';
+                            
+                            $('#armouredTable tbody').append(`
+                                <tr>
+                                    <td>${regiment.name}</td>
+                                    <td>${regiment.unitCode}</td>
+                                    <td>${regiment.strength}</td>
+                                    <td>${regiment.tanks}</td>
+                                    <td>${brigadeDisplay}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" onclick="viewArmouredDetails('${regiment.id}')" title="View"><i class="fas fa-eye"></i></button>
+                                        <button class="btn btn-sm btn-primary" onclick="editArmoured('${regiment.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteArmoured('${regiment.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            `);
+                        });
+                    }
+                })
+                .fail(function() {
+                    $('#armouredTable tbody').empty();
+                    $('#armouredTable tbody').append(`
+                        <tr>
+                            <td colspan="6" class="text-center text-danger">Failed to load armoured regiments</td>
+                        </tr>
+                    `);
+                })
+                .always(function() {
+                    // Hide loading indicator
+                    $('#armouredLoading').hide();
+                    $('#armouredTable').show();
+                });
+        }
+
+        function loadArtilleryRegiments() {
+            // Show loading indicator
+            $('#artilleryLoading').show();
+            $('#artilleryTable').hide();
+            
+            $.get('/DataManagement/GetArtilleryRegiments')
+                .done(function(data) {
+                    $('#artilleryTable tbody').empty();
+                    if (data.length === 0) {
+                        $('#artilleryTable tbody').append(`
+                            <tr>
+                                <td colspan="6" class="text-center">No artillery regiments found</td>
+                            </tr>
+                        `);
+                    } else {
+                        data.forEach(function(regiment) {
+                            const brigadeDisplay = regiment.brigadeCode 
+                                ? `<span class="badge badge-success">${regiment.brigadeCode}</span>` 
+                                : '<span class="badge badge-warning">Unassigned</span>';
+                            
+                            $('#artilleryTable tbody').append(`
+                                <tr>
+                                    <td>${regiment.name}</td>
+                                    <td>${regiment.unitCode}</td>
+                                    <td>${regiment.strength}</td>
+                                    <td>${regiment.guns}</td>
+                                    <td>${brigadeDisplay}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" onclick="viewArtilleryDetails('${regiment.id}')" title="View"><i class="fas fa-eye"></i></button>
+                                        <button class="btn btn-sm btn-primary" onclick="editArtillery('${regiment.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteArtillery('${regiment.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            `);
+                        });
+                    }
+                })
+                .fail(function() {
+                    $('#artilleryTable tbody').empty();
+                    $('#artilleryTable tbody').append(`
+                        <tr>
+                            <td colspan="6" class="text-center text-danger">Failed to load artillery regiments</td>
+                        </tr>
+                    `);
+                })
+                .always(function() {
+                    // Hide loading indicator
+                    $('#artilleryLoading').hide();
+                    $('#artilleryTable').show();
+                });
+        }
+
+        // Infantry Battalion Actions
+        function openInfantryModal() {
+            $('#infantryForm')[0].reset();
+            $('#infantryId').val('');
+            $('#infantryModalTitle').text('Add Infantry Battalion');
+            loadBrigadesForDropdown('infantryBrigadeId');
+            $('#infantryModal').modal('show');
+        }
+
+        function viewInfantryDetails(id) {
+            editInfantry(id); // Open in edit mode for viewing
+        }
+
+        function editInfantry(id) {
+            // Load battalion data from the full detail endpoint
+            $.ajax({
+                url: '/DataManagement/GetInfantryBattalions',
+                method: 'GET',
+                success: function(data) {
+                    const battalion = data.find(b => b.id === id);
+                    if (battalion) {
+                        // Load brigades first, then populate form
+                        loadBrigadesForDropdown('infantryBrigadeId', function() {
+                            // Populate all form fields
+                            $('#infantryId').val(battalion.id);
+                            $('#infantryName').val(battalion.name || '');
+                            $('#infantryUnitCode').val(battalion.unitCode || '');
+                            $('#infantryStrength').val(battalion.strength || 0);
+                            $('#infantryCompanies').val(battalion.companies || 0);
+                            $('#infantryForceType').val(battalion.forceType || 'Blue');
+                            $('#infantryDescription').val(battalion.description || '');
+                            $('#infantryATGMS').val(battalion.atgms || 0);
+                            $('#infantryRocketLauncher').val(battalion.rocketLauncher || 0);
+                            $('#infantryMortars81mm').val(battalion.mortars81mm || 0);
+                            $('#infantryMortars120mm').val(battalion.mortars120mm || 0);
+                            $('#infantryGrenadeLaunchers').val(battalion.grenadeLaunchers || 0);
+                            $('#infantryHMG_AGL').val(battalion.hmg_AGL || 0);
+                            $('#infantryMG_LMG').val(battalion.mg_LMG || 0);
+                            $('#infantryMANPADS').val(battalion.manpads || 0);
+                            $('#infantryGrenades').val(battalion.grenades || 0);
+                            $('#infantryDrones').val(battalion.drones || 0);
+                            $('#infantryDroneTypes').val(battalion.droneTypes || '');
+                            $('#infantryMarchingSpeedTrucksRoads').val(battalion.marchingSpeedTrucksRoads || 30);
+                            $('#infantryMarchingSpeedAPCs').val(battalion.marchingSpeedAPCs || 20);
+                            $('#infantryMarchingSpeedCrossCountry').val(battalion.marchingSpeedCrossCountry || 5);
+                            $('#infantryMarchingSpeedAPCsCrossCountry').val(battalion.marchingSpeedAPCsCrossCountry || 10);
+                            $('#infantryCombatAdvanceSpeed').val(battalion.combatAdvanceSpeed || 1);
+                            $('#infantryBrigadeId').val(battalion.brigadeId || '');
+                            
+                            $('#infantryModalTitle').text('Edit Infantry Battalion');
+                            $('#infantryModal').modal('show');
+                        });
+                    } else {
+                        showNotification('Infantry battalion not found', 'error');
+                    }
+                },
+                error: function() {
+                    showNotification('Failed to load infantry battalion details', 'error');
+                }
+            });
+        }
+
+        function saveInfantry() {
+            const id = $('#infantryId').val();
+            const isEdit = id !== '';
+            
+            console.log('💾 Saving Infantry Battalion - Mode:', isEdit ? 'UPDATE' : 'CREATE', 'ID:', id);
+            
+            // Validation
+            if (!$('#infantryName').val() || !$('#infantryUnitCode').val()) {
+                showNotification('Please fill in Name and Unit Code', 'error');
+                return;
+            }
+
+            const infantryData = {
+                Id: id || null,
+                Name: $('#infantryName').val(),
+                UnitCode: $('#infantryUnitCode').val(),
+                Strength: parseInt($('#infantryStrength').val()) || 0,
+                Companies: parseInt($('#infantryCompanies').val()) || 0,
+                ForceType: $('#infantryForceType').val(),
+                Description: $('#infantryDescription').val(),
+                ATGMS: parseInt($('#infantryATGMS').val()) || 0,
+                RocketLauncher: parseInt($('#infantryRocketLauncher').val()) || 0,
+                Mortars81mm: parseInt($('#infantryMortars81mm').val()) || 0,
+                Mortars120mm: parseInt($('#infantryMortars120mm').val()) || 0,
+                GrenadeLaunchers: parseInt($('#infantryGrenadeLaunchers').val()) || 0,
+                HMG_AGL: parseInt($('#infantryHMG_AGL').val()) || 0,
+                MG_LMG: parseInt($('#infantryMG_LMG').val()) || 0,
+                MANPADS: parseInt($('#infantryMANPADS').val()) || 0,
+                Grenades: parseInt($('#infantryGrenades').val()) || 0,
+                Drones: parseInt($('#infantryDrones').val()) || 0,
+                DroneTypes: $('#infantryDroneTypes').val(),
+                MarchingSpeedTrucksRoads: parseFloat($('#infantryMarchingSpeedTrucksRoads').val()) || 30,
+                MarchingSpeedAPCs: parseFloat($('#infantryMarchingSpeedAPCs').val()) || 20,
+                MarchingSpeedCrossCountry: parseFloat($('#infantryMarchingSpeedCrossCountry').val()) || 5,
+                MarchingSpeedAPCsCrossCountry: parseFloat($('#infantryMarchingSpeedAPCsCrossCountry').val()) || 10,
+                CombatAdvanceSpeed: parseFloat($('#infantryCombatAdvanceSpeed').val()) || 1,
+                BrigadeId: $('#infantryBrigadeId').val() || null,
+                TokenId: null,
+                TeamId: '@ViewBag.TeamId'
+            };
+
+            const url = isEdit ? '/DataManagement/UpdateTokenInfantryBattalion' : '/DataManagement/CreateTokenInfantryBattalion';
+            const method = isEdit ? 'PUT' : 'POST';
+
+            console.log('📡 Sending to:', url);
+            console.log('📦 Method:', method);
+            console.log('📦 Data:', infantryData);
+
+            $.ajax({
+                url: url,
+                method: method,
+                contentType: 'application/json',
+                data: JSON.stringify(infantryData)
+            })
+            .done(function(response) {
+                console.log('✅ Response:', response);
+                
+                if (response.success) {
+                    console.log('✅ Save successful! Refreshing table...');
+                    showNotification(isEdit ? 'Infantry battalion updated successfully' : 'Infantry battalion created successfully', 'success');
+                    $('#infantryModal').modal('hide');
+                    loadInfantryBattalions();
+                } else {
+                    console.error('❌ Server returned success=false:', response.message);
+                    showNotification('Error: ' + response.message, 'error');
+                }
+            })
+            .fail(function(xhr) {
+                console.error('❌ AJAX Error:', xhr.status, xhr.statusText);
+                console.error('❌ Response:', xhr.responseText);
+                showNotification('Failed to save infantry battalion', 'error');
+            });
+        }
+
+        function deleteInfantry(id) {
+            if (!confirm('Are you sure you want to delete this infantry battalion?')) {
+                return;
+            }
+
+            $.ajax({
+                url: '/DataManagement/DeleteTokenInfantryBattalion/' + id,
+                method: 'DELETE',
+                contentType: 'application/json'
+            })
+            .done(function(response) {
+                if (response.success) {
+                    showNotification('Infantry battalion deleted successfully', 'success');
+                    loadInfantryBattalions();
+                } else {
+                    showNotification('Error: ' + response.message, 'error');
+                }
+            })
+            .fail(function() {
+                showNotification('Failed to delete infantry battalion', 'error');
+            });
+        }
+
+        // Armoured Regiment Actions
+        function openArmouredModal() {
+            $('#armouredForm')[0].reset();
+            $('#armouredId').val('');
+            $('#armouredModalTitle').text('Add Armoured Regiment');
+            loadBrigadesForDropdown('armouredBrigadeId');
+            $('#armouredModal').modal('show');
+        }
+
+        function viewArmouredDetails(id) {
+            editArmoured(id); // Open in edit mode for viewing
+        }
+
+        function editArmoured(id) {
+            // Load regiment data
+            $.ajax({
+                url: '/DataManagement/GetArmouredRegiments',
+                method: 'GET',
+                success: function(data) {
+                    const regiment = data.find(r => r.id === id);
+                    if (regiment) {
+                        // Load brigades first, then populate form
+                        loadBrigadesForDropdown('armouredBrigadeId', function() {
+                            // Populate all form fields
+                            $('#armouredId').val(regiment.id);
+                            $('#armouredName').val(regiment.name || '');
+                            $('#armouredUnitCode').val(regiment.unitCode || '');
+                            $('#armouredStrength').val(regiment.strength || 0);
+                            $('#armouredSquadrons').val(regiment.squadrons || 0);
+                            $('#armouredForceType').val(regiment.forceType || 'Blue');
+                            $('#armouredDescription').val(regiment.description || '');
+                            $('#armouredTanks').val(regiment.tanks || 0);
+                            $('#armouredATGMS').val(regiment.atgms || 0);
+                            $('#armouredMortars120mm').val(regiment.mortars120mm || 0);
+                            $('#armouredHMG').val(regiment.hmg || 0);
+                            $('#armouredDrones').val(regiment.drones || 0);
+                            $('#armouredDroneTypes').val(regiment.droneTypes || '');
+                            $('#armouredMarchingSpeedRoads').val(regiment.marchingSpeedRoads || 15);
+                            $('#armouredMarchingSpeedCrossCountry').val(regiment.marchingSpeedCrossCountry || 10);
+                            $('#armouredCombatAdvanceSpeed').val(regiment.combatAdvanceSpeed || 1);
+                            $('#armouredBrigadeId').val(regiment.brigadeId || '');
+                            
+                            $('#armouredModalTitle').text('Edit Armoured Regiment');
+                            $('#armouredModal').modal('show');
+                        });
+                    } else {
+                        showNotification('Armoured regiment not found', 'error');
+                    }
+                },
+                error: function() {
+                    showNotification('Failed to load armoured regiment details', 'error');
+                }
+            });
+        }
+
+        function saveArmoured() {
+            const id = $('#armouredId').val();
+            const isEdit = id !== '';
+            
+            // Validation
+            if (!$('#armouredName').val() || !$('#armouredUnitCode').val()) {
+                showNotification('Please fill in Name and Unit Code', 'error');
+                return;
+            }
+
+            const armouredData = {
+                Id: id || null,
+                Name: $('#armouredName').val(),
+                UnitCode: $('#armouredUnitCode').val(),
+                Strength: parseInt($('#armouredStrength').val()) || 0,
+                Squadrons: parseInt($('#armouredSquadrons').val()) || 0,
+                ForceType: $('#armouredForceType').val(),
+                Description: $('#armouredDescription').val(),
+                Tanks: parseInt($('#armouredTanks').val()) || 0,
+                ATGMS: parseInt($('#armouredATGMS').val()) || 0,
+                Mortars120mm: parseInt($('#armouredMortars120mm').val()) || 0,
+                HMG: parseInt($('#armouredHMG').val()) || 0,
+                Drones: parseInt($('#armouredDrones').val()) || 0,
+                DroneTypes: $('#armouredDroneTypes').val(),
+                MarchingSpeedRoads: parseFloat($('#armouredMarchingSpeedRoads').val()) || 15,
+                MarchingSpeedCrossCountry: parseFloat($('#armouredMarchingSpeedCrossCountry').val()) || 10,
+                CombatAdvanceSpeed: parseFloat($('#armouredCombatAdvanceSpeed').val()) || 1,
+                BrigadeId: $('#armouredBrigadeId').val() || null,
+                TokenId: null,
+                TeamId: '@ViewBag.TeamId'
+            };
+
+            const url = isEdit ? '/DataManagement/UpdateTokenArmouredRegiment' : '/DataManagement/CreateTokenArmouredRegiment';
+            const method = isEdit ? 'PUT' : 'POST';
+
+            $.ajax({
+                url: url,
+                method: method,
+                contentType: 'application/json',
+                data: JSON.stringify(armouredData)
+            })
+            .done(function(response) {
+                if (response.success) {
+                    showNotification(isEdit ? 'Armoured regiment updated successfully' : 'Armoured regiment created successfully', 'success');
+                    $('#armouredModal').modal('hide');
+                    loadArmouredRegiments();
+                } else {
+                    showNotification('Error: ' + response.message, 'error');
+                }
+            })
+            .fail(function(xhr) {
+                console.error('Error saving armoured:', xhr);
+                showNotification('Failed to save armoured regiment', 'error');
+            });
+        }
+
+        function deleteArmoured(id) {
+            if (!confirm('Are you sure you want to delete this armoured regiment?')) {
+                return;
+            }
+
+            $.ajax({
+                url: '/DataManagement/DeleteTokenArmouredRegiment/' + id,
+                method: 'DELETE',
+                contentType: 'application/json'
+            })
+            .done(function(response) {
+                if (response.success) {
+                    showNotification('Armoured regiment deleted successfully', 'success');
+                    loadArmouredRegiments();
+                } else {
+                    showNotification('Error: ' + response.message, 'error');
+                }
+            })
+            .fail(function() {
+                showNotification('Failed to delete armoured regiment', 'error');
+            });
+        }
+
+        // Artillery Regiment Actions
+        function openArtilleryModal() {
+            $('#artilleryForm')[0].reset();
+            $('#artilleryId').val('');
+            $('#artilleryModalTitle').text('Add Artillery Regiment');
+            loadBrigadesForDropdown('artilleryBrigadeId');
+            $('#artilleryModal').modal('show');
+        }
+
+        // Load brigades for dropdown with callback
+        function loadBrigadesForDropdown(dropdownId, callback) {
+            $.get('/DataManagement/GetBrigades')
+                .done(function(data) {
+                    const dropdown = $('#' + dropdownId);
+                    dropdown.empty();
+                    dropdown.append('<option value="">-- No Brigade --</option>');
+                    data.forEach(function(brigade) {
+                        dropdown.append(`<option value="${brigade.id}">${brigade.brigadeCode} (${brigade.forceType})</option>`);
+                    });
+                    
+                    // Execute callback if provided
+                    if (callback && typeof callback === 'function') {
+                        callback();
+                    }
+                })
+                .fail(function() {
+                    console.error('Failed to load brigades for dropdown');
+                });
+        }
+
+        function viewArtilleryDetails(id) {
+            editArtillery(id); // Open in edit mode for viewing
+        }
+
+        function editArtillery(id) {
+            // Load regiment data
+            $.ajax({
+                url: '/DataManagement/GetArtilleryRegiments',
+                method: 'GET',
+                success: function(data) {
+                    const regiment = data.find(r => r.id === id);
+                    if (regiment) {
+                        // Load brigades first, then populate form
+                        loadBrigadesForDropdown('artilleryBrigadeId', function() {
+                            // Populate all form fields
+                            $('#artilleryId').val(regiment.id);
+                            $('#artilleryName').val(regiment.name || '');
+                            $('#artilleryUnitCode').val(regiment.unitCode || '');
+                            $('#artilleryStrength').val(regiment.strength || 0);
+                            $('#artilleryBatteries').val(regiment.batteries || 0);
+                            $('#artilleryForceType').val(regiment.forceType || 'Blue');
+                            $('#artilleryDescription').val(regiment.description || '');
+                            $('#artilleryGuns').val(regiment.guns || 0);
+                            $('#artilleryGunRange').val(regiment.gunRange || 0);
+                            $('#artilleryGunCaliber').val(regiment.gunCaliber || '155mm SP');
+                            $('#artilleryHMG').val(regiment.hmg || 0);
+                            $('#artilleryDrones').val(regiment.drones || 0);
+                            $('#artilleryDroneTypes').val(regiment.droneTypes || '');
+                            $('#artilleryBrigadeId').val(regiment.brigadeId || '');
+                            
+                            $('#artilleryModalTitle').text('Edit Artillery Regiment');
+                            $('#artilleryModal').modal('show');
+                        });
+                    } else {
+                        showNotification('Artillery regiment not found', 'error');
+                    }
+                },
+                error: function() {
+                    showNotification('Failed to load artillery regiment details', 'error');
+                }
+            });
+        }
+
+        function saveArtillery() {
+            const id = $('#artilleryId').val();
+            const isEdit = id !== '';
+            
+            // Validation
+            if (!$('#artilleryName').val() || !$('#artilleryUnitCode').val()) {
+                showNotification('Please fill in Name and Unit Code', 'error');
+                return;
+            }
+
+            const artilleryData = {
+                Id: id || null,
+                Name: $('#artilleryName').val(),
+                UnitCode: $('#artilleryUnitCode').val(),
+                Strength: parseInt($('#artilleryStrength').val()) || 0,
+                Batteries: parseInt($('#artilleryBatteries').val()) || 0,
+                ForceType: $('#artilleryForceType').val(),
+                Description: $('#artilleryDescription').val(),
+                Guns: parseInt($('#artilleryGuns').val()) || 0,
+                GunRange: parseFloat($('#artilleryGunRange').val()) || 0,
+                GunCaliber: $('#artilleryGunCaliber').val(),
+                HMG: parseInt($('#artilleryHMG').val()) || 0,
+                Drones: parseInt($('#artilleryDrones').val()) || 0,
+                DroneTypes: $('#artilleryDroneTypes').val(),
+                BrigadeId: $('#artilleryBrigadeId').val() || null,
+                TokenId: null,
+                TeamId: '@ViewBag.TeamId'
+            };
+
+            const url = isEdit ? '/DataManagement/UpdateTokenArtilleryRegiment' : '/DataManagement/CreateTokenArtilleryRegiment';
+            const method = isEdit ? 'PUT' : 'POST';
+
+            $.ajax({
+                url: url,
+                method: method,
+                contentType: 'application/json',
+                data: JSON.stringify(artilleryData)
+            })
+            .done(function(response) {
+                if (response.success) {
+                    showNotification(isEdit ? 'Artillery regiment updated successfully' : 'Artillery regiment created successfully', 'success');
+                    $('#artilleryModal').modal('hide');
+                    loadArtilleryRegiments();
+                } else {
+                    showNotification('Error: ' + response.message, 'error');
+                }
+            })
+            .fail(function(xhr) {
+                console.error('Error saving artillery:', xhr);
+                showNotification('Failed to save artillery regiment', 'error');
+            });
+        }
+
+        function deleteArtillery(id) {
+            if (!confirm('Are you sure you want to delete this artillery regiment?')) {
+                return;
+            }
+
+            $.ajax({
+                url: '/DataManagement/DeleteTokenArtilleryRegiment/' + id,
+                method: 'DELETE',
+                contentType: 'application/json'
+            })
+            .done(function(response) {
+                if (response.success) {
+                    showNotification('Artillery regiment deleted successfully', 'success');
+                    loadArtilleryRegiments();
+                } else {
+                    showNotification('Error: ' + response.message, 'error');
+                }
+            })
+            .fail(function() {
+                showNotification('Failed to delete artillery regiment', 'error');
+                });
+        }
+
         function openBrigadeModal() {
             $('#brigadeForm')[0].reset();
+            $('#brigadeId').val('');
+            $('.modal-title').text('Add Brigade');
             $('#brigadeModal').modal('show');
         }
 
         function saveBrigade() {
+            const brigadeId = $('#brigadeId').val();
+            const brigadeCode = $('#brigadeCode').val();
+            const forceType = $('#forceType').val();
+
+            // Validation
+            if (!brigadeCode) {
+                showNotification('Please enter Brigade Code', 'error');
+                return;
+            }
+            if (!forceType) {
+                showNotification('Please select Force Type', 'error');
+                return;
+            }
+
+            const isEdit = brigadeId !== '';
+            const url = isEdit ? '/DataManagement/UpdateTokenBrigade' : '/DataManagement/CreateTokenBrigade';
+            const method = isEdit ? 'PUT' : 'POST';
+
             const brigadeData = {
-                Name: $('#brigadeName').val(),
-                BrigadeCode: $('#brigadeCode').val(),
-                ForceType: $('#forceType').val(),
-                Description: $('#brigadeDescription').val()
+                BrigadeCode: brigadeCode,
+                ForceType: forceType,
+                TokenId: null // Standalone brigade without token
             };
 
+            // Add Id for update operations
+            if (isEdit) {
+                brigadeData.Id = brigadeId;
+            }
+
             $.ajax({
-                url: '/DataManagement/CreateBrigade',
-                method: 'POST',
+                url: url,
+                method: method,
                 contentType: 'application/json',
                 data: JSON.stringify(brigadeData)
             })
             .done(function(response) {
                 if (response.success) {
-                    showNotification('Brigade created successfully', 'success');
+                    showNotification(isEdit ? 'Brigade updated successfully' : 'Brigade created successfully', 'success');
                     $('#brigadeModal').modal('hide');
                     loadBrigades();
                 } else {
                     showNotification('Error: ' + response.message, 'error');
                 }
             })
+            .fail(function(xhr, status, error) {
+                console.error('Error saving brigade:', error);
+                showNotification('Failed to save brigade', 'error');
+            });
+        }
+
+        function editBrigade(brigadeId) {
+            // Load brigade data
+            $.get('/DataManagement/GetBrigades')
+                .done(function(data) {
+                    const brigade = data.find(b => b.id === brigadeId);
+                    if (brigade) {
+                        $('#brigadeId').val(brigade.id);
+                        $('#brigadeCode').val(brigade.brigadeCode);
+                        $('#forceType').val(brigade.forceType);
+                        $('.modal-title').text('Edit Brigade');
+                        $('#brigadeModal').modal('show');
+                    } else {
+                        showNotification('Brigade not found', 'error');
+                    }
+                })
+                .fail(function() {
+                    showNotification('Failed to load brigade data', 'error');
+                });
+        }
+
+        function deleteBrigade(brigadeId) {
+            if (!confirm('Are you sure you want to delete this brigade?')) {
+                return;
+            }
+
+            $.ajax({
+                url: '/DataManagement/DeleteTokenBrigade/' + brigadeId,
+                method: 'DELETE',
+                contentType: 'application/json'
+            })
+            .done(function(response) {
+                if (response.success) {
+                    showNotification('Brigade deleted successfully', 'success');
+                    loadBrigades();
+                } else {
+                    showNotification('Error: ' + response.message, 'error');
+                }
+            })
             .fail(function() {
-                showNotification('Failed to create brigade', 'error');
+                showNotification('Failed to delete brigade', 'error');
             });
         }
 

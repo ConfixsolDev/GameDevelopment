@@ -3,73 +3,70 @@
     ViewData["Title"] = "Create Role";
     var controllers = (IEnumerable<TechWebSol.ViewModels.MvcControllerInfo>)ViewData["Controllers"];
 }
-<style>
-    .white {
-        color: white;
-    }
-</style>
 <link href="~/js/jquery-bonsai/jquery.bonsai.css" rel="stylesheet" />
-<div class="panel-primary">
-    <div class="panel-heading">
-        <h4 class="panel-title">
-            Create Role
-        </h4>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Create New Role</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="AppId" value="@ViewBag.ApplicationId" />
+
+                        <div class="form-group">
+                            <label asp-for="Name" class="control-label">Role Name *</label>
+                            <input asp-for="Name" class="form-control" placeholder="Enter role name" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="card mt-3">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">Access Permissions</h5>
+                            </div>
+                            <div class="card-body">
+                                <ol id="tree">
+                                    @foreach (var controller in controllers)
+                                    {
+                                        var name = controller.DisplayName ?? controller.Name;
+                                        <li class="controller" data-value="@controller.Name">
+                                            <input type="hidden" class="area" value="@controller.AreaName" />
+                                            @name
+                                            @if (controller.Actions.Any())
+                                            {
+                                                <ul>
+                                                    @foreach (var action in controller.Actions)
+                                                    {
+                                                        name = action.DisplayName ?? action.Name;
+                                                        <li data-value="@action.Name">
+                                                            @name
+                                                        </li>
+                                                    }
+                                                </ul>
+                                            }
+                                        </li>
+                                    }
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Create Role
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to List
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-<form asp-action="Create" class="form-horizontal">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-    <input type="hidden" asp-for="AppId" value="@ViewBag.ApplicationId" />
-
-    <table class="table table-bordered table-striped panel">
-        <tr>
-            <td>
-                <label asp-for="Name" class="control-label"></label>
-            </td>
-            <td>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-
-
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2" class="text-center bg-danger">
-                <label class="white"> Access List </label>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <ol id="tree">
-                    @foreach (var controller in controllers)
-                    {
-                        var name = controller.DisplayName ?? controller.Name;
-                        <li class="controller" data-value="@controller.Name">
-                            <input type="hidden" class="area" value="@controller.AreaName" />
-                            @name
-                            @if (controller.Actions.Any())
-                            {
-                                <ul>
-                                    @foreach (var action in controller.Actions)
-                                    {
-                                        name = action.DisplayName ?? action.Name;
-                                        <li data-value="@action.Name" class="font-weight-100">
-                                            @name
-                                            </li>
-                                    }
-                                </ul>
-                            }
-                        </li>
-                    }
-                </ol>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <input type="submit" class="btn btn-primary" value="Create" style="margin:10px;" />
-            </td>
-        </tr>
-    </table>
-</form>
 
 <script src="~/js/jquery-bonsai/jquery.qubit.js"></script>
 <script src="~/js/jquery-bonsai/jquery.bonsai.js"></script>

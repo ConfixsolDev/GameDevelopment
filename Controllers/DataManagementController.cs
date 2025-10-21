@@ -34,6 +34,7 @@ namespace TechWebSol.Controllers
         {
             ViewData["Title"] = "Token-Based Data Management";
             ViewData["Subtitle"] = "Military Unit Data Entry System";
+            ViewBag.TeamId = user?.TeamId ?? Guid.Empty;
             return View();
         }
 
@@ -391,6 +392,200 @@ namespace TechWebSol.Controllers
 
         #endregion
 
+        #region Brigade List/Get Methods
+
+        /// <summary>
+        /// Get all brigades for the current team
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetBrigades()
+        {
+            try
+            {
+                var brigades = await _context.Brigades
+                    .Where(b => b.TeamId == user.TeamId && b.IsActive)
+                    .OrderBy(b => b.BrigadeCode)
+                    .Select(b => new
+                    {
+                        id = b.Id,
+                        brigadeCode = b.BrigadeCode,
+                        forceType = b.ForceType,
+                        tokenId = b.TokenId,
+                        createdDate = b.CreatedDate
+                    })
+                    .ToListAsync();
+
+                return Json(brigades);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading brigades");
+                return Json(new { success = false, message = "Error loading brigades" });
+            }
+        }
+
+        /// <summary>
+        /// Get all infantry battalions for the current team
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetInfantryBattalions(Guid? brigadeId = null)
+        {
+            try
+            {
+                var query = _context.InfantryBattalions
+                    .Include(i => i.Brigade)
+                    .Where(i => i.TeamId == user.TeamId && i.IsActive);
+
+                if (brigadeId.HasValue)
+                {
+                    query = query.Where(i => i.BrigadeId == brigadeId.Value);
+                }
+
+                var battalions = await query
+                    .OrderBy(i => i.Name)
+                    .Select(i => new
+                    {
+                        id = i.Id,
+                        name = i.Name,
+                        unitCode = i.UnitCode,
+                        strength = i.Strength,
+                        companies = i.Companies,
+                        forceType = i.ForceType,
+                        description = i.Description,
+                        atgms = i.ATGMS,
+                        rocketLauncher = i.RocketLauncher,
+                        mortars81mm = i.Mortars81mm,
+                        mortars120mm = i.Mortars120mm,
+                        grenadeLaunchers = i.GrenadeLaunchers,
+                        hmg_AGL = i.HMG_AGL,
+                        mg_LMG = i.MG_LMG,
+                        manpads = i.MANPADS,
+                        grenades = i.Grenades,
+                        drones = i.Drones,
+                        droneTypes = i.DroneTypes,
+                        marchingSpeedTrucksRoads = i.MarchingSpeedTrucksRoads,
+                        marchingSpeedAPCs = i.MarchingSpeedAPCs,
+                        marchingSpeedCrossCountry = i.MarchingSpeedCrossCountry,
+                        marchingSpeedAPCsCrossCountry = i.MarchingSpeedAPCsCrossCountry,
+                        combatAdvanceSpeed = i.CombatAdvanceSpeed,
+                        brigadeId = i.BrigadeId,
+                        brigadeCode = i.Brigade != null ? i.Brigade.BrigadeCode : null,
+                        tokenId = i.TokenId
+                    })
+                    .ToListAsync();
+
+                return Json(battalions);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading infantry battalions");
+                return Json(new { success = false, message = "Error loading infantry battalions" });
+            }
+        }
+
+        /// <summary>
+        /// Get all armoured regiments for the current team
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetArmouredRegiments(Guid? brigadeId = null)
+        {
+            try
+            {
+                var query = _context.ArmouredRegiments
+                    .Include(a => a.Brigade)
+                    .Where(a => a.TeamId == user.TeamId && a.IsActive);
+
+                if (brigadeId.HasValue)
+                {
+                    query = query.Where(a => a.BrigadeId == brigadeId.Value);
+                }
+
+                var regiments = await query
+                    .OrderBy(a => a.Name)
+                    .Select(a => new
+                    {
+                        id = a.Id,
+                        name = a.Name,
+                        unitCode = a.UnitCode,
+                        strength = a.Strength,
+                        squadrons = a.Squadrons,
+                        forceType = a.ForceType,
+                        description = a.Description,
+                        tanks = a.Tanks,
+                        atgms = a.ATGMS,
+                        mortars120mm = a.Mortars120mm,
+                        hmg = a.HMG,
+                        drones = a.Drones,
+                        droneTypes = a.DroneTypes,
+                        marchingSpeedRoads = a.MarchingSpeedRoads,
+                        marchingSpeedCrossCountry = a.MarchingSpeedCrossCountry,
+                        combatAdvanceSpeed = a.CombatAdvanceSpeed,
+                        brigadeId = a.BrigadeId,
+                        brigadeCode = a.Brigade != null ? a.Brigade.BrigadeCode : null,
+                        tokenId = a.TokenId
+                    })
+                    .ToListAsync();
+
+                return Json(regiments);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading armoured regiments");
+                return Json(new { success = false, message = "Error loading armoured regiments" });
+            }
+        }
+
+        /// <summary>
+        /// Get all artillery regiments for the current team
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetArtilleryRegiments(Guid? brigadeId = null)
+        {
+            try
+            {
+                var query = _context.ArtilleryRegiments
+                    .Include(a => a.Brigade)
+                    .Where(a => a.TeamId == user.TeamId && a.IsActive);
+
+                if (brigadeId.HasValue)
+                {
+                    query = query.Where(a => a.BrigadeId == brigadeId.Value);
+                }
+
+                var regiments = await query
+                    .OrderBy(a => a.Name)
+                    .Select(a => new
+                    {
+                        id = a.Id,
+                        name = a.Name,
+                        unitCode = a.UnitCode,
+                        strength = a.Strength,
+                        batteries = a.Batteries,
+                        forceType = a.ForceType,
+                        description = a.Description,
+                        guns = a.Guns,
+                        gunRange = a.GunRange,
+                        gunCaliber = a.GunCaliber,
+                        hmg = a.HMG,
+                        drones = a.Drones,
+                        droneTypes = a.DroneTypes,
+                        brigadeId = a.BrigadeId,
+                        brigadeCode = a.Brigade != null ? a.Brigade.BrigadeCode : null,
+                        tokenId = a.TokenId
+                    })
+                    .ToListAsync();
+
+                return Json(regiments);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading artillery regiments");
+                return Json(new { success = false, message = "Error loading artillery regiments" });
+            }
+        }
+
+        #endregion
+
         #region Brigade Management (Token-Based)
 
         [HttpPost]
@@ -473,14 +668,48 @@ namespace TechWebSol.Controllers
                 var brigade = await _context.Brigades
                     .FirstOrDefaultAsync(b => b.Id == request.BrigadeId && b.TeamId == user.TeamId && b.IsActive);
 
-                if (brigade == null) 
+                var existingBattalions = await _context.InfantryBattalions
+                    .Where(b => b.BrigadeId == request.BrigadeId && b.TeamId == user.TeamId && b.IsActive)
+                    .ToListAsync();
+
+                var existingArmouredRegiments = await _context.ArmouredRegiments
+                    .Where(r => r.BrigadeId == request.BrigadeId && r.TeamId == user.TeamId && r.IsActive)
+                    .ToListAsync();
+
+                var existingArtilleryRegiments = await _context.ArtilleryRegiments
+                    .Where(r => r.BrigadeId == request.BrigadeId && r.TeamId == user.TeamId && r.IsActive)
+                    .ToListAsync();
+
+                if (brigade == null)
                 {
                     return Json(new { success = false, message = "Brigade not found or not accessible." });
                 }
 
                 brigade.TokenId = request.TokenId;
                 brigade.UpdatedBy = user.FullName;
-                
+                _context.Update(brigade);
+
+                foreach (var battalion in existingBattalions)
+                {
+                    battalion.TokenId = request.TokenId;
+                    battalion.UpdatedBy = user.FullName;
+                    _context.Update(battalion);
+                }
+
+                foreach (var regiment in existingArmouredRegiments)
+                {
+                    regiment.TokenId = request.TokenId;
+                    regiment.UpdatedBy = user.FullName;
+                    _context.Update(regiment);
+                }
+
+                foreach (var regiment in existingArtilleryRegiments)
+                {
+                    regiment.TokenId = request.TokenId;
+                    regiment.UpdatedBy = user.FullName;
+                    _context.Update(regiment);
+                }
+
                 await _context.SaveChangesAsync();
 
                 return Json(new { success = true, data = brigade, message = "Brigade successfully linked to token." });
@@ -490,6 +719,7 @@ namespace TechWebSol.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
+
 
         #endregion
 
@@ -561,6 +791,8 @@ namespace TechWebSol.Controllers
                 existingBattalion.Strength = battalion.Strength;
                 existingBattalion.ForceType = battalion.ForceType;
                 existingBattalion.Companies = battalion.Companies;
+                existingBattalion.BrigadeId = battalion.BrigadeId;
+                existingBattalion.TokenId = battalion.TokenId;
                 existingBattalion.ATGMS = battalion.ATGMS;
                 existingBattalion.RocketLauncher = battalion.RocketLauncher;
                 existingBattalion.Mortars81mm = battalion.Mortars81mm;
@@ -579,6 +811,7 @@ namespace TechWebSol.Controllers
                 existingBattalion.CombatAdvanceSpeed = battalion.CombatAdvanceSpeed;
                 existingBattalion.UpdatedBy = user.FullName;
 
+                 _context.Update(existingBattalion);
                 await _context.SaveChangesAsync();
 
                 return Json(new { success = true, data = existingBattalion });
@@ -675,6 +908,8 @@ namespace TechWebSol.Controllers
                 existingRegiment.Strength = regiment.Strength;
                 existingRegiment.ForceType = regiment.ForceType;
                 existingRegiment.Squadrons = regiment.Squadrons;
+                existingRegiment.BrigadeId = regiment.BrigadeId;
+                existingRegiment.TokenId = regiment.TokenId;
                 existingRegiment.Tanks = regiment.Tanks;
                 existingRegiment.ATGMS = regiment.ATGMS;
                 existingRegiment.Mortars120mm = regiment.Mortars120mm;
@@ -685,7 +920,7 @@ namespace TechWebSol.Controllers
                 existingRegiment.MarchingSpeedCrossCountry = regiment.MarchingSpeedCrossCountry;
                 existingRegiment.CombatAdvanceSpeed = regiment.CombatAdvanceSpeed;
                 existingRegiment.UpdatedBy = user.FullName;
-
+                _context.Update(existingRegiment);
                 await _context.SaveChangesAsync();
 
                 return Json(new { success = true, data = existingRegiment });
@@ -779,6 +1014,8 @@ namespace TechWebSol.Controllers
                 existingRegiment.Strength = regiment.Strength;
                 existingRegiment.ForceType = regiment.ForceType;
                 existingRegiment.Batteries = regiment.Batteries;
+                existingRegiment.BrigadeId = regiment.BrigadeId;
+                existingRegiment.TokenId = regiment.TokenId;
                 existingRegiment.Guns = regiment.Guns;
                 existingRegiment.GunRange = regiment.GunRange;
                 existingRegiment.GunCaliber = regiment.GunCaliber;
@@ -786,7 +1023,7 @@ namespace TechWebSol.Controllers
                 existingRegiment.Drones = regiment.Drones;
                 existingRegiment.DroneTypes = regiment.DroneTypes;
                 existingRegiment.UpdatedBy = user.FullName;
-
+                _context.Update(existingRegiment);
                 await _context.SaveChangesAsync();
 
                 return Json(new { success = true, data = existingRegiment });

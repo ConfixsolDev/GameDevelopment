@@ -3,90 +3,80 @@
     ViewData["Title"] = "Edit Role";
     var controllers = (IEnumerable<TechWebSol.ViewModels.MvcControllerInfo>)ViewData["Controllers"];
 }
-<style>
-    .white {
-        color: white;
-    }
-</style>
 <link href="~/js/jquery-bonsai/jquery.bonsai.css" rel="stylesheet" />
-<div class="panel-primary">
-    <div class="panel-heading">
-        <h4 class="panel-title">
-            Edit Role
-        </h4>
-    </div>
-</div>
-<form asp-action="Edit" class="form-horizontal">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-    <table class="table table-bordered table-striped panel">
-        <tr>
-            <td>
-                <label asp-for="Name" class="control-label"></label>
-            </td>
-            <td>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2" class="text-center bg-danger">
-                <label class="white"> Access List </label>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <ol id="tree">
-                    @foreach (var controller in controllers)
-                    {
-                        try
-                        {
-                            var selectedController = Model?.MvcControllerInfoCont?.SingleOrDefault(c => c.Id == controller.Name);
-                            string name;
-                            {
-                                name = controller.DisplayName ?? controller.Name;
-                            }
-                            <li class="controller" data-value="@controller.Name">
-                                <input type="hidden" class="area" value="@controller.AreaName" />
-                                @name
-                                @if (controller.Actions.Any())
-                                {
-                                    <ul>
-                                        @foreach (var action in controller.Actions)
-                                        {
-                                            {
-                                                name = action.DisplayName ?? action.Name;
-                                            }
-                                            <li data-value="@action.Name" class="font-weight-100"
-                                            @if (selectedController != null && selectedController.Actions.Any(a => a.Name == action.Name))
-                                            {
-                                                <text> data-checked='1' </text>
-                                            }>
-                                                @name
-                                                        </li>
-                                        }
-                                    </ul>
-                                }
-                            </li>
-                        }
-                        catch (Exception)
-                        {
-                        }
-                    }
-                </ol>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <input type="submit" class="btn btn-primary" value="Save" style="margin:10px;" />
-            </td>
-        </tr>
-    </table>
-</form>
 
-<div class="site-action" data-plugin="actionBtn">
-    <a asp-action="Index" data-toggle="tooltip" data-original-title="Back" class="site-action-toggle btn-raised btn btn-primary btn-sm btn-round btn-floating">
-        <i class="icon md-minus animation-scale-up" aria-hidden="true"></i>
-    </a>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Edit Role</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="form-group">
+                            <label asp-for="Name" class="control-label">Role Name *</label>
+                            <input asp-for="Name" class="form-control" placeholder="Enter role name" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="card mt-3">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">Access Permissions</h5>
+                            </div>
+                            <div class="card-body">
+                                <ol id="tree">
+                                    @foreach (var controller in controllers)
+                                    {
+                                        try
+                                        {
+                                            var selectedController = Model?.MvcControllerInfoCont?.SingleOrDefault(c => c.Id == controller.Name);
+                                            var name = controller.DisplayName ?? controller.Name;
+                                            
+                                            <li class="controller" data-value="@controller.Name">
+                                                <input type="hidden" class="area" value="@controller.AreaName" />
+                                                @name
+                                                @if (controller.Actions.Any())
+                                                {
+                                                    <ul>
+                                                        @foreach (var action in controller.Actions)
+                                                        {
+                                                            name = action.DisplayName ?? action.Name;
+                                                            <li data-value="@action.Name"
+                                                            @if (selectedController != null && selectedController.Actions.Any(a => a.Name == action.Name))
+                                                            {
+                                                                <text> data-checked='1' </text>
+                                                            }>
+                                                                @name
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                }
+                                            </li>
+                                        }
+                                        catch (Exception)
+                                        {
+                                        }
+                                    }
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to List
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 <script src="~/assets/js/core/jquery.min.js"></script>
 <script src="~/js/jquery-bonsai/jquery.qubit.js"></script>
