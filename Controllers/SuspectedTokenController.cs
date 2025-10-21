@@ -313,7 +313,6 @@ namespace TechWebSol.Controllers
 
                 if (suspectedToken == null)
                 {
-                        request.TokenId, user.TeamId);
                     return Json(new { success = false, message = "Suspected token not found" });
                 }
 
