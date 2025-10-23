@@ -89,6 +89,139 @@ namespace TechWebSol.Controllers
             return Json(new { success = true, message = "Token updated" });
         }
 
+        /// <summary>
+        /// Update token coverage area
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> UpdateTokenCoverage([FromBody] UpdateTokenCoverageRequest req)
+        {
+            try
+            {
+                if (req.TokenId == Guid.Empty) return BadRequest(new { success = false, message = "Missing token id" });
+                
+                var token = await _context.Tokens
+                    .Include(t => t.AreaCoverages)
+                    .FirstOrDefaultAsync(x => x.Id == req.TokenId);
+                if (token == null) return NotFound(new { success = false, message = "Token not found" });
+
+                // Add or update coverage area
+                if (req.CoverageArea != null)
+                {
+                    // Remove ALL existing coverage areas for this token (enforce one per token rule)
+                    var existingCoverages = _context.TokenAreaCoverages.Where(ac => ac.TokenId == req.TokenId).ToList();
+                    
+                    if (existingCoverages.Any())
+                    {
+                        _logger.LogInformation($"Found {existingCoverages.Count} existing coverage areas for token {req.TokenId}. Removing all to keep only the latest one.");
+                        
+                        // Log details of what's being removed
+                        foreach (var existing in existingCoverages)
+                        {
+                            _logger.LogInformation($"Removing coverage area {existing.Id} (Shape: {existing.ShapeType}, Created: {existing.CreatedDate})");
+                        }
+                        
+                        _context.TokenAreaCoverages.RemoveRange(existingCoverages);
+                        
+                        // Save changes to ensure removal happens before adding new one
+                        await _context.SaveChangesAsync();
+                        _logger.LogInformation($"Successfully removed {existingCoverages.Count} existing coverage areas for token {req.TokenId}");
+                    }
+                    
+                    // Create new coverage area from the JSON data
+                    var coverageData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(req.CoverageArea.ToString());
+                    
+                    var newCoverageArea = new TokenAreaCoverage
+                    {
+                        Id = Guid.NewGuid(),
+                        TokenId = req.TokenId,
+                        ShapeType = coverageData.ContainsKey("shapeType") ? coverageData["shapeType"].ToString() : "Custom",
+                        CoverageType = coverageData.ContainsKey("coverageType") ? coverageData["coverageType"].ToString() : "Operational",
+                        Geometry = coverageData.ContainsKey("geometry") ? coverageData["geometry"].ToString() : "",
+                        FrontRadiusKm = 0, // Not used for custom polygons
+                        RearRadiusKm = 0,
+                        SideRadiusKm = 0,
+                        RotationDegrees = 0,
+                        CreatedDate = DateTime.UtcNow
+                    };
+                    
+                    _context.TokenAreaCoverages.Add(newCoverageArea);
+                    _logger.LogInformation($"Added new coverage area {newCoverageArea.Id} for token {req.TokenId} (Shape: {newCoverageArea.ShapeType})");
+                }
+
+                await _context.SaveChangesAsync();
+                
+                // Final verification: ensure only one coverage area exists for this token
+                var finalCoverageCount = _context.TokenAreaCoverages.Count(ac => ac.TokenId == req.TokenId);
+                _logger.LogInformation($"Final verification: Token {req.TokenId} now has {finalCoverageCount} coverage area(s)");
+                
+                if (finalCoverageCount > 1)
+                {
+                    _logger.LogWarning($"WARNING: Token {req.TokenId} has {finalCoverageCount} coverage areas. This should not happen!");
+                }
+                
+                return Json(new { success = true, message = "Coverage area updated" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating token coverage area");
+                return Json(new { success = false, message = "Error updating coverage area" });
+            }
+        }
+
+        public class UpdateTokenCoverageRequest
+        {
+            public Guid TokenId { get; set; }
+            public object CoverageArea { get; set; }
+        }
+
+        /// <summary>
+        /// Clean up duplicate coverage areas for a token (keep only the latest one)
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> CleanupDuplicateCoverageAreas([FromBody] CleanupRequest req)
+        {
+            try
+            {
+                if (req.TokenId == Guid.Empty) return BadRequest(new { success = false, message = "Missing token id" });
+                
+                var existingCoverages = await _context.TokenAreaCoverages
+                    .Where(ac => ac.TokenId == req.TokenId)
+                    .OrderByDescending(ac => ac.CreatedDate)
+                    .ToListAsync();
+                
+                if (existingCoverages.Count <= 1)
+                {
+                    return Json(new { success = true, message = "No duplicates found", count = existingCoverages.Count });
+                }
+                
+                // Keep only the latest one (first in the ordered list)
+                var latestCoverage = existingCoverages.First();
+                var duplicatesToRemove = existingCoverages.Skip(1).ToList();
+                
+                _logger.LogInformation($"Found {duplicatesToRemove.Count} duplicate coverage areas for token {req.TokenId}. Keeping latest one (ID: {latestCoverage.Id})");
+                
+                _context.TokenAreaCoverages.RemoveRange(duplicatesToRemove);
+                await _context.SaveChangesAsync();
+                
+                return Json(new { 
+                    success = true, 
+                    message = $"Removed {duplicatesToRemove.Count} duplicate coverage areas", 
+                    keptId = latestCoverage.Id,
+                    removedCount = duplicatesToRemove.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error cleaning up duplicate coverage areas for token {TokenId}", req.TokenId);
+                return Json(new { success = false, message = "Error cleaning up duplicates" });
+            }
+        }
+
+        public class CleanupRequest
+        {
+            public Guid TokenId { get; set; }
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> ToggleActive([FromQuery] Guid id, [FromQuery] bool active)

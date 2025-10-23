@@ -45,7 +45,7 @@
                             var brigade = Model.Brigades;
                             <div class="summary-item brigade">
                                 <div class="unit-header">
-                                    <strong><i class="fas fa-flag"></i> Brigade:</strong> @(brigade.BrigadeCode ?? "No Code")
+                                    <strong><i class="fas fa-flag"></i> @(Model.Token?.OrganizationLevel ):</strong> @(brigade.BrigadeCode ?? "No Code")
                                     <span class="badge-military">@(brigade.ForceType ?? "Unknown")</span>
                                 </div>
 

@@ -964,12 +964,16 @@ class TokenManager {
         
         const forceTypeLower = forceType.toLowerCase();
         
-        // Return the actual force type name, preserving original naming
-        if (forceTypeLower.includes('fox')) return 'Fox Land';
-        if (forceTypeLower.includes('blue')) return 'Blue Land';
-        if (forceTypeLower.includes('neutral')) return 'Neutral';
-        if (forceTypeLower.includes('hostile')) return 'Hostile';
-        if (forceTypeLower.includes('friendly')) return 'Friendly';
+        // Return the standardized force type name
+        if (forceTypeLower.includes('fox') || forceTypeLower.includes('hostile') || forceTypeLower.includes('red') || forceTypeLower.includes('foxland')) {
+            return 'Fox Land';
+        }
+        if (forceTypeLower.includes('blue') || forceTypeLower.includes('friendly') || forceTypeLower.includes('blueland')) {
+            return 'Blue Land';
+        }
+        if (forceTypeLower.includes('un') || forceTypeLower.includes('united nations') || forceTypeLower.includes('neutral') || forceTypeLower.includes('control')) {
+            return 'UN';
+        }
         
         // Return as-is if no match
         return forceType;
@@ -986,15 +990,15 @@ class TokenManager {
         let forceClass = 'force-unknown';
         let frameType = 'frame-unknown';
         
-        if (forceTypeLower.includes('fox') || forceTypeLower.includes('hostile') || forceTypeLower.includes('red')) {
-            forceClass = 'force-hostile';
-            frameType = 'frame-hostile';
-        } else if (forceTypeLower.includes('blue') || forceTypeLower.includes('friendly')) {
-            forceClass = 'force-friendly';
-            frameType = 'frame-friendly';
-        } else if (forceTypeLower.includes('neutral') || forceTypeLower.includes('green')) {
-            forceClass = 'force-neutral';
-            frameType = 'frame-neutral';
+        if (forceTypeLower.includes('fox') || forceTypeLower.includes('hostile') || forceTypeLower.includes('red') || forceTypeLower.includes('foxland')) {
+            forceClass = 'force-fox-land';
+            frameType = 'frame-fox-land';
+        } else if (forceTypeLower.includes('blue') || forceTypeLower.includes('friendly') || forceTypeLower.includes('blueland')) {
+            forceClass = 'force-blue-land';
+            frameType = 'frame-blue-land';
+        } else if (forceTypeLower.includes('un') || forceTypeLower.includes('united nations') || forceTypeLower.includes('neutral') || forceTypeLower.includes('control') || forceTypeLower.includes('green')) {
+            forceClass = 'force-un';
+            frameType = 'frame-un';
         }
         
         // Get organization symbol

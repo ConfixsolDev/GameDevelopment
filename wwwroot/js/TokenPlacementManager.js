@@ -124,11 +124,13 @@ class TokenPlacementManager {
 			// Determine color based on force type
 			let previewColor = '#3388ff'; // Default blue
 			if (this.selectedTokenForPlacement.forceType) {
-				const forceTypeLower = this.selectedTokenForPlacement.forceType.toLowerCase();
-				if (forceTypeLower.includes('fox') || forceTypeLower.includes('red')) {
+				const forceType = this.getStandardizedForceType(this.selectedTokenForPlacement.forceType);
+				if (forceType === 'Fox Land') {
 					previewColor = '#ff0000'; // Red for Fox Land
-				} else if (forceTypeLower.includes('blue') || forceTypeLower.includes('friendly')) {
+				} else if (forceType === 'Blue Land') {
 					previewColor = '#0000ff'; // Blue for Blue Land
+				} else if (forceType === 'UN') {
+					previewColor = '#00ff00'; // Green for UN
 				}
 			}
 			
@@ -476,7 +478,7 @@ class TokenPlacementManager {
             }
         });
 
-        // Add mode-dependent click event
+		// Add mode-dependent click event
 		marker.on('click', () => {
 			if (this.suppressNextClick) {
 				this.suppressNextClick = false;
@@ -485,6 +487,13 @@ class TokenPlacementManager {
 			if (!this.isDraggingMarker) {
 				this.handleTokenClick(token, marker);
 			}
+		});
+
+		// Add context menu event (always enabled regardless of mode)
+		marker.on('contextmenu', (e) => {
+			e.originalEvent.preventDefault();
+			e.originalEvent.stopPropagation();
+			this.showTokenContextMenu(e, { token: token, marker: marker });
 		});
 
 
@@ -565,11 +574,13 @@ class TokenPlacementManager {
         // Determine route color based on force type
         let routeColor = '#ff6b6b'; // Default red
         if (token && token.forceType) {
-            const forceTypeLower = token.forceType.toLowerCase();
-            if (forceTypeLower.includes('fox') || forceTypeLower.includes('red')) {
+            const forceType = this.getStandardizedForceType(token.forceType);
+            if (forceType === 'Fox Land') {
                 routeColor = '#ff0000'; // Red for Fox Land
-            } else if (forceTypeLower.includes('blue') || forceTypeLower.includes('friendly')) {
+            } else if (forceType === 'Blue Land') {
                 routeColor = '#0000ff'; // Blue for Blue Land
+            } else if (forceType === 'UN') {
+                routeColor = '#00ff00'; // Green for UN
             }
         }
         
@@ -799,8 +810,16 @@ class TokenPlacementManager {
         console.log('🎯 showConfirmMoveModal called for token:', token.name, 'distance:', calculatedDistance);
         
         // Remove any existing modal first
-        $('#confirmMoveModal').remove();
-        $('.modal-backdrop').remove();
+        const existingModal = document.getElementById('confirmMoveModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Remove any existing backdrop
+        const existingBackdrop = document.querySelector('.modal-backdrop');
+        if (existingBackdrop) {
+            existingBackdrop.remove();
+        }
         
         const modalHtml = `
         <div class="modal fade" id="confirmMoveModal" tabindex="-1" role="dialog" aria-labelledby="confirmMoveModalLabel" aria-hidden="true">
@@ -810,7 +829,7 @@ class TokenPlacementManager {
                     <h5 class="modal-title" id="confirmMoveModalLabel">
                         <i class="fas fa-route"></i> Movement Planning - ${token.name}
                     </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" onclick="document.getElementById('confirmMoveModal').remove(); document.querySelector('.modal-backdrop')?.remove();" aria-label="Close">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -821,10 +840,6 @@ class TokenPlacementManager {
                             <div class="brigade-data-form">
                                 <!-- Movement Planning Section -->
                                 <div class="data-tab-content active">
-                                    <div class="tab-content-header">
-                                        <h6><i class="fas fa-route"></i> Movement Planning</h6>
-                                        <p class="text-muted">Configure movement parameters and timing details for this token.</p>
-                                    </div>
                                     
                                     <!-- Movement Mode - Full Width -->
                                     <div class="form-group">
@@ -849,18 +864,6 @@ class TokenPlacementManager {
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label for="startTurn" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Proceed</label>
-                                                <select class="form-control" id="startTurn">
-                                                    <option value="1">PR</option>
-                                                    <option value="2">PR</option>
-                                                    <option value="3">PR</option>
-                                                    <option value="4">PR</option>
-                                                    <option value="5">PR</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
                                                 <label for="startOffset" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Start Offset (hours)</label>
                                                 <select class="form-control" id="startOffset">
                                                     <option value="0">0 hours</option>
@@ -882,11 +885,7 @@ class TokenPlacementManager {
                                                 </select>
                                             </div>
                                         </div>
-                                    </div>
-                                    
-                                    <!-- Row 2: Planned ETA & Movement Speed -->
-                                    <div class="row">
-                                        <div class="col-md-6">
+                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label for="plannedETA" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Planned ETA</label>
                                                 <select class="form-control" id="plannedETA">
@@ -908,27 +907,6 @@ class TokenPlacementManager {
                                                     <option value="15">0100 hours</option>
                                                 </select>
                                                 <small class="text-muted" style="font-size: 11px;">Estimated arrival time in military format</small>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="movementSpeed" style="color: #ccc; font-size: 12px; margin-bottom: 5px;">Movement Speed (km/h)</label>
-                                                <select class="form-control" id="movementSpeed">
-                                                    <option value="">Select speed (Optional)</option>
-                                                    <option value="1">1 km/h</option>
-                                                    <option value="2">2 km/h</option>
-                                                    <option value="3">3 km/h</option>
-                                                    <option value="4">4 km/h</option>
-                                                    <option value="5">5 km/h</option>
-                                                    <option value="8">8 km/h</option>
-                                                    <option value="10">10 km/h</option>
-                                                    <option value="12">12 km/h</option>
-                                                    <option value="14">14 km/h</option>
-                                                    <option value="18">18 km/h</option>
-                                                    <option value="30">30 km/h</option>
-                                                    <option value="40">40 km/h</option>
-                                                </select>
-                                                <small class="text-muted" style="font-size: 11px;">Unit's movement speed</small>
                                             </div>
                                         </div>
                                     </div>
@@ -965,21 +943,15 @@ class TokenPlacementManager {
                                 </div>
                             </div>
                             
-                            <!-- Action Buttons -->
-                            <div class="add-unit-section">
-                                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal" style="margin-right: 10px;">
-                                    <i class="fas fa-times"></i> Cancel
-                                </button>
-                                <button type="button" class="btn btn-primary" onclick="window.tokenPlacementManager.saveMoveOrder('${token.id}')">
-                                    <i class="fas fa-save"></i> Save Planning Details
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('confirmMoveModal').remove(); document.querySelector('.modal-backdrop')?.remove();">
                         <i class="fas fa-times"></i> Close
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="window.tokenPlacementManager.saveMoveOrder('${token.id}')">
+                        <i class="fas fa-save"></i> Save Planning Details
                     </button>
                 </div>
             </div>
@@ -1168,26 +1140,32 @@ class TokenPlacementManager {
             </style>
         `;
         
-        $('body').append(modalHtml);
+        // Add modal to DOM
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
         console.log('🎯 Movement modal added to DOM');
         
         // Make sure the function is globally accessible
         window.tokenPlacementManager = this;
         
-        // Force show Bootstrap modal
-        $('#confirmMoveModal').css({
-            'display': 'block',
-            'opacity': '1',
-            'visibility': 'visible'
-        }).addClass('show').removeClass('fade');
-        
-        $('#confirmMoveModal').modal({
-            backdrop: false,
-            keyboard: true,
-            show: true
-        });
-        
-        console.log('✅ Movement modal displayed');
+        // Show the modal using vanilla JavaScript
+        const modal = document.getElementById('confirmMoveModal');
+        if (modal) {
+            modal.style.display = 'block';
+            modal.style.opacity = '1';
+            modal.style.visibility = 'visible';
+            modal.classList.add('show');
+            modal.classList.remove('fade');
+            
+            // Add backdrop
+            const backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            backdrop.style.zIndex = '1040';
+            document.body.appendChild(backdrop);
+            
+            console.log('✅ Movement modal displayed');
+        } else {
+            console.error('❌ Failed to find confirmMoveModal element');
+        }
     }
 
     /**
@@ -1247,42 +1225,53 @@ class TokenPlacementManager {
      */
     async saveMoveOrder(tokenId) {
         console.log('saveMoveOrder called with tokenId:', tokenId);
-        const token = this.placedTokens.get(tokenId)?.token;
-        if (!token) {
+        const tokenInfo = this.placedTokens.get(tokenId);
+        if (!tokenInfo) {
             console.error('Token not found for ID:', tokenId);
             this.notificationCallback('Token not found', 'error');
             return;
         }
         
-        // Get form values - all optional
-        const plannedETA = document.getElementById('plannedETA').value;
-        const movementSpeed = document.getElementById('movementSpeed').value;
-        const engagementRule = document.getElementById('engagementRule').value;
+        // Get current token position
+        let currentLat, currentLng;
+        if (tokenInfo.marker && tokenInfo.marker.getLatLng) {
+            const latLng = tokenInfo.marker.getLatLng();
+            currentLat = latLng.lat;
+            currentLng = latLng.lng;
+        } else if (tokenInfo.token && tokenInfo.token.position) {
+            currentLat = parseFloat(tokenInfo.token.position.lat);
+            currentLng = parseFloat(tokenInfo.token.position.lng);
+        } else {
+            console.error('No position data available for token:', tokenId);
+            this.notificationCallback('Token position not found', 'error');
+            return;
+        }
         
-        console.log('Form values:', { plannedETA, movementSpeed, engagementRule });
+        // Get form values - only the fields that still exist
+        const plannedETA = document.getElementById('plannedETA')?.value || null;
+        const engagementRule = document.getElementById('engagementRule')?.value || null;
         
-        // All fields are now optional - user can just save position
+        console.log('Form values:', { plannedETA, engagementRule });
+        
+        // Get remaining form fields
         const movementMode = document.querySelector('input[name="movementMode"]:checked')?.value || null;
-        const startTurn = document.getElementById('startTurn').value || null;
-        const startOffset = document.getElementById('startOffset').value || null;
-        const sharedOrder = document.getElementById('sharedOrder').checked;
-        const notes = document.getElementById('moveNotes').value || null;
+        const startOffset = document.getElementById('startOffset')?.value || null;
+        const sharedOrder = document.getElementById('sharedOrder')?.checked || false;
+        const notes = document.getElementById('moveNotes')?.value || null;
         
         console.log('All form values:', { 
-            movementMode, startTurn, startOffset, sharedOrder, notes,
-            plannedETA, movementSpeed, engagementRule 
+            movementMode, startOffset, sharedOrder, notes,
+            plannedETA, engagementRule 
         });
         
         try {
             console.log('Saving move order with data:', {
                 tokenId: tokenId,
-                latitude: this.dragPreview.marker.getLatLng().lat,
-                longitude: this.dragPreview.marker.getLatLng().lng,
+                latitude: currentLat,
+                longitude: currentLng,
                 movementMode: movementMode,
-                startTurn: startTurn,
                 startOffset: startOffset,
                 plannedETA: plannedETA,
-                movementSpeed: movementSpeed,
                 engagementRule: engagementRule,
                 sharedOrder: sharedOrder,
                 notes: notes
@@ -1293,13 +1282,13 @@ class TokenPlacementManager {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     TokenId: tokenId,
-                    Latitude: this.dragPreview.marker.getLatLng().lat,
-                    Longitude: this.dragPreview.marker.getLatLng().lng,
+                    Latitude: currentLat,
+                    Longitude: currentLng,
                     MovementMode: movementMode || null,
-                    StartTurn: startTurn ? parseInt(startTurn) : null,
+                    StartTurn: null, // Removed field
                     StartOffset: startOffset ? parseFloat(startOffset) : null,
                     PlannedETA: plannedETA ? parseFloat(plannedETA) : null,
-                    MovementSpeed: movementSpeed ? parseFloat(movementSpeed) : null,
+                    MovementSpeed: null, // Removed field
                     EngagementRule: engagementRule || null,
                     SharedOrder: sharedOrder || false,
                     Notes: notes || null
@@ -1319,13 +1308,11 @@ class TokenPlacementManager {
                         unitId: tokenId,
                         type: 'movement',
                         movementMode: movementMode,
-                        startTurn: startTurn,
                         startOffset: startOffset,
                         plannedETA: plannedETA,
-                        movementSpeed: movementSpeed,
                         engagementRule: engagementRule,
                         notes: notes,
-                        route: [this.originalPosition, this.dragPreview.marker.getLatLng()],
+                        route: [{ lat: currentLat, lng: currentLng }], // Current position only
                         timestamp: new Date()
                     };
                     
@@ -1333,12 +1320,13 @@ class TokenPlacementManager {
                     window.scenarioPlanning.updateOrdersDisplay();
                 }
                 
-                // Show complete route on map
-                await this.showCompleteTokenRoute(tokenId);
+                // Show success message
+                this.notificationCallback('Movement planning saved successfully', 'success');
                 
                 // Close modal
                 document.getElementById('confirmMoveModal').remove();
-                this.dragPreview = null;
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) backdrop.remove();
             } else {
                 this.notificationCallback('Failed to confirm move: ' + result.message, 'error');
                 console.error('MoveToken failed:', result);
@@ -1559,13 +1547,152 @@ class TokenPlacementManager {
             
             this.create4SidedCoverageFromToken(coverage, centerLatLng, forceType || token.forceType);
         } else if (areaCoverages && areaCoverages.length > 0) {
-            console.log(`⚠️ Using fallback areaCoverages data (${areaCoverages.length} areas) instead of token attributes`);
-            // Fallback to existing areaCoverages data
-        areaCoverages.forEach(coverage => {
-                this.createOvalCoverageFromToken(coverage, centerLatLng, forceType);
+            // Process areaCoverages data
+            areaCoverages.forEach(coverage => {
+                // Check if geometry contains polygon data (regardless of shapeType)
+                const hasPolygonGeometry = coverage.geometry && 
+                    (coverage.geometry.includes('"type":"Polygon"') || 
+                     (typeof coverage.geometry === 'object' && coverage.geometry.type === 'Polygon'));
+                
+                if (coverage.shapeType === 'Custom' || hasPolygonGeometry) {
+                    // Handle custom polygon coverage areas
+                    this.createCustomPolygonCoverage(coverage, centerLatLng, forceType || token?.forceType, token);
+                } else {
+                    // Handle standard coverage areas (oval, 4-sided, etc.)
+                    this.createOvalCoverageFromToken(coverage, centerLatLng, forceType || token?.forceType);
+                }
             });
-        } else {
-            console.log(`⚠️ No coverage data available for token ${token?.name || 'unknown'}`);
+        }
+    }
+
+    /**
+     * Create custom polygon coverage area from saved geometry
+     */
+    createCustomPolygonCoverage(coverage, centerLatLng, forceType = null, token = null) {
+        try {
+            // Parse the geometry JSON
+            let geometry;
+            if (typeof coverage.geometry === 'string') {
+                geometry = JSON.parse(coverage.geometry);
+            } else {
+                geometry = coverage.geometry;
+            }
+            
+            if (!geometry || !geometry.coordinates || !geometry.coordinates[0]) {
+                return;
+            }
+            
+            // Determine color based on force type
+            let fillColor, strokeColor, opacity;
+            if (forceType) {
+                const forceTypeLower = forceType.toLowerCase();
+                if (forceTypeLower.includes('fox')) {
+                    fillColor = '#ff0000'; // Red for Fox Land
+                    strokeColor = '#cc0000';
+                } else if (forceTypeLower.includes('blue')) {
+                    fillColor = '#0000ff'; // Blue for Blue Land
+                    strokeColor = '#0000cc';
+                } else {
+                    fillColor = '#3388ff'; // Default light blue
+                    strokeColor = '#2266dd';
+                }
+            } else {
+                fillColor = '#3388ff'; // Default light blue
+                strokeColor = '#2266dd';
+            }
+            opacity = 0.2;
+            
+            // Convert coordinates to LatLng array
+            // Check if coordinates are already in [lat, lng] format or need conversion from [lng, lat]
+            const firstCoord = geometry.coordinates[0][0];
+            const isAlreadyLatLng = firstCoord[0] > -90 && firstCoord[0] < 90; // Latitude range check
+            
+            let latLngs;
+            if (isAlreadyLatLng) {
+                // Coordinates are already in [lat, lng] format
+                latLngs = geometry.coordinates[0].map(coord => [coord[0], coord[1]]);
+            } else {
+                // Coordinates are in [lng, lat] format, need conversion
+                latLngs = geometry.coordinates[0].map(coord => [coord[1], coord[0]]);
+            }
+            
+            // Validate coordinates before creating polygon
+            if (latLngs.length < 3) {
+                return;
+            }
+            
+            // Check for duplicate or invalid coordinates
+            const validLatLngs = [];
+            const seenCoords = new Set();
+            
+            latLngs.forEach((coord, index) => {
+                const isValid = coord[0] !== undefined && coord[1] !== undefined && 
+                               !isNaN(coord[0]) && !isNaN(coord[1]);
+                
+                if (!isValid) {
+                    return;
+                }
+                
+                // Check for duplicates
+                const coordKey = `${coord[0]},${coord[1]}`;
+                if (seenCoords.has(coordKey)) {
+                    return;
+                }
+                
+                seenCoords.add(coordKey);
+                validLatLngs.push(coord);
+            });
+            
+            if (validLatLngs.length < 3) {
+                return;
+            }
+            
+            // Check if coordinates are within reasonable bounds
+            const allCoordsValid = validLatLngs.every(coord => {
+                const lat = coord[0];
+                const lng = coord[1];
+                return lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+            });
+            
+            if (!allCoordsValid) {
+                return;
+            }
+            
+            // Create polygon with exact coordinates (no scaling or transformation)
+            const polygon = L.polygon(validLatLngs, {
+                color: strokeColor,
+                weight: 2,
+                opacity: 0.8,
+                fillColor: fillColor,
+                fillOpacity: opacity,
+                className: 'coverage-area-polygon'
+            }).addTo(this.map);
+            
+            
+            // Add popup with coverage info
+            const popupContent = `
+                <div class="coverage-popup">
+                    <h6><i class="fas fa-draw-polygon"></i> Custom Coverage Area</h6>
+                    <p><strong>Type:</strong> ${coverage.coverageType || 'Operational'}</p>
+                    <p><strong>Shape:</strong> Custom Polygon</p>
+                    <p><strong>Points:</strong> ${latLngs.length}</p>
+                </div>
+            `;
+            polygon.bindPopup(popupContent);
+            
+            // Store polygon reference with token association
+            if (!this.coverageAreas) {
+                this.coverageAreas = new Map();
+            }
+            
+            // Store with both coverage ID and token association for easy removal
+            const tokenId = coverage.tokenId || (token && token.id) || 'unknown';
+            const coverageKey = `${coverage.id}_${tokenId}`;
+            this.coverageAreas.set(coverageKey, polygon);
+            this.coverageAreas.set(coverage.id, polygon); // Also store with just coverage ID for compatibility
+            
+        } catch (error) {
+            // Silently handle errors
         }
     }
 
@@ -1598,16 +1725,32 @@ class TokenPlacementManager {
 
         // Create 4-sided polygon using front/rear/side radius
         if (coverage.frontRadiusKm && coverage.rearRadiusKm) {
-            const polygon = this.create4SidedPolygon(
-                centerLatLng, 
-                coverage.frontRadiusKm, 
-                coverage.rearRadiusKm, 
-                coverage.sideRadiusKm || (coverage.frontRadiusKm + coverage.rearRadiusKm) / 2,
-                coverage.rotationDegrees || 0,
-                fillColor, 
-                strokeColor,
-                opacity
-            );
+            let polygon;
+            
+            // For Blue Land tokens, create policy zone with C-shaped arc and parallel lines
+            if (forceType && this.getStandardizedForceType(forceType) === 'Blue Land') {
+                polygon = this.createPolicyZonePolygon(
+                    centerLatLng, 
+                    coverage.frontRadiusKm, 
+                    coverage.rearRadiusKm, 
+                    coverage.sideRadiusKm || (coverage.frontRadiusKm + coverage.rearRadiusKm) / 2,
+                    coverage.rotationDegrees || 0,
+                    fillColor, 
+                    strokeColor,
+                    opacity
+                );
+            } else {
+                polygon = this.create4SidedPolygon(
+                    centerLatLng, 
+                    coverage.frontRadiusKm, 
+                    coverage.rearRadiusKm, 
+                    coverage.sideRadiusKm || (coverage.frontRadiusKm + coverage.rearRadiusKm) / 2,
+                    coverage.rotationDegrees || 0,
+                    fillColor, 
+                    strokeColor,
+                    opacity
+                );
+            }
 
             // Add popup with coverage info
             polygon.bindPopup(`
@@ -1617,12 +1760,15 @@ class TokenPlacementManager {
                     <small>Rear: ${coverage.rearRadiusKm} km</small><br/>
                     ${coverage.sideRadiusKm ? `<small>Side: ${coverage.sideRadiusKm} km</small><br/>` : ''}
                     <small>Force: ${forceType || 'Unknown'}</small>
+                    ${forceType && this.getStandardizedForceType(forceType) === 'Blue Land' ? '<br/><small>Policy Zone Active</small>' : ''}
                 </div>
             `);
 
-            // Store reference for later updates
+            // Store reference for later updates with token association
             if (!this.coverageAreas) this.coverageAreas = new Map();
-            this.coverageAreas.set(coverage.id, polygon);
+            const coverageKey = `${coverage.id}_${coverage.tokenId || 'unknown'}`;
+            this.coverageAreas.set(coverageKey, polygon);
+            this.coverageAreas.set(coverage.id, polygon); // Also store with just coverage ID for compatibility
         }
     }
 
@@ -1639,14 +1785,19 @@ class TokenPlacementManager {
             const forceTypeLower = forceType.toLowerCase();
             console.log(`🎨 Coverage area - forceTypeLower: "${forceTypeLower}"`);
             
-            if (forceTypeLower.includes('fox') || forceTypeLower.includes('red') || forceTypeLower.includes('hostile')) {
+            const standardizedForceType = this.getStandardizedForceType(forceType);
+            if (standardizedForceType === 'Fox Land') {
                 fillColor = '#ff0000'; // Red for Fox Land
                 strokeColor = '#cc0000';
-                console.log(`🔴 Setting RED coverage for Fox/Red/Hostile`);
-            } else if (forceTypeLower.includes('blue') || forceTypeLower.includes('friendly')) {
+                console.log(`🔴 Setting RED coverage for Fox Land`);
+            } else if (standardizedForceType === 'Blue Land') {
                 fillColor = '#0000ff'; // Blue for Blue Land
                 strokeColor = '#0000cc';
-                console.log(`🔵 Setting BLUE coverage for Blue/Friendly`);
+                console.log(`🔵 Setting BLUE coverage for Blue Land`);
+            } else if (standardizedForceType === 'UN') {
+                fillColor = '#00ff00'; // Green for UN
+                strokeColor = '#00cc00';
+                console.log(`🟢 Setting GREEN coverage for UN`);
                 } else {
                     fillColor = '#3388ff'; // Default light blue
                     strokeColor = '#2266dd';
@@ -1685,16 +1836,36 @@ class TokenPlacementManager {
 
         // Create oval coverage using front/rear/side radius
             if (coverage.frontRadiusKm && coverage.rearRadiusKm) {
-            const polygon = this.createOvalFromRadii(
-                centerLatLng, 
-                coverage.frontRadiusKm, 
-                coverage.rearRadiusKm, 
-                coverage.sideRadiusKm || (coverage.frontRadiusKm + coverage.rearRadiusKm) / 2,
-                coverage.rotationDegrees || 0,
-                fillColor, 
-                strokeColor,
-                opacity
-            );
+            let polygon;
+            
+            // For Blue Land tokens, create policy zone with C-shaped arc and parallel lines
+            const standardizedForceType = this.getStandardizedForceType(forceType);
+            console.log(`🎯 Force type check: "${forceType}" -> "${standardizedForceType}"`);
+            
+            if (forceType && standardizedForceType === 'Blue Land') {
+                console.log(`🔵 Creating policy zone for Blue Land token with C-shaped arc and || lines`);
+                polygon = this.createPolicyZonePolygon(
+                    centerLatLng, 
+                    coverage.frontRadiusKm, 
+                    coverage.rearRadiusKm, 
+                    coverage.sideRadiusKm || (coverage.frontRadiusKm + coverage.rearRadiusKm) / 2,
+                    coverage.rotationDegrees || 0,
+                    fillColor, 
+                    strokeColor,
+                    opacity
+                );
+            } else {
+                polygon = this.createOvalFromRadii(
+                    centerLatLng, 
+                    coverage.frontRadiusKm, 
+                    coverage.rearRadiusKm, 
+                    coverage.sideRadiusKm || (coverage.frontRadiusKm + coverage.rearRadiusKm) / 2,
+                    coverage.rotationDegrees || 0,
+                    fillColor, 
+                    strokeColor,
+                    opacity
+                );
+            }
 
             // Add popup with coverage info
             polygon.bindPopup(`
@@ -1704,12 +1875,15 @@ class TokenPlacementManager {
                     <small>Rear: ${coverage.rearRadiusKm} km</small><br/>
                     ${coverage.sideRadiusKm ? `<small>Side: ${coverage.sideRadiusKm} km</small><br/>` : ''}
                     <small>Force: ${forceType || 'Unknown'}</small>
+                    ${forceType && this.getStandardizedForceType(forceType) === 'Blue Land' ? '<br/><small>Policy Zone Active</small>' : ''}
                 </div>
             `);
 
-            // Store reference for later updates
+            // Store reference for later updates with token association
             if (!this.coverageAreas) this.coverageAreas = new Map();
-            this.coverageAreas.set(coverage.id, polygon);
+            const coverageKey = `${coverage.id}_${coverage.tokenId || 'unknown'}`;
+            this.coverageAreas.set(coverageKey, polygon);
+            this.coverageAreas.set(coverage.id, polygon); // Also store with just coverage ID for compatibility
         }
     }
 
@@ -1766,9 +1940,11 @@ class TokenPlacementManager {
             </div>
         `);
 
-        // Store reference for later updates
+        // Store reference for later updates with token association
         if (!this.coverageAreas) this.coverageAreas = new Map();
-        this.coverageAreas.set(coverage.id, polygon);
+        const coverageKey = `${coverage.id}_${coverage.tokenId || 'unknown'}`;
+        this.coverageAreas.set(coverageKey, polygon);
+        this.coverageAreas.set(coverage.id, polygon); // Also store with just coverage ID for compatibility
     }
 
     /**
@@ -1783,6 +1959,20 @@ class TokenPlacementManager {
         
         // Calculate rotation in radians
         const rotationRad = (rotationDegrees * Math.PI) / 180;
+        
+        // For Blue Land tokens, use policy zone instead of regular oval
+        if (fillColor === '#0000ff' || strokeColor === '#0000cc') {
+            return this.createPolicyZonePolygon(
+                centerLatLng, 
+                frontKm, 
+                rearKm, 
+                sideKm, 
+                rotationDegrees, 
+                fillColor, 
+                strokeColor, 
+                opacity
+            );
+        }
         
         // Create oval/elliptical shape with multiple points for smoother curves
         const numPoints = 32; // More points = smoother oval
@@ -1833,14 +2023,192 @@ class TokenPlacementManager {
             weight: 2
         }).addTo(this.map);
         
-        // Add parallel lines (||) on the sides for Blue Land tokens
-        if (fillColor === '#0000ff' || strokeColor === '#0000cc') {
-            this.addParallelLinesToOval(centerLatLng, sideDegrees, frontDegrees, rearDegrees, rotationRad, strokeColor);
-        }
-        
         return polygon;
     }
+
+    /**
+     * Create policy zone polygon for Blue Land tokens with C-shaped arc on left and parallel lines on right
+     */
+    createPolicyZonePolygon(centerLatLng, frontKm, rearKm, sideKm, rotationDegrees, fillColor, strokeColor, opacity = 0.2) {
+        console.log(`🔵 Creating policy zone polygon: Front=${frontKm}km, Rear=${rearKm}km, Side=${sideKm}km`);
+        
+        // Use much smaller, more reasonable scaling for policy zone
+        const scaleFactor = 0.01; // Make it 100x smaller - very compact around token
+        const frontDegrees = (frontKm * scaleFactor) / 111.32;
+        const rearDegrees = (rearKm * scaleFactor) / 111.32;
+        const sideDegrees = (sideKm * scaleFactor) / 111.32;
+        
+        console.log(`🔵 Policy zone degrees (scaled): Front=${frontDegrees}, Rear=${rearDegrees}, Side=${sideDegrees}`);
+        
+        // Calculate rotation in radians
+        const rotationRad = (rotationDegrees * Math.PI) / 180;
+        
+        // Create policy zone points
+        const points = [];
+        
+        // Create C-shaped arc on the left side
+        const cArcPoints = this.createCShapedArc(centerLatLng, sideDegrees, frontDegrees, rearDegrees, rotationRad);
+        points.push(...cArcPoints);
+        console.log(`🔵 C-shaped arc points: ${cArcPoints.length}`);
+        
+        // Create parallel lines (||) on the right side
+        const parallelLinePoints = this.createParallelLines(centerLatLng, sideDegrees, frontDegrees, rearDegrees, rotationRad);
+        points.push(...parallelLinePoints);
+        console.log(`🔵 Parallel lines points: ${parallelLinePoints.length}`);
+        
+        // Close the polygon by connecting back to the start
+        if (points.length > 0) {
+            points.push(points[0]);
+        }
+        
+        console.log(`🔵 Total policy zone points: ${points.length}`);
+        
+        // Create the main polygon
+        const polygon = L.polygon(points, {
+            color: strokeColor,
+            fillColor: fillColor,
+            fillOpacity: opacity,
+            opacity: 0.6,
+            weight: 2,
+            className: 'policy-zone-polygon'
+        }).addTo(this.map);
+        
+        console.log('✅ Created policy zone polygon for Blue Land token');
+        return polygon;
+    }
+
+    /**
+     * Create C-shaped arc points for the left side of the policy zone
+     */
+    createCShapedArc(centerLatLng, sideDegrees, frontDegrees, rearDegrees, rotationRad) {
+        const points = [];
+        const numPoints = 16; // Number of points for the C-shape
+        
+        // C-shape parameters - use very small, compact scaling
+        const cRadius = sideDegrees * 0.5; // Small radius relative to token
+        const cGap = sideDegrees * 0.3; // Small gap
+        
+        console.log(`🔵 C-shaped arc: radius=${cRadius}, gap=${cGap}, points=${numPoints}`);
+        
+        // Start from top-left, go around the left side
+        for (let i = 0; i < numPoints; i++) {
+            const angle = (i / numPoints) * (Math.PI * 2 - cGap) + cGap/2; // Create gap in the C
+            
+            let lat = centerLatLng.lat + cRadius * Math.sin(angle);
+            let lng = centerLatLng.lng - sideDegrees * 0.1 + cRadius * Math.cos(angle); // Very close to center
+            
+            // Apply rotation if needed
+            if (rotationRad !== 0) {
+                const cos = Math.cos(rotationRad);
+                const sin = Math.sin(rotationRad);
+                const x = lng - centerLatLng.lng;
+                const y = lat - centerLatLng.lat;
+                
+                const rotatedX = x * cos - y * sin;
+                const rotatedY = x * sin + y * cos;
+                
+                lat = centerLatLng.lat + rotatedY;
+                lng = centerLatLng.lng + rotatedX;
+            }
+            
+            points.push([lat, lng]);
+        }
+        
+        console.log(`🔵 C-shaped arc created with ${points.length} points`);
+        return points;
+    }
+
+    /**
+     * Create parallel lines (||) points for the right side of the policy zone
+     */
+    createParallelLines(centerLatLng, sideDegrees, frontDegrees, rearDegrees, rotationRad) {
+        const points = [];
+        const lineSpacing = sideDegrees * 0.1; // Small spacing
+        const lineLength = sideDegrees * 0.2; // Small length
+        const lineWidth = sideDegrees * 0.05; // Small width
+        
+        console.log(`🔵 Parallel lines: spacing=${lineSpacing}, length=${lineLength}, width=${lineWidth}`);
+        
+        // Position on the right side - very close to center
+        const rightPosition = centerLatLng.lng + sideDegrees * 0.1;
+        const topPosition = centerLatLng.lat + sideDegrees * 0.05;
+        const bottomPosition = centerLatLng.lat - sideDegrees * 0.05;
+        
+        console.log(`🔵 Parallel lines position: right=${rightPosition}, top=${topPosition}, bottom=${bottomPosition}`);
+        
+        // Create two parallel vertical lines
+        const lines = [
+            // First line (outer)
+            [
+                [topPosition, rightPosition],
+                [bottomPosition, rightPosition],
+                [bottomPosition, rightPosition + lineWidth],
+                [topPosition, rightPosition + lineWidth]
+            ],
+            // Second line (inner)
+            [
+                [topPosition, rightPosition + lineSpacing],
+                [bottomPosition, rightPosition + lineSpacing],
+                [bottomPosition, rightPosition + lineSpacing + lineWidth],
+                [topPosition, rightPosition + lineSpacing + lineWidth]
+            ]
+        ];
+        
+        // Apply rotation and add to points
+        lines.forEach((line, lineIndex) => {
+            line.forEach(point => {
+                let lat = point[0];
+                let lng = point[1];
+                
+                // Apply rotation if needed
+                if (rotationRad !== 0) {
+                    const cos = Math.cos(rotationRad);
+                    const sin = Math.sin(rotationRad);
+                    const x = lng - centerLatLng.lng;
+                    const y = lat - centerLatLng.lat;
+                    
+                    const rotatedX = x * cos - y * sin;
+                    const rotatedY = x * sin + y * cos;
+                    
+                    lat = centerLatLng.lat + rotatedY;
+                    lng = centerLatLng.lng + rotatedX;
+                }
+                
+                points.push([lat, lng]);
+            });
+        });
+        
+        console.log(`🔵 Parallel lines created with ${points.length} points`);
+        return points;
+    }
     
+    /**
+     * Get standardized force type from various input formats
+     */
+    getStandardizedForceType(input) {
+        if (!input) return 'Blue Land'; // Default
+        
+        const lower = input.toLowerCase().trim();
+        
+        // Blue Land variations
+        if (lower.includes('blue') || lower.includes('friendly') || lower.includes('blueland')) {
+            return 'Blue Land';
+        }
+        
+        // Fox Land variations  
+        if (lower.includes('fox') || lower.includes('hostile') || lower.includes('red') || lower.includes('foxland')) {
+            return 'Fox Land';
+        }
+        
+        // UN variations
+        if (lower.includes('un') || lower.includes('united nations') || lower.includes('neutral') || lower.includes('control')) {
+            return 'UN';
+        }
+        
+        // Default to Blue Land if not recognized
+        return 'Blue Land';
+    }
+
     /**
      * Add parallel lines (||) decoration on the front side of the oval for Blue Land tokens
      * Returns array of polyline layers for cleanup
@@ -1938,15 +2306,34 @@ class TokenPlacementManager {
      * Remove coverage areas for a specific token
      */
     removeCoverageAreas(tokenId) {
-        if (!this.coverageAreas) return;
+        if (!this.coverageAreas) {
+            console.log(`⚠️ No coverage areas map found for token ${tokenId}`);
+            return;
+        }
+
+        console.log(`🧹 Removing coverage areas for token: ${tokenId}`);
+        console.log(`🧹 Current coverage areas:`, Array.from(this.coverageAreas.keys()));
 
         // Find and remove coverage areas for this specific token
+        const coverageIdsToRemove = [];
         for (const [coverageId, polygon] of this.coverageAreas) {
-            if (coverageId.includes(tokenId)) {
-                this.map.removeLayer(polygon);
-            this.coverageAreas.delete(coverageId);
+            // Check if this coverage area belongs to the token
+            // Coverage IDs can be in format: "token_coverage_{tokenId}" or just the coverage ID
+            if (coverageId.includes(tokenId) || coverageId === `token_coverage_${tokenId}`) {
+                console.log(`🧹 Removing coverage area: ${coverageId}`);
+                if (this.map && this.map.hasLayer(polygon)) {
+                    this.map.removeLayer(polygon);
+                }
+                coverageIdsToRemove.push(coverageId);
             }
         }
+
+        // Remove from the coverage areas map
+        coverageIdsToRemove.forEach(id => {
+            this.coverageAreas.delete(id);
+        });
+
+        console.log(`✅ Removed ${coverageIdsToRemove.length} coverage areas for token ${tokenId}`);
     }
 
     /**
@@ -2005,12 +2392,27 @@ class TokenPlacementManager {
             {
                 icon: 'fas fa-route',
                 text: 'Movement Planning',
-                action: () => this.openMovementPlanning(token, marker)
+                action: () => {
+                    console.log('🎯 Context menu calling showConfirmMoveModal for token:', token.name);
+                    console.log('🎯 TokenPlacementManager instance:', this);
+                    console.log('🎯 showConfirmMoveModal method exists:', typeof this.showConfirmMoveModal);
+                    this.showConfirmMoveModal(token);
+                }
             },
             {
                 icon: 'fas fa-info-circle',
-                text: 'Token Details',
-                action: () => this.showExistingTokenDetails(token)
+                text: 'Token Summary',
+                action: () => this.showTokenSummary(token)
+            },
+            {
+                icon: 'fas fa-draw-polygon',
+                text: 'Coverage Areas',
+                action: () => this.showCoverageAreaManagement(token)
+            },
+            {
+                icon: 'fas fa-map-marker-alt',
+                text: 'Organizational Signs',
+                action: () => this.showOrganizationalSignManagement(token)
             },
             {
                 icon: 'fas fa-edit',
@@ -2078,202 +2480,7 @@ class TokenPlacementManager {
         }, 100);
     }
 
-    /**
-     * Open movement planning for token
-     */
-    openMovementPlanning(token, marker) {
-        console.log('🎯 Opening movement planning for token:', token);
-        
-        // Get current position from marker if available
-        let currentPosition = 'Not placed';
-        if (marker && marker.getLatLng) {
-            const latLng = marker.getLatLng();
-            currentPosition = `${latLng.lat.toFixed(6)}, ${latLng.lng.toFixed(6)}`;
-        } else if (token.position) {
-            currentPosition = `${token.position.lat.toFixed(6)}, ${token.position.lng.toFixed(6)}`;
-        }
-        
-        // Get token name safely
-        const tokenName = token.name || 'Unnamed Token';
-        
-        // Create movement planning modal with tabs
-        const modal = document.createElement('div');
-        modal.className = 'modal fade show';
-        modal.style.display = 'block';
-        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
-        modal.innerHTML = `
-            <div class="modal-dialog modal-xl">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="fas fa-route"></i> Token Management: ${tokenName}
-                        </h5>
-                        <button type="button" class="btn-close" onclick="this.closest('.modal').remove()"></button>
-                    </div>
-                    <div class="modal-body">
-                        <!-- Tab Navigation -->
-                        <ul class="nav nav-tabs" id="tokenManagementTabs" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="token-info-tab" data-bs-toggle="tab" data-bs-target="#token-info" type="button" role="tab">
-                                    <i class="fas fa-info-circle"></i> Token Information
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="movement-planning-tab" data-bs-toggle="tab" data-bs-target="#movement-planning" type="button" role="tab">
-                                    <i class="fas fa-route"></i> Movement Planning
-                                </button>
-                            </li>
-                        </ul>
-                        
-                        <!-- Tab Content -->
-                        <div class="tab-content" id="tokenManagementTabContent">
-                            <!-- Token Information Tab -->
-                            <div class="tab-pane fade show active" id="token-info" role="tabpanel">
-                                <div class="row mt-3">
-                                    <div class="col-md-6">
-                                        <h6><i class="fas fa-map-marker-alt"></i> Position & Status</h6>
-                                        <table class="table table-sm">
-                                            <tr>
-                                                <td><strong>Current Position:</strong></td>
-                                                <td><i class="fas fa-map-marker-alt text-primary"></i> ${currentPosition}</td>
-                                            </tr>
-                                            <tr>
-                                                <td><strong>Force Type:</strong></td>
-                                                <td><span class="badge bg-${this.getForceTypeColor(token.forceType)}">${token.forceType || 'Unknown'}</span></td>
-                                            </tr>
-                                            <tr>
-                                                <td><strong>Status:</strong></td>
-                                                <td><span class="badge bg-success">Active</span></td>
-                                            </tr>
-                                            <tr>
-                                                <td><strong>Token ID:</strong></td>
-                                                <td><code>${token.id || 'Unknown'}</code></td>
-                                            </tr>
-                                        </table>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6><i class="fas fa-flag"></i> Military Classification</h6>
-                                        <table class="table table-sm">
-                                            <tr>
-                                                <td><strong>Organization Level:</strong></td>
-                                                <td>${this.getOrgLevelName(token.organizationLevel)}</td>
-                                            </tr>
-                                            <tr>
-                                                <td><strong>Unit Type:</strong></td>
-                                                <td>${this.getUnitTypeName(token.unitType)}</td>
-                                            </tr>
-                                            <tr>
-                                                <td><strong>Unit Designation:</strong></td>
-                                                <td>${token.unitDesignation || 'Not specified'}</td>
-                                            </tr>
-                                            <tr>
-                                                <td><strong>Token Group:</strong></td>
-                                                <td>${token.tokenGroupName || 'No group'}</td>
-                                            </tr>
-                                        </table>
-                                    </div>
-                                </div>
-                                <div class="row mt-3">
-                                    <div class="col-12">
-                                        <h6><i class="fas fa-chart-area"></i> Coverage Areas</h6>
-                                        <div class="alert alert-info">
-                                            <i class="fas fa-info-circle"></i>
-                                            Coverage areas are displayed on the map when the token is selected.
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Movement Planning Tab -->
-                            <div class="tab-pane fade" id="movement-planning" role="tabpanel">
-                                <div class="row mt-3">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Movement Type</label>
-                                            <select class="form-control" id="movementType">
-                                                <option value="foot">Foot Movement</option>
-                                                <option value="vehicle">Vehicle Movement</option>
-                                                <option value="air">Air Movement</option>
-                                                <option value="naval">Naval Movement</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Speed</label>
-                                            <select class="form-control" id="movementSpeed">
-                                                <option value="slow">Slow (Cautious)</option>
-                                                <option value="normal" selected>Normal</option>
-                                                <option value="fast">Fast (Rushed)</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Estimated Duration</label>
-                                            <input type="text" class="form-control" id="estimatedDuration" placeholder="e.g., 2 hours, 30 minutes">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Priority Level</label>
-                                            <select class="form-control" id="priorityLevel">
-                                                <option value="low">Low Priority</option>
-                                                <option value="normal" selected>Normal Priority</option>
-                                                <option value="high">High Priority</option>
-                                                <option value="urgent">Urgent</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Weather Conditions</label>
-                                            <select class="form-control" id="weatherConditions">
-                                                <option value="clear">Clear</option>
-                                                <option value="cloudy">Cloudy</option>
-                                                <option value="rain">Rain</option>
-                                                <option value="storm">Storm</option>
-                                                <option value="snow">Snow</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Visibility</label>
-                                            <select class="form-control" id="visibility">
-                                                <option value="excellent">Excellent (>10km)</option>
-                                                <option value="good">Good (5-10km)</option>
-                                                <option value="moderate" selected>Moderate (1-5km)</option>
-                                                <option value="poor">Poor (<1km)</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Route Description</label>
-                                    <textarea class="form-control" id="routeDescription" rows="3" placeholder="Describe the planned route, waypoints, and any special considerations..."></textarea>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Special Instructions</label>
-                                    <textarea class="form-control" id="specialInstructions" rows="2" placeholder="Any special orders, equipment, or considerations..."></textarea>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Equipment & Resources</label>
-                                    <textarea class="form-control" id="equipmentResources" rows="2" placeholder="Required equipment, vehicles, or special resources..."></textarea>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
-                        <button type="button" class="btn btn-info" onclick="window.tokenPlacementManager.showTokenDetails('${token.id}')">
-                            <i class="fas fa-eye"></i> View Details
-                        </button>
-                        <button type="button" class="btn btn-warning" onclick="window.location.href='/AdminToken/Edit/${token.id}'">
-                            <i class="fas fa-edit"></i> Edit Token
-                        </button>
-                        <button type="button" class="btn btn-primary" onclick="window.tokenPlacementManager.saveMovementPlan('${token.id}')">
-                            <i class="fas fa-save"></i> Save Movement Plan
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-    }
+
 
     /**
      * Get force type color for badges
@@ -2445,12 +2652,334 @@ class TokenPlacementManager {
     }
 
     /**
+     * Format token position for display
+     */
+    formatTokenPosition(position) {
+        if (!position) return 'Not placed';
+        
+        const lat = typeof position.lat === 'string' ? parseFloat(position.lat) : position.lat;
+        const lng = typeof position.lng === 'string' ? parseFloat(position.lng) : position.lng;
+        
+        if (isNaN(lat) || isNaN(lng)) return 'Invalid position';
+        
+        return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    }
+
+    /**
+     * Show token summary with coverage areas and organizational signs
+     */
+    showTokenSummary(token) {
+        console.log('🎯 Showing token summary for:', token.name);
+        
+        // Use the existing tokenManager.showTokenDetails method
+        if (window.tokenManager && window.tokenManager.showTokenDetails) {
+            window.tokenManager.showTokenDetails(token);
+        } else {
+            console.error('TokenManager not available for showing token summary');
+            if (this.notificationCallback) {
+                this.notificationCallback('Token summary not available', 'error');
+            }
+        }
+    }
+
+    /**
+     * Show coverage area management
+     */
+    showCoverageAreaManagement(token) {
+        console.log('🗺️ Showing coverage area management for:', token.name);
+        
+        // Store token data for modal context
+        this.currentModalToken = token;
+        
+        // Start coverage area mapping immediately
+        console.log('🗺️ Starting coverage area mapping immediately for token:', token.name);
+        this.startCoverageMapping(token, 'Operational');
+    }
+
+    /**
+     * Show organizational sign management
+     */
+    showOrganizationalSignManagement(token) {
+        console.log('🏷️ Showing organizational sign management for:', token.name);
+        
+        // Store token data for modal context
+        this.currentModalToken = token;
+        
+        const modal = document.createElement('div');
+        modal.className = 'gameplay-modal';
+        modal.id = 'organizationalSignManagementModal';
+        modal.innerHTML = `
+            <div class="gameplay-modal-content">
+                <div class="gameplay-modal-header">
+                    <h3><i class="fas fa-map-marker-alt"></i> Organizational Sign Management - ${token.name}</h3>
+                    <button class="gameplay-modal-close" onclick="this.closest('.gameplay-modal').remove()">&times;</button>
+                </div>
+                <div class="gameplay-modal-body">
+                    <div class="organizational-sign-management">
+                        <div class="organizational-sign-list">
+                            <h6>Existing Organizational Signs</h6>
+                            <div id="organizational-sign-list">
+                                ${this.renderOrganizationalSignList(token)}
+                            </div>
+                        </div>
+                        
+                        <div class="organizational-sign-actions">
+                            <h6>Add New Organizational Sign</h6>
+                            <p>Click on the map to place an organizational sign for this token.</p>
+                            <button class="btn btn-success" onclick="window.tokenPlacementManager.startOrganizationalSignMappingFromModal()">
+                                <i class="fas fa-map-marker-alt"></i> Place Sign
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="gameplay-modal-footer">
+                    <button class="btn btn-secondary" onclick="this.closest('.gameplay-modal').remove()">Close</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+
+    /**
+     * Start coverage area mapping from modal
+     */
+    startCoverageMappingFromModal() {
+        console.log('🗺️ Starting coverage mapping from modal...');
+        console.log('🗺️ Current modal token:', this.currentModalToken);
+        
+        // Get the coverage type from the select
+        const coverageTypeSelect = document.getElementById('coverageType');
+        const coverageType = coverageTypeSelect ? coverageTypeSelect.value : 'Operational';
+        console.log('🗺️ Selected coverage type:', coverageType);
+        
+        // Get token data from the modal context
+        const tokenData = this.currentModalToken;
+        if (!tokenData) {
+            console.error('❌ Token data not available in modal context');
+            if (window.showNotification) {
+                window.showNotification('Token data not available', 'error');
+            }
+            return;
+        }
+        
+        console.log('🗺️ Starting coverage mapping for token:', tokenData.name, 'ID:', tokenData.id);
+        
+        // Start the mapping with token ID
+        this.startCoverageMapping(tokenData, coverageType);
+    }
+
+    /**
+     * Start coverage area mapping
+     */
+    startCoverageMapping(token, coverageType) {
+        console.log(`🗺️ Starting coverage mapping for ${token.name}, type: ${coverageType}`);
+        debugger; // DEBUG: Check if method is called with correct parameters
+        
+        // Close modal
+        const modal = document.getElementById('coverageAreaManagementModal');
+        console.log('🗺️ Modal to close found:', !!modal);
+        debugger; // DEBUG: Check modal removal
+        
+        if (modal) {
+            modal.remove();
+            console.log('🗺️ Modal removed');
+        }
+        
+        // Initialize coverage area manager if not exists
+        console.log('🗺️ CoverageAreaManager exists:', !!window.coverageAreaManager);
+        debugger; // DEBUG: Check CoverageAreaManager existence
+        
+        if (!window.coverageAreaManager) {
+            console.log('🗺️ Initializing CoverageAreaManager...');
+            try {
+                console.log('🗺️ Map available:', !!this.map);
+                console.log('🗺️ TokenManager available:', !!window.tokenManager);
+                debugger; // DEBUG: Check dependencies
+                
+                window.coverageAreaManager = new CoverageAreaManager(this.map, window.tokenManager);
+                console.log('✅ CoverageAreaManager initialized successfully');
+                debugger; // DEBUG: Check initialization success
+            } catch (error) {
+                console.error('❌ Error initializing CoverageAreaManager:', error);
+                debugger; // DEBUG: Check initialization error
+                if (window.showNotification) {
+                    window.showNotification('Error initializing coverage area manager', 'error');
+                }
+                return;
+            }
+        }
+        
+        // Start mapping
+        try {
+            console.log('🗺️ Calling startCoverageMapping on CoverageAreaManager...');
+            console.log('🗺️ CoverageAreaManager object:', window.coverageAreaManager);
+            console.log('🗺️ startCoverageMapping method exists:', typeof window.coverageAreaManager.startCoverageMapping);
+            debugger; // DEBUG: Check CoverageAreaManager method
+            
+            window.coverageAreaManager.startCoverageMapping(token, coverageType);
+            console.log('✅ Coverage mapping started successfully');
+            debugger; // DEBUG: Check if mapping started
+        } catch (error) {
+            console.error('❌ Error starting coverage mapping:', error);
+            debugger; // DEBUG: Check mapping error
+            if (window.showNotification) {
+                window.showNotification('Error starting coverage mapping', 'error');
+            }
+        }
+    }
+
+    /**
+     * Start organizational sign mapping from modal
+     */
+    startOrganizationalSignMappingFromModal() {
+        console.log('🏷️ Starting organizational sign mapping from modal...');
+        
+        // Get token data from the modal context
+        const tokenData = this.currentModalToken;
+        if (!tokenData) {
+            console.error('❌ Token data not available in modal context');
+            if (window.showNotification) {
+                window.showNotification('Token data not available', 'error');
+            }
+            return;
+        }
+        
+        console.log('🏷️ Using token data:', tokenData);
+        
+        // Start the mapping
+        this.startOrganizationalSignMapping(tokenData);
+    }
+
+    /**
+     * Start organizational sign mapping
+     */
+    startOrganizationalSignMapping(token) {
+        console.log(`🏷️ Starting organizational sign mapping for ${token.name}`);
+        
+        // Close modal
+        const modal = document.getElementById('organizationalSignManagementModal');
+        if (modal) {
+            modal.remove();
+        }
+        
+        // Initialize coverage area manager if not exists
+        if (!window.coverageAreaManager) {
+            console.log('🗺️ Initializing CoverageAreaManager...');
+            window.coverageAreaManager = new CoverageAreaManager(this.map, window.tokenManager);
+        }
+        
+        // Start mapping
+        window.coverageAreaManager.startOrganizationalSignMapping(token);
+    }
+
+    /**
+     * Render coverage area list
+     */
+    renderCoverageAreaList(token) {
+        const coverageAreas = token.areaCoverages || [];
+        
+        if (coverageAreas.length === 0) {
+            return '<p class="text-muted">No coverage areas defined</p>';
+        }
+        
+        return coverageAreas.map(area => `
+            <div class="coverage-area-item">
+                <div class="coverage-area-info">
+                    <div class="coverage-area-type">${area.coverageType || 'Operational'}</div>
+                    <div class="coverage-area-details">${area.shapeType || 'Custom'} - ${area.geometry?.coordinates?.[0]?.length || 0} points</div>
+                </div>
+                <div class="coverage-area-actions">
+                    <button class="btn btn-sm btn-outline-primary" onclick="window.tokenPlacementManager.editCoverageArea('${area.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="window.tokenPlacementManager.deleteCoverageArea('${area.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    /**
+     * Render organizational sign list
+     */
+    renderOrganizationalSignList(token) {
+        const organizationalSigns = token.organizationalSigns || [];
+        
+        if (organizationalSigns.length === 0) {
+            return '<p class="text-muted">No organizational signs placed</p>';
+        }
+        
+        return organizationalSigns.map(sign => `
+            <div class="organizational-sign-item">
+                <div class="organizational-sign-info">
+                    <div class="organizational-sign-level">${token.organizationLevel || 'ORG'}</div>
+                    <div class="organizational-sign-position">${sign.position?.lat?.toFixed(6)}, ${sign.position?.lng?.toFixed(6)}</div>
+                </div>
+                <div class="organizational-sign-actions">
+                    <button class="btn btn-sm btn-outline-primary" onclick="window.tokenPlacementManager.editOrganizationalSign('${sign.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="window.tokenPlacementManager.deleteOrganizationalSign('${sign.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    /**
+     * Edit coverage area
+     */
+    editCoverageArea(areaId) {
+        console.log('✏️ Editing coverage area:', areaId);
+        // TODO: Implement coverage area editing
+        if (window.showNotification) {
+            window.showNotification('Coverage area editing not yet implemented', 'info');
+        }
+    }
+
+    /**
+     * Delete coverage area
+     */
+    deleteCoverageArea(areaId) {
+        console.log('🗑️ Deleting coverage area:', areaId);
+        // TODO: Implement coverage area deletion
+        if (window.showNotification) {
+            window.showNotification('Coverage area deletion not yet implemented', 'info');
+        }
+    }
+
+    /**
+     * Edit organizational sign
+     */
+    editOrganizationalSign(signId) {
+        console.log('✏️ Editing organizational sign:', signId);
+        // TODO: Implement organizational sign editing
+        if (window.showNotification) {
+            window.showNotification('Organizational sign editing not yet implemented', 'info');
+        }
+    }
+
+    /**
+     * Delete organizational sign
+     */
+    deleteOrganizationalSign(signId) {
+        console.log('🗑️ Deleting organizational sign:', signId);
+        // TODO: Implement organizational sign deletion
+        if (window.showNotification) {
+            window.showNotification('Organizational sign deletion not yet implemented', 'info');
+        }
+    }
+
+    /**
      * Edit token
      */
     editToken(token) {
         console.log('✏️ Editing token:', token.name);
-        // Redirect to edit page
-        window.location.href = `/AdminToken/Edit/${token.id}`;
+        // Open edit page in new tab
+        window.open(`/AdminToken/Edit/${token.id}`, '_blank');
     }
 
     /**

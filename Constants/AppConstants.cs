@@ -181,4 +181,74 @@ namespace TechWebSol.Constants
             return all;
         }
     }
+
+    /// <summary>
+    /// Standardized Force Types for the application
+    /// </summary>
+    public static class ForceTypes
+    {
+        public const string BlueLand = "Blue Land";
+        public const string FoxLand = "Fox Land";
+        public const string UN = "UN";
+
+        public static List<string> GetAll()
+        {
+            return new List<string>
+            {
+                BlueLand,
+                FoxLand,
+                UN
+            };
+        }
+
+        /// <summary>
+        /// Get the standardized force type from various input formats
+        /// </summary>
+        public static string GetStandardizedForceType(string? input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return BlueLand; // Default
+
+            var lower = input.ToLower().Trim();
+            
+            // Blue Land variations
+            if (lower.Contains("blue") || lower.Contains("friendly") || lower.Contains("blueland"))
+                return BlueLand;
+            
+            // Fox Land variations  
+            if (lower.Contains("fox") || lower.Contains("hostile") || lower.Contains("red") || lower.Contains("foxland"))
+                return FoxLand;
+            
+            // UN variations
+            if (lower.Contains("un") || lower.Contains("united nations") || lower.Contains("neutral"))
+                return UN;
+            
+            // Default to Blue Land if not recognized
+            return BlueLand;
+        }
+
+        /// <summary>
+        /// Check if a force type is Blue Land
+        /// </summary>
+        public static bool IsBlueLand(string? forceType)
+        {
+            return GetStandardizedForceType(forceType) == BlueLand;
+        }
+
+        /// <summary>
+        /// Check if a force type is Fox Land
+        /// </summary>
+        public static bool IsFoxLand(string? forceType)
+        {
+            return GetStandardizedForceType(forceType) == FoxLand;
+        }
+
+        /// <summary>
+        /// Check if a force type is UN
+        /// </summary>
+        public static bool IsUN(string? forceType)
+        {
+            return GetStandardizedForceType(forceType) == UN;
+        }
+    }
 }

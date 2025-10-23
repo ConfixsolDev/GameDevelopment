@@ -148,11 +148,10 @@ namespace TechWebSol.Constants
         {
             return forceType?.ToLower() switch
             {
-                "friendly" => "force-friendly",
-                "hostile" => "force-hostile",
-                "neutral" => "force-neutral",
-                "unknown" => "force-unknown",
-                _ => "force-friendly" // Default
+                "blue land" => "force-blue-land",
+                "fox land" => "force-fox-land", 
+                "un" => "force-un",
+                _ => "force-blue-land" // Default
             };
         }
     }

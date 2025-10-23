@@ -138,8 +138,7 @@ class TokenActionModeManager {
             window.tokenPlacementManager.disableTokenDragging();
         }
         
-        // Re-enable right-click context menus for default mode
-        this.enableTokenContextMenus();
+        // Context menus are always enabled - no restrictions
         
         // Hide instruction banner for default mode (no mode selected)
         this.hideAllInstructions();
@@ -192,8 +191,7 @@ class TokenActionModeManager {
             window.tokenPlacementManager.exitAttackMode();
         }
         
-        // Re-enable context menus when disabling all interactions
-        this.enableTokenContextMenus();
+        // Context menus are always enabled - no restrictions
         
         // Remove any active attack panels
         this.closeAttackPanel();
@@ -204,8 +202,7 @@ class TokenActionModeManager {
         // This method only sets up the environment (disable other interactions)
         // The actual placement starts when a token is selected from the modal
         
-        // Disable context menus and movement during placement mode
-        this.disableTokenContextMenus();
+        // Disable movement during placement mode but keep context menus enabled
         this.disableTokenMovement();
         
         console.log('✅ Placement mode environment ready (token will be selected from modal)');
@@ -222,8 +219,7 @@ class TokenActionModeManager {
             window.tokenPlacementManager.enableTokenDragging();
         }
         
-        // Re-enable context menus for movement mode
-        this.enableTokenContextMenus();
+        // Context menus are always enabled - no restrictions
         
         // Trigger movement planning UI if available
         if (typeof openMovementPlanning === 'function') {
@@ -237,8 +233,8 @@ class TokenActionModeManager {
             window.tokenManager.disableTokenMovement();
         }
         
-        // Disable right-click context menus for all tokens
-        this.disableTokenContextMenus();
+        // Keep context menus enabled for all modes
+        // this.disableTokenContextMenus(); // Removed - context menus should work in all modes
         
         // Show instruction banner
         this.showAttackInstructions('Click on your own token to select attacker');
@@ -327,8 +323,8 @@ class TokenActionModeManager {
             window.tokenManager.disableTokenMovement();
         }
         
-        // Disable right-click context menus for all tokens
-        this.disableTokenContextMenus();
+        // Keep context menus enabled for all modes
+        // this.disableTokenContextMenus(); // Removed - context menus should work in all modes
         
         // Pan attack mode will be activated when user clicks on a token
         console.log('Pan attack mode activated - click on a token to start pan attack');
@@ -349,8 +345,7 @@ class TokenActionModeManager {
             window.tokenManager.enableTokenSelection();
         }
         
-        // Re-enable right-click context menus for selection mode
-        this.enableTokenContextMenus();
+        // Context menus are always enabled - no restrictions
     }
 
     closeAttackPanel() {
@@ -716,45 +711,6 @@ class TokenActionModeManager {
         }
     }
 
-    disableTokenContextMenus() {
-        // Disable right-click context menus for all placed tokens
-        if (window.tokenPlacementManager && window.tokenPlacementManager.placedTokens) {
-            window.tokenPlacementManager.placedTokens.forEach((tokenInfo, tokenId) => {
-                if (tokenInfo.marker) {
-                    // Remove existing contextmenu event listeners
-                    tokenInfo.marker.off('contextmenu');
-                    
-                    // Add a new contextmenu handler that prevents the default behavior
-                    tokenInfo.marker.on('contextmenu', (e) => {
-                        e.originalEvent.preventDefault();
-                        e.originalEvent.stopPropagation();
-                        console.log('Context menu disabled in attack mode');
-                    });
-                }
-            });
-        }
-        console.log('✅ Token context menus disabled');
-    }
-
-    enableTokenContextMenus() {
-        // Re-enable right-click context menus for all placed tokens
-        if (window.tokenPlacementManager && window.tokenPlacementManager.placedTokens) {
-            window.tokenPlacementManager.placedTokens.forEach((tokenInfo, tokenId) => {
-                if (tokenInfo.marker) {
-                    // Remove the disabled contextmenu handler
-                    tokenInfo.marker.off('contextmenu');
-                    
-                    // Re-add the original contextmenu functionality
-                    tokenInfo.marker.on('contextmenu', (e) => {
-                        if (window.tokenPlacementManager && window.tokenPlacementManager.showTokenContextMenu) {
-                            window.tokenPlacementManager.showTokenContextMenu(e, tokenInfo.token);
-                        }
-                    });
-                }
-            });
-        }
-        console.log('✅ Token context menus re-enabled');
-    }
 
     handlePanAttack(latlng) {
         // Find token at location

@@ -553,11 +553,8 @@ class GamePlayManager {
      * Restore placed tokens on map after page refresh
      */
     async restorePlacedTokens() {
-        console.log('🔄 Restoring placed tokens...');
-        
         try {
             if (!this.map) {
-                console.warn('⚠️ Map not available for token restoration');
                 return;
             }
 
@@ -580,8 +577,6 @@ class GamePlayManager {
             }
             
             if (placedTokens && placedTokens.length > 0) {
-                console.log(`📍 Found ${placedTokens.length} placed tokens to restore`);
-                
                 const restoredLatLngs = [];
                 for (const tokenData of placedTokens) {
                     const pos = tokenData.position;
@@ -592,16 +587,6 @@ class GamePlayManager {
                         if (!isNaN(latNum) && !isNaN(lngNum)) restoredLatLngs.push([latNum, lngNum]);
                     }
                 }
-                // After restoring, DON'T fit bounds to avoid zoom out
-                // Just log the restored tokens for debugging
-                if (restoredLatLngs.length > 0) {
-                    console.log(`📍 Restored ${restoredLatLngs.length} tokens - keeping current zoom level`);
-                    // Don't call fitBounds to prevent zoom out
-                }
-                
-                console.log('✅ All placed tokens restored successfully');
-            } else {
-                console.log('ℹ️ No placed tokens found to restore');
             }
         } catch (error) {
             console.error('❌ Error restoring placed tokens:', error);
@@ -627,8 +612,8 @@ class GamePlayManager {
                 const marker = tokenManager.tokenPlacementManager.createTokenMarker(tokenData, latlng);
                 this.map.addLayer(marker);
                 
-                // Create coverage areas using token attributes
-                tokenManager.tokenPlacementManager.createCoverageAreas(null, latlng, tokenData.forceType, tokenData);
+                // Create coverage areas using token attributes and areaCoverages data
+                tokenManager.tokenPlacementManager.createCoverageAreas(tokenData.areaCoverages, latlng, tokenData.forceType, tokenData);
                 
                 // Store token info for tracking
                 tokenManager.tokenPlacementManager.placedTokens.set(tokenData.id, {

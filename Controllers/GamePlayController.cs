@@ -1403,6 +1403,7 @@ namespace TechWebSol.Controllers
                         areaCoverages = t.AreaCoverages.Select(ac => new
                         {
                             id = ac.Id,
+                            tokenId = ac.TokenId,
                             shapeType = ac.ShapeType,
                             frontRadiusKm = ac.FrontRadiusKm,
                             rearRadiusKm = ac.RearRadiusKm,
