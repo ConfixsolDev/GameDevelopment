@@ -11,6 +11,26 @@ async function runMilitaryAdjudication() {
     
     // Check if terrain database is available
     console.log('🔍 Current terrain database:', window.currentTerrainDb);
+    
+    // If no terrain database is loaded, try to get current map path and load it
+    if (!window.currentTerrainDb) {
+        const currentMapPath = document.getElementById('currentMapPath')?.value;
+        if (currentMapPath) {
+            console.log('🔍 No terrain database loaded, but found current map path:', currentMapPath);
+            console.log('🔍 Attempting to load terrain database for current map...');
+            
+            // Try to load terrain database for current map
+            if (window.gamePlayManager && typeof window.gamePlayManager.loadTerrainDatabase === 'function') {
+                try {
+                    await window.gamePlayManager.loadTerrainDatabase(currentMapPath);
+                    console.log('🔍 Terrain database loading attempted for:', currentMapPath);
+                } catch (error) {
+                    console.warn('⚠️ Failed to load terrain database for current map:', error);
+                }
+            }
+        }
+    }
+    
     if (!window.currentTerrainDb) {
         console.warn('⚠️ No terrain database available - analysis will use basic calculations');
         if (typeof toastr !== 'undefined') {
@@ -26,11 +46,40 @@ async function runMilitaryAdjudication() {
     }
     
     try {
+        // Get current map path from multiple sources
+        const currentMapPath = document.getElementById('currentMapPath')?.value || '';
+        
+        // Try multiple fallback sources
+        let finalMapPath = currentMapPath;
+        
+        // Fallback 1: GamePlayManager
+        if (!finalMapPath && window.gamePlayManager && window.gamePlayManager.currentMapPath) {
+            finalMapPath = window.gamePlayManager.currentMapPath;
+        }
+        
+        // Fallback 2: Check URL parameters
+        if (!finalMapPath) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const fileParam = urlParams.get('file');
+            if (fileParam) {
+                finalMapPath = fileParam;
+            }
+        }
+        
+        // Update the hidden field if we found a map path
+        if (finalMapPath && !currentMapPath) {
+            const hiddenField = document.getElementById('currentMapPath');
+            if (hiddenField) {
+                hiddenField.value = finalMapPath;
+            }
+        }
+        
         const response = await fetch('/GamePlay/AdjudicateAllMovements', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'X-Terrain-Database': window.currentTerrainDb || ''
+                'X-Terrain-Database': window.currentTerrainDb || '',
+                'X-Current-Map-Path': finalMapPath
             }
         });
         
@@ -383,36 +432,18 @@ function showAdjudicationResultsModal(data) {
                         <i class="fas fa-chart-line"></i> 
                         Military Movement Adjudication
                     </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #ffb000; font-size: 24px; font-weight: bold;" onclick="window.closeMilitaryAdjudicationModal()">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 
                 <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-                <!-- Tactical Recommendations -->
+                <!-- Tactical Recommendations by Force -->
                 <div class="tactical-recommendations" style="background: #1a1a1a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 2px solid #ffaa00;">
                     <h3 style="margin: 0 0 15px 0; color: #ffaa00; font-size: 16px;">
-                        <i class="fas fa-lightbulb"></i> Tactical Recommendations
+                        <i class="fas fa-lightbulb"></i> Tactical Recommendations by Force
                     </h3>
-                    <div class="recommendations-list">
-                        ${data.summary.recommendations && data.summary.recommendations.length > 0 ? 
-                            data.summary.recommendations.map(rec => {
-                                const priorityColor = rec.priority === 'high' ? '#ff0000' : 
-                                                     rec.priority === 'medium' ? '#ffaa00' : '#00ff00';
-                                return `
-                                    <div style="display: flex; gap: 10px; padding: 10px; background: #2a2a2a; margin: 5px 0; border-left: 3px solid ${priorityColor}; border-radius: 4px;">
-                                        <div style="color: ${priorityColor}; font-weight: bold; min-width: 60px; font-size: 11px; text-transform: uppercase;">
-                                            ${rec.priority}
-                                        </div>
-                                        <div style="color: #ccc; font-size: 12px; flex: 1;">
-                                            ${rec.message}
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('') : 
-                            '<div style="color: #666; font-size: 12px; text-align: center; padding: 20px;">No specific recommendations at this time.</div>'
-                        }
-                    </div>
+                    ${generateForceSpecificRecommendations(data)}
                 </div>
                 
                 <!-- Executive Summary by Force Type -->
@@ -432,11 +463,11 @@ function showAdjudicationResultsModal(data) {
                 </div>
                 </div>
                 
-                <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="color: #666; font-size: 12px;">
+                <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; border-top: 1px solid #333;">
+                    <div style="color: #ccc; font-size: 12px;">
                         Analysis completed at ${new Date(data.timestamp).toLocaleString()}
                     </div>
-                    <button type="button" class="btn btn-success" data-dismiss="modal">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" style="background: #ffb000; border-color: #ffb000; color: #000; font-weight: bold;" onclick="window.closeMilitaryAdjudicationModal()">
                         <i class="fas fa-check"></i> Close
                     </button>
                 </div>
@@ -448,9 +479,35 @@ function showAdjudicationResultsModal(data) {
     
     // Show modal using Bootstrap
     $('#militaryAdjudicationModal').modal({
-        backdrop: false,
+        backdrop: true,
         keyboard: true,
         show: true
+    });
+    
+    // Use the same close approach as GamePlay arena
+    window.closeMilitaryAdjudicationModal = function() {
+        const modal = document.getElementById('militaryAdjudicationModal');
+        if (modal) {
+            // Hide Bootstrap modal
+            $('#militaryAdjudicationModal').hide().removeClass('show');
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
+            $('#militaryAdjudicationModal').remove();
+            console.log('✅ Military adjudication modal closed');
+        }
+    };
+    
+    // Ensure close buttons work with proper event delegation
+    $(document).off('click.militaryModal').on('click.militaryModal', '#militaryAdjudicationModal .close, #militaryAdjudicationModal [data-dismiss="modal"]', function(e) {
+        e.preventDefault();
+        window.closeMilitaryAdjudicationModal();
+    });
+    
+    // Handle escape key
+    $(document).off('keydown.militaryModal').on('keydown.militaryModal', function(e) {
+        if (e.key === 'Escape' && $('#militaryAdjudicationModal').length) {
+            window.closeMilitaryAdjudicationModal();
+        }
     });
     
     // Force display for large screens
@@ -459,6 +516,101 @@ function showAdjudicationResultsModal(data) {
         'opacity': '1',
         'visibility': 'visible'
     }).addClass('show');
+}
+
+/**
+ * Generate force-specific recommendations grouped by Blue Land and Fox Land
+ */
+function generateForceSpecificRecommendations(data) {
+    // Group results by force type
+    const blueResults = data.results.filter(result => {
+        const forceType = result.forceType || '';
+        return forceType.toLowerCase().includes('blue') || forceType.toLowerCase().includes('friendly');
+    });
+    
+    const foxResults = data.results.filter(result => {
+        const forceType = result.forceType || '';
+        return forceType.toLowerCase().includes('fox') || forceType.toLowerCase().includes('red') || forceType.toLowerCase().includes('hostile');
+    });
+    
+    // Generate recommendations for each force
+    const blueRecommendations = generateRecommendationsForForce(blueResults, 'Blue Land');
+    const foxRecommendations = generateRecommendationsForForce(foxResults, 'Fox Land');
+    
+    return `
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <!-- Blue Land Recommendations -->
+            <div>
+                <h4 style="margin: 0 0 15px 0; color: #00ff00; font-size: 16px; text-align: center;">
+                    Blue Land Recommendations
+                </h4>
+                ${blueRecommendations}
+            </div>
+            
+            <!-- Fox Land Recommendations -->
+            <div>
+                <h4 style="margin: 0 0 15px 0; color: #00ff00; font-size: 16px; text-align: center;">
+                    Fox Land Recommendations
+                </h4>
+                ${foxRecommendations}
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Generate recommendations for a specific force
+ */
+function generateRecommendationsForForce(forceResults, forceName) {
+    if (forceResults.length === 0) {
+        return `
+            <div style="color: #666; font-size: 12px; text-align: center; padding: 20px;">
+                No units for ${forceName}
+            </div>
+        `;
+    }
+    
+    let recommendationsHTML = '';
+    
+    forceResults.forEach(result => {
+        const unitNumber = result.tokenName || 'Unknown';
+        const feasibility = result.feasibility;
+        const priority = feasibility.isFeasible ? 'LOW' : 'HIGH';
+        const priorityColor = feasibility.isFeasible ? '#00ff00' : '#ff0000';
+        const statusIcon = feasibility.isFeasible ? '✓' : '✗';
+        
+        let recommendationMessage = '';
+        if (feasibility.isFeasible) {
+            recommendationMessage = 'Movement plan appears sound - proceed as planned';
+        } else {
+            if (feasibility.status === 'terrain_blocked') {
+                recommendationMessage = 'ROUTE IMPASSABLE - Terrain obstacles block movement. Select an alternate route avoiding water, cliffs, or steep terrain.';
+            } else if (feasibility.status === 'insufficient_mp') {
+                recommendationMessage = 'Consider engineering support (bridge-laying, road construction) or air/water transport alternatives';
+            } else {
+                recommendationMessage = 'Consider engineering support (bridge-laying, road construction) or air/water transport alternatives';
+            }
+        }
+        
+        recommendationsHTML += `
+            <div style="display: flex; align-items: center; gap: 8px; padding: 8px; margin: 5px 0; border-left: 3px solid ${priorityColor};">
+                <div style="color: ${priorityColor}; font-weight: bold; min-width: 50px; font-size: 10px; text-transform: uppercase;">
+                    ${priority}
+                </div>
+                <div style="color: #fff; font-weight: bold; min-width: 40px; font-size: 12px;">
+                    Unit ${unitNumber}
+                </div>
+                <div style="color: ${priorityColor}; font-size: 14px; margin-right: 5px;">
+                    ${statusIcon}
+                </div>
+                <div style="color: #ccc; font-size: 11px; flex: 1; line-height: 1.3;">
+                    ${recommendationMessage}
+                </div>
+            </div>
+        `;
+    });
+    
+    return recommendationsHTML;
 }
 
 /**
@@ -491,85 +643,85 @@ function generateForceSpecificSummary(data) {
         totalDistance: foxResults.reduce((sum, r) => sum + r.movement.totalDistance, 0)
     };
     
-    return `
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <!-- Blue Land Summary -->
-            <div style="background: #1a3a5c; padding: 20px; border-radius: 8px; border: 2px solid #0000ff;">
-                <h4 style="margin: 0 0 15px 0; color: #0000ff; font-size: 18px; text-align: center;">
-                    <i class="fas fa-flag"></i> Blue Land
-                </h4>
-                <div style="margin-bottom: 15px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span style="color: #ccc; font-size: 14px;">Total Units:</span>
-                        <span style="color: #0000ff; font-size: 18px; font-weight: bold;">${blueStats.total}</span>
+                return `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <!-- Blue Land Summary -->
+                        <div style="background: #2a2a2a; padding: 20px; border-radius: 8px; border: 2px solid #ffb000;">
+                            <h4 style="margin: 0 0 15px 0; color: #ffb000; font-size: 18px; text-align: center;">
+                                <i class="fas fa-flag"></i> Blue Land
+                            </h4>
+                            <div style="margin-bottom: 15px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="color: #fff; font-size: 14px;">Total Units:</span>
+                                    <span style="color: #ffb000; font-size: 18px; font-weight: bold;">${blueStats.total}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="color: #fff; font-size: 14px;">Feasible:</span>
+                                    <span style="color: #00ff00; font-size: 18px; font-weight: bold;">${blueStats.feasible}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="color: #fff; font-size: 14px;">Blocked:</span>
+                                    <span style="color: #ff0000; font-size: 18px; font-weight: bold;">${blueStats.blocked}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="color: #fff; font-size: 14px;">Total Distance:</span>
+                                    <span style="color: #ffb000; font-size: 18px; font-weight: bold;">${Math.round(blueStats.totalDistance)} km</span>
+                                </div>
+                            </div>
+                            ${blueStats.feasible > 0 ? `
+                                <div style="background: #00ff00; color: #000; padding: 10px; border-radius: 4px; font-size: 12px; text-align: center; font-weight: bold;">
+                                    ✅ ${blueStats.feasible} unit(s) can execute movement orders successfully
+                                </div>
+                            ` : blueStats.blocked > 0 ? `
+                                <div style="background: #ff0000; color: #fff; padding: 10px; border-radius: 4px; font-size: 12px; text-align: center; font-weight: bold;">
+                                    ❌ All ${blueStats.blocked} unit(s) blocked by terrain or insufficient MP
+                                </div>
+                            ` : `
+                                <div style="background: #666; color: #fff; padding: 10px; border-radius: 4px; font-size: 12px; text-align: center;">
+                                    No movement orders for Blue Land units
+                                </div>
+                            `}
+                        </div>
+                        
+                        <!-- Fox Land Summary -->
+                        <div style="background: #2a2a2a; padding: 20px; border-radius: 8px; border: 2px solid #ffb000;">
+                            <h4 style="margin: 0 0 15px 0; color: #ffb000; font-size: 18px; text-align: center;">
+                                <i class="fas fa-flag"></i> Fox Land
+                            </h4>
+                            <div style="margin-bottom: 15px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="color: #fff; font-size: 14px;">Total Units:</span>
+                                    <span style="color: #ffb000; font-size: 18px; font-weight: bold;">${foxStats.total}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="color: #fff; font-size: 14px;">Feasible:</span>
+                                    <span style="color: #00ff00; font-size: 18px; font-weight: bold;">${foxStats.feasible}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="color: #fff; font-size: 14px;">Blocked:</span>
+                                    <span style="color: #ff0000; font-size: 18px; font-weight: bold;">${foxStats.blocked}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="color: #fff; font-size: 14px;">Total Distance:</span>
+                                    <span style="color: #ffb000; font-size: 18px; font-weight: bold;">${Math.round(foxStats.totalDistance)} km</span>
+                                </div>
+                            </div>
+                            ${foxStats.feasible > 0 ? `
+                                <div style="background: #00ff00; color: #000; padding: 10px; border-radius: 4px; font-size: 12px; text-align: center; font-weight: bold;">
+                                    ✅ ${foxStats.feasible} unit(s) can execute movement orders successfully
+                                </div>
+                            ` : foxStats.blocked > 0 ? `
+                                <div style="background: #ff0000; color: #fff; padding: 10px; border-radius: 4px; font-size: 12px; text-align: center; font-weight: bold;">
+                                    ❌ All ${foxStats.blocked} unit(s) blocked by terrain or insufficient MP
+                                </div>
+                            ` : `
+                                <div style="background: #666; color: #fff; padding: 10px; border-radius: 4px; font-size: 12px; text-align: center;">
+                                    No movement orders for Fox Land units
+                                </div>
+                            `}
+                        </div>
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span style="color: #ccc; font-size: 14px;">Feasible:</span>
-                        <span style="color: #00ff00; font-size: 18px; font-weight: bold;">${blueStats.feasible}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span style="color: #ccc; font-size: 14px;">Blocked:</span>
-                        <span style="color: #ff0000; font-size: 18px; font-weight: bold;">${blueStats.blocked}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span style="color: #ccc; font-size: 14px;">Total Distance:</span>
-                        <span style="color: #0000ff; font-size: 18px; font-weight: bold;">${Math.round(blueStats.totalDistance)} km</span>
-                    </div>
-                </div>
-                ${blueStats.feasible > 0 ? `
-                    <div style="background: #00ff00; color: #000; padding: 10px; border-radius: 4px; font-size: 12px; text-align: center; font-weight: bold;">
-                        ✅ ${blueStats.feasible} unit(s) can execute movement orders successfully
-                    </div>
-                ` : blueStats.blocked > 0 ? `
-                    <div style="background: #ff0000; color: #fff; padding: 10px; border-radius: 4px; font-size: 12px; text-align: center; font-weight: bold;">
-                        ❌ All ${blueStats.blocked} unit(s) blocked by terrain or insufficient MP
-                    </div>
-                ` : `
-                    <div style="background: #666; color: #fff; padding: 10px; border-radius: 4px; font-size: 12px; text-align: center;">
-                        No movement orders for Blue Land units
-                    </div>
-                `}
-            </div>
-            
-            <!-- Fox Land Summary -->
-            <div style="background: #5c1a1a; padding: 20px; border-radius: 8px; border: 2px solid #ff0000;">
-                <h4 style="margin: 0 0 15px 0; color: #ff0000; font-size: 18px; text-align: center;">
-                    <i class="fas fa-flag"></i> Fox Land
-                </h4>
-                <div style="margin-bottom: 15px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span style="color: #ccc; font-size: 14px;">Total Units:</span>
-                        <span style="color: #ff0000; font-size: 18px; font-weight: bold;">${foxStats.total}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span style="color: #ccc; font-size: 14px;">Feasible:</span>
-                        <span style="color: #00ff00; font-size: 18px; font-weight: bold;">${foxStats.feasible}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span style="color: #ccc; font-size: 14px;">Blocked:</span>
-                        <span style="color: #ff0000; font-size: 18px; font-weight: bold;">${foxStats.blocked}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span style="color: #ccc; font-size: 14px;">Total Distance:</span>
-                        <span style="color: #ff0000; font-size: 18px; font-weight: bold;">${Math.round(foxStats.totalDistance)} km</span>
-                    </div>
-                </div>
-                ${foxStats.feasible > 0 ? `
-                    <div style="background: #00ff00; color: #000; padding: 10px; border-radius: 4px; font-size: 12px; text-align: center; font-weight: bold;">
-                        ✅ ${foxStats.feasible} unit(s) can execute movement orders successfully
-                    </div>
-                ` : foxStats.blocked > 0 ? `
-                    <div style="background: #ff0000; color: #fff; padding: 10px; border-radius: 4px; font-size: 12px; text-align: center; font-weight: bold;">
-                        ❌ All ${foxStats.blocked} unit(s) blocked by terrain or insufficient MP
-                    </div>
-                ` : `
-                    <div style="background: #666; color: #fff; padding: 10px; border-radius: 4px; font-size: 12px; text-align: center;">
-                        No movement orders for Fox Land units
-                    </div>
-                `}
-            </div>
-        </div>
-    `;
+                `;
 }
 
 /**

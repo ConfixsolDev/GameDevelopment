@@ -69,6 +69,8 @@ namespace TechWebSol.Controllers
                 HttpContext.Session.SetString("CurrentTerrainDb", request.TerrainDbPath);
                 
                 _logger.LogInformation("Terrain database set in session: {Path}", request.TerrainDbPath);
+                _logger.LogInformation("Session ID: {SessionId}", HttpContext.Session.Id);
+                _logger.LogInformation("Session CurrentTerrainDb value: {Value}", HttpContext.Session.GetString("CurrentTerrainDb"));
                 
                 return Json(new { success = true, message = "Terrain database set successfully", path = request.TerrainDbPath });
             }
@@ -248,9 +250,9 @@ namespace TechWebSol.Controllers
                             var mobilityType = GetMobilityType(token);
                             var baseMovementPoints = GetBaseMovementPoints(mobilityType);
 
-                            // Get terrain analysis AFTER getting unit data
-                            _logger.LogInformation($"Getting terrain analysis for token {token.Id}");
-                            var terrainAnalysis = await GetTerrainAnalysis(markers, mobilityType, militaryUnit);
+            // Get terrain analysis AFTER getting unit data
+            _logger.LogInformation($"Getting terrain analysis for token {token.Id} (Force: {token.ForceType})");
+            var terrainAnalysis = await GetTerrainAnalysis(markers, mobilityType, militaryUnit);
 
                             _logger.LogInformation($"Calculating MP consumption for token {token.Id}");
 
@@ -287,7 +289,7 @@ namespace TechWebSol.Controllers
                                 : DetermineFeasibilityStatus(mpUtilization, totalMP, baseMovementPoints);
                             
                             // Log terrain analysis results for debugging
-                            _logger.LogInformation($"Terrain analysis for token {token.Id}: isRouteBlocked={isRouteBlocked}, reason='{blockageReason}', isFeasible={isFeasible}");
+                            _logger.LogInformation($"Terrain analysis for token {token.Id} (Force: {token.ForceType}): isRouteBlocked={isRouteBlocked}, reason='{blockageReason}', isFeasible={isFeasible}");
 
 
                             _logger.LogInformation($"Calculating time estimate for token {token.Id}");
@@ -785,21 +787,28 @@ namespace TechWebSol.Controllers
                 {
                     try
                     {
-                        // Get current terrain database from header, session, or null
-                        var terrainDb = Request.Headers["X-Terrain-Database"].FirstOrDefault() 
-                                        ?? HttpContext.Session.GetString("CurrentTerrainDb") 
-                                        ?? null;
+                        // Get terrain database from current map path
+                        var currentMapPath = Request.Headers["X-Current-Map-Path"].FirstOrDefault();
+                        string terrainDb = null;
                         
-                        _logger.LogInformation($"Terrain analysis - Header: {Request.Headers["X-Terrain-Database"].FirstOrDefault()}, Session: {HttpContext.Session.GetString("CurrentTerrainDb")}, Final: {terrainDb}");
-                        
-                        if (string.IsNullOrEmpty(terrainDb))
+                        if (!string.IsNullOrEmpty(currentMapPath))
                         {
-                            _logger.LogWarning("No terrain database specified for terrain analysis - using fallback mode");
-                            // Skip elevation lookup - will use fallback analysis below
-                            // In fallback mode, we'll still try to detect water using basic heuristics
+                            // Extract folder name from map path
+                            var folderName = currentMapPath.Split('/')[0];
+                            
+                            // Check if terrain.db exists in the same folder
+                            var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                            var terrainDbPath = Path.Combine(wwwRoot, folderName, "terrain.db");
+                            
+                            if (System.IO.File.Exists(terrainDbPath))
+                            {
+                                terrainDb = $"{folderName}/terrain.db";
+                            }
                         }
-                        else
+                        
+                        if (!string.IsNullOrEmpty(terrainDb))
                         {
+                            _logger.LogInformation($"Using terrain database: {terrainDb} for token {token.Id} (Force: {token.ForceType})");
                         // Build detailed route points with intermediate sampling (like TacticalViewer)
                         var detailedPoints = new List<object>();
                         
@@ -922,7 +931,7 @@ namespace TechWebSol.Controllers
                             lats.Max() + buffer  // maxLat
                         };
 
-                        // Get terrain features
+                        // Get terrain features using the same approach as TacticalViewer
                         var featuresResponse = await CallTerrainFeatures(bbox, terrainDb);
                         
                         if (featuresResponse != null && featuresResponse.success == true && featuresResponse.elements != null)
@@ -930,6 +939,8 @@ namespace TechWebSol.Controllers
                             var elementsList = featuresResponse.elements as IEnumerable<dynamic>;
                             if (elementsList != null)
                             {
+                                _logger.LogInformation($"Found {elementsList.Count()} terrain features for analysis");
+                                
                                 // Analyze features for obstacles (like TacticalViewer)
                                 foreach (var element in elementsList)
                                 {
@@ -938,18 +949,18 @@ namespace TechWebSol.Controllers
                                         var tags = element.tags as Dictionary<string, string>;
                                         if (tags != null)
                                         {
-                                            // Check for water features - IMPASSABLE
-                                            if (tags.ContainsKey("natural") && tags["natural"] == "water" ||
-                                                tags.ContainsKey("waterway") ||
-                                                tags.ContainsKey("water"))
-                                            {
-                                                obstacleCategories["water"]++;
-                                                obstacles.Add(new { 
-                                                    type = "water",
-                                                    isImpassable = true,
-                                                    description = $"🌊 WATER: {tags.GetValueOrDefault("name", "Water crossing")} - IMPASSABLE (requires bridge/boat)"
-                                                });
-                                            }
+                // Check for water features - IMPASSABLE (same logic as TacticalViewer)
+                if (tags.ContainsKey("natural") && tags["natural"] == "water" ||
+                    tags.ContainsKey("waterway"))
+                {
+                    obstacleCategories["water"]++;
+                    obstacles.Add(new { 
+                        type = "water",
+                        isImpassable = true,
+                        description = $"🌊 WATER: {tags.GetValueOrDefault("name", "Water crossing")} - IMPASSABLE (requires bridge/boat)"
+                    });
+                    _logger.LogInformation($"Water obstacle detected: {tags.GetValueOrDefault("name", "Water crossing")} - BLOCKING ROUTE");
+                }
                                             
                                             // Check for cliffs/rock - IMPASSABLE
                                             if (tags.ContainsKey("natural") && 
@@ -1068,6 +1079,7 @@ namespace TechWebSol.Controllers
                     // In fallback mode, add basic water detection based on coordinates
                     // This is a simplified approach for when terrain database is not available
                     _logger.LogInformation("Using fallback water detection based on coordinate analysis");
+                    _logger.LogWarning("WARNING: Fallback mode cannot detect water crossings accurately. Load terrain data for proper analysis.");
                     
                     // Check if route crosses water bodies (simplified detection)
                     for (int i = 0; i < markers.Count - 1; i++)
@@ -1087,7 +1099,7 @@ namespace TechWebSol.Controllers
                         {
                             // This is a very basic heuristic - in reality, you'd need proper terrain data
                             // For now, we'll assume no water crossings in fallback mode
-                            _logger.LogInformation($"Fallback analysis: segment {i + 1} distance {distance:F2}km - no water detected");
+                            _logger.LogInformation($"Fallback analysis: segment {i + 1} distance {distance:F2}km - no water detected (fallback mode)");
                         }
                     }
                 }

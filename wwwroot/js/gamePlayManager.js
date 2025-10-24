@@ -1018,6 +1018,7 @@ class GamePlayManager {
                 // Store globally for use in adjudication
                 window.currentTerrainDb = terrainDb.path;
                 
+                
                 // Also set in session on server-side
                 await fetch('/GamePlay/SetTerrainDatabase', {
                     method: 'POST',
@@ -1558,6 +1559,17 @@ window.switchGamePlayMap = async function(mapPath) {
             console.log('🔍 loadTerrainDatabase call completed');
         } else {
             console.warn('⚠️ gamePlayManager not found, cannot load terrain database');
+        }
+        
+        // Store current map path in hidden field for terrain database access
+        const currentMapPathField = document.getElementById('currentMapPath');
+        if (currentMapPathField) {
+            currentMapPathField.value = mapPath;
+            // Also store in gamePlayManager for easy access
+            this.currentMapPath = mapPath;
+            
+        } else {
+            console.warn('⚠️ currentMapPath hidden field not found');
         }
         
         // Create new tile layer with BALANCED settings (performance + reliability)

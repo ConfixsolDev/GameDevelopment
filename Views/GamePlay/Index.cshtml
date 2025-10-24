@@ -9,6 +9,10 @@
 
 
 <div class="gameplay-container">
+    <!-- Hidden field to store current map path for terrain database loading -->
+    <input type="hidden" id="currentMapPath" value="" />
+    
+    
     <!-- Instruction Banner (shown during attack mode) -->
     <div id="attackInstructionBanner" style="display: none; position: fixed; top: 120px; left: 10px; width: 280px; z-index: 9998; background: #007bff; color: white; padding: 15px 20px; border-radius: 8px; border: 2px solid #87ceeb; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 16px; font-weight: bold; text-align: left; font-family: sans-serif;">
         <div style="display: flex; align-items: center; justify-content: flex-start; gap: 10px;">
