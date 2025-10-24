@@ -45,6 +45,9 @@ async function runMilitaryAdjudication() {
         toastr.info('Analyzing all token movements...', 'Military Adjudication');
     }
     
+    // Show loader
+    showLoader();
+    
     try {
         // Get current map path from multiple sources
         const currentMapPath = document.getElementById('currentMapPath')?.value || '';
@@ -110,10 +113,16 @@ async function runMilitaryAdjudication() {
             // Show comprehensive results modal
             showAdjudicationResultsModal(result);
             
+            // Hide loader
+            hideLoader();
+            
             if (typeof toastr !== 'undefined') {
                 toastr.success(`Analyzed ${result.summary.totalTokens} token movements`, 'Adjudication Complete');
             }
         } else {
+            // Hide loader
+            hideLoader();
+            
             console.error('❌ Adjudication failed:', result.message);
             if (typeof toastr !== 'undefined') {
                 toastr.error(result.message, 'Adjudication Failed');
@@ -122,6 +131,9 @@ async function runMilitaryAdjudication() {
             }
         }
     } catch (error) {
+        // Hide loader
+        hideLoader();
+        
         console.error('❌ Error in military adjudication:', error);
         if (typeof toastr !== 'undefined') {
             toastr.error('Error running adjudication: ' + error.message, 'Error');
