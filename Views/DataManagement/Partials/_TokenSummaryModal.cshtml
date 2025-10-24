@@ -428,7 +428,7 @@
         $.ajax({
             url: '/DataManagement/TokenDataEntryForm',
             type: 'GET',
-            data: { tokenId: tokenId },
+            data: { tokenId: tokenId, _cacheBust: new Date().getTime() },
             success: function(data) {
                 console.log('✅ Data entry form loaded');
                 $('#tokenDataEntryModal').remove();
@@ -471,7 +471,7 @@
         $.ajax({
             url: '/DataManagement/TokenDataEntryForm',
             type: 'GET',
-            data: { tokenId: tokenId },
+            data: { tokenId: tokenId, _cacheBust: new Date().getTime() },
             success: function(data) {
                 console.log('✅ Data entry form loaded');
                 $('#tokenDataEntryModal').remove();

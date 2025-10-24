@@ -370,24 +370,19 @@ function saveUnitToServer(endpoint, unitData, unitTypeName) {
             if (typeof toastr !== 'undefined') {
                 toastr.success(`${unitTypeName} ${actionText} successfully`, 'Success');
             }
-            console.log(`✅ ${unitTypeName} ${actionText} - modal reloaded, no page refresh`);
+            console.log(`✅ ${unitTypeName} ${actionText} - reloading list only`);
             
-            // Reload the Direct Unit Form to show the new/updated unit
-            setTimeout(() => {
-                const unitType = document.getElementById('directUnitType').value;
-                const tokenId = document.getElementById('directTokenId').value;
-                
-                // Reload the Direct Unit Form
-                if (typeof openDirectUnitForm === 'function') {
-                    openDirectUnitForm(unitType, tokenId);
-                } else {
-                    // Fallback: just close and hope for refresh
-                    $('#directUnitModal').modal('hide');
-                    if (typeof window.refreshTokenDataEntry === 'function') {
-                        window.refreshTokenDataEntry();
-                    }
-                }
-            }, 500);
+            // Reload just the unit list (not the entire modal)
+            const unitType = document.getElementById('directUnitType').value;
+            const tokenId = document.getElementById('directTokenId').value;
+            
+            // Call the load function for the specific unit type
+            if (typeof window.loadDirectUnits === 'function') {
+                window.loadDirectUnits(tokenId, unitType);
+            } else {
+                console.warn('⚠️ loadDirectUnits function not found, hiding loader');
+                hideLoader();
+            }
         },
         error: function(xhr, status, error) {
             hideLoader();

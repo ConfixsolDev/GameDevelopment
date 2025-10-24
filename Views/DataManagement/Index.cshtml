@@ -1000,7 +1000,7 @@
             })
             .done(function(response) {
                 console.log('✅ Response:', response);
-                
+                debugger
                 if (response.success) {
                     console.log('✅ Save successful! Refreshing table...');
                     showNotification(isEdit ? 'Infantry battalion updated successfully' : 'Infantry battalion created successfully', 'success');

@@ -14,41 +14,33 @@
                 </button>
             </div>
             <div class="modal-body">
-                <!-- Token Information -->
-                <div class="token-base-section">
-                    <h5><i class="fas fa-crosshairs"></i> Token Base Information</h5>
-                    <div class="token-display">
+                <!-- Compact Token Information -->
+                <div class="compact-token-info">
+                    <div class="token-header-bar">
+                        <div class="token-icon-wrapper">
                         @if (!string.IsNullOrEmpty(Model.Token.AssetImagePath))
                         {
-                            <img src="@Model.Token.AssetImagePath" alt="@Model.Token.Name" class="token-preview-image">
+                                <img src="@Model.Token.AssetImagePath" alt="@Model.Token.Name" class="token-mini-icon">
                         }
                         else
                         {
-                            <div class="token-preview-placeholder">
-                                <i class="fas fa-crosshairs"></i>
+                                <div class="token-mini-placeholder">
+                                    <i class="fas fa-hashtag"></i>
                             </div>
                         }
-                        <div class="token-details">
-                            <h4>@Model.Token.Name</h4>
-                            <p class="text-muted">@Model.Token.TokenGroup?.Name</p>
-                            <div class="token-status">
-                                <span class="badge badge-primary">Active Token</span>
-                            <span class="badge badge-info">@Model.Token.ForceType</span>
                         </div>
+                        <div class="token-title-section">
+                            <h6 class="token-name">@Model.Token.Name</h6>
+                            <span class="token-subtitle">@Model.Token.TokenGroup?.Name</span>
                         </div>
-                    </div>
-                    <div class="alert alert-success">
-                        <i class="fas fa-check-circle"></i> 
-                        <strong>Token Selected:</strong> This token serves as the base for your unit data entry.
+                        <div class="token-badges">
+                            <span class="badge badge-success">ACTIVE TOKEN</span>
+                            <span class="badge badge-primary">@Model.Token.ForceType.ToUpper()</span>
                     </div>
                 </div>
-
-                <!-- Unit Type Information -->
-                <div class="unit-type-section">
-                    <h6><i class="fas fa-info-circle"></i> Unit Type: @Model.UnitType</h6>
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> 
-                        <strong>Direct Unit Entry:</strong> This unit will be added directly to the token without requiring a brigade.
+                    <div class="compact-info-bar">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span><strong>Direct Unit Entry:</strong> Units added without requiring a brigade</span>
                     </div>
                 </div>
 
@@ -179,6 +171,94 @@
 /* Direct Unit Form Styling */
 #directUnitModal .modal-body {
     min-height: 500px;
+}
+
+/* Compact Token Info - Professional & Colorful */
+.compact-token-info {
+    background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+    border-left: 4px solid #4caf50;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.token-header-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.7);
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.token-icon-wrapper {
+    flex-shrink: 0;
+}
+
+.token-mini-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    object-fit: cover;
+    border: 2px solid #4caf50;
+}
+
+.token-mini-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.token-title-section {
+    flex: 1;
+    min-width: 0;
+}
+
+.token-name {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1b5e20;
+}
+
+.token-subtitle {
+    font-size: 12px;
+    color: #666;
+    display: block;
+    margin-top: 2px;
+}
+
+.token-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.token-badges .badge {
+    font-size: 11px;
+    padding: 4px 8px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.compact-info-bar {
+    padding: 10px 15px;
+    font-size: 13px;
+    color: #2e7d32;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.compact-info-bar i {
+    font-size: 14px;
 }
 
 .token-base-section {
@@ -467,23 +547,16 @@ function deleteDirectUnit(unitId, unitType) {
         url: `${endpoint}?id=${unitId}`,
         type: 'DELETE',
         success: function(response) {
-            console.log('✅ Unit deleted successfully - no page refresh');
-            
-            // Close the modal
-            $('#directUnitModal').modal('hide');
+            console.log('✅ Unit deleted successfully, response:', response);
+            console.log('✅ Unit deleted successfully - reloading modal');
             
             if (typeof toastr !== 'undefined') {
                 toastr.success('Unit deleted successfully', 'Success');
             }
             
-            hideLoader();
-            
-            // Refresh the data entry form
-            setTimeout(() => {
-                if (typeof window.refreshTokenDataEntry === 'function') {
-                    window.refreshTokenDataEntry();
-                }
-            }, 500);
+            // Reload just the unit list
+            const tokenId = '@Model.Token.Id';
+            loadDirectUnits(tokenId, unitType);
         },
         error: function(xhr, status, error) {
             hideLoader();
@@ -502,4 +575,100 @@ function deleteDirectUnit(unitId, unitType) {
         }
     });
 }
+
+// Load direct units list using GET endpoints (Index page pattern)
+function loadDirectUnits(tokenId, unitType) {
+    console.log('🔄 Loading direct units:', unitType, 'for token:', tokenId);
+    showLoader();
+    
+    let endpoint = '';
+    switch(unitType.toString().toLowerCase()) {
+        case 'infantry':
+            endpoint = '/DataManagement/GetInfantryBattalions';
+            break;
+        case 'armoured':
+            endpoint = '/DataManagement/GetArmouredRegiments';
+            break;
+        case 'artillery':
+            endpoint = '/DataManagement/GetArtilleryRegiments';
+            break;
+        case 'logistics':
+            endpoint = '/DataManagement/GetLogisticsUnits';
+            break;
+        case 'engineering':
+            endpoint = '/DataManagement/GetEngineeringCompanies';
+            break;
+        default:
+            console.error('❌ Unknown unit type:', unitType);
+            hideLoader();
+            return;
+    }
+    
+    $.get(endpoint, { tokenId: tokenId })
+        .done(function(data) {
+            console.log('✅ Received units data:', data.length, 'units');
+            renderDirectUnitsList(data, unitType);
+            hideLoader();
+        })
+        .fail(function(xhr, status, error) {
+            console.error('❌ Error loading units:', error);
+            $('#existingUnitsList').html('<div class="no-units-message text-danger">Failed to load units. Please try again.</div>');
+            hideLoader();
+        });
+}
+
+// Render the units list HTML
+function renderDirectUnitsList(units, unitType) {
+    const container = $('#existingUnitsList');
+    container.empty();
+    
+    if (!units || units.length === 0) {
+        container.html(`<div class="no-units-message">No ${unitType} units found. Click "Add New" to create one.</div>`);
+        return;
+    }
+    
+    units.forEach(function(unit) {
+        let detailsHtml = '';
+        
+        switch(unitType.toString().toLowerCase()) {
+            case 'infantry':
+                detailsHtml = `Code: ${unit.unitCode || 'N/A'} | Strength: ${unit.strength || 0} | Companies: ${unit.companies || 0}`;
+                break;
+            case 'armoured':
+                detailsHtml = `Code: ${unit.unitCode || 'N/A'} | Strength: ${unit.strength || 0} | Tanks: ${unit.tanks || 0}`;
+                break;
+            case 'artillery':
+                detailsHtml = `Code: ${unit.unitCode || 'N/A'} | Strength: ${unit.strength || 0} | Guns: ${unit.guns || 0}`;
+                break;
+            case 'logistics':
+                detailsHtml = `Code: ${unit.unitCode || 'N/A'} | Strength: ${unit.strength || 0} | Trucks: ${(unit.supplyTrucks || 0) + (unit.fuelTrucks || 0)}`;
+                break;
+            case 'engineering':
+                detailsHtml = `Code: ${unit.unitCode || 'N/A'} | Strength: ${unit.strength || 0} | Platoons: ${unit.platoons || 0}`;
+                break;
+        }
+        
+        const unitHtml = `
+            <div class="unit-item">
+                <div class="unit-info">
+                    <div class="unit-name">${unit.name || 'Unnamed Unit'}</div>
+                    <div class="unit-details">${detailsHtml}</div>
+                </div>
+                <div class="unit-actions">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="editDirectUnit('${unit.id}', '${unitType}')">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteDirectUnit('${unit.id}', '${unitType}')">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        container.append(unitHtml);
+    });
+}
+
+// Make function globally available
+window.loadDirectUnits = loadDirectUnits;
 </script>

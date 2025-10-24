@@ -310,13 +310,20 @@ function saveBrigadeUnitToServer(endpoint, data, unitName, tokenId, brigadeId) {
         contentType: 'application/json',
         data: JSON.stringify(data),
         success: function(response) {
-            console.log(`✅ ${unitName} saved successfully - no page refresh`);
+            console.log(`✅ ${unitName} saved successfully - reloading list only`);
             
             // Close the creation modal
             $('#brigadeUnitCreationModal').modal('hide');
             
-            // Reload the brigade units list (modal only)
-            reloadBrigadeUnitsList(tokenId, brigadeId);
+            // Reload just the currently visible unit type list
+            const unitType = document.getElementById('brigadeUnitType').value;
+            
+            if (typeof window.loadBrigadeUnits === 'function') {
+                window.loadBrigadeUnits(brigadeId, unitType);
+            } else {
+                console.warn('⚠️ loadBrigadeUnits function not found, hiding loader');
+                hideLoader();
+            }
         },
         error: function(xhr, status, error) {
             hideLoader();
@@ -327,25 +334,5 @@ function saveBrigadeUnitToServer(endpoint, data, unitName, tokenId, brigadeId) {
     });
 }
 
-// Reload the brigade units list modal
-function reloadBrigadeUnitsList(tokenId, brigadeId) {
-    console.log('🔄 Reloading brigade units list');
-    
-    $.get('/DataManagement/UnitsDataEntryForm', { tokenId: tokenId, brigadeId: brigadeId }, function(data) {
-        // Replace the entire modal content
-        $('#brigadeUnitModal .modal-content').html($(data).find('.modal-content').html());
-        
-        // Show the modal again
-        if (!$('#brigadeUnitModal').hasClass('show')) {
-            $('#brigadeUnitModal').modal('show');
-        }
-        
-        // Hide loader
-        hideLoader();
-    }).fail(function(xhr, status, error) {
-        hideLoader();
-        console.error('❌ Error reloading brigade units list:', error);
-        alert('Failed to reload list: ' + error);
-    });
-}
+// Note: Load functions are now in _BrigadeUnitForm.cshtml as window.loadBrigadeUnits()
 

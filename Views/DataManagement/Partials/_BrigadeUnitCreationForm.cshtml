@@ -25,13 +25,19 @@
                 <input type="hidden" id="brigadeUnitId" value="@(Model.UnitId?.ToString() ?? "")" />
                 <input type="hidden" id="brigadeExistingUnitJson" value='@Html.Raw(Model.ExistingUnitJson ?? "")' />
                 
-                <!-- Brigade Information -->
-                <div class="token-info-banner">
-                    <i class="fas fa-users"></i>
-                    <strong>Brigade:</strong> @Model.Brigade.BrigadeCode
-                    <span class="token-separator">•</span>
-                    <strong>Token:</strong> @Model.Token.Name
-                    <span class="badge badge-info">@Model.ForceType</span>
+                <!-- Brigade Information - Professional Dark Theme -->
+                <div class="form-info-banner">
+                    <div class="banner-left">
+                        <i class="fas fa-users"></i>
+                        <span class="banner-label">Brigade:</span>
+                        <span class="banner-value">@Model.Brigade.BrigadeCode</span>
+                        <span class="banner-separator">|</span>
+                        <span class="banner-label">Token:</span>
+                        <span class="banner-value">@Model.Token.Name</span>
+                    </div>
+                    <div class="banner-right">
+                        <span class="badge badge-blue-solid">@Model.ForceType.ToUpper()</span>
+                    </div>
                 </div>
 
                 @if (Model.UnitType == UnitType.Infantry)
@@ -412,59 +418,163 @@
 </div>
 
 <style>
-.token-info-banner {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+/* Professional Dark Theme for Brigade Unit Creation Form */
+
+/* Modal Body Dark Background */
+#brigadeUnitCreationModal .modal-content {
+    background: #1a1a1a;
+    color: #ffffff;
+}
+
+#brigadeUnitCreationModal .modal-header {
+    background: #2d2d2d;
+    border-bottom: 2px solid #ffa726;
+    color: #ffa726;
+}
+
+#brigadeUnitCreationModal .modal-header .close {
+    color: #ffffff;
+    opacity: 0.8;
+}
+
+#brigadeUnitCreationModal .modal-header .close:hover {
+    opacity: 1;
+}
+
+#brigadeUnitCreationModal .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+    background: #1a1a1a;
+}
+
+/* Form Info Banner - Professional Dark Theme */
+.form-info-banner {
+    background: #2d2d2d;
+    border: 1px solid #ffa726;
+    border-left: 4px solid #ffa726;
     color: white;
-    padding: 15px;
-    border-radius: 8px;
+    padding: 12px 20px;
+    border-radius: 6px;
     margin-bottom: 20px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
+}
+
+.banner-left {
+    display: flex;
+    align-items: center;
     gap: 10px;
-    flex-wrap: wrap;
 }
 
-.token-info-banner i {
-    font-size: 1.2rem;
+.banner-left i {
+    color: #ffa726;
+    font-size: 1.1rem;
 }
 
-.token-separator {
-    opacity: 0.7;
+.banner-label {
+    color: #b0b0b0;
+    font-size: 13px;
+}
+
+.banner-value {
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.banner-separator {
+    color: #666;
     margin: 0 5px;
 }
 
+.banner-right {
+    display: flex;
+    gap: 8px;
+}
+
+/* Form Sections - Dark Theme */
 .form-section {
-    background: #f8f9fa;
+    background: #2d2d2d;
+    border: 1px solid #3a3a3a;
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 20px;
 }
 
 .form-section h6 {
-    color: #495057;
+    color: #ffa726;
     font-weight: 600;
     margin-bottom: 15px;
     padding-bottom: 10px;
-    border-bottom: 2px solid #dee2e6;
+    border-bottom: 2px solid #ffa726;
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
+.form-section h6 i {
+    color: #ffa726;
+}
+
+/* Form Controls - Dark Theme */
 .form-group label {
     font-weight: 600;
-    color: #495057;
+    color: #ffffff;
     margin-bottom: 5px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-control {
+    background: #3a3a3a;
+    border: 1px solid #4a4a4a;
+    color: #ffffff;
+}
+
+.form-control::placeholder {
+    color: #888;
 }
 
 .form-control:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    background: #3a3a3a;
+    border-color: #ffa726;
+    color: #ffffff;
+    box-shadow: 0 0 0 0.2rem rgba(255, 167, 38, 0.25);
 }
 
-#brigadeUnitCreationModal .modal-body {
-    max-height: 70vh;
-    overflow-y: auto;
+/* Buttons */
+.btn-success {
+    background: #4caf50;
+    border-color: #4caf50;
+}
+
+.btn-success:hover {
+    background: #45a049;
+    border-color: #45a049;
+}
+
+.btn-secondary {
+    background: #3a3a3a;
+    border-color: #4a4a4a;
+    color: #ffffff;
+}
+
+.btn-secondary:hover {
+    background: #4a4a4a;
+    border-color: #5a5a5a;
+}
+
+/* Solid Badges */
+.badge-blue-solid {
+    background: #2196f3;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 </style>
 

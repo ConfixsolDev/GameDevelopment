@@ -680,7 +680,7 @@ namespace TechWebSol.Controllers
         /// Get all infantry battalions for the current team
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetInfantryBattalions(Guid? brigadeId = null)
+        public async Task<IActionResult> GetInfantryBattalions(Guid? brigadeId = null, Guid? tokenId = null)
         {
             try
             {
@@ -691,6 +691,11 @@ namespace TechWebSol.Controllers
                 if (brigadeId.HasValue)
                 {
                     query = query.Where(i => i.BrigadeId == brigadeId.Value);
+                }
+                
+                if (tokenId.HasValue && !brigadeId.HasValue)
+                {
+                    query = query.Where(i => i.TokenId == tokenId.Value && i.BrigadeId == null);
                 }
 
                 var battalions = await query
@@ -739,7 +744,7 @@ namespace TechWebSol.Controllers
         /// Get all armoured regiments for the current team
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetArmouredRegiments(Guid? brigadeId = null)
+        public async Task<IActionResult> GetArmouredRegiments(Guid? brigadeId = null, Guid? tokenId = null)
         {
             try
             {
@@ -750,6 +755,11 @@ namespace TechWebSol.Controllers
                 if (brigadeId.HasValue)
                 {
                     query = query.Where(a => a.BrigadeId == brigadeId.Value);
+                }
+                
+                if (tokenId.HasValue && !brigadeId.HasValue)
+                {
+                    query = query.Where(a => a.TokenId == tokenId.Value && a.BrigadeId == null);
                 }
 
                 var regiments = await query
@@ -791,7 +801,7 @@ namespace TechWebSol.Controllers
         /// Get all artillery regiments for the current team
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetArtilleryRegiments(Guid? brigadeId = null)
+        public async Task<IActionResult> GetArtilleryRegiments(Guid? brigadeId = null, Guid? tokenId = null)
         {
             try
             {
@@ -802,6 +812,11 @@ namespace TechWebSol.Controllers
                 if (brigadeId.HasValue)
                 {
                     query = query.Where(a => a.BrigadeId == brigadeId.Value);
+                }
+                
+                if (tokenId.HasValue && !brigadeId.HasValue)
+                {
+                    query = query.Where(a => a.TokenId == tokenId.Value && a.BrigadeId == null);
                 }
 
                 var regiments = await query
@@ -833,6 +848,150 @@ namespace TechWebSol.Controllers
             {
                 _logger.LogError(ex, "Error loading artillery regiments");
                 return Json(new { success = false, message = "Error loading artillery regiments" });
+            }
+        }
+
+        /// <summary>
+        /// Get all logistics units for the current team
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetLogisticsUnits(Guid? brigadeId = null, Guid? tokenId = null)
+        {
+            try
+            {
+                var query = _context.LogisticsUnits
+                    .Include(l => l.Brigade)
+                    .Where(l => l.TeamId == user.TeamId && l.IsActive);
+
+                if (brigadeId.HasValue)
+                {
+                    query = query.Where(l => l.BrigadeId == brigadeId.Value);
+                }
+                
+                if (tokenId.HasValue && !brigadeId.HasValue)
+                {
+                    query = query.Where(l => l.TokenId == tokenId.Value && l.BrigadeId == null);
+                }
+
+                var units = await query
+                    .OrderBy(l => l.Name)
+                    .Select(l => new
+                    {
+                        id = l.Id,
+                        name = l.Name,
+                        unitCode = l.UnitCode,
+                        strength = l.Strength,
+                        forceType = l.ForceType,
+                        supplyTrucks = l.SupplyTrucks,
+                        fuelTrucks = l.FuelTrucks,
+                        maintenanceVehicles = l.MaintenanceVehicles,
+                        brigadeId = l.BrigadeId,
+                        brigadeCode = l.Brigade != null ? l.Brigade.BrigadeCode : null,
+                        tokenId = l.TokenId
+                    })
+                    .ToListAsync();
+
+                return Json(units);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading logistics units");
+                return Json(new { success = false, message = "Error loading logistics units" });
+            }
+        }
+
+        /// <summary>
+        /// Get all engineering companies for the current team
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetEngineeringCompanies(Guid? brigadeId = null, Guid? tokenId = null)
+        {
+            try
+            {
+                var query = _context.CombatEngineeringCompanies
+                    .Include(e => e.Brigade)
+                    .Where(e => e.TeamId == user.TeamId && e.IsActive);
+
+                if (brigadeId.HasValue)
+                {
+                    query = query.Where(e => e.BrigadeId == brigadeId.Value);
+                }
+                
+                if (tokenId.HasValue && !brigadeId.HasValue)
+                {
+                    query = query.Where(e => e.TokenId == tokenId.Value && e.BrigadeId == null);
+                }
+
+                var companies = await query
+                    .OrderBy(e => e.Name)
+                    .Select(e => new
+                    {
+                        id = e.Id,
+                        name = e.Name,
+                        unitCode = e.UnitCode,
+                        strength = e.Strength,
+                        forceType = e.ForceType,
+                        platoons = e.Platoons,
+                        engineerVehicles = e.EngineerVehicles,
+                        bridgeLayingVehicles = e.BridgeLayingVehicles,
+                        mineClearingVehicles = e.MineClearingVehicles,
+                        bulldozers = e.Bulldozers,
+                        excavators = e.Excavators,
+                        cranes = e.Cranes,
+                        demolitionCharges = e.DemolitionCharges,
+                        mineDetectionEquipment = e.MineDetectionEquipment,
+                        constructionMaterials = e.ConstructionMaterials,
+                        brigadeId = e.BrigadeId,
+                        brigadeCode = e.Brigade != null ? e.Brigade.BrigadeCode : null,
+                        tokenId = e.TokenId
+                    })
+                    .ToListAsync();
+
+                return Json(companies);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading engineering companies");
+                return Json(new { success = false, message = "Error loading engineering companies" });
+            }
+        }
+
+        /// <summary>
+        /// Get all recon units for the current team
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetReconUnits(Guid? tokenId = null)
+        {
+            try
+            {
+                var query = _context.Recon
+                    .Where(r => r.TeamId == user.TeamId && r.IsActive);
+
+                if (tokenId.HasValue)
+                {
+                    query = query.Where(r => r.TokenId == tokenId.Value);
+                }
+
+                var recons = await query
+                    .OrderByDescending(r => r.Timestamp)
+                    .Select(r => new
+                    {
+                        id = r.Id,
+                        reconType = r.ReconType,
+                        confidence = r.Confidence,
+                        location = r.Location,
+                        description = r.Description,
+                        timestamp = r.Timestamp,
+                        tokenId = r.TokenId
+                    })
+                    .ToListAsync();
+
+                return Json(recons);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading recon units");
+                return Json(new { success = false, message = "Error loading recon units" });
             }
         }
 
@@ -1012,7 +1171,7 @@ namespace TechWebSol.Controllers
 
                 brigade.IsActive = false;
                 brigade.UpdatedBy = user.FullName;
-
+                _context.Update(brigade);
                 await _context.SaveChangesAsync();
 
                 return Json(new { success = true });
@@ -1197,7 +1356,7 @@ namespace TechWebSol.Controllers
 
                 battalion.IsActive = false;
                 battalion.UpdatedBy = user.FullName;
-
+                _context.Update(battalion);
                 await _context.SaveChangesAsync();
 
                 return Json(new { success = true });
@@ -1409,7 +1568,7 @@ namespace TechWebSol.Controllers
 
                 regiment.IsActive = false;
                 regiment.UpdatedBy = user.FullName;
-
+                _context.Update(regiment);
                 await _context.SaveChangesAsync();
 
                 return Json(new { success = true });
@@ -1468,7 +1627,7 @@ namespace TechWebSol.Controllers
                 existingRecon.Confidence = recon.Confidence;
                 existingRecon.Description = recon.Description;
                 existingRecon.UpdatedBy = user.FullName;
-
+                _context.Update(existingRecon);
                 await _context.SaveChangesAsync();
 
                 return Json(new { success = true, data = existingRecon });
@@ -1491,7 +1650,7 @@ namespace TechWebSol.Controllers
 
                 recon.IsActive = false;
                 recon.UpdatedBy = user.FullName;
-
+                _context.Update(recon);
                 await _context.SaveChangesAsync();
 
                 return Json(new { success = true });
@@ -1607,7 +1766,7 @@ namespace TechWebSol.Controllers
 
                 logistics.IsActive = false;
                 logistics.UpdatedBy = user.FullName;
-
+                _context.Update(logistics);
                 await _context.SaveChangesAsync();
 
                 return Json(new { success = true });
@@ -1720,7 +1879,7 @@ namespace TechWebSol.Controllers
 
                 engineering.IsActive = false;
                 engineering.UpdatedBy = user.FullName;
-
+                _context.Update(engineering);
                 await _context.SaveChangesAsync();
 
                 return Json(new { success = true });

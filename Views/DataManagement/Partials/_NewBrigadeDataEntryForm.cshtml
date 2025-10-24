@@ -280,7 +280,7 @@ function loadUnitsDataEntryForm(tokenId, brigadeId) {
     $.ajax({
         url: '/DataManagement/UnitsDataEntryForm',
         type: 'GET',
-        data: { tokenId: tokenId, brigadeId: brigadeId },
+        data: { tokenId: tokenId, brigadeId: brigadeId, _cacheBust: new Date().getTime() },
         success: function(data) {
             console.log('✅ Units form loaded');
             
