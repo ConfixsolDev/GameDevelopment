@@ -1,0 +1,681 @@
+@using static TechWebSol.Controllers.DataManagementController
+@model DirectUnitCreationViewModel
+
+<!-- Direct Unit Creation Form Modal - Bootstrap Modal -->
+<div class="modal fade" id="directUnitCreationModal" tabindex="-1" role="dialog" aria-labelledby="directUnitCreationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="directUnitCreationModalLabel">
+                    <i class="fas fa-@(Model.UnitType == UnitType.Infantry ? "user-shield" : Model.UnitType == UnitType.Armoured ? "shield-alt" : Model.UnitType == UnitType.Artillery ? "crosshairs" : Model.UnitType == UnitType.Logistics ? "truck" : "hard-hat")"></i>
+                    @(Model.UnitId.HasValue ? "Edit" : "Create New") @(Model.UnitType == UnitType.Infantry ? "Infantry Battalion" : Model.UnitType == UnitType.Armoured ? "Armoured Regiment" : Model.UnitType == UnitType.Artillery ? "Artillery Regiment" : Model.UnitType == UnitType.Logistics ? "Logistics Unit" : "Combat Engineering Company")
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Hidden fields -->
+                <input type="hidden" id="directUnitType" value="@Model.UnitType.ToString().ToLower()" />
+                <input type="hidden" id="directTokenId" value="@Model.Token.Id" />
+                <input type="hidden" id="directTeamId" value="@Model.TeamId" />
+                <input type="hidden" id="directForceType" value="@Model.ForceType" />
+                <input type="hidden" id="directUnitId" value="@(Model.UnitId?.ToString() ?? "")" />
+                <input type="hidden" id="directExistingUnitJson" value='@Html.Raw(Model.ExistingUnitJson ?? "")' />
+                
+                <!-- Token Information -->
+                <div class="token-info-banner">
+                    <i class="fas fa-crosshairs"></i>
+                    <strong>Token:</strong> @Model.Token.Name
+                    <span class="badge badge-info">@Model.ForceType</span>
+                </div>
+
+                @if (Model.UnitType == UnitType.Infantry)
+                {
+                    <!-- INFANTRY BATTALION FORM -->
+                    <form id="directInfantryForm">
+                        <div class="form-section">
+                            <h6><i class="fas fa-user-shield"></i> Infantry Battalion Details</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directInfantryName">Battalion Name *</label>
+                                        <input type="text" class="form-control" id="directInfantryName" placeholder="e.g., 1st Infantry Battalion" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directInfantryCode">Unit Code *</label>
+                                        <input type="text" class="form-control" id="directInfantryCode" placeholder="e.g., INF-01" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directInfantryStrength">Strength (Personnel) *</label>
+                                        <input type="number" class="form-control" id="directInfantryStrength" placeholder="e.g., 600" min="0" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directInfantryCompanies">Number of Companies *</label>
+                                        <input type="number" class="form-control" id="directInfantryCompanies" placeholder="e.g., 4" min="1" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="directInfantryDescription">Description</label>
+                                <textarea class="form-control" id="directInfantryDescription" rows="3" placeholder="Enter battalion description..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-shield-alt"></i> Equipment & Armaments</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="directInfantryATGMS">ATGMs</label>
+                                        <input type="number" class="form-control" id="directInfantryATGMS" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="directInfantryRocketLauncher">Rocket Launchers</label>
+                                        <input type="number" class="form-control" id="directInfantryRocketLauncher" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="directInfantryMortars81mm">81mm Mortars</label>
+                                        <input type="number" class="form-control" id="directInfantryMortars81mm" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="directInfantryMortars120mm">120mm Mortars</label>
+                                        <input type="number" class="form-control" id="directInfantryMortars120mm" value="0" min="0" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="directInfantryGrenadeLaunchers">Grenade Launchers</label>
+                                        <input type="number" class="form-control" id="directInfantryGrenadeLaunchers" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="directInfantryHMG_AGL">HMG / AGL</label>
+                                        <input type="number" class="form-control" id="directInfantryHMG_AGL" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="directInfantryMG_LMG">MG / LMG</label>
+                                        <input type="number" class="form-control" id="directInfantryMG_LMG" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="directInfantryMANPADS">MANPADS</label>
+                                        <input type="number" class="form-control" id="directInfantryMANPADS" value="0" min="0" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="directInfantrySniper">Snipers</label>
+                                        <input type="number" class="form-control" id="directInfantrySniper" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="directInfantryDrones">Drones</label>
+                                        <input type="number" class="form-control" id="directInfantryDrones" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="directInfantryNVG">Night Vision Goggles</label>
+                                        <input type="number" class="form-control" id="directInfantryNVG" value="0" min="0" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                }
+                else if (Model.UnitType == UnitType.Armoured)
+                {
+                    <!-- ARMOURED REGIMENT FORM -->
+                    <form id="directArmouredForm">
+                        <div class="form-section">
+                            <h6><i class="fas fa-shield-alt"></i> Armoured Regiment Details</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directArmouredName">Regiment Name *</label>
+                                        <input type="text" class="form-control" id="directArmouredName" placeholder="e.g., 1st Tank Regiment" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directArmouredCode">Unit Code *</label>
+                                        <input type="text" class="form-control" id="directArmouredCode" placeholder="e.g., ARM-01" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="directArmouredStrength">Strength (Personnel) *</label>
+                                        <input type="number" class="form-control" id="directArmouredStrength" placeholder="e.g., 400" min="0" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="directArmouredSquadrons">Number of Squadrons *</label>
+                                        <input type="number" class="form-control" id="directArmouredSquadrons" placeholder="e.g., 3" min="1" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="directArmouredTanks">Number of Tanks *</label>
+                                        <input type="number" class="form-control" id="directArmouredTanks" placeholder="e.g., 44" min="0" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="directArmouredDescription">Description</label>
+                                <textarea class="form-control" id="directArmouredDescription" rows="3" placeholder="Enter regiment description..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-shield-alt"></i> Additional Equipment</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="directArmouredATGMS">ATGMs</label>
+                                        <input type="number" class="form-control" id="directArmouredATGMS" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="directArmouredMortars120mm">120mm Mortars</label>
+                                        <input type="number" class="form-control" id="directArmouredMortars120mm" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="directArmouredHMG">Heavy Machine Guns</label>
+                                        <input type="number" class="form-control" id="directArmouredHMG" value="0" min="0" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directArmouredDrones">Drones</label>
+                                        <input type="number" class="form-control" id="directArmouredDrones" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directArmouredNVG">Night Vision Systems</label>
+                                        <input type="number" class="form-control" id="directArmouredNVG" value="0" min="0" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                }
+                else if (Model.UnitType == UnitType.Artillery)
+                {
+                    <!-- ARTILLERY REGIMENT FORM -->
+                    <form id="directArtilleryForm">
+                        <div class="form-section">
+                            <h6><i class="fas fa-crosshairs"></i> Artillery Regiment Details</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directArtilleryName">Regiment Name *</label>
+                                        <input type="text" class="form-control" id="directArtilleryName" placeholder="e.g., 1st Artillery Regiment" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directArtilleryCode">Unit Code *</label>
+                                        <input type="text" class="form-control" id="directArtilleryCode" placeholder="e.g., ART-01" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="directArtilleryStrength">Strength (Personnel) *</label>
+                                        <input type="number" class="form-control" id="directArtilleryStrength" placeholder="e.g., 300" min="0" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="directArtilleryBatteries">Number of Batteries *</label>
+                                        <input type="number" class="form-control" id="directArtilleryBatteries" placeholder="e.g., 3" min="1" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="directArtilleryGuns">Number of Guns *</label>
+                                        <input type="number" class="form-control" id="directArtilleryGuns" placeholder="e.g., 18" min="0" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directArtilleryGunCaliber">Gun Caliber *</label>
+                                        <input type="text" class="form-control" id="directArtilleryGunCaliber" placeholder="e.g., 155mm" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directArtilleryGunRange">Gun Range (km) *</label>
+                                        <input type="number" class="form-control" id="directArtilleryGunRange" placeholder="e.g., 30" min="0" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="directArtilleryDescription">Description</label>
+                                <textarea class="form-control" id="directArtilleryDescription" rows="3" placeholder="Enter regiment description..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-shield-alt"></i> Additional Equipment</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directArtilleryHMG">Heavy Machine Guns</label>
+                                        <input type="number" class="form-control" id="directArtilleryHMG" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directArtilleryDrones">Drones</label>
+                                        <input type="number" class="form-control" id="directArtilleryDrones" value="0" min="0" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                }
+                else if (Model.UnitType == UnitType.Logistics)
+                {
+                    <!-- LOGISTICS UNIT FORM -->
+                    <form id="directLogisticsForm">
+                        <div class="form-section">
+                            <h6><i class="fas fa-truck"></i> Logistics Unit Details</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directLogisticsName">Unit Name *</label>
+                                        <input type="text" class="form-control" id="directLogisticsName" placeholder="e.g., 1st Logistics Company" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directLogisticsCode">Unit Code *</label>
+                                        <input type="text" class="form-control" id="directLogisticsCode" placeholder="e.g., LOG-01" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directLogisticsStrength">Strength (Personnel) *</label>
+                                        <input type="number" class="form-control" id="directLogisticsStrength" placeholder="e.g., 200" min="0" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directLogisticsCompanies">Number of Companies *</label>
+                                        <input type="number" class="form-control" id="directLogisticsCompanies" placeholder="e.g., 2" min="1" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="directLogisticsDescription">Description</label>
+                                <textarea class="form-control" id="directLogisticsDescription" rows="3" placeholder="Enter unit description..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-truck-loading"></i> Vehicles & Equipment</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="directLogisticsSupplyTrucks">Supply Trucks</label>
+                                        <input type="number" class="form-control" id="directLogisticsSupplyTrucks" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="directLogisticsFuelTrucks">Fuel Trucks</label>
+                                        <input type="number" class="form-control" id="directLogisticsFuelTrucks" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="directLogisticsWaterTrucks">Water Trucks</label>
+                                        <input type="number" class="form-control" id="directLogisticsWaterTrucks" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="directLogisticsAmmoTrucks">Ammo Trucks</label>
+                                        <input type="number" class="form-control" id="directLogisticsAmmoTrucks" value="0" min="0" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="directLogisticsMaintenanceVehicles">Maintenance Vehicles</label>
+                                        <input type="number" class="form-control" id="directLogisticsMaintenanceVehicles" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="directLogisticsRecoveryVehicles">Recovery Vehicles</label>
+                                        <input type="number" class="form-control" id="directLogisticsRecoveryVehicles" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="directLogisticsMobileWorkshops">Mobile Workshops</label>
+                                        <input type="number" class="form-control" id="directLogisticsMobileWorkshops" value="0" min="0" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directLogisticsFuelCapacity">Fuel Capacity (Liters)</label>
+                                        <input type="number" class="form-control" id="directLogisticsFuelCapacity" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directLogisticsWaterCapacity">Water Capacity (Liters)</label>
+                                        <input type="number" class="form-control" id="directLogisticsWaterCapacity" value="0" min="0" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directLogisticsHMG">Heavy Machine Guns</label>
+                                        <input type="number" class="form-control" id="directLogisticsHMG" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directLogisticsLMG">Light Machine Guns</label>
+                                        <input type="number" class="form-control" id="directLogisticsLMG" value="0" min="0" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                }
+                else if (Model.UnitType == UnitType.Engineering)
+                {
+                    <!-- COMBAT ENGINEERING COMPANY FORM -->
+                    <form id="directEngineeringForm">
+                        <div class="form-section">
+                            <h6><i class="fas fa-hard-hat"></i> Combat Engineering Company Details</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directEngineeringName">Company Name *</label>
+                                        <input type="text" class="form-control" id="directEngineeringName" placeholder="e.g., 1st Engineering Company" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directEngineeringCode">Unit Code *</label>
+                                        <input type="text" class="form-control" id="directEngineeringCode" placeholder="e.g., ENG-01" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directEngineeringStrength">Strength (Personnel) *</label>
+                                        <input type="number" class="form-control" id="directEngineeringStrength" placeholder="e.g., 150" min="0" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directEngineeringPlatoons">Number of Platoons *</label>
+                                        <input type="number" class="form-control" id="directEngineeringPlatoons" placeholder="e.g., 3" min="1" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="directEngineeringDescription">Description</label>
+                                <textarea class="form-control" id="directEngineeringDescription" rows="3" placeholder="Enter company description..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-tools"></i> Specialized Equipment</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="directEngineeringVehicles">Engineer Vehicles</label>
+                                        <input type="number" class="form-control" id="directEngineeringVehicles" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="directEngineeringBridgeLayers">Bridge Layers</label>
+                                        <input type="number" class="form-control" id="directEngineeringBridgeLayers" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="directEngineeringMineClearers">Mine Clearers</label>
+                                        <input type="number" class="form-control" id="directEngineeringMineClearers" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="directEngineeringBulldozers">Bulldozers</label>
+                                        <input type="number" class="form-control" id="directEngineeringBulldozers" value="0" min="0" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directEngineeringExcavators">Excavators</label>
+                                        <input type="number" class="form-control" id="directEngineeringExcavators" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="directEngineeringCranes">Cranes</label>
+                                        <input type="number" class="form-control" id="directEngineeringCranes" value="0" min="0" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="directEngineeringATGMS">ATGMs</label>
+                                        <input type="number" class="form-control" id="directEngineeringATGMS" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="directEngineeringHMG">Heavy Machine Guns</label>
+                                        <input type="number" class="form-control" id="directEngineeringHMG" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="directEngineeringLMG">Light Machine Guns</label>
+                                        <input type="number" class="form-control" id="directEngineeringLMG" value="0" min="0" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                }
+                else
+                {
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Unit type not yet supported
+                    </div>
+                }
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveDirectUnit()">
+                    <i class="fas fa-save"></i> <span id="saveBtnText">@(Model.UnitId.HasValue ? "Update" : "Save") Unit</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Direct Unit Creation Form Styling */
+.token-info-banner {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+}
+
+.token-info-banner i {
+    font-size: 18px;
+}
+
+.form-section {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.form-section h6 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-section h6 i {
+    color: #007bff;
+}
+
+.form-group label {
+    color: #495057;
+    font-weight: 500;
+    font-size: 13px;
+    margin-bottom: 5px;
+}
+
+.form-control {
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    padding: 10px 12px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.modal-footer {
+    background: #f8f9fa;
+    border-top: 2px solid #dee2e6;
+}
+
+.btn {
+    padding: 10px 20px;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    border: none;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+</style>
+
+<script src="~/js/DirectUnitCreationForm.js" asp-append-version="true"></script>
+

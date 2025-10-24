@@ -363,6 +363,72 @@
                             <h6><i class="fas fa-users"></i> Add Units Directly to Token</h6>
                             <p class="text-muted">Add military units directly to this token without requiring a brigade.</p>
                             
+                            <!-- Show existing units without brigade -->
+                            @if (Model.ExistingInfantry.Any() || Model.ExistingArmoured.Any() || Model.ExistingArtillery.Any() || Model.ExistingLogistics != null || Model.ExistingEngineering != null)
+                            {
+                                <div class="existing-direct-units-summary">
+                                    <h6><i class="fas fa-list"></i> Existing Units</h6>
+                                    
+                                    @if (Model.ExistingInfantry.Any())
+                                    {
+                                        <div class="unit-summary-item">
+                                            <i class="fas fa-user-shield"></i>
+                                            <strong>Infantry Battalions:</strong> @Model.ExistingInfantry.Count
+                                            <button class="btn btn-sm btn-outline-primary" onclick="openDirectUnitForm('infantry', '@Model.Token.Id')">
+                                                <i class="fas fa-eye"></i> View/Manage
+                                            </button>
+                                        </div>
+                                    }
+                                    
+                                    @if (Model.ExistingArmoured.Any())
+                                    {
+                                        <div class="unit-summary-item">
+                                            <i class="fas fa-shield-alt"></i>
+                                            <strong>Armoured Regiments:</strong> @Model.ExistingArmoured.Count
+                                            <button class="btn btn-sm btn-outline-primary" onclick="openDirectUnitForm('armoured', '@Model.Token.Id')">
+                                                <i class="fas fa-eye"></i> View/Manage
+                                            </button>
+                                        </div>
+                                    }
+                                    
+                                    @if (Model.ExistingArtillery.Any())
+                                    {
+                                        <div class="unit-summary-item">
+                                            <i class="fas fa-crosshairs"></i>
+                                            <strong>Artillery Regiments:</strong> @Model.ExistingArtillery.Count
+                                            <button class="btn btn-sm btn-outline-primary" onclick="openDirectUnitForm('artillery', '@Model.Token.Id')">
+                                                <i class="fas fa-eye"></i> View/Manage
+                                            </button>
+                                        </div>
+                                    }
+                                    
+                                    @if (Model.ExistingLogistics != null)
+                                    {
+                                        <div class="unit-summary-item">
+                                            <i class="fas fa-truck"></i>
+                                            <strong>Logistics Unit:</strong> @Model.ExistingLogistics.Name
+                                            <button class="btn btn-sm btn-outline-primary" onclick="openDirectUnitForm('logistics', '@Model.Token.Id')">
+                                                <i class="fas fa-eye"></i> View/Manage
+                                            </button>
+                                        </div>
+                                    }
+                                    
+                                    @if (Model.ExistingEngineering != null)
+                                    {
+                                        <div class="unit-summary-item">
+                                            <i class="fas fa-hard-hat"></i>
+                                            <strong>Engineering Company:</strong> @Model.ExistingEngineering.Name
+                                            <button class="btn btn-sm btn-outline-primary" onclick="openDirectUnitForm('engineering', '@Model.Token.Id')">
+                                                <i class="fas fa-eye"></i> View/Manage
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                                
+                                <hr style="margin: 20px 0; border-top: 2px dashed #dee2e6;" />
+                            }
+                            
+                            <h6><i class="fas fa-plus-circle"></i> Add More Units</h6>
                             <div class="direct-unit-buttons">
                                 <button type="button" class="btn btn-outline-primary btn-sm" onclick="openDirectUnitForm('infantry', '@Model.Token.Id')">
                                     <i class="fas fa-user-shield"></i> Infantry Battalion
@@ -511,6 +577,55 @@
     flex: 1;
     min-width: 140px;
     text-align: center;
+}
+
+.existing-direct-units-summary {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.existing-direct-units-summary h6 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.unit-summary-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+.unit-summary-item:hover {
+    background: #e9ecef;
+    border-color: #007bff;
+    transform: translateX(3px);
+}
+
+.unit-summary-item i {
+    color: #007bff;
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+}
+
+.unit-summary-item strong {
+    flex: 1;
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+.unit-summary-item .btn {
+    margin-left: auto;
 }
 
 .brigade-creation-section {

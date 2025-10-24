@@ -1,0 +1,472 @@
+@using static TechWebSol.Controllers.DataManagementController
+@model BrigadeUnitCreationViewModel
+
+<!-- Brigade Unit Creation Form Modal - Bootstrap Modal -->
+<div class="modal fade" id="brigadeUnitCreationModal" tabindex="-1" role="dialog" aria-labelledby="brigadeUnitCreationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="brigadeUnitCreationModalLabel">
+                    <i class="fas fa-@(Model.UnitType == UnitType.Infantry ? "user-shield" : Model.UnitType == UnitType.Armoured ? "shield-alt" : Model.UnitType == UnitType.Artillery ? "crosshairs" : Model.UnitType == UnitType.Logistics ? "truck" : "hard-hat")"></i>
+                    @(Model.UnitId.HasValue ? "Edit" : "Create New") @(Model.UnitType == UnitType.Infantry ? "Infantry Battalion" : Model.UnitType == UnitType.Armoured ? "Armoured Regiment" : Model.UnitType == UnitType.Artillery ? "Artillery Regiment" : Model.UnitType == UnitType.Logistics ? "Logistics Unit" : "Combat Engineering Company")
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Hidden fields -->
+                <input type="hidden" id="brigadeUnitType" value="@Model.UnitType.ToString().ToLower()" />
+                <input type="hidden" id="brigadeTokenId" value="@Model.Token.Id" />
+                <input type="hidden" id="brigadeBrigadeId" value="@Model.Brigade.Id" />
+                <input type="hidden" id="brigadeTeamId" value="@Model.TeamId" />
+                <input type="hidden" id="brigadeForceType" value="@Model.ForceType" />
+                <input type="hidden" id="brigadeUnitId" value="@(Model.UnitId?.ToString() ?? "")" />
+                <input type="hidden" id="brigadeExistingUnitJson" value='@Html.Raw(Model.ExistingUnitJson ?? "")' />
+                
+                <!-- Brigade Information -->
+                <div class="token-info-banner">
+                    <i class="fas fa-users"></i>
+                    <strong>Brigade:</strong> @Model.Brigade.BrigadeCode
+                    <span class="token-separator">•</span>
+                    <strong>Token:</strong> @Model.Token.Name
+                    <span class="badge badge-info">@Model.ForceType</span>
+                </div>
+
+                @if (Model.UnitType == UnitType.Infantry)
+                {
+                    <!-- INFANTRY BATTALION FORM -->
+                    <form id="brigadeInfantryForm">
+                        <div class="form-section">
+                            <h6><i class="fas fa-user-shield"></i> Infantry Battalion Details</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brigadeInfantryName">Battalion Name *</label>
+                                        <input type="text" class="form-control" id="brigadeInfantryName" placeholder="e.g., 1st Infantry Battalion" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brigadeInfantryCode">Unit Code *</label>
+                                        <input type="text" class="form-control" id="brigadeInfantryCode" placeholder="e.g., INF-01" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brigadeInfantryStrength">Strength (Personnel) *</label>
+                                        <input type="number" class="form-control" id="brigadeInfantryStrength" placeholder="e.g., 600" min="0" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brigadeInfantryCompanies">Number of Companies *</label>
+                                        <input type="number" class="form-control" id="brigadeInfantryCompanies" placeholder="e.g., 4" min="1" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="brigadeInfantryDescription">Description</label>
+                                <textarea class="form-control" id="brigadeInfantryDescription" rows="3" placeholder="Enter battalion description..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-shield-alt"></i> Equipment & Armaments</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="brigadeInfantryATGMS">ATGMs</label>
+                                        <input type="number" class="form-control" id="brigadeInfantryATGMS" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="brigadeInfantryRocketLauncher">Rocket Launchers</label>
+                                        <input type="number" class="form-control" id="brigadeInfantryRocketLauncher" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="brigadeInfantryMortars81mm">81mm Mortars</label>
+                                        <input type="number" class="form-control" id="brigadeInfantryMortars81mm" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="brigadeInfantryMortars120mm">120mm Mortars</label>
+                                        <input type="number" class="form-control" id="brigadeInfantryMortars120mm" value="0" min="0" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                }
+                else if (Model.UnitType == UnitType.Armoured)
+                {
+                    <!-- ARMOURED REGIMENT FORM -->
+                    <form id="brigadeArmouredForm">
+                        <div class="form-section">
+                            <h6><i class="fas fa-shield-alt"></i> Armoured Regiment Details</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brigadeArmouredName">Regiment Name *</label>
+                                        <input type="text" class="form-control" id="brigadeArmouredName" placeholder="e.g., 1st Armoured Regiment" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brigadeArmouredCode">Unit Code *</label>
+                                        <input type="text" class="form-control" id="brigadeArmouredCode" placeholder="e.g., ARM-01" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brigadeArmouredStrength">Strength (Personnel) *</label>
+                                        <input type="number" class="form-control" id="brigadeArmouredStrength" placeholder="e.g., 400" min="0" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brigadeArmouredSquadrons">Number of Squadrons *</label>
+                                        <input type="number" class="form-control" id="brigadeArmouredSquadrons" placeholder="e.g., 3" min="1" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="brigadeArmouredDescription">Description</label>
+                                <textarea class="form-control" id="brigadeArmouredDescription" rows="3" placeholder="Enter regiment description..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-shield-alt"></i> Equipment & Armaments</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="brigadeArmouredTanks">Tanks *</label>
+                                        <input type="number" class="form-control" id="brigadeArmouredTanks" placeholder="e.g., 40" min="0" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="brigadeArmouredATGMS">ATGMs</label>
+                                        <input type="number" class="form-control" id="brigadeArmouredATGMS" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="brigadeArmouredMortars120mm">120mm Mortars</label>
+                                        <input type="number" class="form-control" id="brigadeArmouredMortars120mm" value="0" min="0" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                }
+                else if (Model.UnitType == UnitType.Artillery)
+                {
+                    <!-- ARTILLERY REGIMENT FORM -->
+                    <form id="brigadeArtilleryForm">
+                        <div class="form-section">
+                            <h6><i class="fas fa-crosshairs"></i> Artillery Regiment Details</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brigadeArtilleryName">Regiment Name *</label>
+                                        <input type="text" class="form-control" id="brigadeArtilleryName" placeholder="e.g., 1st Artillery Regiment" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brigadeArtilleryCode">Unit Code *</label>
+                                        <input type="text" class="form-control" id="brigadeArtilleryCode" placeholder="e.g., ART-01" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brigadeArtilleryStrength">Strength (Personnel) *</label>
+                                        <input type="number" class="form-control" id="brigadeArtilleryStrength" placeholder="e.g., 300" min="0" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brigadeArtilleryBatteries">Number of Batteries *</label>
+                                        <input type="number" class="form-control" id="brigadeArtilleryBatteries" placeholder="e.g., 3" min="1" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="brigadeArtilleryDescription">Description</label>
+                                <textarea class="form-control" id="brigadeArtilleryDescription" rows="3" placeholder="Enter regiment description..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-crosshairs"></i> Equipment & Specifications</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="brigadeArtilleryGuns">Guns *</label>
+                                        <input type="number" class="form-control" id="brigadeArtilleryGuns" placeholder="e.g., 18" min="0" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="brigadeArtilleryGunRange">Gun Range (km) *</label>
+                                        <input type="number" class="form-control" id="brigadeArtilleryGunRange" placeholder="e.g., 30" min="0" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="brigadeArtilleryGunCaliber">Gun Caliber *</label>
+                                        <input type="text" class="form-control" id="brigadeArtilleryGunCaliber" placeholder="e.g., 155mm" required />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                }
+                else if (Model.UnitType == UnitType.Logistics)
+                {
+                    <!-- LOGISTICS UNIT FORM -->
+                    <form id="brigadeLogisticsForm">
+                        <div class="form-section">
+                            <h6><i class="fas fa-truck"></i> Logistics Unit Details</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brigadeLogisticsName">Unit Name *</label>
+                                        <input type="text" class="form-control" id="brigadeLogisticsName" placeholder="e.g., Brigade Logistics Company" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brigadeLogisticsCode">Unit Code *</label>
+                                        <input type="text" class="form-control" id="brigadeLogisticsCode" placeholder="e.g., LOG-01" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brigadeLogisticsStrength">Strength (Personnel) *</label>
+                                        <input type="number" class="form-control" id="brigadeLogisticsStrength" placeholder="e.g., 150" min="0" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brigadeLogisticsCompanies">Number of Companies</label>
+                                        <input type="number" class="form-control" id="brigadeLogisticsCompanies" value="1" min="1" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="brigadeLogisticsDescription">Description</label>
+                                <textarea class="form-control" id="brigadeLogisticsDescription" rows="3" placeholder="Enter unit description..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-truck"></i> Equipment & Resources</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="brigadeLogisticsSupplyTrucks">Supply Trucks</label>
+                                        <input type="number" class="form-control" id="brigadeLogisticsSupplyTrucks" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="brigadeLogisticsFuelTrucks">Fuel Trucks</label>
+                                        <input type="number" class="form-control" id="brigadeLogisticsFuelTrucks" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="brigadeLogisticsMaintenanceVehicles">Maintenance Vehicles</label>
+                                        <input type="number" class="form-control" id="brigadeLogisticsMaintenanceVehicles" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="brigadeLogisticsRecoveryVehicles">Recovery Vehicles</label>
+                                        <input type="number" class="form-control" id="brigadeLogisticsRecoveryVehicles" value="0" min="0" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                }
+                else if (Model.UnitType == UnitType.Engineering)
+                {
+                    <!-- ENGINEERING COMPANY FORM -->
+                    <form id="brigadeEngineeringForm">
+                        <div class="form-section">
+                            <h6><i class="fas fa-hard-hat"></i> Engineering Company Details</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brigadeEngineeringName">Company Name *</label>
+                                        <input type="text" class="form-control" id="brigadeEngineeringName" placeholder="e.g., Brigade Engineering Company" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brigadeEngineeringCode">Unit Code *</label>
+                                        <input type="text" class="form-control" id="brigadeEngineeringCode" placeholder="e.g., ENG-01" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brigadeEngineeringStrength">Strength (Personnel) *</label>
+                                        <input type="number" class="form-control" id="brigadeEngineeringStrength" placeholder="e.g., 120" min="0" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="brigadeEngineeringPlatoons">Number of Platoons</label>
+                                        <input type="number" class="form-control" id="brigadeEngineeringPlatoons" value="3" min="1" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="brigadeEngineeringDescription">Description</label>
+                                <textarea class="form-control" id="brigadeEngineeringDescription" rows="3" placeholder="Enter company description..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h6><i class="fas fa-hard-hat"></i> Equipment & Machinery</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="brigadeEngineeringBulldozers">Bulldozers</label>
+                                        <input type="number" class="form-control" id="brigadeEngineeringBulldozers" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="brigadeEngineeringExcavators">Excavators</label>
+                                        <input type="number" class="form-control" id="brigadeEngineeringExcavators" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="brigadeEngineeringMinePlows">Mine Plows</label>
+                                        <input type="number" class="form-control" id="brigadeEngineeringMinePlows" value="0" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="brigadeEngineeringBridgeLayers">Bridge Layers</label>
+                                        <input type="number" class="form-control" id="brigadeEngineeringBridgeLayers" value="0" min="0" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                }
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-success" onclick="saveBrigadeUnit()">
+                    <i class="fas fa-save"></i> Save Unit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.token-info-banner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.token-info-banner i {
+    font-size: 1.2rem;
+}
+
+.token-separator {
+    opacity: 0.7;
+    margin: 0 5px;
+}
+
+.form-section {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.form-section h6 {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 5px;
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+#brigadeUnitCreationModal .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+</style>
+
+<script src="~/js/BrigadeUnitCreationForm.js" asp-append-version="true"></script>
+

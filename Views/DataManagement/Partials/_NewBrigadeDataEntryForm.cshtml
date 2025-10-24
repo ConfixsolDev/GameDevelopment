@@ -18,6 +18,7 @@
                 <!-- Hidden fields for token and team -->
                 <input type="hidden" id="tokenId" value="@Model.Token.Id" />
                 <input type="hidden" id="teamId" value="@Model.Brigade.TeamId" />
+                <input type="hidden" id="forceType" value="@Model.Token.ForceType" />
                 
                 <!-- Token Information as Base Data (Primary) -->
                 <div class="token-base-section">
@@ -70,16 +71,7 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="forceType">Force Type *</label>
-                                <select class="form-control" id="forceType" required>
-                                    <option value="Blue" selected>Blue Force</option>
-                                    <option value="Red">Red Force</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <div class="form-group">
                                 <label for="brigadeDescription">Description</label>
                                 <input type="text" class="form-control" id="brigadeDescription" placeholder="Brief description of the brigade" />
@@ -107,6 +99,10 @@
 </div>
 
 <style>
+#newBrigadeDataEntryModal .modal-body {
+    min-height: 500px;
+}
+
 .token-base-section {
     background: #e8f5e8;
     border: 2px solid #28a745;
@@ -225,7 +221,8 @@ function saveBrigadeOnly() {
     // Collect brigade form data - Use PascalCase to match controller
     const brigadeData = {
         TokenId: document.getElementById('tokenId').value,
-        BrigadeCode: document.getElementById('brigadeCode').value
+        BrigadeCode: document.getElementById('brigadeCode').value,
+        ForceType: document.getElementById('forceType').value // From session via token
     };
     
     // Basic validation
@@ -233,6 +230,13 @@ function saveBrigadeOnly() {
         alert('Please fill in Brigade Code');
         return;
     }
+    
+    if (!brigadeData.ForceType) {
+        alert('Force Type is missing from session');
+        return;
+    }
+    
+    console.log('📋 Brigade data to save:', brigadeData);
     
     // Show loading
     $("#loading").show();

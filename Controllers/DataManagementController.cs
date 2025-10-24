@@ -165,6 +165,16 @@ namespace TechWebSol.Controllers
                             .OrderByDescending(r => r.CreatedDate)
                             .ToListAsync();
                         break;
+
+                    case UnitType.Logistics:
+                        viewModel.ExistingLogistics = await _context.LogisticsUnits
+                            .FirstOrDefaultAsync(l => l.TokenId == tokenId && l.TeamId == user.TeamId && l.IsActive);
+                        break;
+
+                    case UnitType.Engineering:
+                        viewModel.ExistingEngineering = await _context.CombatEngineeringCompanies
+                            .FirstOrDefaultAsync(e => e.TokenId == tokenId && e.TeamId == user.TeamId && e.IsActive);
+                        break;
                 }
 
                 return PartialView("Partials/_DirectUnitForm", viewModel);
@@ -248,6 +258,174 @@ namespace TechWebSol.Controllers
         }
 
         /// <summary>
+        /// Returns the direct unit creation form (without brigade requirement)
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> DirectUnitCreationForm(string unitType, Guid tokenId, Guid? unitId = null)
+        {
+            try
+            {
+                _logger.LogInformation($"Loading direct unit creation form for unitType: {unitType}, tokenId: {tokenId}, unitId: {unitId}");
+
+                var token = await _context.Tokens
+                    .Include(t => t.TokenGroup)
+                    .FirstOrDefaultAsync(t => t.Id == tokenId && t.TeamId == user.TeamId && t.IsActive);
+
+                if (token == null)
+                {
+                    _logger.LogWarning($"Token not found: {tokenId}");
+                    return PartialView("Partials/_ErrorPartial", new { Message = "Token not found or not accessible" });
+                }
+
+                // Parse unit type from string
+                UnitType parsedUnitType;
+                if (!Enum.TryParse(unitType, true, out parsedUnitType))
+                {
+                    _logger.LogWarning($"Invalid unit type: {unitType}");
+                    return PartialView("Partials/_ErrorPartial", new { Message = "Invalid unit type" });
+                }
+
+                var viewModel = new DirectUnitCreationViewModel
+                {
+                    UnitType = parsedUnitType,
+                    Token = token,
+                    TeamId = user.TeamId,
+                    ForceType = token.ForceType ?? "Unknown",
+                    UnitId = unitId
+                };
+
+                // If editing, load existing unit data
+                if (unitId.HasValue)
+                {
+                    viewModel.ExistingUnitJson = await GetExistingUnitJson(parsedUnitType, unitId.Value);
+                }
+
+                _logger.LogInformation($"Successfully created viewModel for {parsedUnitType} unit {(unitId.HasValue ? "edit" : "creation")}");
+
+                return PartialView("Partials/_DirectUnitCreationForm", viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading direct unit creation form");
+                return PartialView("Partials/_ErrorPartial", new { Message = $"Error loading unit creation form: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Get existing unit data as JSON for edit mode
+        /// </summary>
+        private async Task<string> GetExistingUnitJson(UnitType unitType, Guid unitId)
+        {
+            try
+            {
+                object unitData = null;
+
+                switch (unitType)
+                {
+                    case UnitType.Infantry:
+                        unitData = await _context.InfantryBattalions
+                            .FirstOrDefaultAsync(u => u.Id == unitId && u.TeamId == user.TeamId && u.IsActive);
+                        break;
+
+                    case UnitType.Armoured:
+                        unitData = await _context.ArmouredRegiments
+                            .FirstOrDefaultAsync(u => u.Id == unitId && u.TeamId == user.TeamId && u.IsActive);
+                        break;
+
+                    case UnitType.Artillery:
+                        unitData = await _context.ArtilleryRegiments
+                            .FirstOrDefaultAsync(u => u.Id == unitId && u.TeamId == user.TeamId && u.IsActive);
+                        break;
+
+                    case UnitType.Logistics:
+                        unitData = await _context.LogisticsUnits
+                            .FirstOrDefaultAsync(u => u.Id == unitId && u.TeamId == user.TeamId && u.IsActive);
+                        break;
+
+                    case UnitType.Engineering:
+                        unitData = await _context.CombatEngineeringCompanies
+                            .FirstOrDefaultAsync(u => u.Id == unitId && u.TeamId == user.TeamId && u.IsActive);
+                        break;
+                }
+
+                if (unitData != null)
+                {
+                    return System.Text.Json.JsonSerializer.Serialize(unitData);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error loading existing unit data for {unitType} with ID {unitId}");
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Returns the brigade unit creation/edit form
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> BrigadeUnitCreationForm(string unitType, Guid tokenId, Guid brigadeId, Guid? unitId = null)
+        {
+            try
+            {
+                _logger.LogInformation($"Loading brigade unit creation form for unitType: {unitType}, tokenId: {tokenId}, brigadeId: {brigadeId}, unitId: {unitId}");
+
+                var token = await _context.Tokens
+                    .Include(t => t.TokenGroup)
+                    .FirstOrDefaultAsync(t => t.Id == tokenId && t.TeamId == user.TeamId && t.IsActive);
+
+                if (token == null)
+                {
+                    _logger.LogWarning($"Token not found: {tokenId}");
+                    return PartialView("Partials/_ErrorPartial", new { Message = "Token not found or not accessible" });
+                }
+
+                var brigade = await _context.Brigades
+                    .FirstOrDefaultAsync(b => b.Id == brigadeId && b.TeamId == user.TeamId && b.IsActive);
+
+                if (brigade == null)
+                {
+                    _logger.LogWarning($"Brigade not found: {brigadeId}");
+                    return PartialView("Partials/_ErrorPartial", new { Message = "Brigade not found or not accessible" });
+                }
+
+                // Parse unit type from string
+                UnitType parsedUnitType;
+                if (!Enum.TryParse(unitType, true, out parsedUnitType))
+                {
+                    _logger.LogWarning($"Invalid unit type: {unitType}");
+                    return PartialView("Partials/_ErrorPartial", new { Message = "Invalid unit type" });
+                }
+
+                var viewModel = new BrigadeUnitCreationViewModel
+                {
+                    UnitType = parsedUnitType,
+                    Token = token,
+                    Brigade = brigade,
+                    TeamId = user.TeamId,
+                    ForceType = token.ForceType ?? "Unknown",
+                    UnitId = unitId
+                };
+
+                // If editing, load existing unit data
+                if (unitId.HasValue)
+                {
+                    viewModel.ExistingUnitJson = await GetExistingUnitJson(parsedUnitType, unitId.Value);
+                }
+
+                _logger.LogInformation($"Successfully created viewModel for brigade {parsedUnitType} unit {(unitId.HasValue ? "edit" : "creation")}");
+
+                return PartialView("Partials/_BrigadeUnitCreationForm", viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading brigade unit creation form");
+                return PartialView("Partials/_ErrorPartial", new { Message = $"Error loading unit creation form: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
         /// Returns the new brigade creation form for a specific token
         /// </summary>
         [HttpGet]
@@ -327,39 +505,48 @@ namespace TechWebSol.Controllers
                     return PartialView("Partials/_ErrorPartial", new { Message = "Brigade not found or not accessible" });
                 }
 
-                // Get existing units for this brigade
-                var existingInfantry = await _context.InfantryBattalions
-                    .FirstOrDefaultAsync(i => i.BrigadeId == brigadeId && i.IsActive);
+                // Get ALL existing units for this brigade (not just one)
+                var existingInfantryList = await _context.InfantryBattalions
+                    .Where(i => i.BrigadeId == brigadeId && i.IsActive)
+                    .OrderByDescending(i => i.CreatedDate)
+                    .ToListAsync();
 
-                var existingArmoured = await _context.ArmouredRegiments
-                    .FirstOrDefaultAsync(a => a.BrigadeId == brigadeId && a.IsActive);
+                var existingArmouredList = await _context.ArmouredRegiments
+                    .Where(a => a.BrigadeId == brigadeId && a.IsActive)
+                    .OrderByDescending(a => a.CreatedDate)
+                    .ToListAsync();
 
-                var existingArtillery = await _context.ArtilleryRegiments
-                    .FirstOrDefaultAsync(ar => ar.BrigadeId == brigadeId && ar.IsActive);
+                var existingArtilleryList = await _context.ArtilleryRegiments
+                    .Where(ar => ar.BrigadeId == brigadeId && ar.IsActive)
+                    .OrderByDescending(ar => ar.CreatedDate)
+                    .ToListAsync();
 
-                var existingRecon = await _context.Recon
-                    .Where(r => r.TokenId == tokenId && r.TeamId == user.TeamId && r.IsActive)
+                // Recon is linked to Token, not Brigade
+                var existingReconList = await _context.Recon
+                    .Where(r => r.TokenId == tokenId && r.IsActive)
                     .OrderByDescending(r => r.CreatedDate)
                     .ToListAsync();
 
-                var existingLogistics = await _context.LogisticsUnits
+                var existingLogisticsList = await _context.LogisticsUnits
                     .Where(l => l.BrigadeId == brigade.Id && l.TeamId == user.TeamId && l.IsActive)
-                    .FirstOrDefaultAsync();
+                    .OrderByDescending(l => l.CreatedDate)
+                    .ToListAsync();
 
-                var existingEngineering = await _context.CombatEngineeringCompanies
+                var existingEngineeringList = await _context.CombatEngineeringCompanies
                     .Where(e => e.BrigadeId == brigade.Id && e.TeamId == user.TeamId && e.IsActive)
-                    .FirstOrDefaultAsync();
+                    .OrderByDescending(e => e.CreatedDate)
+                    .ToListAsync();
 
                 var viewModel = new UnitsDataEntryViewModel
                 {
                     Token = token,
                     Brigade = brigade,
-                    ExistingInfantry = existingInfantry,
-                    ExistingArmoured = existingArmoured,
-                    ExistingArtillery = existingArtillery,
-                    ExistingRecon = existingRecon,
-                    ExistingLogistics = existingLogistics,
-                    ExistingEngineering = existingEngineering
+                    ExistingInfantryList = existingInfantryList,
+                    ExistingArmouredList = existingArmouredList,
+                    ExistingArtilleryList = existingArtilleryList,
+                    ExistingReconList = existingReconList,
+                    ExistingLogisticsList = existingLogisticsList,
+                    ExistingEngineeringList = existingEngineeringList
                 };
 
                 return PartialView("Partials/_UnitsDataEntryForm", viewModel);
@@ -426,11 +613,12 @@ namespace TechWebSol.Controllers
                     .OrderByDescending(e => e.CreatedDate)
                     .ToList();
 
-                //Brigades.Recon = _context.Recon
-                //    .AsNoTracking()
-                //    .Where(r => r.TokenId == tokenId  && r.IsActive)
-                //    .OrderByDescending(r => r.CreatedDate)
-                //    .ToList();
+                // Load Recon separately (not part of Brigade)
+                var reconList = _context.Recon
+                    .AsNoTracking()
+                    .Where(r => r.TokenId == tokenId  && r.IsActive)
+                    .OrderByDescending(r => r.CreatedDate)
+                    .ToList();
 
                 // Create ViewModel
                 var viewModel = new TokenSummaryViewModel
@@ -442,14 +630,15 @@ namespace TechWebSol.Controllers
                     ArtilleryRegiments = Brigades.ArtilleryRegiments ?? new List<ArtilleryRegiment>(),
                     LogisticsUnits = Brigades.LogisticsUnits ?? new List<LogisticsUnit>(),
                     CombatEngineeringCompanies = Brigades.CombatEngineeringCompanies ?? new List<CombatEngineeringCompany>(),
-                    Recon = Brigades.Recon ?? new List<Recon>()
+                    Recon = reconList
                 };
 
                 return PartialView("Partials/_TokenSummaryModal", viewModel);
             }
             catch (Exception ex)
             {
-                return PartialView("Partials/_ErrorPartial", ViewBag.ErrorMessage);
+                _logger.LogError(ex, "Error loading token summary for token {TokenId}", tokenId);
+                return PartialView("Partials/_ErrorPartial", new { Message = $"Error loading token summary: {ex.Message}" });
             }
         }
 
@@ -1204,6 +1393,236 @@ namespace TechWebSol.Controllers
 
         #endregion
 
+        #region Logistics Unit Management (Token-Based)
+
+        [HttpPost]
+        public async Task<IActionResult> CreateLogisticsUnit([FromBody] CreateLogisticsUnitRequest request)
+        {
+            try
+            {
+                var logistics = new LogisticsUnit
+                {
+                    Id = Guid.NewGuid(),
+                    Name = request.Name,
+                    Description = request.Description,
+                    UnitCode = request.UnitCode,
+                    Strength = request.Strength,
+                    ForceType = request.ForceType,
+                    Companies = request.Companies,
+                    BrigadeId = request.BrigadeId,
+                    TokenId = request.TokenId,
+                    TeamId = user.TeamId,
+                    SupplyTrucks = request.SupplyTrucks,
+                    FuelTrucks = request.FuelTrucks,
+                    WaterTrucks = request.WaterTrucks,
+                    AmmunitionTrucks = request.AmmunitionTrucks,
+                    MaintenanceVehicles = request.MaintenanceVehicles,
+                    RecoveryVehicles = request.RecoveryVehicles,
+                    MobileWorkshops = request.MobileWorkshops,
+                    FuelCapacity = request.FuelCapacity,
+                    WaterCapacity = request.WaterCapacity,
+                    HMG = request.HMG,
+                    LMG = request.LMG,
+                    SupplyState = request.SupplyState,
+                    StrengthPercentage = request.StrengthPercentage,
+                    CreatedBy = user.FullName,
+                    IsActive = true
+                };
+
+                _context.LogisticsUnits.Add(logistics);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, data = logistics });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating logistics unit");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateLogisticsUnit([FromBody] UpdateLogisticsUnitRequest request)
+        {
+            try
+            {
+                var existingUnit = await _context.LogisticsUnits
+                    .FirstOrDefaultAsync(l => l.Id == request.Id && l.TeamId == user.TeamId);
+
+                if (existingUnit == null) return NotFound();
+
+                existingUnit.Name = request.Name;
+                existingUnit.Description = request.Description;
+                existingUnit.UnitCode = request.UnitCode;
+                existingUnit.Strength = request.Strength;
+                existingUnit.ForceType = request.ForceType;
+                existingUnit.Companies = request.Companies;
+                existingUnit.BrigadeId = request.BrigadeId;
+                existingUnit.TokenId = request.TokenId;
+                existingUnit.SupplyTrucks = request.SupplyTrucks;
+                existingUnit.FuelTrucks = request.FuelTrucks;
+                existingUnit.WaterTrucks = request.WaterTrucks;
+                existingUnit.AmmunitionTrucks = request.AmmunitionTrucks;
+                existingUnit.MaintenanceVehicles = request.MaintenanceVehicles;
+                existingUnit.RecoveryVehicles = request.RecoveryVehicles;
+                existingUnit.MobileWorkshops = request.MobileWorkshops;
+                existingUnit.FuelCapacity = request.FuelCapacity;
+                existingUnit.WaterCapacity = request.WaterCapacity;
+                existingUnit.HMG = request.HMG;
+                existingUnit.LMG = request.LMG;
+                existingUnit.UpdatedBy = user.FullName;
+
+                _context.Update(existingUnit);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, data = existingUnit });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating logistics unit");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteTokenLogisticsUnit(Guid id)
+        {
+            try
+            {
+                var logistics = await _context.LogisticsUnits
+                    .FirstOrDefaultAsync(l => l.Id == id && l.TeamId == user.TeamId);
+
+                if (logistics == null) return NotFound();
+
+                logistics.IsActive = false;
+                logistics.UpdatedBy = user.FullName;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting logistics unit");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        #endregion
+
+        #region Combat Engineering Company Management (Token-Based)
+
+        [HttpPost]
+        public async Task<IActionResult> CreateCombatEngineeringCompany([FromBody] CreateEngineeringCompanyRequest request)
+        {
+            try
+            {
+                var engineering = new CombatEngineeringCompany
+                {
+                    Id = Guid.NewGuid(),
+                    Name = request.Name,
+                    Description = request.Description,
+                    UnitCode = request.UnitCode,
+                    Strength = request.Strength,
+                    ForceType = request.ForceType,
+                    Platoons = request.Platoons,
+                    BrigadeId = request.BrigadeId,
+                    TokenId = request.TokenId,
+                    TeamId = user.TeamId,
+                    EngineerVehicles = request.EngineerVehicles,
+                    BridgeLayingVehicles = request.BridgeLayingVehicles,
+                    MineClearingVehicles = request.MineClearingVehicles,
+                    Bulldozers = request.Bulldozers,
+                    Excavators = request.Excavators,
+                    Cranes = request.Cranes,
+                    ATGMS = request.ATGMS,
+                    HMG = request.HMG,
+                    LMG = request.LMG,
+                    SupplyState = request.SupplyState,
+                    StrengthPercentage = request.StrengthPercentage,
+                    CreatedBy = user.FullName,
+                    IsActive = true
+                };
+
+                _context.CombatEngineeringCompanies.Add(engineering);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, data = engineering });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating engineering company");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateCombatEngineeringCompany([FromBody] UpdateEngineeringCompanyRequest request)
+        {
+            try
+            {
+                var existingUnit = await _context.CombatEngineeringCompanies
+                    .FirstOrDefaultAsync(e => e.Id == request.Id && e.TeamId == user.TeamId);
+
+                if (existingUnit == null) return NotFound();
+
+                existingUnit.Name = request.Name;
+                existingUnit.Description = request.Description;
+                existingUnit.UnitCode = request.UnitCode;
+                existingUnit.Strength = request.Strength;
+                existingUnit.ForceType = request.ForceType;
+                existingUnit.Platoons = request.Platoons;
+                existingUnit.BrigadeId = request.BrigadeId;
+                existingUnit.TokenId = request.TokenId;
+                existingUnit.EngineerVehicles = request.EngineerVehicles;
+                existingUnit.BridgeLayingVehicles = request.BridgeLayingVehicles;
+                existingUnit.MineClearingVehicles = request.MineClearingVehicles;
+                existingUnit.Bulldozers = request.Bulldozers;
+                existingUnit.Excavators = request.Excavators;
+                existingUnit.Cranes = request.Cranes;
+                existingUnit.ATGMS = request.ATGMS;
+                existingUnit.HMG = request.HMG;
+                existingUnit.LMG = request.LMG;
+                existingUnit.UpdatedBy = user.FullName;
+
+                _context.Update(existingUnit);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, data = existingUnit });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating engineering company");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteTokenCombatEngineeringCompany(Guid id)
+        {
+            try
+            {
+                var engineering = await _context.CombatEngineeringCompanies
+                    .FirstOrDefaultAsync(e => e.Id == id && e.TeamId == user.TeamId);
+
+                if (engineering == null) return NotFound();
+
+                engineering.IsActive = false;
+                engineering.UpdatedBy = user.FullName;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting engineering company");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        #endregion
+
         #region ViewModels and Request Classes
 
         public class TokenDataEntryViewModel
@@ -1232,13 +1651,13 @@ namespace TechWebSol.Controllers
         {
             public Token Token { get; set; }
             public Brigade Brigade { get; set; }
-            public InfantryBattalion ExistingInfantry { get; set; }
-            public ArmouredRegiment ExistingArmoured { get; set; }
-            public ArtilleryRegiment ExistingArtillery { get; set; }
+            public List<InfantryBattalion> ExistingInfantryList { get; set; } = new List<InfantryBattalion>();
+            public List<ArmouredRegiment> ExistingArmouredList { get; set; } = new List<ArmouredRegiment>();
+            public List<ArtilleryRegiment> ExistingArtilleryList { get; set; } = new List<ArtilleryRegiment>();
             public List<Intelligence> ExistingIntelligence { get; set; }
-            public List<Recon> ExistingRecon { get; set; }
-            public LogisticsUnit ExistingLogistics { get; set; }
-            public CombatEngineeringCompany ExistingEngineering { get; set; }
+            public List<Recon> ExistingReconList { get; set; } = new List<Recon>();
+            public List<LogisticsUnit> ExistingLogisticsList { get; set; } = new List<LogisticsUnit>();
+            public List<CombatEngineeringCompany> ExistingEngineeringList { get; set; } = new List<CombatEngineeringCompany>();
         }
 
         public class TokenSummaryViewModel
@@ -1258,7 +1677,9 @@ namespace TechWebSol.Controllers
             Infantry,
             Armoured,
             Artillery,
-            Recon
+            Recon,
+            Logistics,
+            Engineering
         }
 
         public class SingleUnitFormViewModel
@@ -1284,6 +1705,29 @@ namespace TechWebSol.Controllers
             public List<ArmouredRegiment> ExistingArmoured { get; set; } = new List<ArmouredRegiment>();
             public List<ArtilleryRegiment> ExistingArtillery { get; set; } = new List<ArtilleryRegiment>();
             public List<Recon> ExistingRecon { get; set; } = new List<Recon>();
+            public LogisticsUnit ExistingLogistics { get; set; }
+            public CombatEngineeringCompany ExistingEngineering { get; set; }
+        }
+
+        public class DirectUnitCreationViewModel
+        {
+            public UnitType UnitType { get; set; }
+            public Token Token { get; set; }
+            public Guid? TeamId { get; set; }
+            public string ForceType { get; set; }
+            public Guid? UnitId { get; set; }
+            public string ExistingUnitJson { get; set; }
+        }
+
+        public class BrigadeUnitCreationViewModel
+        {
+            public UnitType UnitType { get; set; }
+            public Token Token { get; set; }
+            public Brigade Brigade { get; set; }
+            public Guid? TeamId { get; set; }
+            public string ForceType { get; set; }
+            public Guid? UnitId { get; set; }
+            public string ExistingUnitJson { get; set; }
         }
 
         public class CreateTokenBrigadeRequest
@@ -1378,6 +1822,106 @@ namespace TechWebSol.Controllers
             public string Confidence { get; set; }
             public string Description { get; set; }
             public Guid TokenId { get; set; }
+        }
+
+        public class CreateLogisticsUnitRequest
+        {
+            public Guid? Id { get; set; }
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public string UnitCode { get; set; }
+            public int Strength { get; set; }
+            public string ForceType { get; set; }
+            public Guid? BrigadeId { get; set; }
+            public Guid TokenId { get; set; }
+            public Guid TeamId { get; set; }
+            public int Companies { get; set; }
+            public int SupplyTrucks { get; set; }
+            public int FuelTrucks { get; set; }
+            public int WaterTrucks { get; set; }
+            public int AmmunitionTrucks { get; set; }
+            public int MaintenanceVehicles { get; set; }
+            public int RecoveryVehicles { get; set; }
+            public int MobileWorkshops { get; set; }
+            public int FuelCapacity { get; set; }
+            public int WaterCapacity { get; set; }
+            public int HMG { get; set; }
+            public int LMG { get; set; }
+            public int SupplyState { get; set; }
+            public int StrengthPercentage { get; set; }
+            public bool IsActive { get; set; }
+        }
+
+        public class UpdateLogisticsUnitRequest
+        {
+            public Guid Id { get; set; }
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public string UnitCode { get; set; }
+            public int Strength { get; set; }
+            public string ForceType { get; set; }
+            public Guid? BrigadeId { get; set; }
+            public Guid TokenId { get; set; }
+            public int Companies { get; set; }
+            public int SupplyTrucks { get; set; }
+            public int FuelTrucks { get; set; }
+            public int WaterTrucks { get; set; }
+            public int AmmunitionTrucks { get; set; }
+            public int MaintenanceVehicles { get; set; }
+            public int RecoveryVehicles { get; set; }
+            public int MobileWorkshops { get; set; }
+            public int FuelCapacity { get; set; }
+            public int WaterCapacity { get; set; }
+            public int HMG { get; set; }
+            public int LMG { get; set; }
+        }
+
+        public class CreateEngineeringCompanyRequest
+        {
+            public Guid? Id { get; set; }
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public string UnitCode { get; set; }
+            public int Strength { get; set; }
+            public string ForceType { get; set; }
+            public Guid? BrigadeId { get; set; }
+            public Guid TokenId { get; set; }
+            public Guid TeamId { get; set; }
+            public int Platoons { get; set; }
+            public int EngineerVehicles { get; set; }
+            public int BridgeLayingVehicles { get; set; }
+            public int MineClearingVehicles { get; set; }
+            public int Bulldozers { get; set; }
+            public int Excavators { get; set; }
+            public int Cranes { get; set; }
+            public int ATGMS { get; set; }
+            public int HMG { get; set; }
+            public int LMG { get; set; }
+            public int SupplyState { get; set; }
+            public int StrengthPercentage { get; set; }
+            public bool IsActive { get; set; }
+        }
+
+        public class UpdateEngineeringCompanyRequest
+        {
+            public Guid Id { get; set; }
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public string UnitCode { get; set; }
+            public int Strength { get; set; }
+            public string ForceType { get; set; }
+            public Guid? BrigadeId { get; set; }
+            public Guid TokenId { get; set; }
+            public int Platoons { get; set; }
+            public int EngineerVehicles { get; set; }
+            public int BridgeLayingVehicles { get; set; }
+            public int MineClearingVehicles { get; set; }
+            public int Bulldozers { get; set; }
+            public int Excavators { get; set; }
+            public int Cranes { get; set; }
+            public int ATGMS { get; set; }
+            public int HMG { get; set; }
+            public int LMG { get; set; }
         }
 
         #endregion
