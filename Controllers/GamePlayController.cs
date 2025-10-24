@@ -808,7 +808,6 @@ namespace TechWebSol.Controllers
                         
                         if (!string.IsNullOrEmpty(terrainDb))
                         {
-                            _logger.LogInformation($"Using terrain database: {terrainDb} for token {token.Id} (Force: {token.ForceType})");
                         // Build detailed route points with intermediate sampling (like TacticalViewer)
                         var detailedPoints = new List<object>();
                         
@@ -837,7 +836,6 @@ namespace TechWebSol.Controllers
                             }
                         }
                         
-                        _logger.LogInformation($"Sampling {detailedPoints.Count} points along route for terrain analysis");
                         
                         // Create elevation lookup request with detailed points
                         var elevationRequest = new
@@ -846,10 +844,8 @@ namespace TechWebSol.Controllers
                         };
 
                         // Call elevation lookup API
-                        _logger.LogInformation($"Calling elevation lookup API with {detailedPoints.Count} points, terrainDb: {terrainDb}");
                         var elevationResponse = await CallElevationLookup(elevationRequest, terrainDb);
                         
-                        _logger.LogInformation($"Elevation lookup response: success={elevationResponse?.success}, results count={elevationResponse?.results?.Count ?? 0}");
                         
                         if (elevationResponse != null && elevationResponse.success == true && elevationResponse.results != null)
                         {

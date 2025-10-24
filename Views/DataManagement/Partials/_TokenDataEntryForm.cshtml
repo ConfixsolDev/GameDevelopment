@@ -15,6 +15,35 @@
             </div>
             <div class="modal-body">
             <div class="data-entry-container">
+                <!-- Token Base Information (Primary) -->
+                <div class="token-base-section">
+                    <h5><i class="fas fa-crosshairs"></i> Token Base Information</h5>
+                    <div class="token-display">
+                        @if (!string.IsNullOrEmpty(Model.Token.AssetImagePath))
+                        {
+                            <img src="@Model.Token.AssetImagePath" alt="@Model.Token.Name" class="token-preview-image">
+                        }
+                        else
+                        {
+                            <div class="token-preview-placeholder">
+                                <i class="fas fa-crosshairs"></i>
+                            </div>
+                        }
+                        <div class="token-details">
+                            <h4>@Model.Token.Name</h4>
+                            <p class="text-muted">@Model.Token.TokenGroup?.Name</p>
+                            <div class="token-status">
+                                <span class="badge badge-primary">Active Token</span>
+                                <span class="badge badge-info">@Model.Token.ForceType</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> 
+                        <strong>Token Selected:</strong> This token serves as the base for all brigade data management.
+                    </div>
+                </div>
+
                 <!-- Data Entry Form -->
                 <div class="data-entry-form-section">
                     @if (Model.ExistingBrigade != null)
@@ -323,15 +352,49 @@
                     }
                     else
                     {
-                        <!-- Create New Brigade -->
-                        <div class="alert alert-success">
-                            <i class="fas fa-plus"></i> Create new brigade data for this token.
+                        <!-- No Brigade - Direct Unit Entry Options -->
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> 
+                            <strong>Flexible Unit Entry:</strong> You can add units directly to this token or create a brigade first.
                         </div>
                         
-                        <div class="text-center">
-                            <button type="button" class="btn btn-success" onclick="createNewBrigadeData('@Model.Token.Id')">
-                                <i class="fas fa-plus"></i> Create New Brigade Data
-                            </button>
+                        <!-- Direct Unit Entry Options -->
+                        <div class="direct-unit-entry-section">
+                            <h6><i class="fas fa-users"></i> Add Units Directly to Token</h6>
+                            <p class="text-muted">Add military units directly to this token without requiring a brigade.</p>
+                            
+                            <div class="direct-unit-buttons">
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="openDirectUnitForm('infantry', '@Model.Token.Id')">
+                                    <i class="fas fa-user-shield"></i> Infantry Battalion
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="openDirectUnitForm('armoured', '@Model.Token.Id')">
+                                    <i class="fas fa-shield-alt"></i> Armoured Regiment
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="openDirectUnitForm('artillery', '@Model.Token.Id')">
+                                    <i class="fas fa-crosshairs"></i> Artillery Regiment
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="openDirectUnitForm('logistics', '@Model.Token.Id')">
+                                    <i class="fas fa-truck"></i> Logistics Unit
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="openDirectUnitForm('engineering', '@Model.Token.Id')">
+                                    <i class="fas fa-hard-hat"></i> Engineering
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        <p class="text-center text-muted">OR</p>
+                        
+                        <!-- Brigade Creation Option -->
+                        <div class="brigade-creation-section">
+                            <h6><i class="fas fa-flag"></i> Create Brigade First</h6>
+                            <p class="text-muted">Create a brigade to organize units under a command structure.</p>
+                            
+                            <div class="text-center">
+                                <button type="button" class="btn btn-success" onclick="createNewBrigadeData('@Model.Token.Id')">
+                                    <i class="fas fa-plus"></i> Create New Brigade Data
+                                </button>
+                            </div>
                         </div>
                     }
                 </div>
@@ -352,6 +415,116 @@
     background: #1a1a1a;
     border-radius: 8px;
     padding: 20px;
+}
+
+.token-base-section {
+    background: #e8f5e8;
+    border: 2px solid #28a745;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.token-base-section h5 {
+    color: #28a745;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.token-display {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.token-preview-image {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 2px solid #28a745;
+}
+
+.token-preview-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    border: 2px solid #28a745;
+}
+
+.token-details h4 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.token-status {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+}
+
+.badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.badge-primary {
+    background: #007bff;
+    color: white;
+}
+
+.badge-info {
+    background: #17a2b8;
+    color: white;
+}
+
+.direct-unit-entry-section {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.direct-unit-entry-section h6 {
+    color: #495057;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.direct-unit-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.direct-unit-buttons .btn {
+    flex: 1;
+    min-width: 140px;
+    text-align: center;
+}
+
+.brigade-creation-section {
+    background: #e8f5e8;
+    border: 1px solid #28a745;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.brigade-creation-section h6 {
+    color: #28a745;
+    margin-bottom: 10px;
+    font-weight: 600;
 }
 
 .brigade-header-section {
@@ -900,6 +1073,44 @@ function refreshUnitsList(tokenId, brigadeId) {
     console.log('🔄 Refreshing units list...');
     // Reload the entire modal to get fresh data
     location.reload();
+}
+
+// Open direct unit form (without brigade)
+function openDirectUnitForm(unitType, tokenId) {
+    console.log('🆕 Opening direct unit form for', unitType, 'token', tokenId);
+    
+    // Show loading
+    $("#loading").show();
+    
+    // Load the direct unit form via AJAX (without brigade)
+    $.ajax({
+        url: '/DataManagement/DirectUnitForm',
+        type: 'GET',
+        data: { unitType: unitType, tokenId: tokenId },
+        success: function(data) {
+            console.log('✅ Direct unit form loaded');
+            
+            // Remove any existing direct unit modal
+            $('#directUnitModal').remove();
+            
+            // Add the new modal to the body
+            $('body').append(data);
+            
+            // Show the modal using Bootstrap modal API
+            setTimeout(() => {
+                $('#directUnitModal').modal('show');
+            }, 100);
+            
+            console.log('✅ Direct unit form displayed successfully');
+        },
+        error: function(xhr, status, error) {
+            console.error('❌ Error loading direct unit form:', error);
+            alert('Failed to load unit form. Please try again.');
+        },
+        complete: function() {
+            $("#loading").hide();
+        }
+    });
 }
 
 // Data is now loaded in the controller, no need for initialization

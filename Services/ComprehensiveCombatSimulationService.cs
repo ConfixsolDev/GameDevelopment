@@ -145,23 +145,37 @@ namespace TechWebSol.Services
                     .Include(b => b.CombatEngineeringCompanies)
                     .FirstOrDefaultAsync(b => b.TokenId == attackerTokenId);
 
+                // Initialize empty brigade if none exists
+                if (attackerBrigade == null)
+                {
+                    attackerBrigade = new Brigade
+                    {
+                        TokenId = attackerTokenId,
+                        TeamId = attackerToken.TeamId,
+                        ForceType = attackerToken.ForceType,
+                        BrigadeCode = "DIRECT",
+                        IsActive = true
+                    };
+                }
+
+                // Load ALL units for this token (both with and without brigade)
                 attackerBrigade.InfantryBattalions = await _context.InfantryBattalions
-                    .Where(i => i.TokenId == targetTokenId &&  i.IsActive)
+                    .Where(i => i.TokenId == attackerTokenId && i.IsActive)
                     .OrderByDescending(i => i.CreatedDate)
                     .ToListAsync();
 
                 attackerBrigade.ArmouredRegiments = await _context.ArmouredRegiments
-                         .Where(i => i.TokenId == targetTokenId && i.IsActive)
+                    .Where(i => i.TokenId == attackerTokenId && i.IsActive)
                     .ToListAsync();
 
                 attackerBrigade.ArtilleryRegiments = await _context.ArtilleryRegiments
-                         .Where(i => i.TokenId == targetTokenId && i.IsActive)
+                    .Where(i => i.TokenId == attackerTokenId && i.IsActive)
                     .ToListAsync();
 
                 attackerBrigade.CombatEngineeringCompanies = await _context.CombatEngineeringCompanies
-                  .Where(i => i.TokenId == targetTokenId && i.IsActive)
-                  .OrderByDescending(i => i.CreatedDate)
-                  .ToListAsync();
+                    .Where(i => i.TokenId == attackerTokenId && i.IsActive)
+                    .OrderByDescending(i => i.CreatedDate)
+                    .ToListAsync();
 
                 // Get Brigades (contains all weapon data)
                 var defenderBrigade = await _context.Brigades
@@ -171,23 +185,37 @@ namespace TechWebSol.Services
                     .Include(b => b.CombatEngineeringCompanies)
                     .FirstOrDefaultAsync(b => b.TokenId == realDefenderToken.Id);
 
+                // Initialize empty brigade if none exists
+                if (defenderBrigade == null)
+                {
+                    defenderBrigade = new Brigade
+                    {
+                        TokenId = realDefenderToken.Id,
+                        TeamId = realDefenderToken.TeamId,
+                        ForceType = realDefenderToken.ForceType,
+                        BrigadeCode = "DIRECT",
+                        IsActive = true
+                    };
+                }
+
+                // Load ALL units for this token (both with and without brigade)
                 defenderBrigade.InfantryBattalions = await _context.InfantryBattalions
                     .Where(i => i.TokenId == realDefenderToken.Id && i.IsActive)
                     .OrderByDescending(i => i.CreatedDate)
                     .ToListAsync();
 
                 defenderBrigade.ArmouredRegiments = await _context.ArmouredRegiments
-                         .Where(i => i.TokenId == realDefenderToken.Id && i.IsActive)
+                    .Where(i => i.TokenId == realDefenderToken.Id && i.IsActive)
                     .ToListAsync();
 
                 defenderBrigade.ArtilleryRegiments = await _context.ArtilleryRegiments
-                         .Where(i => i.TokenId == realDefenderToken.Id && i.IsActive)
+                    .Where(i => i.TokenId == realDefenderToken.Id && i.IsActive)
                     .ToListAsync();
 
                 defenderBrigade.CombatEngineeringCompanies = await _context.CombatEngineeringCompanies
-                  .Where(i => i.TokenId == realDefenderToken.Id && i.IsActive)
-                  .OrderByDescending(i => i.CreatedDate)
-                  .ToListAsync();
+                    .Where(i => i.TokenId == realDefenderToken.Id && i.IsActive)
+                    .OrderByDescending(i => i.CreatedDate)
+                    .ToListAsync();
 
 
                 _logger.LogInformation("🎯 SIMULATION START: Attacker={AttackerName} (Brigade={AttackerBrigade}), Defender={DefenderName} (Brigade={DefenderBrigade})", 

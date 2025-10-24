@@ -71,46 +71,108 @@ namespace TechWebSol.Controllers
                         .ToListAsync(),
                 };
 
-                if (existingBrigade != null)
-                {
-                    // Load Infantry Battalions
-                    viewModel.ExistingInfantry = await _context.InfantryBattalions
-                        .Where(b => b.TokenId == tokenId && b.BrigadeId == existingBrigade.Id && b.TeamId == user.TeamId && b.IsActive)
-                        .OrderByDescending(b => b.CreatedDate)
-                        .ToListAsync();
+                // Load ALL units for this token (both with and without brigade)
+                viewModel.ExistingInfantry = await _context.InfantryBattalions
+                    .Where(b => b.TokenId == tokenId && b.TeamId == user.TeamId && b.IsActive)
+                    .OrderByDescending(b => b.CreatedDate)
+                    .ToListAsync();
 
-                    // Load Armoured Regiments
-                    viewModel.ExistingArmoured = await _context.ArmouredRegiments
-                        .Where(r => r.TokenId == tokenId && r.BrigadeId == existingBrigade.Id && r.TeamId == user.TeamId && r.IsActive)
-                        .OrderByDescending(r => r.CreatedDate)
-                        .ToListAsync();
+                viewModel.ExistingArmoured = await _context.ArmouredRegiments
+                    .Where(r => r.TokenId == tokenId && r.TeamId == user.TeamId && r.IsActive)
+                    .OrderByDescending(r => r.CreatedDate)
+                    .ToListAsync();
 
-                    // Load Artillery Regiments
-                    viewModel.ExistingArtillery = await _context.ArtilleryRegiments
-                        .Where(r => r.TokenId == tokenId && r.BrigadeId == existingBrigade.Id && r.TeamId == user.TeamId && r.IsActive)
-                        .OrderByDescending(r => r.CreatedDate)
-                        .ToListAsync();
+                viewModel.ExistingArtillery = await _context.ArtilleryRegiments
+                    .Where(r => r.TokenId == tokenId && r.TeamId == user.TeamId && r.IsActive)
+                    .OrderByDescending(r => r.CreatedDate)
+                    .ToListAsync();
 
-                    // Load Logistics Units
-                    viewModel.ExistingLogistics = await _context.LogisticsUnits
-                        .FirstOrDefaultAsync(l => l.TokenId == tokenId && l.BrigadeId == existingBrigade.Id && l.TeamId == user.TeamId && l.IsActive);
+                // Load Logistics Units
+                viewModel.ExistingLogistics = await _context.LogisticsUnits
+                    .FirstOrDefaultAsync(l => l.TokenId == tokenId && l.TeamId == user.TeamId && l.IsActive);
 
-                    // Load Combat Engineering Companies
-                    viewModel.ExistingEngineering = await _context.CombatEngineeringCompanies
-                        .FirstOrDefaultAsync(c => c.TokenId == tokenId && c.BrigadeId == existingBrigade.Id && c.TeamId == user.TeamId && c.IsActive);
-                }
+                // Load Combat Engineering Companies
+                viewModel.ExistingEngineering = await _context.CombatEngineeringCompanies
+                    .FirstOrDefaultAsync(c => c.TokenId == tokenId && c.TeamId == user.TeamId && c.IsActive);
 
-                //// Load Reconnaissance (not tied to brigade)
-                //viewModel.ExistingRecon = await _context.Recon
-                //    .Where(r => r.TokenId == tokenId && r.TeamId == user.TeamId && r.IsActive)
-                //    .OrderByDescending(r => r.CreatedDate)
-                //    .ToListAsync();
+                // Load Reconnaissance (not tied to brigade)
+                viewModel.ExistingRecon = await _context.Recon
+                    .Where(r => r.TokenId == tokenId && r.TeamId == user.TeamId && r.IsActive)
+                    .OrderByDescending(r => r.CreatedDate)
+                    .ToListAsync();
+
 
                 return PartialView("Partials/_TokenDataEntryForm", viewModel);
             }
             catch (Exception ex)
             {
                 return PartialView("Partials/_ErrorPartial", new { Message = "Error loading data entry form" });
+            }
+        }
+
+        /// <summary>
+        /// Returns the direct unit form for adding units directly to token (without brigade)
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> DirectUnitForm(UnitType unitType, Guid tokenId)
+        {
+            try
+            {
+                var token = await _context.Tokens
+                    .Include(t => t.TokenGroup)
+                    .FirstOrDefaultAsync(t => t.Id == tokenId && t.TeamId == user.TeamId && t.IsActive);
+
+                if (token == null)
+                {
+                    return PartialView("Partials/_ErrorPartial", new { Message = "Token not found" });
+                }
+
+                var viewModel = new DirectUnitFormViewModel
+                {
+                    UnitType = unitType,
+                    Token = token,
+                    TeamId = user.TeamId,
+                    ForceType = token.ForceType,
+                };
+
+                // Load existing units for this token (without brigade filter)
+                switch (unitType)
+                {
+                    case UnitType.Infantry:
+                        viewModel.ExistingInfantry = await _context.InfantryBattalions
+                            .Where(b => b.TokenId == tokenId && b.TeamId == user.TeamId && b.IsActive)
+                            .OrderByDescending(b => b.CreatedDate)
+                            .ToListAsync();
+                        break;
+
+                    case UnitType.Armoured:
+                        viewModel.ExistingArmoured = await _context.ArmouredRegiments
+                            .Where(r => r.TokenId == tokenId && r.TeamId == user.TeamId && r.IsActive)
+                            .OrderByDescending(r => r.CreatedDate)
+                            .ToListAsync();
+                        break;
+
+                    case UnitType.Artillery:
+                        viewModel.ExistingArtillery = await _context.ArtilleryRegiments
+                            .Where(a => a.TokenId == tokenId && a.TeamId == user.TeamId && a.IsActive)
+                            .OrderByDescending(a => a.CreatedDate)
+                            .ToListAsync();
+                        break;
+
+                    case UnitType.Recon:
+                        viewModel.ExistingRecon = await _context.Recon
+                            .Where(r => r.TokenId == tokenId && r.TeamId == user.TeamId && r.IsActive)
+                            .OrderByDescending(r => r.CreatedDate)
+                            .ToListAsync();
+                        break;
+                }
+
+                return PartialView("Partials/_DirectUnitForm", viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading direct unit form");
+                return PartialView("Partials/_ErrorPartial", new { Message = "Error loading unit form" });
             }
         }
 
@@ -333,6 +395,7 @@ namespace TechWebSol.Controllers
                     Brigades = new Brigade();
                 }
 
+                // Load ALL units for this token (both with and without brigade)
                 Brigades.InfantryBattalions = _context.InfantryBattalions
                     .Where(i => i.TokenId == tokenId  && i.IsActive)
                     .OrderByDescending(i => i.CreatedDate)
@@ -1211,6 +1274,18 @@ namespace TechWebSol.Controllers
             public List<Recon> ExistingRecon { get; set; } = new List<Recon>();
         }
 
+        public class DirectUnitFormViewModel
+        {
+            public UnitType UnitType { get; set; }
+            public Token Token { get; set; }
+            public Guid? TeamId { get; set; }
+            public string ForceType { get; set; }
+            public List<InfantryBattalion> ExistingInfantry { get; set; } = new List<InfantryBattalion>();
+            public List<ArmouredRegiment> ExistingArmoured { get; set; } = new List<ArmouredRegiment>();
+            public List<ArtilleryRegiment> ExistingArtillery { get; set; } = new List<ArtilleryRegiment>();
+            public List<Recon> ExistingRecon { get; set; } = new List<Recon>();
+        }
+
         public class CreateTokenBrigadeRequest
         {
             public string BrigadeCode { get; set; }
@@ -1231,7 +1306,7 @@ namespace TechWebSol.Controllers
             public string UnitCode { get; set; }
             public int Strength { get; set; }
             public string ForceType { get; set; }
-            public Guid BrigadeId { get; set; }
+            public Guid? BrigadeId { get; set; } // Made optional for direct token units
             public Guid TokenId { get; set; }
             public Guid TeamId { get; set; }
             public int Companies { get; set; }
@@ -1261,7 +1336,7 @@ namespace TechWebSol.Controllers
             public string UnitCode { get; set; }
             public int Strength { get; set; }
             public string ForceType { get; set; }
-            public Guid BrigadeId { get; set; }
+            public Guid? BrigadeId { get; set; } // Made optional for direct token units
             public Guid TokenId { get; set; }
             public Guid TeamId { get; set; }
             public int Squadrons { get; set; }
@@ -1284,7 +1359,7 @@ namespace TechWebSol.Controllers
             public string UnitCode { get; set; }
             public int Strength { get; set; }
             public string ForceType { get; set; }
-            public Guid BrigadeId { get; set; }
+            public Guid? BrigadeId { get; set; } // Made optional for direct token units
             public Guid TokenId { get; set; }
             public Guid TeamId { get; set; }
             public int Batteries { get; set; }

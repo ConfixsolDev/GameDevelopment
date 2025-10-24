@@ -1,0 +1,346 @@
+@using static TechWebSol.Controllers.DataManagementController
+@model DirectUnitFormViewModel
+
+<!-- Direct Unit Form Modal - Units without Brigade - Bootstrap Modal -->
+<div class="modal fade" id="directUnitModal" tabindex="-1" role="dialog" aria-labelledby="directUnitModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="directUnitModalLabel">
+                    <i class="fas fa-users"></i> Direct Unit Entry - @Model.Token.Name
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Token Information -->
+                <div class="token-info-section">
+                    <h6><i class="fas fa-crosshairs"></i> Token Information</h6>
+                    <div class="token-display">
+                        @if (!string.IsNullOrEmpty(Model.Token.AssetImagePath))
+                        {
+                            <img src="@Model.Token.AssetImagePath" alt="@Model.Token.Name" class="token-preview-image">
+                        }
+                        else
+                        {
+                            <div class="token-preview-placeholder">
+                                <i class="fas fa-crosshairs"></i>
+                            </div>
+                        }
+                        <div class="token-details">
+                            <h5>@Model.Token.Name</h5>
+                            <p class="text-muted">@Model.Token.TokenGroup?.Name</p>
+                            <span class="badge badge-info">@Model.Token.ForceType</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Unit Type Information -->
+                <div class="unit-type-section">
+                    <h6><i class="fas fa-info-circle"></i> Unit Type: @Model.UnitType</h6>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>Direct Unit Entry:</strong> This unit will be added directly to the token without requiring a brigade.
+                    </div>
+                </div>
+
+                <!-- Existing Units List -->
+                <div class="existing-units-section">
+                    <h6><i class="fas fa-list"></i> Existing @Model.UnitType Units</h6>
+                    <div id="existingUnitsList" class="units-list">
+                        @if (Model.UnitType == UnitType.Infantry && Model.ExistingInfantry.Any())
+                        {
+                            @foreach (var unit in Model.ExistingInfantry)
+                            {
+                                <div class="unit-item">
+                                    <div class="unit-info">
+                                        <div class="unit-name">@unit.Name</div>
+                                        <div class="unit-details">Code: @unit.UnitCode | Strength: @unit.Strength | Companies: @unit.Companies</div>
+                                    </div>
+                                    <div class="unit-actions">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="editDirectUnit('@unit.Id', '@Model.UnitType')">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteDirectUnit('@unit.Id', '@Model.UnitType')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else if (Model.UnitType == UnitType.Armoured && Model.ExistingArmoured.Any())
+                        {
+                            @foreach (var unit in Model.ExistingArmoured)
+                            {
+                                <div class="unit-item">
+                                    <div class="unit-info">
+                                        <div class="unit-name">@unit.Name</div>
+                                        <div class="unit-details">Code: @unit.UnitCode | Strength: @unit.Strength | Tanks: @unit.Tanks</div>
+                                    </div>
+                                    <div class="unit-actions">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="editDirectUnit('@unit.Id', '@Model.UnitType')">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteDirectUnit('@unit.Id', '@Model.UnitType')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else if (Model.UnitType == UnitType.Artillery && Model.ExistingArtillery.Any())
+                        {
+                            @foreach (var unit in Model.ExistingArtillery)
+                            {
+                                <div class="unit-item">
+                                    <div class="unit-info">
+                                        <div class="unit-name">@unit.Name</div>
+                                        <div class="unit-details">Code: @unit.UnitCode | Strength: @unit.Strength | Guns: @unit.Guns</div>
+                                    </div>
+                                    <div class="unit-actions">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="editDirectUnit('@unit.Id', '@Model.UnitType')">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteDirectUnit('@unit.Id', '@Model.UnitType')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="no-units-message">No @Model.UnitType units found. Click "Add New" to create one.</div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Add New Unit Button -->
+                <div class="add-unit-section">
+                    <button type="button" class="btn btn-primary" onclick="openDirectUnitCreationForm('@Model.UnitType', '@Model.Token.Id')">
+                        <i class="fas fa-plus"></i> Add New @Model.UnitType Unit
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Direct Unit Form Styling */
+.token-info-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.token-display {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.token-preview-image {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 2px solid #007bff;
+}
+
+.token-preview-placeholder {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    border: 2px solid #007bff;
+}
+
+.token-details h5 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.unit-type-section {
+    background: #e8f5e8;
+    border: 1px solid #28a745;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.unit-type-section h6 {
+    color: #28a745;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.existing-units-section {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.existing-units-section h6 {
+    color: #495057;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.units-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.unit-item {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.unit-item:hover {
+    background: #e9ecef;
+    border-color: #007bff;
+}
+
+.unit-info {
+    flex: 1;
+    margin-right: 12px;
+}
+
+.unit-name {
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.unit-details {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.unit-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 4px;
+}
+
+.add-unit-section {
+    text-align: center;
+    padding: 15px;
+    border-top: 1px solid #dee2e6;
+    margin-top: 10px;
+}
+
+.no-units-message {
+    text-align: center;
+    padding: 30px;
+    color: #6c757d;
+    font-style: italic;
+    font-size: 14px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+}
+
+.badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.badge-info {
+    background: #17a2b8;
+    color: white;
+}
+</style>
+
+<script>
+// Close direct unit modal
+function closeDirectUnitModal() {
+    console.log('🔒 Closing direct unit modal');
+    $('#directUnitModal').modal('hide');
+}
+
+// Open direct unit creation form
+function openDirectUnitCreationForm(unitType, tokenId) {
+    console.log('🆕 Opening direct unit creation form for', unitType, 'token', tokenId);
+    
+    // Show loading
+    $("#loading").show();
+    
+    // Load the direct unit creation form via AJAX
+    $.ajax({
+        url: '/DataManagement/DirectUnitCreationForm',
+        type: 'GET',
+        data: { unitType: unitType, tokenId: tokenId },
+        success: function(data) {
+            console.log('✅ Direct unit creation form loaded');
+            
+            // Remove any existing direct unit creation modal
+            $('#directUnitCreationModal').remove();
+            
+            // Add the new modal to the body
+            $('body').append(data);
+            
+            // Show the modal using Bootstrap modal API
+            setTimeout(() => {
+                $('#directUnitCreationModal').modal('show');
+            }, 100);
+            
+            console.log('✅ Direct unit creation form displayed successfully');
+        },
+        error: function(xhr, status, error) {
+            console.error('❌ Error loading direct unit creation form:', error);
+            alert('Failed to load unit creation form. Please try again.');
+        },
+        complete: function() {
+            $("#loading").hide();
+        }
+    });
+}
+
+// Edit direct unit
+function editDirectUnit(unitId, unitType) {
+    console.log('✏️ Editing direct unit', unitId, 'type', unitType);
+    // Implementation for editing direct units
+    alert('Edit functionality will be implemented');
+}
+
+// Delete direct unit
+function deleteDirectUnit(unitId, unitType) {
+    console.log('🗑️ Deleting direct unit', unitId, 'type', unitType);
+    if (confirm('Are you sure you want to delete this unit?')) {
+        // Implementation for deleting direct units
+        alert('Delete functionality will be implemented');
+    }
+}
+</script>
