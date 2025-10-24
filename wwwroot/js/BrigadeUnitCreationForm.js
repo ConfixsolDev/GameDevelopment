@@ -301,22 +301,25 @@ function saveBrigadeUnitToServer(endpoint, data, unitName, tokenId, brigadeId) {
     
     console.log(`🔧 Using HTTP method: ${httpMethod} (isUpdate: ${isUpdate})`);
     
+    // Show loader
+    showLoader();
+    
     $.ajax({
         url: endpoint,
         type: httpMethod,
         contentType: 'application/json',
         data: JSON.stringify(data),
         success: function(response) {
-            console.log(`✅ ${unitName} saved successfully`);
-            alert(`${unitName} saved successfully!`);
+            console.log(`✅ ${unitName} saved successfully - no page refresh`);
             
             // Close the creation modal
             $('#brigadeUnitCreationModal').modal('hide');
             
-            // Reload the brigade units list
+            // Reload the brigade units list (modal only)
             reloadBrigadeUnitsList(tokenId, brigadeId);
         },
         error: function(xhr, status, error) {
+            hideLoader();
             console.error(`❌ Error saving ${unitName}:`, error);
             console.error('Response:', xhr.responseText);
             alert(`Failed to save ${unitName}: ` + error);
@@ -336,9 +339,13 @@ function reloadBrigadeUnitsList(tokenId, brigadeId) {
         if (!$('#brigadeUnitModal').hasClass('show')) {
             $('#brigadeUnitModal').modal('show');
         }
+        
+        // Hide loader
+        hideLoader();
     }).fail(function(xhr, status, error) {
+        hideLoader();
         console.error('❌ Error reloading brigade units list:', error);
-        alert('Failed to reload units list. Please refresh the page.');
+        alert('Failed to reload list: ' + error);
     });
 }
 

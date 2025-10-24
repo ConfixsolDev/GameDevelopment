@@ -14,7 +14,7 @@
                 </button>
             </div>
             <div class="modal-body">
-            <form id="brigadeOnlyForm">
+            <form id="brigadeOnlyForm" onsubmit="return false;">
                 <!-- Hidden fields for token and team -->
                 <input type="hidden" id="tokenId" value="@Model.Token.Id" />
                 <input type="hidden" id="teamId" value="@Model.Brigade.TeamId" />
@@ -239,8 +239,7 @@ function saveBrigadeOnly() {
     console.log('📋 Brigade data to save:', brigadeData);
     console.log('🔄 Direct units will be automatically assigned to brigade');
     
-    // Show loading
-    $("#loading").show();
+    showLoader();
     
     // Save brigade via AJAX
     $.ajax({
@@ -264,11 +263,9 @@ function saveBrigadeOnly() {
             }
         },
         error: function(xhr, status, error) {
+            hideLoader();
             console.error('❌ Error saving brigade:', error);
             alert('Error saving brigade. Please try again.');
-        },
-        complete: function() {
-            $("#loading").hide();
         }
     });
 }
@@ -277,8 +274,7 @@ function saveBrigadeOnly() {
 function loadUnitsDataEntryForm(tokenId, brigadeId) {
     console.log('🔧 Loading units form for brigade:', brigadeId);
     
-    // Show loading
-    $("#loading").show();
+    // Loader already shown from saveBrigadeOnly, will be hidden when form loads
     
     // Load the units form via AJAX
     $.ajax({
@@ -297,16 +293,15 @@ function loadUnitsDataEntryForm(tokenId, brigadeId) {
             // Show the modal using Bootstrap modal API
             setTimeout(() => {
                 $('#brigadeUnitModal').modal('show');
+                hideLoader();
             }, 100);
             
             console.log('✅ Units form displayed successfully');
         },
         error: function(xhr, status, error) {
+            hideLoader();
             console.error('❌ Error loading units form:', error);
             alert('Brigade saved, but failed to load units form. Please refresh and try again.');
-        },
-        complete: function() {
-            $("#loading").hide();
         }
     });
 }

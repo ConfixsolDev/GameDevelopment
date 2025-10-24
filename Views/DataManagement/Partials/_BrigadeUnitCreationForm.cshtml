@@ -37,7 +37,7 @@
                 @if (Model.UnitType == UnitType.Infantry)
                 {
                     <!-- INFANTRY BATTALION FORM -->
-                    <form id="brigadeInfantryForm">
+                    <form id="brigadeInfantryForm" onsubmit="return false;">
                         <div class="form-section">
                             <h6><i class="fas fa-user-shield"></i> Infantry Battalion Details</h6>
                             
@@ -112,7 +112,7 @@
                 else if (Model.UnitType == UnitType.Armoured)
                 {
                     <!-- ARMOURED REGIMENT FORM -->
-                    <form id="brigadeArmouredForm">
+                    <form id="brigadeArmouredForm" onsubmit="return false;">
                         <div class="form-section">
                             <h6><i class="fas fa-shield-alt"></i> Armoured Regiment Details</h6>
                             
@@ -181,7 +181,7 @@
                 else if (Model.UnitType == UnitType.Artillery)
                 {
                     <!-- ARTILLERY REGIMENT FORM -->
-                    <form id="brigadeArtilleryForm">
+                    <form id="brigadeArtilleryForm" onsubmit="return false;">
                         <div class="form-section">
                             <h6><i class="fas fa-crosshairs"></i> Artillery Regiment Details</h6>
                             
@@ -250,7 +250,7 @@
                 else if (Model.UnitType == UnitType.Logistics)
                 {
                     <!-- LOGISTICS UNIT FORM -->
-                    <form id="brigadeLogisticsForm">
+                    <form id="brigadeLogisticsForm" onsubmit="return false;">
                         <div class="form-section">
                             <h6><i class="fas fa-truck"></i> Logistics Unit Details</h6>
                             
@@ -325,7 +325,7 @@
                 else if (Model.UnitType == UnitType.Engineering)
                 {
                     <!-- ENGINEERING COMPANY FORM -->
-                    <form id="brigadeEngineeringForm">
+                    <form id="brigadeEngineeringForm" onsubmit="return false;">
                         <div class="form-section">
                             <h6><i class="fas fa-hard-hat"></i> Engineering Company Details</h6>
                             

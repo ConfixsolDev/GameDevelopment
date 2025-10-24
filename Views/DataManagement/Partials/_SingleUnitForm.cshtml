@@ -806,7 +806,7 @@ function saveReconnaissance() {
         return;
     }
     
-    $("#loading").show();
+    showLoader();
     
     $.ajax({
         url: '/DataManagement/CreateTokenRecon',
@@ -835,14 +835,14 @@ function saveReconnaissance() {
             alert('Error saving Reconnaissance. Please try again.');
         },
         complete: function() {
-            $("#loading").hide();
+            hideLoader();
         }
     });
 }
 
 // Generic save unit function (for infantry, armoured, artillery)
 function saveUnit(unitType, unitData, unitDisplayName) {
-    $("#loading").show();
+    showLoader();
     
     // Map unit types to correct endpoint names
     let endpoint;
@@ -855,7 +855,7 @@ function saveUnit(unitType, unitData, unitDisplayName) {
     } else {
         console.error('Unknown unit type:', unitType);
         alert(`Unknown unit type: ${unitType}`);
-        $("#loading").hide();
+        hideLoader();
         return;
     }
     
@@ -901,7 +901,7 @@ function saveUnit(unitType, unitData, unitDisplayName) {
             alert(errorMessage);
         },
         complete: function() {
-            $("#loading").hide();
+            hideLoader();
         }
     });
 }

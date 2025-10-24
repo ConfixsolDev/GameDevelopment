@@ -347,7 +347,7 @@ function saveDirectEngineeringCompany() {
 
 // Generic save function
 function saveUnitToServer(endpoint, unitData, unitTypeName) {
-    $("#loading").show();
+    showLoader();
     
     const isEditMode = unitData.Id && unitData.Id.trim() !== '';
     const actionText = isEditMode ? 'updated' : 'created';
@@ -366,12 +366,11 @@ function saveUnitToServer(endpoint, unitData, unitTypeName) {
             // Close the creation modal
             closeDirectUnitCreationModal();
             
-            // Show success message
+            // Show success message (toast only, no alert)
             if (typeof toastr !== 'undefined') {
                 toastr.success(`${unitTypeName} ${actionText} successfully`, 'Success');
-            } else {
-                alert(`${unitTypeName} ${actionText} successfully`);
             }
+            console.log(`✅ ${unitTypeName} ${actionText} - modal reloaded, no page refresh`);
             
             // Reload the Direct Unit Form to show the new/updated unit
             setTimeout(() => {
@@ -391,6 +390,7 @@ function saveUnitToServer(endpoint, unitData, unitTypeName) {
             }, 500);
         },
         error: function(xhr, status, error) {
+            hideLoader();
             console.error(`❌ Error saving ${unitTypeName}:`, error);
             
             let errorMsg = `Failed to save ${unitTypeName}. Please try again.`;
@@ -403,9 +403,6 @@ function saveUnitToServer(endpoint, unitData, unitTypeName) {
             } else {
                 alert(errorMsg);
             }
-        },
-        complete: function() {
-            $("#loading").hide();
         }
     });
 }

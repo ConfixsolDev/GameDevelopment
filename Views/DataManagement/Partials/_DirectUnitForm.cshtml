@@ -33,8 +33,8 @@
                             <p class="text-muted">@Model.Token.TokenGroup?.Name</p>
                             <div class="token-status">
                                 <span class="badge badge-primary">Active Token</span>
-                                <span class="badge badge-info">@Model.Token.ForceType</span>
-                            </div>
+                            <span class="badge badge-info">@Model.Token.ForceType</span>
+                        </div>
                         </div>
                     </div>
                     <div class="alert alert-success">
@@ -356,8 +356,7 @@ function closeDirectUnitModal() {
 function openDirectUnitCreationForm(unitType, tokenId) {
     console.log('🆕 Opening direct unit creation form for', unitType, 'token', tokenId);
     
-    // Show loading
-    $("#loading").show();
+    showLoader();
     
     // Load the direct unit creation form via AJAX
     $.ajax({
@@ -376,16 +375,15 @@ function openDirectUnitCreationForm(unitType, tokenId) {
             // Show the modal using Bootstrap modal API
             setTimeout(() => {
                 $('#directUnitCreationModal').modal('show');
+                hideLoader();
             }, 100);
             
             console.log('✅ Direct unit creation form displayed successfully');
         },
         error: function(xhr, status, error) {
+            hideLoader();
             console.error('❌ Error loading direct unit creation form:', error);
             alert('Failed to load unit creation form. Please try again.');
-        },
-        complete: function() {
-            $("#loading").hide();
         }
     });
 }
@@ -396,8 +394,7 @@ function editDirectUnit(unitId, unitType) {
     
     const tokenId = '@Model.Token.Id';
     
-    // Show loading
-    $("#loading").show();
+    showLoader();
     
     // Load the direct unit creation form in edit mode
     $.ajax({
@@ -416,16 +413,15 @@ function editDirectUnit(unitId, unitType) {
             // Show the modal using Bootstrap modal API
             setTimeout(() => {
                 $('#directUnitCreationModal').modal('show');
+                hideLoader();
             }, 100);
             
             console.log('✅ Direct unit edit form displayed successfully');
         },
         error: function(xhr, status, error) {
+            hideLoader();
             console.error('❌ Error loading direct unit edit form:', error);
             alert('Failed to load unit edit form. Please try again.');
-        },
-        complete: function() {
-            $("#loading").hide();
         }
     });
 }
@@ -464,24 +460,23 @@ function deleteDirectUnit(unitId, unitType) {
             return;
     }
     
-    // Show loading
-    $("#loading").show();
+    showLoader();
     
     // Delete via AJAX
     $.ajax({
         url: `${endpoint}?id=${unitId}`,
         type: 'DELETE',
         success: function(response) {
-            console.log('✅ Unit deleted successfully');
+            console.log('✅ Unit deleted successfully - no page refresh');
             
             // Close the modal
             $('#directUnitModal').modal('hide');
             
             if (typeof toastr !== 'undefined') {
                 toastr.success('Unit deleted successfully', 'Success');
-            } else {
-                alert('Unit deleted successfully');
             }
+            
+            hideLoader();
             
             // Refresh the data entry form
             setTimeout(() => {
@@ -491,6 +486,7 @@ function deleteDirectUnit(unitId, unitType) {
             }, 500);
         },
         error: function(xhr, status, error) {
+            hideLoader();
             console.error('❌ Error deleting unit:', error);
             
             let errorMsg = 'Failed to delete unit. Please try again.';
@@ -503,9 +499,6 @@ function deleteDirectUnit(unitId, unitType) {
             } else {
                 alert(errorMsg);
             }
-        },
-        complete: function() {
-            $("#loading").hide();
         }
     });
 }

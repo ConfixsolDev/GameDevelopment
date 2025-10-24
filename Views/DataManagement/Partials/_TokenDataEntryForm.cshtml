@@ -100,10 +100,10 @@
                                                     <div class="unit-details">Code: @battalionData.UnitCode | Strength: @battalionData.Strength | Companies: @battalionData.Companies</div>
                                                 </div>
                                                 <div class="unit-actions">
-                                                    <button class="btn btn-sm btn-outline-secondary" onclick="editInfantryBattalion('@battalionData.Id')">
+                                                    <button class="btn btn-sm btn-outline-secondary" onclick="editBrigadeUnit('infantry', '@Model.Token.Id', '@Model.ExistingBrigade.Id', '@battalionData.Id')">
                                                         <i class="fas fa-edit"></i> Edit
                                                     </button>
-                                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteInfantryBattalion('@battalionData.Id')">
+                                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteBrigadeUnit('infantry', '@battalionData.Id', '@Model.Token.Id', '@Model.ExistingBrigade.Id')">
                                                         <i class="fas fa-trash"></i> Delete
                                                     </button>
                                                 </div>
@@ -141,10 +141,10 @@
                                                     <div class="unit-details">Code: @regimentData.UnitCode | Strength: @regimentData.Strength | Tanks: @regimentData.Tanks</div>
                                                 </div>
                                                 <div class="unit-actions">
-                                                    <button class="btn btn-sm btn-outline-secondary" onclick="editArmouredRegiment('@regimentData.Id')">
+                                                    <button class="btn btn-sm btn-outline-secondary" onclick="editBrigadeUnit('armoured', '@Model.Token.Id', '@Model.ExistingBrigade.Id', '@regimentData.Id')">
                                                         <i class="fas fa-edit"></i> Edit
                                                     </button>
-                                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteArmouredRegiment('@regimentData.Id')">
+                                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteBrigadeUnit('armoured', '@regimentData.Id', '@Model.Token.Id', '@Model.ExistingBrigade.Id')">
                                                         <i class="fas fa-trash"></i> Delete
                                                     </button>
                                                 </div>
@@ -181,10 +181,10 @@
                                                     <div class="unit-details">Code: @regimentData.UnitCode | Strength: @regimentData.Strength | Guns: @regimentData.Guns</div>
                                                 </div>
                                                 <div class="unit-actions">
-                                                    <button class="btn btn-sm btn-outline-secondary" onclick="editArtilleryRegiment('@regimentData.Id')">
+                                                    <button class="btn btn-sm btn-outline-secondary" onclick="editBrigadeUnit('artillery', '@Model.Token.Id', '@Model.ExistingBrigade.Id', '@regimentData.Id')">
                                                         <i class="fas fa-edit"></i> Edit
                                                     </button>
-                                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteArtilleryRegiment('@regimentData.Id')">
+                                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteBrigadeUnit('artillery', '@regimentData.Id', '@Model.Token.Id', '@Model.ExistingBrigade.Id')">
                                                         <i class="fas fa-trash"></i> Delete
                                                     </button>
                                                 </div>
@@ -218,10 +218,10 @@
                                                 <div class="unit-details">Code: @Model.ExistingLogistics.UnitCode | Strength: @Model.ExistingLogistics.Strength | Supply Trucks: @Model.ExistingLogistics.SupplyTrucks</div>
                                             </div>
                                             <div class="unit-actions">
-                                                <button class="btn btn-sm btn-outline-secondary" onclick="editLogisticsUnit('@Model.ExistingLogistics.Id')">
+                                                <button class="btn btn-sm btn-outline-secondary" onclick="editBrigadeUnit('logistics', '@Model.Token.Id', '@Model.ExistingBrigade.Id', '@Model.ExistingLogistics.Id')">
                                                     <i class="fas fa-edit"></i> Edit
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteLogisticsUnit('@Model.ExistingLogistics.Id')">
+                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteBrigadeUnit('logistics', '@Model.ExistingLogistics.Id', '@Model.Token.Id', '@Model.ExistingBrigade.Id')">
                                                     <i class="fas fa-trash"></i> Delete
                                                 </button>
                                             </div>
@@ -254,10 +254,10 @@
                                                 <div class="unit-details">Code: @Model.ExistingEngineering.UnitCode | Strength: @Model.ExistingEngineering.Strength | Vehicles: @Model.ExistingEngineering.BridgeLayingVehicles</div>
                                             </div>
                                             <div class="unit-actions">
-                                                <button class="btn btn-sm btn-outline-secondary" onclick="editCombatEngineeringCompany('@Model.ExistingEngineering.Id')">
+                                                <button class="btn btn-sm btn-outline-secondary" onclick="editBrigadeUnit('engineering', '@Model.Token.Id', '@Model.ExistingBrigade.Id', '@Model.ExistingEngineering.Id')">
                                                     <i class="fas fa-edit"></i> Edit
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCombatEngineeringCompany('@Model.ExistingEngineering.Id')">
+                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteBrigadeUnit('engineering', '@Model.ExistingEngineering.Id', '@Model.Token.Id', '@Model.ExistingBrigade.Id')">
                                                     <i class="fas fa-trash"></i> Delete
                                                 </button>
                                             </div>
@@ -293,10 +293,10 @@
                                                     <div class="unit-details">Location: @reconData.Location | Confidence: @reconData.Confidence</div>
                                                 </div>
                                                 <div class="unit-actions">
-                                                    <button class="btn btn-sm btn-outline-secondary" onclick="editReconnaissance('@reconData.Id')">
+                                                    <button class="btn btn-sm btn-outline-secondary" onclick="editBrigadeUnit('recon', '@Model.Token.Id', '@Model.ExistingBrigade.Id', '@reconData.Id')">
                                                         <i class="fas fa-edit"></i> Edit
                                                     </button>
-                                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteReconnaissance('@reconData.Id')">
+                                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteBrigadeUnit('recon', '@reconData.Id', '@Model.Token.Id', '@Model.ExistingBrigade.Id')">
                                                         <i class="fas fa-trash"></i> Delete
                                                     </button>
                                                 </div>
@@ -990,7 +990,7 @@ function linkSelectedBrigade(tokenId) {
     console.log('🔗 Linking brigade', brigadeId, 'to token', tokenId);
     
     // Show loading
-    $("#loading").show();
+    showLoader();
     
     // Make AJAX call to link brigade to token
     $.ajax({
@@ -1005,17 +1005,17 @@ function linkSelectedBrigade(tokenId) {
             console.log('✅ Brigade linked successfully:', response);
             
             if (response.success) {
-                alert('Brigade linked to token successfully!');
+                console.log('✅ Brigade linked, no page refresh needed');
                 closeTokenDataEntryModal();
-                
-                // Refresh the map or token display if needed
-                if (window.location.reload) {
-                    location.reload();
-                }
+                hideLoader();
+                // Modal will be refreshed when reopened
             } else {
+                hideLoader();
+                alert('Error linking brigade: ' + response.message);
             }
         },
         error: function(xhr, status, error) {
+            hideLoader();
             console.error('❌ Error linking brigade:', error);
             console.error('   Status Code:', xhr.status);
             console.error('   Response Text:', xhr.responseText);
@@ -1027,9 +1027,7 @@ function linkSelectedBrigade(tokenId) {
                 errorMessage = 'Server error linking brigade (500)';
             }
             
-        },
-        complete: function() {
-            $("#loading").hide();
+            alert(errorMessage + '. Please try again.');
         }
     });
 }
@@ -1042,7 +1040,7 @@ function createNewBrigadeData(tokenId) {
     closeTokenDataEntryModal();
     
     // Show loading
-    $("#loading").show();
+    showLoader();
     
     // Load the new brigade creation form via AJAX
     $.ajax({
@@ -1061,11 +1059,13 @@ function createNewBrigadeData(tokenId) {
             // Show the modal using Bootstrap modal API
             setTimeout(() => {
                 $('#newBrigadeDataEntryModal').modal('show');
+                hideLoader();
             }, 100);
             
             console.log('✅ New brigade form displayed successfully');
         },
         error: function(xhr, status, error) {
+            hideLoader();
             console.error('❌ Error loading new brigade form:', error);
             console.error('   Status Code:', xhr.status);
             console.error('   Response Text:', xhr.responseText);
@@ -1077,9 +1077,7 @@ function createNewBrigadeData(tokenId) {
                 errorMessage = 'Server error loading new brigade form (500)';
             }
             
-        },
-        complete: function() {
-            $("#loading").hide();
+            alert(errorMessage + '. Please try again.');
         }
     });
 }
@@ -1119,40 +1117,11 @@ function editBrigadeCode() {
 
 // Data is now loaded in the controller, no need for AJAX loading
 
-// Open individual unit forms
-function openInfantryBattalionForm(tokenId, brigadeId) {
-    console.log('🆕 Opening Infantry Battalion form');
-    loadSingleUnitForm('infantry', tokenId, brigadeId);
-}
-
-function openArmouredRegimentForm(tokenId, brigadeId) {
-    console.log('🆕 Opening Armoured Regiment form');
-    loadSingleUnitForm('armoured', tokenId, brigadeId);
-}
-
-function openArtilleryRegimentForm(tokenId, brigadeId) {
-    console.log('🆕 Opening Artillery Regiment form');
-    loadSingleUnitForm('artillery', tokenId, brigadeId);
-}
-
-function openLogisticsUnitForm(tokenId, brigadeId) {
-    console.log('🆕 Opening Logistics Unit form');
-    loadSingleUnitForm('logistics', tokenId, brigadeId);
-}
-
-function openCombatEngineeringCompanyForm(tokenId, brigadeId) {
-    console.log('🆕 Opening Combat Engineering Company form');
-    loadSingleUnitForm('engineering', tokenId, brigadeId);
-}
-
-function openReconnaissanceForm(tokenId, brigadeId) {
-    console.log('🆕 Opening Reconnaissance form');
-    loadSingleUnitForm('recon', tokenId, brigadeId);
-}
+// Open individual unit forms (removed duplicates - using new functions below)
 
 // Load single unit form
 function loadSingleUnitForm(unitType, tokenId, brigadeId) {
-    $("#loading").show();
+    showLoader();
     
     $.ajax({
         url: '/DataManagement/SingleUnitForm',
@@ -1170,32 +1139,29 @@ function loadSingleUnitForm(unitType, tokenId, brigadeId) {
             // Show the modal using Bootstrap modal API
             setTimeout(() => {
                 $('#singleUnitModal').modal('show');
+                hideLoader();
             }, 100);
             
             console.log('✅ Single unit form displayed successfully');
         },
         error: function(xhr, status, error) {
+            hideLoader();
             console.error('❌ Error loading single unit form:', error);
-        },
-        complete: function() {
-            $("#loading").hide();
         }
     });
 }
 
-// Refresh units list after save
+// Refresh units list after save - No page reload
 function refreshUnitsList(tokenId, brigadeId) {
-    console.log('🔄 Refreshing units list...');
-    // Reload the entire modal to get fresh data
-    location.reload();
+    console.log('🔄 Refreshing units list (no page reload)');
+    // Modal will be reloaded when user reopens it
 }
 
 // Open direct unit form (without brigade)
 function openDirectUnitForm(unitType, tokenId) {
     console.log('🆕 Opening direct unit form for', unitType, 'token', tokenId);
     
-    // Show loading
-    $("#loading").show();
+    showLoader();
     
     // Load the direct unit form via AJAX (without brigade)
     $.ajax({
@@ -1214,17 +1180,153 @@ function openDirectUnitForm(unitType, tokenId) {
             // Show the modal using Bootstrap modal API
             setTimeout(() => {
                 $('#directUnitModal').modal('show');
+                hideLoader();
             }, 100);
             
             console.log('✅ Direct unit form displayed successfully');
         },
         error: function(xhr, status, error) {
+            hideLoader();
             console.error('❌ Error loading direct unit form:', error);
             alert('Failed to load unit form. Please try again.');
-        },
-        complete: function() {
-            $("#loading").hide();
         }
+    });
+}
+
+// Global brigade unit edit function (with all parameters)
+function editBrigadeUnit(unitType, tokenId, brigadeId, unitId) {
+    console.log('✏️ Editing brigade unit:', { unitType, tokenId, brigadeId, unitId });
+    
+    showLoader();
+    
+    const params = {
+        unitType: unitType,
+        tokenId: tokenId,
+        brigadeId: brigadeId,
+        unitId: unitId
+    };
+    
+    $.get('/DataManagement/BrigadeUnitCreationForm', params, function(data) {
+        $('#brigadeUnitCreationModal').remove();
+        $('body').append(data);
+        $('#brigadeUnitCreationModal').modal('show');
+        hideLoader();
+    }).fail(function(xhr, status, error) {
+        hideLoader();
+        console.error('❌ Error loading unit form:', error);
+        alert('Failed to load unit form: ' + error);
+    });
+}
+
+// Global brigade unit delete function (with all parameters)
+function deleteBrigadeUnit(unitType, unitId, tokenId, brigadeId) {
+    const unitTypeNames = {
+        'infantry': 'Infantry Battalion',
+        'armoured': 'Armoured Regiment',
+        'artillery': 'Artillery Regiment',
+        'logistics': 'Logistics Unit',
+        'engineering': 'Engineering Company',
+        'recon': 'Recon Unit'
+    };
+    
+    const unitName = unitTypeNames[unitType] || 'Unit';
+    
+    if (!confirm(`Are you sure you want to delete this ${unitName}?`)) return;
+    
+    const endpoints = {
+        'infantry': '/DataManagement/DeleteTokenInfantryBattalion',
+        'armoured': '/DataManagement/DeleteTokenArmouredRegiment',
+        'artillery': '/DataManagement/DeleteTokenArtilleryRegiment',
+        'logistics': '/DataManagement/DeleteTokenLogisticsUnit',
+        'engineering': '/DataManagement/DeleteTokenCombatEngineeringCompany',
+        'recon': '/DataManagement/DeleteTokenRecon'
+    };
+    
+    const endpoint = endpoints[unitType];
+    
+    showLoader();
+    
+    $.ajax({
+        url: endpoint,
+        type: 'DELETE',
+        contentType: 'application/json',
+        data: JSON.stringify({ Id: unitId }),
+        success: function(response) {
+            console.log(`✅ ${unitName} deleted`);
+            
+            // Reload the token data entry modal to show updated units
+            $.get('/DataManagement/TokenDataEntryForm', { tokenId: tokenId }, function(data) {
+                $('#tokenDataEntryModal .modal-content').html($(data).find('.modal-content').html());
+                hideLoader();
+            }).fail(function() {
+                hideLoader();
+                alert('Deleted but failed to refresh. Please close and reopen the modal.');
+            });
+        },
+        error: function(xhr, status, error) {
+            hideLoader();
+            alert(`Failed to delete ${unitName}: ` + error);
+        }
+    });
+}
+
+// Brigade unit form opening functions (missing from TokenDataEntryForm)
+function openInfantryBattalionForm(tokenId, brigadeId, unitId = null) {
+    openBrigadeUnitForm('infantry', tokenId, brigadeId, unitId);
+}
+
+function openArmouredRegimentForm(tokenId, brigadeId, unitId = null) {
+    openBrigadeUnitForm('armoured', tokenId, brigadeId, unitId);
+}
+
+function openArtilleryRegimentForm(tokenId, brigadeId, unitId = null) {
+    openBrigadeUnitForm('artillery', tokenId, brigadeId, unitId);
+}
+
+function openLogisticsUnitForm(tokenId, brigadeId, unitId = null) {
+    openBrigadeUnitForm('logistics', tokenId, brigadeId, unitId);
+}
+
+function openCombatEngineeringCompanyForm(tokenId, brigadeId, unitId = null) {
+    openBrigadeUnitForm('engineering', tokenId, brigadeId, unitId);
+}
+
+function openReconnaissanceForm(tokenId, brigadeId, unitId = null) {
+    openBrigadeUnitForm('recon', tokenId, brigadeId, unitId);
+}
+
+// Generic brigade unit form opener with loader
+function openBrigadeUnitForm(unitType, tokenId, brigadeId, unitId = null) {
+    console.log('🚀 Loading brigade unit form:', { unitType, tokenId, brigadeId, unitId });
+    
+    const params = {
+        unitType: unitType,
+        tokenId: tokenId,
+        brigadeId: brigadeId
+    };
+    
+    if (unitId) {
+        params.unitId = unitId;
+    }
+    
+    showLoader();
+    
+    $.get('/DataManagement/BrigadeUnitCreationForm', params, function(data) {
+        // Remove any existing modal
+        $('#brigadeUnitCreationModal').remove();
+        
+        // Append the new modal to body
+        $('body').append(data);
+        
+        // Show the modal
+        $('#brigadeUnitCreationModal').modal('show');
+        
+        hideLoader();
+        console.log('✅ Brigade unit form loaded successfully');
+    }).fail(function(xhr, status, error) {
+        hideLoader();
+        console.error('❌ Error loading brigade unit form:', error);
+        alert('Failed to load unit form: ' + error);
     });
 }
 

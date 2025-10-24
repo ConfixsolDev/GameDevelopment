@@ -423,7 +423,7 @@
         closeTokenSummaryModal();
         
         // Open data entry form directly
-        $("#loading").show();
+        showLoader();
         
         $.ajax({
             url: '/DataManagement/TokenDataEntryForm',
@@ -442,7 +442,7 @@
                 alert('Failed to load data entry form: ' + error);
             },
             complete: function() {
-                $("#loading").hide();
+                hideLoader();
             }
         });
         
@@ -466,7 +466,7 @@
         closeTokenSummaryModal();
         
         // Open data entry form directly
-        $("#loading").show();
+        showLoader();
         
         $.ajax({
             url: '/DataManagement/TokenDataEntryForm',
@@ -485,7 +485,7 @@
                 alert('Failed to load data entry form: ' + error);
             },
             complete: function() {
-                $("#loading").hide();
+                hideLoader();
             }
         });
         
