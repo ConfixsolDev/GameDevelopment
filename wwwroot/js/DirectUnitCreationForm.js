@@ -351,10 +351,13 @@ function saveUnitToServer(endpoint, unitData, unitTypeName) {
     
     const isEditMode = unitData.Id && unitData.Id.trim() !== '';
     const actionText = isEditMode ? 'updated' : 'created';
+    const httpMethod = isEditMode ? 'PUT' : 'POST';
+    
+    console.log(`🔧 Using HTTP method: ${httpMethod} for ${unitTypeName} (isEditMode: ${isEditMode})`);
     
     $.ajax({
         url: endpoint,
-        type: 'POST',
+        type: httpMethod,
         contentType: 'application/json',
         data: JSON.stringify(unitData),
         success: function(response) {

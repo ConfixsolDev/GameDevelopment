@@ -1441,7 +1441,7 @@ namespace TechWebSol.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpPut]
         public async Task<IActionResult> UpdateLogisticsUnit([FromBody] UpdateLogisticsUnitRequest request)
         {
             try
@@ -1556,7 +1556,7 @@ namespace TechWebSol.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpPut]
         public async Task<IActionResult> UpdateCombatEngineeringCompany([FromBody] UpdateEngineeringCompanyRequest request)
         {
             try

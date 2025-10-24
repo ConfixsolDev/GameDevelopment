@@ -295,9 +295,15 @@ function saveBrigadeUnitToServer(endpoint, data, unitName, tokenId, brigadeId) {
     console.log(`💾 Saving ${unitName} to:`, endpoint);
     console.log('Data:', data);
     
+    // Determine HTTP method based on whether it's an update or create
+    const isUpdate = data.Id && data.Id.trim() !== '';
+    const httpMethod = isUpdate ? 'PUT' : 'POST';
+    
+    console.log(`🔧 Using HTTP method: ${httpMethod} (isUpdate: ${isUpdate})`);
+    
     $.ajax({
         url: endpoint,
-        type: 'POST',
+        type: httpMethod,
         contentType: 'application/json',
         data: JSON.stringify(data),
         success: function(response) {

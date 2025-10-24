@@ -470,8 +470,14 @@ class TokenPlacementManager {
                     element.setAttribute('data-token-guid', token.id);
                     element.classList.add('token-marker');
                     
-                    // Add title attribute to show token GUID on hover
-                    element.setAttribute('title', `Token: ${token.name} (ID: ${token.id})`);
+                    // Add meaningful title attribute for hover tooltip
+                    const tooltipParts = [
+                        `${token.name}`,
+                        `Force: ${token.forceType || 'Unknown'}`,
+                        token.tokenGroupName ? `Group: ${token.tokenGroupName}` : null
+                    ].filter(Boolean);
+                    
+                    element.setAttribute('title', tooltipParts.join(' | '));
                     
                     console.log(`✅ Token marker DOM attributes set for ${token.name}: data-id="${token.id}"`);
                 }

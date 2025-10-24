@@ -112,8 +112,14 @@ class SuspectedTokenManager {
                     element.setAttribute('data-token-guid', tokenData.id);
                     element.classList.add('suspected-token-marker');
                     
-                    // Add title attribute to show token GUID on hover
-                    element.setAttribute('title', `Suspected Token: ${tokenData.name} (ID: ${tokenData.id})`);
+                    // Add meaningful title attribute for hover tooltip
+                    const tooltipParts = [
+                        `Suspected: ${tokenData.name}`,
+                        tokenData.suspectedForce ? `Force: ${tokenData.suspectedForce}` : 'Force: Unknown',
+                        tokenData.confidence ? `Confidence: ${tokenData.confidence}` : null
+                    ].filter(Boolean);
+                    
+                    element.setAttribute('title', tooltipParts.join(' | '));
                     
                     console.log(`✅ Suspected token marker DOM attributes set for ${tokenData.name}: data-id="${tokenData.id}"`);
                 }

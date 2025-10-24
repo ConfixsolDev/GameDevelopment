@@ -2222,7 +2222,15 @@ window.updateExistingTokenMarkers = function() {
                         element.setAttribute('data-token-name', tokenInfo.token.name);
                         element.setAttribute('data-token-type', tokenInfo.token.forceType || 'Unknown');
                         element.setAttribute('data-token-guid', tokenInfo.token.id);
-                        element.setAttribute('title', `Token: ${tokenInfo.token.name} (ID: ${tokenInfo.token.id})`);
+                        
+                        // Add meaningful title attribute
+                        const tooltipParts = [
+                            `${tokenInfo.token.name}`,
+                            `Force: ${tokenInfo.token.forceType || 'Unknown'}`,
+                            tokenInfo.token.tokenGroupName ? `Group: ${tokenInfo.token.tokenGroupName}` : null
+                        ].filter(Boolean);
+                        element.setAttribute('title', tooltipParts.join(' | '));
+                        
                         element.classList.add('token-marker');
                         
                         // Also set the marker properties
@@ -2248,7 +2256,15 @@ window.updateExistingTokenMarkers = function() {
                         element.setAttribute('data-token-name', layer.tokenData.name);
                         element.setAttribute('data-token-type', layer.tokenData.forceType || 'Unknown');
                         element.setAttribute('data-token-guid', layer.tokenData.id);
-                        element.setAttribute('title', `Token: ${layer.tokenData.name} (ID: ${layer.tokenData.id})`);
+                        
+                        // Add meaningful title attribute
+                        const tooltipParts = [
+                            `${layer.tokenData.name}`,
+                            `Force: ${layer.tokenData.forceType || 'Unknown'}`,
+                            layer.tokenData.tokenGroupName ? `Group: ${layer.tokenData.tokenGroupName}` : null
+                        ].filter(Boolean);
+                        element.setAttribute('title', tooltipParts.join(' | '));
+                        
                         element.classList.add('token-marker');
                         
                         // Also set the marker properties

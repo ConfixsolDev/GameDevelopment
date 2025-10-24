@@ -810,25 +810,40 @@ class GamePlayManager {
                     element.setAttribute('data-token-guid', tokenData.id);
                     element.classList.add('token-marker');
                     
-                    // Add title attribute to show token GUID on hover
-                    element.setAttribute('title', `Token: ${tokenData.name} (ID: ${tokenData.id})`);
+                    // Add meaningful title attribute for hover tooltip
+                    const tooltipParts = [
+                        `${tokenData.name}`,
+                        `Force: ${tokenData.forceType || 'Unknown'}`,
+                        tokenData.tokenGroupName ? `Group: ${tokenData.tokenGroupName}` : null
+                    ].filter(Boolean);
+                    
+                    element.setAttribute('title', tooltipParts.join(' | '));
                     
                     console.log(`✅ Basic token marker DOM attributes set for ${tokenData.name}: data-id="${tokenData.id}"`);
                 }
             }
         });
         
-        // Add popup with token info
-        marker.bindPopup(`
-            <div class="token-popup">
-                <h4>${tokenData.name}</h4>
-                <p><strong>Force:</strong> ${tokenData.forceType || 'Unknown'}</p>
-                <p><strong>Group:</strong> ${tokenData.tokenGroupName || 'Unknown'}</p>
-                <p><strong>Position:</strong> ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}</p>
-                <p><strong>Status:</strong> Placed</p>
-                <p><strong>Token ID:</strong> ${tokenData.id}</p>
+        // Add popup with meaningful token info
+        const popupContent = `
+            <div class="token-popup" style="min-width: 250px;">
+                <h4 style="margin-top: 0; color: #2196F3; border-bottom: 2px solid #2196F3; padding-bottom: 8px;">
+                    ${tokenData.name}
+                </h4>
+                <div style="margin: 10px 0;">
+                    <p style="margin: 5px 0;"><strong>🏴 Force:</strong> ${tokenData.forceType || 'Unknown'}</p>
+                    <p style="margin: 5px 0;"><strong>👥 Group:</strong> ${tokenData.tokenGroupName || 'Unknown'}</p>
+                    ${tokenData.brigadeCode ? `<p style="margin: 5px 0;"><strong>🎖️ Brigade:</strong> ${tokenData.brigadeCode}</p>` : ''}
+                    <p style="margin: 5px 0;"><strong>📍 Position:</strong> ${latlng.lat.toFixed(4)}°, ${latlng.lng.toFixed(4)}°</p>
+                    <p style="margin: 5px 0;"><strong>✅ Status:</strong> <span style="color: #4CAF50;">Active</span></p>
+                </div>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; font-size: 0.85em; color: #666;">
+                    ID: ${tokenData.id.substring(0, 8)}...
+                </div>
             </div>
-        `);
+        `;
+        
+        marker.bindPopup(popupContent);
         
         // Add to token layer
         if (window.tokenLayer) {

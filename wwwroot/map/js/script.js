@@ -5894,30 +5894,48 @@ class TokenSystem {
         }
     }
 
-    // NEW: Create tooltip content for token markers (2-3 lines)
+    // NEW: Create tooltip content for token markers (meaningful information)
     createTokenTooltipContent(token) {
         const lines = [];
 
-        // Line 1: Token name and ID
-        lines.push(`<strong>${token.name}</strong> (ID: ${token.id})`);
+        // Line 1: Token name (prominent)
+        lines.push(`<strong style="font-size: 16px; color: #2196F3;">${token.name}</strong>`);
 
-        // Line 2: Touch count and signature details
+        // Line 2: Force Type and Token Group
+        const forceInfo = [];
+        if (token.forceType) {
+            forceInfo.push(`Force: ${token.forceType}`);
+        }
+        if (token.tokenGroupName) {
+            forceInfo.push(`Group: ${token.tokenGroupName}`);
+        }
+        if (forceInfo.length > 0) {
+            lines.push(forceInfo.join(' | '));
+        }
+
+        // Line 3: Touch count and signature details (if available)
         if (token.signature && token.signature.touchCount) {
             const touchCount = token.signature.touchCount;
             const complexity = token.signature.touchPattern?.complexity || 'Unknown';
-            lines.push(`Touch Pattern: ${touchCount} fingers (Complexity: ${complexity})`);
+            lines.push(`Touch Pattern: ${touchCount} fingers (${complexity})`);
         }
 
-        // Line 3: Training date and location info
+        // Line 4: Training date
         if (token.trainingDate) {
             lines.push(`Trained: ${new Date(token.trainingDate).toLocaleDateString()}`);
         }
 
-        // Add detailed token information button
-        lines.push(`<button onclick="window.currentTokenSystem.showDetailedTokenInfo('${token.id}')" style="background: #2196F3; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin-top: 8px; margin-right: 5px;">📊 Details</button>`);
-
-        // Add remove button
-        lines.push(`<button onclick="window.currentTokenSystem.removeTokenMarker('${token.id}')" style="background: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-top: 8px;">🗑️ Remove</button>`);
+        // Add action buttons
+        lines.push(`<div style="margin-top: 10px; display: flex; gap: 5px;">
+            <button onclick="window.currentTokenSystem.showDetailedTokenInfo('${token.id}')" 
+                style="background: #2196F3; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; flex: 1;">
+                📊 Details
+            </button>
+            <button onclick="window.currentTokenSystem.removeTokenMarker('${token.id}')" 
+                style="background: #f44336; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
+                🗑️
+            </button>
+        </div>`);
 
         return lines.join('<br>');
     }
