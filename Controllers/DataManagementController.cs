@@ -549,7 +549,7 @@ namespace TechWebSol.Controllers
                     ExistingEngineeringList = existingEngineeringList
                 };
 
-                return PartialView("Partials/_UnitsDataEntryForm", viewModel);
+                return PartialView("Partials/_BrigadeUnitForm", viewModel);
             }
             catch (Exception ex)
             {
@@ -845,6 +845,7 @@ namespace TechWebSol.Controllers
         {
             try
             {
+                // Create the brigade
                 var brigade = new Brigade
                 {
                     BrigadeCode = request.BrigadeCode,
@@ -857,10 +858,120 @@ namespace TechWebSol.Controllers
                 _context.Brigades.Add(brigade);
                 await _context.SaveChangesAsync();
 
+                // ALWAYS automatically assign any existing direct units to this new brigade
+                await AssignDirectUnitsToBrigade(request.TokenId, brigade.Id);
+
                 return Json(new { success = true, data = brigade });
             }
             catch (Exception ex)
             {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Check if a token has any direct units (without brigade)
+        /// </summary>
+        private async Task<(bool hasUnits, int totalCount)> CheckForDirectUnits(Guid tokenId)
+        {
+            var infantryCount = await _context.InfantryBattalions.CountAsync(u => u.TokenId == tokenId && u.BrigadeId == null && u.IsActive);
+            var armouredCount = await _context.ArmouredRegiments.CountAsync(u => u.TokenId == tokenId && u.BrigadeId == null && u.IsActive);
+            var artilleryCount = await _context.ArtilleryRegiments.CountAsync(u => u.TokenId == tokenId && u.BrigadeId == null && u.IsActive);
+            var logisticsCount = await _context.LogisticsUnits.CountAsync(u => u.TokenId == tokenId && u.BrigadeId == null && u.IsActive);
+            var engineeringCount = await _context.CombatEngineeringCompanies.CountAsync(u => u.TokenId == tokenId && u.BrigadeId == null && u.IsActive);
+
+            var totalCount = infantryCount + armouredCount + artilleryCount + logisticsCount + engineeringCount;
+            
+            return (totalCount > 0, totalCount);
+        }
+
+        /// <summary>
+        /// Assign all direct units from a token to a brigade
+        /// </summary>
+        private async Task AssignDirectUnitsToBrigade(Guid tokenId, Guid brigadeId)
+        {
+            _logger.LogInformation($"🔄 Migrating direct units from token {tokenId} to brigade {brigadeId}");
+
+            // Update Infantry Battalions
+            var infantryUnits = await _context.InfantryBattalions
+                .Where(u => u.TokenId == tokenId && u.BrigadeId == null && u.IsActive)
+                .ToListAsync();
+            foreach (var unit in infantryUnits)
+            {
+                unit.BrigadeId = brigadeId;
+            }
+
+            // Update Armoured Regiments
+            var armouredUnits = await _context.ArmouredRegiments
+                .Where(u => u.TokenId == tokenId && u.BrigadeId == null && u.IsActive)
+                .ToListAsync();
+            foreach (var unit in armouredUnits)
+            {
+                unit.BrigadeId = brigadeId;
+            }
+
+            // Update Artillery Regiments
+            var artilleryUnits = await _context.ArtilleryRegiments
+                .Where(u => u.TokenId == tokenId && u.BrigadeId == null && u.IsActive)
+                .ToListAsync();
+            foreach (var unit in artilleryUnits)
+            {
+                unit.BrigadeId = brigadeId;
+            }
+
+            // Update Logistics Units
+            var logisticsUnits = await _context.LogisticsUnits
+                .Where(u => u.TokenId == tokenId && u.BrigadeId == null && u.IsActive)
+                .ToListAsync();
+            foreach (var unit in logisticsUnits)
+            {
+                unit.BrigadeId = brigadeId;
+            }
+
+            // Update Engineering Companies
+            var engineeringUnits = await _context.CombatEngineeringCompanies
+                .Where(u => u.TokenId == tokenId && u.BrigadeId == null && u.IsActive)
+                .ToListAsync();
+            foreach (var unit in engineeringUnits)
+            {
+                unit.BrigadeId = brigadeId;
+            }
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation($"✅ Migrated {infantryUnits.Count + armouredUnits.Count + artilleryUnits.Count + logisticsUnits.Count + engineeringUnits.Count} direct units to brigade {brigadeId}");
+        }
+
+        /// <summary>
+        /// Manually assign direct units to a brigade (can be called later)
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> AssignDirectUnitsToBrigadeManual([FromBody] AssignUnitsToBrigadeRequest request)
+        {
+            try
+            {
+                var brigade = await _context.Brigades
+                    .FirstOrDefaultAsync(b => b.Id == request.BrigadeId && b.TeamId == user.TeamId && b.IsActive);
+
+                if (brigade == null)
+                {
+                    return Json(new { success = false, message = "Brigade not found" });
+                }
+
+                await AssignDirectUnitsToBrigade(request.TokenId, request.BrigadeId);
+
+                var directUnitsInfo = await CheckForDirectUnits(request.TokenId);
+
+                return Json(new 
+                { 
+                    success = true, 
+                    message = "Direct units assigned to brigade successfully",
+                    remainingDirectUnits = directUnitsInfo.totalCount
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error assigning direct units to brigade");
                 return Json(new { success = false, message = ex.Message });
             }
         }
@@ -1734,6 +1845,12 @@ namespace TechWebSol.Controllers
         {
             public string BrigadeCode { get; set; }
             public Guid TokenId { get; set; }
+        }
+
+        public class AssignUnitsToBrigadeRequest
+        {
+            public Guid TokenId { get; set; }
+            public Guid BrigadeId { get; set; }
         }
 
         public class LinkBrigadeToTokenRequest

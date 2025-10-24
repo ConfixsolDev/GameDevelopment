@@ -237,6 +237,7 @@ function saveBrigadeOnly() {
     }
     
     console.log('📋 Brigade data to save:', brigadeData);
+    console.log('🔄 Direct units will be automatically assigned to brigade');
     
     // Show loading
     $("#loading").show();
@@ -251,7 +252,9 @@ function saveBrigadeOnly() {
             console.log('✅ Brigade saved successfully:', response);
             
             if (response.success) {
-                console.log('🎯 Brigade created, now loading units form...');
+                console.log('🎯 Brigade created successfully');
+                console.log('🔄 Direct units automatically assigned (if any existed)');
+                
                 closeNewBrigadeDataEntryModal();
                 
                 // Load the units form for this newly created brigade
@@ -286,14 +289,14 @@ function loadUnitsDataEntryForm(tokenId, brigadeId) {
             console.log('✅ Units form loaded');
             
             // Remove any existing units modal
-            $('#unitsDataEntryModal').remove();
+            $('#brigadeUnitModal').remove();
             
             // Add the new modal to the body
             $('body').append(data);
             
             // Show the modal using Bootstrap modal API
             setTimeout(() => {
-                $('#unitsDataEntryModal').modal('show');
+                $('#brigadeUnitModal').modal('show');
             }, 100);
             
             console.log('✅ Units form displayed successfully');

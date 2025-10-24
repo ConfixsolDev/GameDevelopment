@@ -330,11 +330,11 @@ function reloadBrigadeUnitsList(tokenId, brigadeId) {
     
     $.get('/DataManagement/UnitsDataEntryForm', { tokenId: tokenId, brigadeId: brigadeId }, function(data) {
         // Replace the entire modal content
-        $('#unitsDataEntryModal .modal-content').html($(data).find('.modal-content').html());
+        $('#brigadeUnitModal .modal-content').html($(data).find('.modal-content').html());
         
         // Show the modal again
-        if (!$('#unitsDataEntryModal').hasClass('show')) {
-            $('#unitsDataEntryModal').modal('show');
+        if (!$('#brigadeUnitModal').hasClass('show')) {
+            $('#brigadeUnitModal').modal('show');
         }
     }).fail(function(xhr, status, error) {
         console.error('❌ Error reloading brigade units list:', error);
