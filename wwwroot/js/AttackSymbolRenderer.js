@@ -17,13 +17,13 @@ class AttackSymbolRenderer {
             // Basic Attack Symbols
             'attack': {
                 symbol: '→',
-                color: '#ff4444',
+                color: '#ff0000',
                 size: 24,
                 className: 'nato-attack-basic'
             },
             'attack-main': {
                 symbol: '⟶',
-                color: '#ff4444',
+                color: '#ff0000',
                 size: 30,
                 className: 'nato-attack-main'
             },
@@ -31,31 +31,31 @@ class AttackSymbolRenderer {
             // NATO Attack Types (from Attack Intent form)
             'frontal': {
                 symbol: '⇨',
-                color: '#ff4444',
+                color: '#ff0000',
                 size: 26,
                 className: 'nato-attack-frontal'
             },
             'flanking': {
                 symbol: '↗',
-                color: '#ff4444',
+                color: '#ff0000',
                 size: 26,
                 className: 'nato-attack-flanking'
             },
             'envelopment': {
                 symbol: '↻',
-                color: '#ff4444',
+                color: '#ff0000',
                 size: 28,
                 className: 'nato-attack-envelopment'
             },
             'penetration': {
                 symbol: '⇉',
-                color: '#ff4444',
+                color: '#ff0000',
                 size: 28,
                 className: 'nato-attack-penetration'
             },
             'raid': {
                 symbol: '⚔',
-                color: '#ff4444',
+                color: '#ff0000',
                 size: 26,
                 className: 'nato-attack-raid'
             },
@@ -125,19 +125,20 @@ class AttackSymbolRenderer {
             placerSide = options.placerSide;
         }
         
-        // Determine arrow color (REVERSE: Blue side → Red arrow, Red side → Blue arrow)
+        // Determine arrow color (SAME as force: Blue force → Blue arrow, Red force → Red arrow)
+        // This matches defense element coloring
         if (placerSide) {
             const sideLower = placerSide.toLowerCase();
             
-            // Blue side attacking → RED arrow (attacking red enemy)
+            // Blue side attacking → BLUE arrow (matches Blue Land defense elements)
             if (sideLower === 'blue' || sideLower.includes('blue')) {
-                console.log('🎯 Blue force attacking → RED arrow');
-                return '#ff4444'; // Red
+                console.log('🎯 Blue force attacking → BLUE arrow (matches defense elements)');
+                return '#0000ff'; // Blue (same as Blue Land defense)
             }
-            // Red side attacking → BLUE arrow (attacking blue enemy)
-            else if (sideLower === 'red' || sideLower.includes('red')) {
-                console.log('🎯 Red force attacking → BLUE arrow');
-                return '#4444ff'; // Blue
+            // Red/Fox side attacking → RED arrow (matches Fox Land defense elements)
+            else if (sideLower === 'red' || sideLower.includes('red') || sideLower.includes('fox')) {
+                console.log('🎯 Red/Fox force attacking → RED arrow (matches defense elements)');
+                return '#ff0000'; // Red (same as Fox Land defense)
             }
         }
         
@@ -146,17 +147,17 @@ class AttackSymbolRenderer {
             const forceType = window.userObject.forceType.toLowerCase();
             
             if (forceType.includes('blue') || forceType.includes('friendly')) {
-                console.log('🎯 User is Blue force → RED arrow (default)');
-                return '#ff4444'; // Red
-            } else if (forceType.includes('red') || forceType.includes('enemy')) {
-                console.log('🎯 User is Red force → BLUE arrow (default)');
-                return '#4444ff'; // Blue
+                console.log('🎯 User is Blue force → BLUE arrow (matches defense elements)');
+                return '#0000ff'; // Blue (matches Blue Land defense)
+            } else if (forceType.includes('red') || forceType.includes('fox') || forceType.includes('enemy')) {
+                console.log('🎯 User is Red/Fox force → RED arrow (matches defense elements)');
+                return '#ff0000'; // Red (matches Fox Land defense)
             }
         }
         
         // Default: Red arrow
         console.log('⚠️ Could not determine side, using default RED arrow');
-        return '#ff4444';
+        return '#ff0000';
     }
 
     /**

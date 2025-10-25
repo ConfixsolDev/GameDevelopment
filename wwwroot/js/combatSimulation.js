@@ -106,30 +106,53 @@ async function runSimulationForOrder(orderId, attackerName, targetName) {
         console.log('📡 Response HTML length:', html.length);
         
         // Check if response contains an error (old style alert or new modal style)
-        if (html.includes('alert-danger') || html.includes('Combat Simulation Error')) {
+        const hasAlertError = html.includes('alert-danger');
+        const hasModalError = html.includes('Combat Simulation Error');
+        const hasErrorModal = html.includes('combatSimulationModal');
+        
+        console.log('🔍 Error detection:', {
+            hasAlertError,
+            hasModalError,
+            hasErrorModal,
+            htmlPreview: html.substring(0, 500)
+        });
+        
+        // Log the FULL HTML if error detected (for debugging)
+        if (hasAlertError || hasModalError) {
+            console.log('📄 FULL ERROR HTML:', html);
+        }
+        
+        if (hasAlertError || hasModalError) {
             $("#simpleLoader").hide();
-            console.error('❌ Simulation returned error, showing error modal');
+            console.error('❌ Simulation returned error, attempting to show error modal');
+            
+            // Clean up any existing modals first
+            $('#combatSimulationModal').remove();
+            $('.modal-backdrop').remove();
             
             // If it's the new error modal format, show it
-            if (html.includes('combatSimulationModal')) {
-                // Clean up any existing modals
-                $('#combatSimulationModal').remove();
+            if (hasErrorModal) {
+                console.log('✅ Error modal structure detected, appending to body');
                 
                 // Append error modal to body
                 $('body').append(html);
                 
-                // Show error modal
+                console.log('✅ Error modal appended, showing with Bootstrap');
+                
+                // Show error modal using Bootstrap
                 setTimeout(() => {
                     $('#combatSimulationModal').modal('show');
-                }, 50);
+                    console.log('✅ Error modal shown');
+                }, 100);
             } else {
-                // Old style alert-danger - show in toastr
+                // Old style alert-danger or exception message - show in toastr
+                console.log('⚠️ Old style error format, showing in toastr');
                 if (typeof toastr !== 'undefined') {
                     // Extract error message from alert-danger div
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = html;
-                    const errorMsg = tempDiv.querySelector('.alert-danger')?.textContent?.trim() || 'Simulation failed';
-                    toastr.error(errorMsg, 'Error', { timeOut: 5000 });
+                    const errorMsg = tempDiv.querySelector('.alert-danger')?.textContent?.trim() || html.trim();
+                    toastr.error(errorMsg, 'Simulation Error', { timeOut: 8000 });
                 }
             }
             return;

@@ -847,11 +847,20 @@ class DefensePlanningManager {
             window.tokenActionModeManager.showDefenseInstructions(`Click 4 points, then double-click/Enter/right-click to finish`, instructionText);
         }
         
-        // Remove any existing event listeners first
+        // Remove ALL existing event listeners first (both polygon and polyline)
         this.map.off('click', this.handlePolygonClick);
+        this.map.off('click', this.handlePolylineClick);
         this.map.off('dblclick', this.finishPolygonDrawing);
+        this.map.off('dblclick', this.finishPolylineDrawing);
+        this.map.off('contextmenu');
         
-        // Add new event listeners
+        // Remove old keyboard handler if exists
+        if (this.keyboardHandler) {
+            document.removeEventListener('keydown', this.keyboardHandler);
+            this.keyboardHandler = null;
+        }
+        
+        // Add new event listeners for POLYGON
         this.map.on('click', this.handlePolygonClick.bind(this));
         this.map.on('dblclick', this.finishPolygonDrawing.bind(this));
         
@@ -962,11 +971,20 @@ class DefensePlanningManager {
             window.tokenActionModeManager.showDefenseInstructions(`Click points to draw line, double-click/Enter/right-click to finish`, instructionText);
         }
         
-        // Remove any existing event listeners first
+        // Remove ALL existing event listeners first (both polygon and polyline)
         this.map.off('click', this.handlePolylineClick);
+        this.map.off('click', this.handlePolygonClick);
         this.map.off('dblclick', this.finishPolylineDrawing);
+        this.map.off('dblclick', this.finishPolygonDrawing);
+        this.map.off('contextmenu');
         
-        // Add new event listeners
+        // Remove old keyboard handler if exists
+        if (this.keyboardHandler) {
+            document.removeEventListener('keydown', this.keyboardHandler);
+            this.keyboardHandler = null;
+        }
+        
+        // Add new event listeners for POLYLINE
         this.map.on('click', this.handlePolylineClick.bind(this));
         this.map.on('dblclick', this.finishPolylineDrawing.bind(this));
         

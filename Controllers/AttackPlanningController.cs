@@ -911,7 +911,39 @@ namespace TechWebSol.Controllers
 
                 if (!result.Success)
                 {
-                    return Content($"<div class='alert alert-danger'>{result.Message}</div>");
+                    // Return styled error modal instead of simple alert
+                    var errorHtml = $@"
+<div class='modal fade' id='combatSimulationModal' tabindex='-1' role='dialog'>
+    <div class='modal-dialog modal-lg' role='document' style='max-width: 700px; margin: 1.75rem auto;'>
+        <div class='modal-content' style='background: #0a0e14; border: 2px solid #ff0000;'>
+            <div class='modal-header' style='background: #1a0000; border-bottom: 2px solid #ff0000;'>
+                <h5 class='modal-title' style='color: #ff0000;'>
+                    <i class='fas fa-exclamation-triangle'></i> Combat Simulation Error
+                </h5>
+                <button type='button' class='close' data-dismiss='modal' style='color: #ff0000;'>
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class='modal-body' style='background: #0a0e14; color: #fff; padding: 30px;'>
+                <div style='background: #1a0000; border-left: 4px solid #ff0000; padding: 20px; border-radius: 4px;'>
+                    <div style='font-size: 16px; margin-bottom: 15px; color: #ff6666;'>
+                        <i class='fas fa-times-circle'></i> <strong>Simulation Failed</strong>
+                    </div>
+                    <div style='font-size: 14px; color: #ffcccc; line-height: 1.6;'>
+                        {result.Message}
+                    </div>
+                </div>
+            </div>
+            <div class='modal-footer' style='background: #1a0000; border-top: 2px solid #ff0000;'>
+                <button type='button' class='btn btn-secondary' data-dismiss='modal'>
+                    <i class='fas fa-times'></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>";
+                    
+                    return Content(errorHtml, "text/html");
                 }
 
                 // Map to ViewModel

@@ -210,7 +210,7 @@ class DefenseSymbolRenderer {
             withdrawalRoutes: {
                 'primary': {
                     symbol: '⇐',
-                    color: '#0066cc',
+                    color: '#cc0000',
                     name: 'Primary Withdrawal Route',
                     strokeWidth: 4,
                     strokeDashArray: '15, 10',
@@ -218,7 +218,7 @@ class DefenseSymbolRenderer {
                 },
                 'alternate': {
                     symbol: '⇐',
-                    color: '#00cc00',
+                    color: '#990000',
                     name: 'Alternate Withdrawal Route',
                     strokeWidth: 3,
                     strokeDashArray: '10, 10',
