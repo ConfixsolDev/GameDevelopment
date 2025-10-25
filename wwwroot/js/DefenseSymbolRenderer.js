@@ -398,8 +398,11 @@ class DefenseSymbolRenderer {
 
         // Add arrow markers along the route
         const arrows = this.createRouteArrows(coordinates, routeConfig);
+        
+        // Add angled text label at midpoint
+        const textLabel = this.createAngledLineLabel(coordinates, 'WITHDRAWAL ROUTE', color);
 
-        return { polyline, arrows };
+        return { polyline, arrows, textLabel };
     }
 
     /**
@@ -421,8 +424,11 @@ class DefenseSymbolRenderer {
             className: `defense-line line-${type}`,
             ...options
         });
+        
+        // Add angled text label at midpoint
+        const textLabel = this.createAngledLineLabel(coordinates, 'DEFENSE LINE', color);
 
-        return polyline;
+        return { polyline, textLabel };
     }
 
     /**
@@ -561,6 +567,89 @@ class DefenseSymbolRenderer {
         
         console.log(`🎨 Created single minefield SVG tile for 100m x 100m area`);
         return markers;
+    }
+    
+    /**
+     * Create angled text label for lines (withdrawal routes, defensive lines)
+     */
+    createAngledLineLabel(coordinates, text, color) {
+        if (coordinates.length < 2) return null;
+        
+        // Calculate TRUE center point of the entire line (not just array midpoint)
+        let totalDistance = 0;
+        const distances = [0]; // Cumulative distances
+        
+        // Calculate cumulative distances for each segment
+        for (let i = 1; i < coordinates.length; i++) {
+            const p1 = L.latLng(coordinates[i-1]);
+            const p2 = L.latLng(coordinates[i]);
+            const segmentDist = p1.distanceTo(p2);
+            totalDistance += segmentDist;
+            distances.push(totalDistance);
+        }
+        
+        // Find the point at half the total distance (true center)
+        const halfDistance = totalDistance / 2;
+        let centerPoint = coordinates[Math.floor(coordinates.length / 2)]; // Fallback
+        let centerAngle = 0;
+        
+        for (let i = 1; i < coordinates.length; i++) {
+            if (distances[i] >= halfDistance) {
+                // The center is on this segment
+                const segmentStart = distances[i-1];
+                const segmentEnd = distances[i];
+                const segmentProgress = (halfDistance - segmentStart) / (segmentEnd - segmentStart);
+                
+                const p1 = coordinates[i-1];
+                const p2 = coordinates[i];
+                
+                // Interpolate the exact center point
+                centerPoint = [
+                    p1[0] + (p2[0] - p1[0]) * segmentProgress,
+                    p1[1] + (p2[1] - p1[1]) * segmentProgress
+                ];
+                
+                // Calculate angle from THIS segment (not overall line)
+                const dx = p2[1] - p1[1]; // lng difference (x-axis, increases right)
+                const dy = -(p2[0] - p1[0]); // lat difference (negate because screen y increases down)
+                centerAngle = Math.atan2(dy, dx) * (180 / Math.PI);
+                
+                break;
+            }
+        }
+        
+        // Normalize angle to prevent upside-down text (keep between -90 and 90)
+        while (centerAngle > 90) centerAngle -= 180;
+        while (centerAngle < -90) centerAngle += 180;
+        
+            const html = `
+                <div style="
+                    color: white;
+                    font-size: 12px;
+                    font-weight: bold;
+                    white-space: nowrap;
+                    transform: rotate(${centerAngle}deg) translateY(-3px);
+                    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+                    cursor: pointer;
+                    letter-spacing: 0.5px;
+                    text-transform: uppercase;
+                ">
+                    ${text}
+                </div>
+            `;
+        
+        const icon = L.divIcon({
+            html: html,
+            className: 'angled-line-label',
+            iconSize: [160, 32],
+            iconAnchor: [80, 16]
+        });
+        
+        return L.marker([centerPoint[0], centerPoint[1]], { 
+            icon: icon,
+            zIndexOffset: 2000,
+            interactive: true
+        });
     }
     
     /**

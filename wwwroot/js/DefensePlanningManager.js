@@ -443,14 +443,29 @@ class DefensePlanningManager {
                     removedFromMap = true;
                 }
             } else if (category === 'withdrawal' || category === 'route') {
-                if (elementData.layers && elementData.layers.route) {
-                    this.withdrawalLayer.removeLayer(elementData.layers.route);
+                if (elementData.layers) {
+                    if (elementData.layers.polyline) {
+                        this.withdrawalLayer.removeLayer(elementData.layers.polyline);
                     removedFromMap = true;
+                    }
+                    if (elementData.layers.arrows) {
+                        elementData.layers.arrows.forEach(arrow => {
+                            this.withdrawalLayer.removeLayer(arrow);
+                        });
+                    }
+                    if (elementData.layers.textLabel) {
+                        this.withdrawalLayer.removeLayer(elementData.layers.textLabel);
+                    }
                 }
             } else if (category === 'line') {
-                if (elementData.layers && elementData.layers.line) {
-                    this.defensiveLineLayer.removeLayer(elementData.layers.line);
+                if (elementData.layers) {
+                    if (elementData.layers.polyline) {
+                        this.defensiveLineLayer.removeLayer(elementData.layers.polyline);
                     removedFromMap = true;
+                    }
+                    if (elementData.layers.textLabel) {
+                        this.defensiveLineLayer.removeLayer(elementData.layers.textLabel);
+                    }
                 }
             } else if (category === 'position') {
                 if (elementData.layers) {
@@ -471,12 +486,13 @@ class DefensePlanningManager {
                 console.log(`✅ Removed ${category} from map`);
             }
             
-            // Delete from database if it has a database ID
+            // Delete from database if it has a database ID or ElementId
             let databaseDeleted = false;
-            if (elementData.dbId) {
+            const deleteId = elementData.dbId || elementData.id;
+            if (deleteId) {
                 try {
-                    console.log(`🗄️ Deleting from database with ID: ${elementData.dbId}`);
-                    const response = await fetch(`/api/DefenseElementApi/delete/${elementData.dbId}`, {
+                    console.log(`🗄️ Deleting from database with ID: ${deleteId} (dbId: ${elementData.dbId}, elementId: ${elementData.id})`);
+                    const response = await fetch(`/api/DefenseElementApi/delete/${deleteId}`, {
                         method: 'DELETE'
                     });
                     
@@ -646,23 +662,48 @@ class DefensePlanningManager {
                     this.obstacleLayer.addLayer(element);
                     element.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'obstacle'));
                 }
-            } else if (dbElement.category === 'route') {
+            } else if (dbElement.category === 'withdrawal' || dbElement.category === 'route') {
+                console.log(`🔄 Reconstructing withdrawal route - category: ${dbElement.category}, type: ${dbElement.type}`);
                 element = this.renderer.createWithdrawalRoute(coordinates, dbElement.type, { forceType });
-                if (element.route) {
-                    this.withdrawalLayer.addLayer(element.route);
-                    element.route.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'route'));
-                } else if (element.polyline) {
+                console.log(`✅ Withdrawal route element created:`, element);
+                
+                // Add polyline to map
+                if (element.polyline) {
                     this.withdrawalLayer.addLayer(element.polyline);
-                    element.polyline.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'route'));
+                    element.polyline.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, dbElement.category));
+                    console.log(`✅ Added withdrawal polyline to map`);
+                }
+                
+                // Add arrows to map
+                if (element.arrows) {
+                    element.arrows.forEach(arrow => {
+                        this.withdrawalLayer.addLayer(arrow);
+                    });
+                    console.log(`✅ Added ${element.arrows.length} arrows to map`);
+                }
+                
+                // Add text label if it exists
+                if (element.textLabel) {
+                    this.withdrawalLayer.addLayer(element.textLabel);
+                    element.textLabel.on('click', () => this.showDefenseElementDetails(dbElement.elementId));
+                    element.textLabel.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, dbElement.category));
+                    console.log(`✅ Added withdrawal text label to map`);
                 }
             } else if (dbElement.category === 'line') {
                 element = this.renderer.createDefensiveLine(coordinates, dbElement.type, { forceType });
                 if (element.line) {
                     this.defensiveLineLayer.addLayer(element.line);
                     element.line.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'line'));
-                } else if (element) {
-                    this.defensiveLineLayer.addLayer(element);
-                    element.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'line'));
+                } else if (element.polyline) {
+                    this.defensiveLineLayer.addLayer(element.polyline);
+                    element.polyline.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'line'));
+                }
+                
+                // Add text label if it exists
+                if (element.textLabel) {
+                    this.defensiveLineLayer.addLayer(element.textLabel);
+                    element.textLabel.on('click', () => this.showDefenseElementDetails(dbElement.elementId));
+                    element.textLabel.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, dbElement.elementId, 'line'));
                 }
             } else if (dbElement.category === 'position') {
                 // Defensive position - coordinates format: [[lat, lng]]
@@ -921,8 +962,35 @@ class DefensePlanningManager {
             window.tokenActionModeManager.showDefenseInstructions(`Click points to draw line, double-click/Enter/right-click to finish`, instructionText);
         }
         
+        // Remove any existing event listeners first
+        this.map.off('click', this.handlePolylineClick);
+        this.map.off('dblclick', this.finishPolylineDrawing);
+        
+        // Add new event listeners
         this.map.on('click', this.handlePolylineClick.bind(this));
         this.map.on('dblclick', this.finishPolylineDrawing.bind(this));
+        
+        // Add right-click to finish drawing as alternative
+        this.map.on('contextmenu', (e) => {
+            if (e.originalEvent) {
+                e.originalEvent.preventDefault();
+            }
+            if (this.drawingMode === category) {
+                this.finishPolylineDrawing(e);
+            }
+        });
+        
+        // Set up keyboard handler for Enter/Escape (for POLYLINES)
+        this.keyboardHandler = (e) => {
+            if (e.key === 'Enter' && this.drawingMode === category) {
+                e.preventDefault();
+                this.finishPolylineDrawing(e);
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                this.cancelDrawing();
+            }
+        };
+        document.addEventListener('keydown', this.keyboardHandler);
     }
 
     /**
@@ -1293,6 +1361,7 @@ class DefensePlanningManager {
         if (category === 'obstacle') {
             element = this.renderer.createObstacle(coordinates, type, { forceType });
             targetLayer = this.obstacleLayer;
+            targetLayer.addLayer(element);
         } else if (category === 'withdrawal') {
             element = this.renderer.createWithdrawalRoute(coordinates, type, { forceType });
             targetLayer = this.withdrawalLayer;
@@ -1300,13 +1369,16 @@ class DefensePlanningManager {
             if (element.arrows) {
                 element.arrows.forEach(arrow => targetLayer.addLayer(arrow));
             }
+            if (element.textLabel) {
+                targetLayer.addLayer(element.textLabel);
+            }
         } else if (category === 'line') {
             element = this.renderer.createDefensiveLine(coordinates, type, { forceType });
             targetLayer = this.defensiveLineLayer;
+            targetLayer.addLayer(element.polyline);
+            if (element.textLabel) {
+                targetLayer.addLayer(element.textLabel);
         }
-        
-        if (category !== 'withdrawal') {
-            targetLayer.addLayer(element);
         }
         
         // Store element
@@ -1330,6 +1402,12 @@ class DefensePlanningManager {
         const clickableElement = element.polyline || element;
         clickableElement.on('click', () => this.showDefenseElementDetails(elementId));
         clickableElement.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, elementId, category));
+        
+        // Also add events to text label if it exists
+        if (element.textLabel) {
+            element.textLabel.on('click', () => this.showDefenseElementDetails(elementId));
+            element.textLabel.on('contextmenu', (e) => this.handleDefenseElementRightClick(e, elementId, category));
+        }
         
         console.log(`✅ Created ${category} (${type}) with ID: ${elementId}`);
         
@@ -1482,6 +1560,9 @@ class DefensePlanningManager {
         }
         if (element.layers.arrows) {
             element.layers.arrows.forEach(arrow => targetLayer.removeLayer(arrow));
+        }
+        if (element.layers.textLabel) {
+            targetLayer.removeLayer(element.layers.textLabel);
         }
         if (element.category === 'position') {
             targetLayer.removeLayer(element.layers);

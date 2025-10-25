@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System.Text.Json;
 using TechWebSol.DAL;
@@ -366,22 +367,35 @@ namespace TechWebSol.Controllers
         }
 
         /// <summary>
-        /// Delete defense element
+        /// Delete defense element - tries both Id (primary key) and ElementId (GUID)
         /// </summary>
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteDefenseElement(Guid id)
         {
             try
             {
-                var dal = new DefenseElementDAL(_context);
-                var result = await dal.DeleteDefenseElementAsync(id);
-
-                if (!result)
+                // First try to find by primary key Id
+                var element = await _context.DefenseElements.FindAsync(id);
+                
+                // If not found, try by ElementId (GUID from frontend)
+                if (element == null)
                 {
+                    _logger.LogInformation("Element not found by Id, trying ElementId: {Id}", id);
+                    element = await _context.DefenseElements
+                        .FirstOrDefaultAsync(d => d.ElementId == id);
+                }
+
+                if (element == null)
+                {
+                    _logger.LogWarning("Defense element {Id} not found by Id or ElementId", id);
                     return NotFound(new { success = false, message = "Defense element not found" });
                 }
 
-                _logger.LogInformation("Defense element {Id} deleted", id);
+                // Hard delete
+                _context.DefenseElements.Remove(element);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Defense element deleted successfully - Id: {Id}, ElementId: {ElementId}", element.Id, element.ElementId);
 
                 return Ok(new
                 {
