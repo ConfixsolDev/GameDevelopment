@@ -203,8 +203,42 @@ namespace TechWebSol.Controllers
 
                         var markers = token.MapMarkers.OrderBy(m => m.CreatedDate).ToList();
 
+                        // If only 1 marker, analyze CURRENT POSITION terrain instead of route
+                        if (markers.Count == 1)
+                        {
+                            _logger.LogInformation($"Token {token.Id} has only 1 marker - analyzing current position");
+                            var currentMarker = markers[0];
+                            var currentPosition = new List<MapMarker> { currentMarker };
+                            
+                            var militaryUnit = militaryUnits.ContainsKey(token.Id) ? militaryUnits[token.Id] : null;
+                            var mobilityType = GetMobilityType(token);
+                            
+                            // Analyze terrain at current position
+                            var positionTerrainAnalysis = await GetTerrainAnalysis(currentPosition, mobilityType, militaryUnit);
+                            
+                            var unitComposition = GetUnitComposition(militaryUnit);
+                            
+                            adjudicationResults.Add(new
+                            {
+                                tokenId = token.Id,
+                                tokenName = token.Name,
+                                forceType = token.ForceType,
+                                unitType = token.TokenGroup?.Name ?? "Unknown",
+                                status = "position_analysis",
+                                currentPosition = new { 
+                                    lat = double.Parse(currentMarker.latitude), 
+                                    lng = double.Parse(currentMarker.longitude) 
+                                },
+                                terrainAnalysis = positionTerrainAnalysis,
+                                unitComposition = unitComposition,
+                                message = "Current position terrain analysis (no movement route)"
+                            });
+                            
+                            continue;
+                        }
+
                         if (markers.Count < 2)
-                            continue; // Need at least 2 points for movement analysis
+                            continue; // Skip if no markers at all
 
                         // Calculate total distance
                         double totalDistance = 0;
@@ -463,6 +497,70 @@ namespace TechWebSol.Controllers
                     Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
             var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
             return R * c;
+        }
+
+        private bool IsPointInWaterBody(double lat, double lng, dynamic geometry)
+        {
+            try
+            {
+                // Check if geometry has coordinates (polygon/multipolygon)
+                if (geometry.coordinates != null)
+                {
+                    var coordinates = geometry.coordinates;
+                    
+                    // For simple point-in-polygon, use ray casting algorithm
+                    // This is a simplified check - just see if point is within bounding box of water feature
+                    // For ocean/sea, this is usually sufficient
+                    
+                    // Convert coordinates to list for easier processing
+                    var coordsList = new List<List<double>>();
+                    
+                    // Handle different geometry types
+                    if (coordinates is IEnumerable<dynamic> coordsEnum)
+                    {
+                        foreach (var coord in coordsEnum)
+                        {
+                            if (coord is IEnumerable<dynamic> coordPair)
+                            {
+                                var coordList = coordPair.ToList();
+                                if (coordList.Count >= 2)
+                                {
+                                    coordsList.Add(new List<double> { 
+                                        Convert.ToDouble(coordList[0]), 
+                                        Convert.ToDouble(coordList[1]) 
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (coordsList.Count > 0)
+                    {
+                        // Simple bounding box check for water bodies
+                        var lats = coordsList.Select(c => c[1]).ToList();
+                        var lngs = coordsList.Select(c => c[0]).ToList();
+                        
+                        var minLat = lats.Min();
+                        var maxLat = lats.Max();
+                        var minLng = lngs.Min();
+                        var maxLng = lngs.Max();
+                        
+                        // Check if point is within bounding box with small margin
+                        if (lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng)
+                        {
+                            _logger.LogInformation($"Point ({lat},{lng}) is within water body bounding box");
+                            return true;
+                        }
+                    }
+                }
+                
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error checking point in water body");
+                return false;
+            }
         }
 
         private string DetermineTerrainType(MapMarker start, MapMarker end)
@@ -783,7 +881,7 @@ namespace TechWebSol.Controllers
                 }
 
                 // Get real elevation data for all markers
-                if (markers.Count >= 2)
+                if (markers.Count >= 1)
                 {
                     try
                     {
@@ -811,28 +909,47 @@ namespace TechWebSol.Controllers
                         // Build detailed route points with intermediate sampling (like TacticalViewer)
                         var detailedPoints = new List<object>();
                         
-                        for (int i = 0; i < markers.Count - 1; i++)
+                        // Handle single position analysis
+                        if (markers.Count == 1)
                         {
-                            var startLat = double.Parse(markers[i].latitude);
-                            var startLng = double.Parse(markers[i].longitude);
-                            var endLat = double.Parse(markers[i + 1].latitude);
-                            var endLng = double.Parse(markers[i + 1].longitude);
+                            // For single position, just analyze that point
+                            var singleLat = double.Parse(markers[0].latitude);
+                            var singleLng = double.Parse(markers[0].longitude);
                             
-                            // Calculate distance between waypoints
-                            var distance = CalculateDistance(startLat, startLng, endLat, endLng);
-                            
-                            // Determine number of segments (adaptive ~100m spacing, min 10, max 300)
-                            var segments = Math.Max(10, Math.Min(300, (int)Math.Floor(distance / 0.1))); // 0.1km = 100m
-                            
-                            // Add intermediate points
-                            for (int j = 0; j <= segments; j++)
+                            detailedPoints.Add(new
                             {
-                                var ratio = (double)j / segments;
-                                detailedPoints.Add(new
+                                latitude = singleLat,
+                                longitude = singleLng
+                            });
+                            
+                            _logger.LogInformation($"Analyzing single position at {singleLat}, {singleLng}");
+                        }
+                        else
+                        {
+                            // Handle route analysis (existing logic)
+                            for (int i = 0; i < markers.Count - 1; i++)
+                            {
+                                var startLat = double.Parse(markers[i].latitude);
+                                var startLng = double.Parse(markers[i].longitude);
+                                var endLat = double.Parse(markers[i + 1].latitude);
+                                var endLng = double.Parse(markers[i + 1].longitude);
+                                
+                                // Calculate distance between waypoints
+                                var distance = CalculateDistance(startLat, startLng, endLat, endLng);
+                                
+                                // Determine number of segments (adaptive ~100m spacing, min 10, max 300)
+                                var segments = Math.Max(10, Math.Min(300, (int)Math.Floor(distance / 0.1))); // 0.1km = 100m
+                                
+                                // Add intermediate points
+                                for (int j = 0; j <= segments; j++)
                                 {
-                                    latitude = startLat + (endLat - startLat) * ratio,
-                                    longitude = startLng + (endLng - startLng) * ratio
-                                });
+                                    var ratio = (double)j / segments;
+                                    detailedPoints.Add(new
+                                    {
+                                        latitude = startLat + (endLat - startLat) * ratio,
+                                        longitude = startLng + (endLng - startLng) * ratio
+                                    });
+                                }
                             }
                         }
                         
@@ -855,10 +972,56 @@ namespace TechWebSol.Controllers
                                 elevations = resultsList.Select(r => (double)r.elevation).ToList();
                             }
                             
+                            // CRITICAL: Check for water using elevation data
+                            // If elevation is significantly negative (below sea level), it's likely water
+                            if (elevations.Count > 0)
+                            {
+                                int waterPointsDetected = 0;
+                                for (int i = 0; i < elevations.Count; i++)
+                                {
+                                    if (elevations[i] < -1) // Below sea level by more than 1m = likely water
+                                    {
+                                        waterPointsDetected++;
+                                    }
+                                }
+                                
+                                if (waterPointsDetected > 0)
+                                {
+                                    obstacleCategories["water"] += waterPointsDetected;
+                                    obstacles.Add(new { 
+                                        type = "water_detected_by_elevation",
+                                        isImpassable = true,
+                                        description = $"🌊 WATER BODY DETECTED: {waterPointsDetected} points below sea level (elevation < -1m) - IMPASSABLE for ground units, requires naval transport"
+                                    });
+                                    _logger.LogWarning($"⚠️ WATER DETECTED via elevation: {waterPointsDetected} points below sea level along route");
+                                }
+                            }
+                            
                             if (elevations.Count > 0)
                             {
                                 startElevation = elevations[0];
                                 endElevation = elevations[elevations.Count - 1];
+                                
+                                // Check if START or END waypoints are on water (below sea level)
+                                if (startElevation < -1)
+                                {
+                                    obstacles.Add(new { 
+                                        type = "start_position_on_water",
+                                        isImpassable = true,
+                                        description = $"🌊 START POSITION ON WATER: Elevation {Math.Round(startElevation, 1)}m (below sea level) - Token starts on water body - IMPASSABLE for ground units"
+                                    });
+                                    _logger.LogError($"❌ CRITICAL: START POSITION is ON WATER at elevation {startElevation}m");
+                                }
+                                
+                                if (endElevation < -1)
+                                {
+                                    obstacles.Add(new { 
+                                        type = "end_position_on_water",
+                                        isImpassable = true,
+                                        description = $"🌊 END POSITION ON WATER: Elevation {Math.Round(endElevation, 1)}m (below sea level) - Destination is on water body - IMPASSABLE for ground units"
+                                    });
+                                    _logger.LogError($"❌ CRITICAL: END POSITION is ON WATER at elevation {endElevation}m");
+                                }
                                 
                                 // Calculate max slope along route and check for impassable slopes
                                 // Like TacticalViewer: Heavy vehicles struggle on slopes > 25°, trucks > 35°
@@ -898,8 +1061,8 @@ namespace TechWebSol.Controllers
                     }
                 }
 
-                // Get terrain features along the route
-                if (markers.Count >= 2)
+                // Get terrain features along the route OR at single position
+                if (markers.Count >= 1)
                 {
                     try
                     {
@@ -914,18 +1077,23 @@ namespace TechWebSol.Controllers
                         }
                         else
                         {
-                        // Calculate bounding box for the detailed route (more accurate)
+                        // Calculate bounding box for the position or route
                         var lats = markers.Select(m => double.Parse(m.latitude)).ToList();
                         var lngs = markers.Select(m => double.Parse(m.longitude)).ToList();
                         
-                        // Add buffer for detailed sampling
-                        var buffer = 0.005; // 500m buffer
+                        // Add buffer for detailed sampling (larger buffer for single position to catch nearby features)
+                        var buffer = markers.Count == 1 ? 0.01 : 0.005; // 1km buffer for single position, 500m for route
                         var bbox = new double[] {
                             lngs.Min() - buffer, // minLng
                             lats.Min() - buffer, // minLat  
                             lngs.Max() + buffer, // maxLng
                             lats.Max() + buffer  // maxLat
                         };
+                        
+                        if (markers.Count == 1)
+                        {
+                            _logger.LogInformation($"Analyzing terrain features at single position with 1km radius");
+                        }
 
                         // Get terrain features using the same approach as TacticalViewer
                         var featuresResponse = await CallTerrainFeatures(bbox, terrainDb);
@@ -1034,6 +1202,48 @@ namespace TechWebSol.Controllers
                                                     isImpassable = false,
                                                     description = $"⚠️ MILITARY ZONE: {tags.GetValueOrDefault("name", "Restricted Area")} - RESTRICTED ACCESS"
                                                 });
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // CRITICAL: Check if any marker positions are DIRECTLY on water
+                        // This checks the actual waypoint locations, not just the route between them
+                        if (featuresResponse != null && featuresResponse.success == true && featuresResponse.elements != null)
+                        {
+                            var elementsList = featuresResponse.elements as IEnumerable<dynamic>;
+                            if (elementsList != null)
+                            {
+                                foreach (var marker in markers)
+                                {
+                                    var markerLat = double.Parse(marker.latitude);
+                                    var markerLng = double.Parse(marker.longitude);
+                                    
+                                    foreach (var element in elementsList)
+                                    {
+                                        if (element.tags != null && element.geometry != null)
+                                        {
+                                            var tags = element.tags as Dictionary<string, string>;
+                                            if (tags != null && 
+                                                (tags.ContainsKey("natural") && tags["natural"] == "water" ||
+                                                 tags.ContainsKey("waterway")))
+                                            {
+                                                // Check if marker is inside this water polygon
+                                                var geometry = element.geometry;
+                                                if (IsPointInWaterBody(markerLat, markerLng, geometry))
+                                                {
+                                                    var waterName = tags.GetValueOrDefault("name", "Water body");
+                                                    obstacleCategories["water"]++;
+                                                    obstacles.Add(new { 
+                                                        type = "water_position",
+                                                        isImpassable = true,
+                                                        description = $"🌊 WAYPOINT ON WATER: {waterName} - Token positioned on water body - IMPASSABLE for ground units"
+                                                    });
+                                                    _logger.LogWarning($"⚠️ CRITICAL: Marker at {markerLat},{markerLng} is DIRECTLY ON WATER: {waterName}");
+                                                    break; // Found water at this marker, no need to check more polygons
+                                                }
                                             }
                                         }
                                     }
