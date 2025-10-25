@@ -1,6 +1,8 @@
 ﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
 @inject UserManager<ApplicationUser> _userManager
 @inject IUserSessionService _userSessionService
+@inject TechWebSol.Data.ApplicationDbContext _context
 @{
     var ShortName = "";
     var DisplayName = "";
@@ -24,32 +26,55 @@
     
     // Get team information from session
     var currentUser = _userSessionService.GetCurrentUser();
-    if (currentUser != null && !string.IsNullOrEmpty(currentUser.ForceType))
+    
+    // Only show force type if user has TeamId (not Director/Super Admin)
+    if (currentUser != null && currentUser.TeamId != null && currentUser.TeamId != Guid.Empty)
     {
-        var forceType = currentUser.ForceType.ToLower();
-        if (forceType.Contains("fox"))
+        // Try to get ForceType from User first, if empty then get from Team
+        var forceType = currentUser.ForceType;
+        
+        if (string.IsNullOrEmpty(forceType))
         {
-            TeamName = "Fox Land";
-            TeamColor = "#ff0000";
-            TeamIcon = "fa-chess-rook";
+            // ForceType not set on user, get it from Team
+            var team = _context.Teams.AsNoTracking().FirstOrDefault(t => t.Id == currentUser.TeamId);
+            forceType = team?.ForceType;
         }
-        else if (forceType.Contains("blue"))
+        
+        if (!string.IsNullOrEmpty(forceType))
         {
-            TeamName = "Blue Land";
-            TeamColor = "#0080ff";
-            TeamIcon = "fa-shield-alt";
-        }
-        else if (forceType.Contains("neutral"))
-        {
-            TeamName = "Neutral";
-            TeamColor = "#00AA00";
-            TeamIcon = "fa-balance-scale";
+            var forceTypeLower = forceType.ToLower().Trim();
+            
+            if (forceTypeLower.Contains("fox") || forceTypeLower.Contains("red"))
+            {
+                TeamName = "FOX LAND";
+                TeamColor = "#ff0000";
+                TeamIcon = "fa-chess-rook";
+            }
+            else if (forceTypeLower.Contains("blue"))
+            {
+                TeamName = "BLUE LAND";
+                TeamColor = "#0080ff";
+                TeamIcon = "fa-shield-alt";
+            }
+            else if (forceTypeLower.Contains("neutral") || forceTypeLower.Contains("un"))
+            {
+                TeamName = "NEUTRAL";
+                TeamColor = "#00AA00";
+                TeamIcon = "fa-balance-scale";
+            }
+            else
+            {
+                // Fallback: use the actual ForceType value
+                TeamName = forceType.ToUpper();
+            }
         }
         else
         {
-            TeamName = currentUser.ForceType;
+            // Has TeamId but no ForceType on User or Team - fallback to CONTROL
+            TeamName = "CONTROL";
         }
     }
+    // If no TeamId (Director/Super Admin), default to CONTROL
 }
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
