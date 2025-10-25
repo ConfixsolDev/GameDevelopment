@@ -1,7 +1,7 @@
 @model List<TechWebSol.ViewModels.AttackOrderSelectionViewModel>
 
 <div class="modal fade" id="attackOrderSelectionModal" tabindex="-1" role="dialog" aria-labelledby="attackOrderSelectionModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-dialog modal-xl" role="document" style="max-width: 900px; margin: 1.75rem auto;">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="attackOrderSelectionModalLabel">
@@ -27,10 +27,11 @@
                             | STATUS: <span class="military-status">@order.Status.ToUpper()</span> 
                             | COMPLETION: <span class="military-value">@order.CompletionPercentage</span>
                         </div>
-                        <button type="button" class="military-simulate-btn"
+                        <button type="button" class="military-simulate-btn btn"
                                 data-order-id="@order.Id"
                                 data-attacker-name="@order.AttackerTokenName"
-                                data-target-name="@order.TargetTokenName">
+                                data-target-name="@order.TargetTokenName"
+                                onclick="window.runSimulationForOrder('@order.Id', '@order.AttackerTokenName', '@order.TargetTokenName'); return false;">
                             ► RUN SIMULATION
                         </button>
                     </div>
@@ -68,7 +69,6 @@
     #attackOrderSelectionModal .modal-content {
         background-color: #0a0e14;
         border: 2px solid #1a4d2e;
-        max-width: 900px;
     }
 
     #attackOrderSelectionModal .modal-header {
@@ -104,63 +104,86 @@
     }
 
     #attackOrderSelectionModal .military-orders-list {
-        margin-top: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
     }
 
     #attackOrderSelectionModal .military-order-item {
         background-color: #0f1419;
         border: 1px solid #1a4d2e;
         padding: 15px;
-        margin-bottom: 10px;
+        border-radius: 4px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        transition: all 0.2s;
     }
 
-    #attackOrderSelectionModal .military-order-item:hover {
-        border-color: #00ff00;
-        background-color: #0a1212;
-    }
+        #attackOrderSelectionModal .military-order-item:hover {
+            border-color: #00ff00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+        }
 
     #attackOrderSelectionModal .military-order-line {
-        color: #00ff00;
-        font-size: 13px;
         flex: 1;
+        color: #00ff00;
+        font-size: 12px;
+        letter-spacing: 1px;
     }
 
     #attackOrderSelectionModal .military-value {
-        color: #ffaa00;
+        color: #00ffff;
         font-weight: bold;
     }
 
     #attackOrderSelectionModal .military-tag {
-        color: #ffaa00;
+        background: #ff8800;
+        color: #000;
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-size: 10px;
         font-weight: bold;
-        background: #1a1a00;
-        padding: 2px 6px;
-        border: 1px solid #ffaa00;
+        margin-left: 5px;
     }
 
     #attackOrderSelectionModal .military-status {
-        color: #00ff00;
+        color: #ffff00;
         font-weight: bold;
     }
 
     #attackOrderSelectionModal .military-simulate-btn {
-        background: #1a4d2e;
-        border: 2px solid #00ff00;
+        background-color: #1a4d2e;
         color: #00ff00;
+        border: 2px solid #00ff00;
         padding: 8px 20px;
         font-family: 'Courier New', monospace;
         font-weight: bold;
-        font-size: 12px;
+        letter-spacing: 2px;
         cursor: pointer;
         transition: all 0.2s;
-        margin-left: 15px;
+        border-radius: 4px;
+        font-size: 12px;
     }
 
-    #attackOrderSelectionModal .military-simulate-btn:hover {
-        background: #00ff00;
-        color: #000;
+        #attackOrderSelectionModal .military-simulate-btn:hover {
+            background-color: #00ff00;
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+
+        #attackOrderSelectionModal .military-simulate-btn:active {
+            transform: scale(0.95);
+        }
+
+    #attackOrderSelectionModal .btn-secondary {
+        background-color: #0f1419;
+        border-color: #1a4d2e;
+        color: #00ff00;
     }
+
+        #attackOrderSelectionModal .btn-secondary:hover {
+            background-color: #1a4d2e;
+            border-color: #00ff00;
+        }
 </style>

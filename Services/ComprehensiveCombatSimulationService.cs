@@ -145,20 +145,27 @@ namespace TechWebSol.Services
                     .Include(b => b.CombatEngineeringCompanies)
                     .FirstOrDefaultAsync(b => b.TokenId == attackerTokenId);
 
-                // Initialize empty brigade if none exists
+                // Initialize empty brigade if none exists - MUST have all collections initialized
                 if (attackerBrigade == null)
                 {
+                    _logger.LogInformation($"⚠️ No brigade found for attacker token {attackerTokenId}, creating temporary brigade for direct units");
                     attackerBrigade = new Brigade
                     {
+                        Id = Guid.NewGuid(), // Generate ID for temporary brigade
                         TokenId = attackerTokenId,
                         TeamId = attackerToken.TeamId,
                         ForceType = attackerToken.ForceType,
                         BrigadeCode = "DIRECT",
-                        IsActive = true
+                        IsActive = true,
+                        InfantryBattalions = new List<InfantryBattalion>(),
+                        ArmouredRegiments = new List<ArmouredRegiment>(),
+                        ArtilleryRegiments = new List<ArtilleryRegiment>(),
+                        CombatEngineeringCompanies = new List<CombatEngineeringCompany>()
                     };
                 }
 
-                // Load ALL units for this token (both with and without brigade)
+                // Load ALL units for this token (both brigade units and direct units)
+                // This ensures direct units (without BrigadeId) are included
                 attackerBrigade.InfantryBattalions = await _context.InfantryBattalions
                     .Where(i => i.TokenId == attackerTokenId && i.IsActive)
                     .OrderByDescending(i => i.CreatedDate)
@@ -176,6 +183,8 @@ namespace TechWebSol.Services
                     .Where(i => i.TokenId == attackerTokenId && i.IsActive)
                     .OrderByDescending(i => i.CreatedDate)
                     .ToListAsync();
+                    
+                _logger.LogInformation($"✅ Loaded attacker units: {attackerBrigade.InfantryBattalions.Count} infantry, {attackerBrigade.ArmouredRegiments.Count} armour, {attackerBrigade.ArtilleryRegiments.Count} artillery, {attackerBrigade.CombatEngineeringCompanies.Count} engineers");
 
                 // Get Brigades (contains all weapon data)
                 var defenderBrigade = await _context.Brigades
@@ -185,20 +194,27 @@ namespace TechWebSol.Services
                     .Include(b => b.CombatEngineeringCompanies)
                     .FirstOrDefaultAsync(b => b.TokenId == realDefenderToken.Id);
 
-                // Initialize empty brigade if none exists
+                // Initialize empty brigade if none exists - MUST have all collections initialized
                 if (defenderBrigade == null)
                 {
+                    _logger.LogInformation($"⚠️ No brigade found for defender token {realDefenderToken.Id}, creating temporary brigade for direct units");
                     defenderBrigade = new Brigade
                     {
+                        Id = Guid.NewGuid(), // Generate ID for temporary brigade
                         TokenId = realDefenderToken.Id,
                         TeamId = realDefenderToken.TeamId,
                         ForceType = realDefenderToken.ForceType,
                         BrigadeCode = "DIRECT",
-                        IsActive = true
+                        IsActive = true,
+                        InfantryBattalions = new List<InfantryBattalion>(),
+                        ArmouredRegiments = new List<ArmouredRegiment>(),
+                        ArtilleryRegiments = new List<ArtilleryRegiment>(),
+                        CombatEngineeringCompanies = new List<CombatEngineeringCompany>()
                     };
                 }
 
-                // Load ALL units for this token (both with and without brigade)
+                // Load ALL units for this token (both brigade units and direct units)
+                // This ensures direct units (without BrigadeId) are included
                 defenderBrigade.InfantryBattalions = await _context.InfantryBattalions
                     .Where(i => i.TokenId == realDefenderToken.Id && i.IsActive)
                     .OrderByDescending(i => i.CreatedDate)
@@ -216,6 +232,8 @@ namespace TechWebSol.Services
                     .Where(i => i.TokenId == realDefenderToken.Id && i.IsActive)
                     .OrderByDescending(i => i.CreatedDate)
                     .ToListAsync();
+                    
+                _logger.LogInformation($"✅ Loaded defender units: {defenderBrigade.InfantryBattalions.Count} infantry, {defenderBrigade.ArmouredRegiments.Count} armour, {defenderBrigade.ArtilleryRegiments.Count} artillery, {defenderBrigade.CombatEngineeringCompanies.Count} engineers");
 
 
                 _logger.LogInformation("🎯 SIMULATION START: Attacker={AttackerName} (Brigade={AttackerBrigade}), Defender={DefenderName} (Brigade={DefenderBrigade})", 
@@ -873,14 +891,21 @@ namespace TechWebSol.Services
                 Location = position.Coordinates
             };
 
-            // Use TokenId directly - Brigade has TokenId field
-            if (attackerBrigade == null || defenderBrigade == null || !attackerBrigade.TokenId.HasValue || !defenderBrigade.TokenId.HasValue)
+            // Validate brigades - should never be null since we create temporary ones
+            if (attackerBrigade == null || defenderBrigade == null)
             {
-                _logger.LogError("❌ CRITICAL: TokenId not found - Attacker: {AttackerNull}, Defender: {DefenderNull}, AttackerTokenId: {AttackerTokenId}, DefenderTokenId: {DefenderTokenId}", 
+                _logger.LogError("❌ CRITICAL: Brigade is null - Attacker: {AttackerNull}, Defender: {DefenderNull}", 
                     attackerBrigade == null, 
-                    defenderBrigade == null, 
-                    attackerBrigade?.TokenId, 
-                    defenderBrigade?.TokenId);
+                    defenderBrigade == null);
+                throw new InvalidOperationException("Brigade data missing for defense position assault.");
+            }
+            
+            // Validate TokenId is set
+            if (!attackerBrigade.TokenId.HasValue || !defenderBrigade.TokenId.HasValue)
+            {
+                _logger.LogError("❌ CRITICAL: TokenId not set on brigade - AttackerTokenId: {AttackerTokenId}, DefenderTokenId: {DefenderTokenId}", 
+                    attackerBrigade.TokenId, 
+                    defenderBrigade.TokenId);
                 throw new InvalidOperationException("TokenId not found for defense position assault. Cannot calculate weapon effects.");
             }
             
@@ -1046,14 +1071,21 @@ namespace TechWebSol.Services
                 PhaseType = "Combat"
             };
 
-            // Use TokenId directly - Brigade has TokenId field
-            if (attackerBrigade == null || defenderBrigade == null || !attackerBrigade.TokenId.HasValue || !defenderBrigade.TokenId.HasValue)
+            // Validate brigades - should never be null since we create temporary ones
+            if (attackerBrigade == null || defenderBrigade == null)
             {
-                _logger.LogError("❌ CRITICAL: TokenId not found - Attacker: {AttackerNull}, Defender: {DefenderNull}, AttackerTokenId: {AttackerTokenId}, DefenderTokenId: {DefenderTokenId}", 
+                _logger.LogError("❌ CRITICAL: Brigade is null - Attacker: {AttackerNull}, Defender: {DefenderNull}", 
                     attackerBrigade == null, 
-                    defenderBrigade == null, 
-                    attackerBrigade?.TokenId, 
-                    defenderBrigade?.TokenId);
+                    defenderBrigade == null);
+                throw new InvalidOperationException("Brigade data missing for direct assault.");
+            }
+            
+            // Validate TokenId is set
+            if (!attackerBrigade.TokenId.HasValue || !defenderBrigade.TokenId.HasValue)
+            {
+                _logger.LogError("❌ CRITICAL: TokenId not set on brigade - AttackerTokenId: {AttackerTokenId}, DefenderTokenId: {DefenderTokenId}", 
+                    attackerBrigade.TokenId, 
+                    defenderBrigade.TokenId);
                 throw new InvalidOperationException("TokenId not found for direct assault. Cannot calculate weapon effects.");
             }
             
@@ -1200,12 +1232,22 @@ namespace TechWebSol.Services
                 PhaseType = "Counter-Attack"
             };
 
-            // Validate brigades
-            if (defenderBrigade == null || attackerBrigade == null || 
-                !defenderBrigade.TokenId.HasValue || !attackerBrigade.TokenId.HasValue)
+            // Validate brigades - should never be null since we create temporary ones
+            if (defenderBrigade == null || attackerBrigade == null)
             {
-                _logger.LogError("❌ CRITICAL: Cannot calculate counter-attack - missing brigade data");
-                throw new InvalidOperationException("Cannot calculate counter-attack without brigade data");
+                _logger.LogError("❌ CRITICAL: Brigade is null - Defender: {DefenderNull}, Attacker: {AttackerNull}", 
+                    defenderBrigade == null, 
+                    attackerBrigade == null);
+                throw new InvalidOperationException("Brigade data missing for counter-attack.");
+            }
+            
+            // Validate TokenId is set
+            if (!defenderBrigade.TokenId.HasValue || !attackerBrigade.TokenId.HasValue)
+            {
+                _logger.LogError("❌ CRITICAL: TokenId not set on brigade - DefenderTokenId: {DefenderTokenId}, AttackerTokenId: {AttackerTokenId}", 
+                    defenderBrigade.TokenId, 
+                    attackerBrigade.TokenId);
+                throw new InvalidOperationException("Cannot calculate counter-attack without TokenId data");
             }
 
             // Get tokens for terrain

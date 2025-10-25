@@ -535,7 +535,9 @@ namespace TechWebSol.Controllers
             try
             {
                 var attackOrders = await _context.EnhancedAttackOrders
-                    .Where(ao => ao.IsActive && ao.TeamId == user.TeamId)
+                    .Where(ao => ao.IsActive
+                    //&& ao.TeamId == user.TeamId
+                    )
                     .OrderByDescending(ao => ao.CreatedDate)
                     .ToListAsync();
 
@@ -893,50 +895,19 @@ namespace TechWebSol.Controllers
                 _logger.LogInformation("  Attacker Token: {AttackerId}", attackOrder.AttackerTokenId);
                 _logger.LogInformation("  Defender Token: {DefenderId}", attackOrder.TargetTokenId);
 
-                // Check brigade linkage for debugging
-                var attackerBrigade = await _context.Brigades
-                    .Include(b => b.InfantryBattalions)
-                    .Include(b => b.ArmouredRegiments)
-                    .Include(b => b.ArtilleryRegiments)
-                    .FirstOrDefaultAsync(b => b.TokenId == attackOrder.AttackerTokenId);
-
+                // Resolve suspected token to real token
                 Guid? TargerToken = _context.SuspectedTokens.FirstOrDefault(x => x.Id == attackOrder.TargetTokenId)?.RealTokenId;
-
-                if (TargerToken != null)
+                
+                // If target is not a suspected token, use the original target token ID
+                if (TargerToken == null)
                 {
+                    TargerToken = attackOrder.TargetTokenId;
+                }
+                
+                _logger.LogInformation("  Resolved Defender Token: {ResolvedDefenderId}", TargerToken);
 
-                }
-                var defenderBrigade = await _context.Brigades
-                    .Include(b => b.InfantryBattalions)
-                    .Include(b => b.ArmouredRegiments)
-                    .Include(b => b.ArtilleryRegiments)
-                    .FirstOrDefaultAsync(b => b.TokenId == TargerToken);
-
-                if (attackerBrigade != null)
-                {
-                    _logger.LogInformation("✅ Attacker Brigade Found: {Count} infantry, {Armour} armour, {Artillery} artillery", 
-                        attackerBrigade.InfantryBattalions.Count, 
-                        attackerBrigade.ArmouredRegiments.Count, 
-                        attackerBrigade.ArtilleryRegiments.Count);
-                }
-                else
-                {
-                    _logger.LogWarning("⚠️ NO BRIGADE FOUND for attacker token {TokenId}", attackOrder.AttackerTokenId);
-                }
-
-                if (defenderBrigade != null)
-                {
-                    _logger.LogInformation("✅ Defender Brigade Found: {Count} infantry, {Armour} armour, {Artillery} artillery", 
-                        defenderBrigade.InfantryBattalions.Count, 
-                        defenderBrigade.ArmouredRegiments.Count, 
-                        defenderBrigade.ArtilleryRegiments.Count);
-                }
-                else
-                {
-                    _logger.LogWarning("⚠️ NO BRIGADE FOUND for defender token {TokenId}", attackOrder.TargetTokenId);
-                }
-
-                var result = await _simulationService.SimulateAttackDefenseAsync(attackOrder.AttackerTokenId, Guid.Parse(TargerToken.ToString()));
+                // Run comprehensive simulation - service handles both brigade and direct units
+                var result = await _simulationService.SimulateAttackDefenseAsync(attackOrder.AttackerTokenId, TargerToken.Value);
 
                 if (!result.Success)
                 {
@@ -1003,7 +974,40 @@ namespace TechWebSol.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error running comprehensive simulation");
-                return Content($"<div class='alert alert-danger'>Simulation failed: {ex.Message}</div>");
+                
+                // Return user-friendly error modal instead of throwing exception
+                var errorHtml = $@"
+<div class='modal fade' id='combatSimulationModal' tabindex='-1' role='dialog'>
+    <div class='modal-dialog modal-lg' role='document' style='max-width: 700px; margin: 1.75rem auto;'>
+        <div class='modal-content' style='background: #0a0e14; border: 2px solid #ff0000;'>
+            <div class='modal-header' style='background: #1a0000; border-bottom: 2px solid #ff0000;'>
+                <h5 class='modal-title' style='color: #ff0000;'>
+                    <i class='fas fa-exclamation-triangle'></i> Combat Simulation Error
+                </h5>
+                <button type='button' class='close' data-dismiss='modal' style='color: #ff0000;'>
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class='modal-body' style='background: #0a0e14; color: #fff; padding: 30px;'>
+                <div style='background: #1a0000; border-left: 4px solid #ff0000; padding: 20px; border-radius: 4px;'>
+                    <div style='font-size: 16px; margin-bottom: 15px; color: #ff6666;'>
+                        <i class='fas fa-times-circle'></i> <strong>Simulation Failed</strong>
+                    </div>
+                    <div style='font-size: 14px; color: #ffcccc; line-height: 1.6;'>
+                        {ex.Message}
+                    </div>
+                </div>
+            </div>
+            <div class='modal-footer' style='background: #1a0000; border-top: 2px solid #ff0000;'>
+                <button type='button' class='btn btn-secondary' data-dismiss='modal'>
+                    <i class='fas fa-times'></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>";
+                
+                return Content(errorHtml, "text/html");
             }
         }
     }

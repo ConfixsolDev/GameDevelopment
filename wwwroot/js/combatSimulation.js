@@ -10,6 +10,9 @@ async function runCombatSimulation() {
     console.log('jQuery available:', typeof $ !== 'undefined');
     console.log('fetch available:', typeof fetch !== 'undefined');
     
+    // Show loader
+    $("#simpleLoader").show();
+    
     try {
         // Clean up existing modals
         console.log('Cleaning up existing modals...');
@@ -37,26 +40,21 @@ async function runCombatSimulation() {
         $('body').append(html);
         console.log('Modal appended to body');
         
-        // Show the modal with fade-in effect
+        // Show the modal using Bootstrap's modal method
+        const $modal = $('#attackOrderSelectionModal');
+        
         setTimeout(() => {
-            $('#attackOrderSelectionModal').css('display', 'flex').hide().fadeIn(300);
-            console.log('Modal shown');
+            $modal.modal('show');
+            console.log('✅ Attack Order Selection Modal shown (using Bootstrap)');
+            console.log('✅ Buttons have onclick handlers attached via HTML');
+            // Hide loader after modal is shown
+            $("#simpleLoader").hide();
         }, 50);
-        
-        // Attach event listeners to simulate buttons (using military-simulate-btn class)
-        $('.military-simulate-btn').on('click', function() {
-            const orderId = $(this).data('order-id');
-            const attackerName = $(this).data('attacker-name');
-            const targetName = $(this).data('target-name');
-            console.log(`Simulate button clicked for order ${orderId}`);
-            runSimulationForOrder(orderId, attackerName, targetName);
-        });
-        
-        console.log('Event listeners attached');
         
     } catch (error) {
         console.error('❌ Error loading attack orders:', error);
         console.error('Error stack:', error.stack);
+        $("#simpleLoader").hide();
         if (typeof toastr !== 'undefined') {
             toastr.error('Error loading attack orders: ' + error.message, 'Error');
         } else {
@@ -74,14 +72,19 @@ window.runCombatSimulation = runCombatSimulation;
 async function runSimulationForOrder(orderId, attackerName, targetName) {
     console.log(`⚔️ Running simulation for order ${orderId}: ${attackerName} → ${targetName}`);
     
+    // Show loader
+    $("#simpleLoader").show();
+    
     try {
-        // Close selection modal with fade out
-        $('#attackOrderSelectionModal').fadeOut(300, function() {
-            $(this).remove();
-        });
+        // Close selection modal using Bootstrap
+        $('#attackOrderSelectionModal').modal('hide');
         
         // Wait for modal to close
         await new Promise(resolve => setTimeout(resolve, 350));
+        
+        // Remove modal after it's hidden
+        $('#attackOrderSelectionModal').remove();
+        $('.modal-backdrop').remove();
         
         // Show loading notification
         if (typeof toastr !== 'undefined') {
@@ -89,6 +92,7 @@ async function runSimulationForOrder(orderId, attackerName, targetName) {
         }
         
         // Load simulation results from server
+        console.log('📡 Fetching simulation results...');
         const response = await fetch('/AttackPlanning/RunComprehensiveSimulation', {
             method: 'POST',
             headers: { 
@@ -97,22 +101,74 @@ async function runSimulationForOrder(orderId, attackerName, targetName) {
             body: `attackOrderId=${orderId}`
         });
         
+        console.log('📡 Response status:', response.status);
         const html = await response.text();
+        console.log('📡 Response HTML length:', html.length);
         
-        // Check if it's an error message
-        if (html.includes('alert-danger')) {
-            if (typeof toastr !== 'undefined') {
-                toastr.error('Simulation failed. Please check the logs.', 'Error');
+        // Check if response contains an error (old style alert or new modal style)
+        if (html.includes('alert-danger') || html.includes('Combat Simulation Error')) {
+            $("#simpleLoader").hide();
+            console.error('❌ Simulation returned error, showing error modal');
+            
+            // If it's the new error modal format, show it
+            if (html.includes('combatSimulationModal')) {
+                // Clean up any existing modals
+                $('#combatSimulationModal').remove();
+                
+                // Append error modal to body
+                $('body').append(html);
+                
+                // Show error modal
+                setTimeout(() => {
+                    $('#combatSimulationModal').modal('show');
+                }, 50);
+            } else {
+                // Old style alert-danger - show in toastr
+                if (typeof toastr !== 'undefined') {
+                    // Extract error message from alert-danger div
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = html;
+                    const errorMsg = tempDiv.querySelector('.alert-danger')?.textContent?.trim() || 'Simulation failed';
+                    toastr.error(errorMsg, 'Error', { timeOut: 5000 });
+                }
             }
             return;
         }
         
+        // Check if response is empty or invalid
+        if (!html || html.length < 100) {
+            $("#simpleLoader").hide();
+            console.error('❌ Invalid or empty response from server');
+            if (typeof toastr !== 'undefined') {
+                toastr.error('No simulation results returned from server', 'Error');
+            }
+            return;
+        }
+        
+        // Clean up any existing combat simulation modals
+        $('#combatSimulationModal').remove();
+        
         // Append modal to body
         $('body').append(html);
+        console.log('✅ Modal HTML appended to body');
         
-        // Show the modal with fade-in effect
+        // Check if modal element exists
+        if ($('#combatSimulationModal').length === 0) {
+            $("#simpleLoader").hide();
+            console.error('❌ Modal element #combatSimulationModal not found in returned HTML');
+            if (typeof toastr !== 'undefined') {
+                toastr.error('Combat simulation modal not found', 'Error');
+            }
+            return;
+        }
+        
+        console.log('✅ Modal element found, showing modal...');
+        
+        // Show the modal using Bootstrap's modal method
         setTimeout(() => {
-            $('#combatSimulationModal').css('display', 'flex').hide().fadeIn(300);
+            $('#combatSimulationModal').modal('show');
+            console.log('✅ Modal shown');
+            $("#simpleLoader").hide();
         }, 50);
         
         if (typeof toastr !== 'undefined') {
@@ -121,6 +177,7 @@ async function runSimulationForOrder(orderId, attackerName, targetName) {
         
     } catch (error) {
         console.error('❌ Error in combat simulation:', error);
+        $("#simpleLoader").hide();
         if (typeof toastr !== 'undefined') {
             toastr.error('Error running simulation: ' + error.message, 'Error');
         } else {
@@ -188,11 +245,18 @@ function exportSimulationResults() {
     }
 }
 
-// Global close function for modals
+// Global close function for modals using Bootstrap
 window.closeSimulationModal = function(modalId) {
-    $(`#${modalId}`).fadeOut(300, function() {
-        $(this).remove();
-    });
+    $(`#${modalId}`).modal('hide');
+    // Remove modal after it's hidden
+    setTimeout(() => {
+        $(`#${modalId}`).remove();
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open');
+    }, 300);
 };
+
+// Export runSimulationForOrder globally so onclick can access it
+window.runSimulationForOrder = runSimulationForOrder;
 
 console.log('✅ Combat Simulation module loaded (Dark Theme with Partial Views)');

@@ -496,17 +496,18 @@ function showAdjudicationResultsModal(data) {
         show: true
     });
     
-    // Use the same close approach as GamePlay arena
+    // Use proper Bootstrap modal close method
     window.closeMilitaryAdjudicationModal = function() {
-        const modal = document.getElementById('militaryAdjudicationModal');
-        if (modal) {
-            // Hide Bootstrap modal
-            $('#militaryAdjudicationModal').hide().removeClass('show');
+        // Close using Bootstrap's modal method
+        $('#militaryAdjudicationModal').modal('hide');
+        
+        // Remove modal after Bootstrap hide animation completes (300ms)
+        setTimeout(() => {
+            $('#militaryAdjudicationModal').remove();
             $('.modal-backdrop').remove();
             $('body').removeClass('modal-open');
-            $('#militaryAdjudicationModal').remove();
             console.log('✅ Military adjudication modal closed');
-        }
+        }, 300);
     };
     
     // Ensure close buttons work with proper event delegation

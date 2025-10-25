@@ -61,19 +61,19 @@ namespace TechWebSol.Services
 
                 if (attackerBrigade == null)
                 {
-                    _logger.LogError($"❌ CRITICAL: NO BRIGADE FOUND for attacker token {attackerTokenId}");
-                    throw new InvalidOperationException($"Attacker token {attackerTokenId} has no linked Brigade. Cannot calculate weapon-level combat. Please link token to a Brigade with military units.");
+                    _logger.LogError($"❌ CRITICAL: NO MILITARY UNITS FOUND for attacker token '{attackerToken.Name}' ({attackerTokenId})");
+                    throw new InvalidOperationException($"Attacker token '{attackerToken.Name}' has no military units (brigade or direct units). Cannot calculate weapon-level combat. Please add Infantry, Armoured, or Artillery units to this token in Data Management.");
                 }
                 
-                _logger.LogInformation($"✅ Found attacker brigade: {attackerBrigade.InfantryBattalions.Count} infantry, {attackerBrigade.ArmouredRegiments.Count} armour, {attackerBrigade.ArtilleryRegiments.Count} artillery units");
+                _logger.LogInformation($"✅ Found attacker '{attackerToken.Name}' units: {attackerBrigade.InfantryBattalions.Count} infantry, {attackerBrigade.ArmouredRegiments.Count} armour, {attackerBrigade.ArtilleryRegiments.Count} artillery, {attackerBrigade.Engineers.Count} engineers");
                 
                 if (defenderBrigade == null)
                 {
-                    _logger.LogError($"❌ CRITICAL: NO BRIGADE FOUND for defender token {defenderTokenId}");
-                    throw new InvalidOperationException($"Defender token {defenderTokenId} has no linked Brigade. Cannot calculate weapon-level combat. Please link token to a Brigade with military units.");
+                    _logger.LogError($"❌ CRITICAL: NO MILITARY UNITS FOUND for defender token '{defenderToken.Name}' ({defenderTokenId})");
+                    throw new InvalidOperationException($"Defender token '{defenderToken.Name}' has no military units (brigade or direct units). Cannot calculate weapon-level combat. Please add Infantry, Armoured, or Artillery units to this token in Data Management.");
                 }
                 
-                _logger.LogInformation($"✅ Found defender brigade: {defenderBrigade.InfantryBattalions.Count} infantry, {defenderBrigade.ArmouredRegiments.Count} armour, {defenderBrigade.ArtilleryRegiments.Count} artillery units");
+                _logger.LogInformation($"✅ Found defender '{defenderToken.Name}' units: {defenderBrigade.InfantryBattalions.Count} infantry, {defenderBrigade.ArmouredRegiments.Count} armour, {defenderBrigade.ArtilleryRegiments.Count} artillery, {defenderBrigade.Engineers.Count} engineers");
 
                 // Calculate range between units
                 var attackerMarker = attackerToken.MapMarkers?.FirstOrDefault(m => m.IsActive);
@@ -532,7 +532,11 @@ namespace TechWebSol.Services
 
         private async Task<BrigadeWeaponData?> GetBrigadeDataByToken(Guid tokenId)
         {
-            // Brigade has TokenId field - use it directly
+            // Get token name for better logging
+            var token = await _context.Tokens.FindAsync(tokenId);
+            var tokenName = token?.Name ?? tokenId.ToString();
+            
+            // Try to find Brigade with TokenId
             var brigade = await _context.Brigades
                 .Include(b => b.InfantryBattalions)
                 .Include(b => b.ArmouredRegiments)
@@ -540,9 +544,50 @@ namespace TechWebSol.Services
                 .Include(b => b.CombatEngineeringCompanies)
                 .FirstOrDefaultAsync(b => b.TokenId == tokenId);
 
+            // If no brigade found, check for DIRECT UNITS (units without brigade)
             if (brigade == null)
-                return null;
+            {
+                _logger.LogInformation($"No brigade found for token '{tokenName}', checking for direct units...");
+                
+                // Load direct units (units with TokenId but no BrigadeId)
+                var directInfantry = await _context.InfantryBattalions
+                    .Where(i => i.TokenId == tokenId && i.IsActive)
+                    .ToListAsync();
+                    
+                var directArmoured = await _context.ArmouredRegiments
+                    .Where(a => a.TokenId == tokenId && a.IsActive && !a.IsDeleted)
+                    .ToListAsync();
+                    
+                var directArtillery = await _context.ArtilleryRegiments
+                    .Where(a => a.TokenId == tokenId && a.IsActive)
+                    .ToListAsync();
+                    
+                var directEngineers = await _context.CombatEngineeringCompanies
+                    .Where(e => e.TokenId == tokenId && e.IsActive)
+                    .ToListAsync();
+                
+                // If no direct units either, return null
+                if (!directInfantry.Any() && !directArmoured.Any() && !directArtillery.Any() && !directEngineers.Any())
+                {
+                    _logger.LogWarning($"⚠️ No brigade AND no direct units found for token '{tokenName}'");
+                    return null;
+                }
+                
+                _logger.LogInformation($"✅ Found direct units for token '{tokenName}': {directInfantry.Count} infantry, {directArmoured.Count} armour, {directArtillery.Count} artillery, {directEngineers.Count} engineers");
+                
+                // Return direct units as BrigadeWeaponData
+                return new BrigadeWeaponData
+                {
+                    InfantryBattalions = directInfantry,
+                    ArmouredRegiments = directArmoured,
+                    ArtilleryRegiments = directArtillery,
+                    Engineers = directEngineers
+                };
+            }
 
+            // Brigade found - return its units
+            _logger.LogInformation($"✅ Found brigade for token '{tokenName}': {brigade.InfantryBattalions.Count} infantry, {brigade.ArmouredRegiments.Count} armour, {brigade.ArtilleryRegiments.Count} artillery, {brigade.CombatEngineeringCompanies.Count} engineers");
+            
             return new BrigadeWeaponData
             {
                 InfantryBattalions = brigade.InfantryBattalions.ToList(),
