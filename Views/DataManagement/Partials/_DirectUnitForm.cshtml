@@ -18,16 +18,9 @@
                 <div class="compact-token-info">
                     <div class="token-header-bar">
                         <div class="token-icon-wrapper">
-                        @if (!string.IsNullOrEmpty(Model.Token.AssetImagePath))
-                        {
-                                <img src="@Model.Token.AssetImagePath" alt="@Model.Token.Name" class="token-mini-icon">
-                        }
-                        else
-                        {
-                                <div class="token-mini-placeholder">
-                                    <i class="fas fa-hashtag"></i>
+                            <div class="token-mini-placeholder">
+                                <i class="fas fa-crosshairs"></i>
                             </div>
-                        }
                         </div>
                         <div class="token-title-section">
                             <h6 class="token-name">@Model.Token.Name</h6>

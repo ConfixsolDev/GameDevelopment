@@ -2641,7 +2641,9 @@ class TokenPlacementManager {
                     },
                     error: function(xhr, status, error) {
                         console.error('❌ Fallback token summary failed:', error);
-                        alert('Failed to load token summary: ' + error);
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error('Failed to load token summary: ' + error, 'Error');
+                        }
                     },
                     complete: function() {
                         $("#simpleLoader").hide();
@@ -2649,11 +2651,15 @@ class TokenPlacementManager {
                 });
             } else {
                 console.error('❌ Invalid token data');
-                alert('Invalid token data');
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Invalid token data', 'Error');
+                }
             }
         } catch (err) {
             console.error('Error showing token details:', err);
-            alert('Error showing token details: ' + err.message);
+            if (typeof toastr !== 'undefined') {
+                toastr.error('Error showing token details: ' + err.message, 'Error');
+            }
         }
     }
 

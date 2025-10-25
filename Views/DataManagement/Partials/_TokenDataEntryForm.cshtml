@@ -22,16 +22,9 @@
                     </div>
                     <div class="token-content-row">
                     <div class="token-display">
-                        @if (!string.IsNullOrEmpty(Model.Token.AssetImagePath))
-                        {
-                            <img src="@Model.Token.AssetImagePath" alt="@Model.Token.Name" class="token-preview-image">
-                        }
-                        else
-                        {
-                            <div class="token-preview-placeholder">
-                                <i class="fas fa-crosshairs"></i>
-                            </div>
-                        }
+                        <div class="token-preview-placeholder">
+                            <i class="fas fa-crosshairs"></i>
+                        </div>
                         <div class="token-details">
                             <h4>@Model.Token.Name</h4>
                                 <p class="token-group-name">@Model.Token.TokenGroup?.Name</p>

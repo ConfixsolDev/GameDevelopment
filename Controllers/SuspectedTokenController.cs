@@ -8,7 +8,6 @@ using TechWebSol.ViewModels;
 
 namespace TechWebSol.Controllers
 {
-    [AuthorizeDynamic]
     public class SuspectedTokenController : Controller
     {
         private readonly ApplicationDbContext _context;

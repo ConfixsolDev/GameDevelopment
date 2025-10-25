@@ -312,7 +312,9 @@ class TokenManager {
         // Validate token data
         if (!token || !token.id) {
             console.error('❌ Invalid token data provided');
-            alert('Invalid token data');
+            if (typeof toastr !== 'undefined') {
+                toastr.error('Invalid token data', 'Error');
+            }
             return;
         }
         
@@ -365,7 +367,9 @@ class TokenManager {
                 console.error('❌ Error loading token summary:', error);
                 console.error('Status:', status);
                 console.error('Response:', xhr.responseText);
-                alert('Failed to load token summary: ' + error);
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Failed to load token summary: ' + error, 'Error');
+                }
             },
                 complete: function() {
                     $("#simpleLoader").hide();

@@ -24,16 +24,9 @@
                 <div class="token-base-section">
                     <h5><i class="fas fa-crosshairs"></i> Token Base Information</h5>
                     <div class="token-display">
-                        @if (!string.IsNullOrEmpty(Model.Token.AssetImagePath))
-                        {
-                            <img src="@Model.Token.AssetImagePath" alt="@Model.Token.Name" class="token-preview-image">
-                        }
-                        else
-                        {
-                            <div class="token-preview-placeholder">
-                                <i class="fas fa-crosshairs"></i>
-                            </div>
-                        }
+                        <div class="token-preview-placeholder">
+                            <i class="fas fa-crosshairs"></i>
+                        </div>
                         <div class="token-details">
                             <h4>@Model.Token.Name</h4>
                             <p class="text-muted">@Model.Token.TokenGroup?.Name</p>

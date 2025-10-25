@@ -77,7 +77,11 @@ class TokenSystem {
             console.log('TokenSystem initialized successfully');
         } catch (error) {
             console.error('Error initializing TokenSystem:', error);
-            alert('Error initializing system: ' + error.message);
+            if (typeof toastr !== 'undefined') {
+                toastr.error('Error initializing system: ' + error.message, 'Initialization Error');
+            } else {
+                console.error('Error initializing system: ' + error.message);
+            }
         }
     }
 

@@ -574,7 +574,9 @@ function startSuspectedTokenPlacement() {
         window.suspectedTokenManager.startPlacementMode(data);
     } else {
         console.error('❌ SuspectedTokenManager not available');
-        alert('Suspected token manager not available. Please refresh the page and try again.');
+        if (typeof toastr !== 'undefined') {
+            toastr.error('Suspected token manager not available. Please refresh the page and try again.', 'Error');
+        }
     }
 }
 
@@ -585,7 +587,9 @@ function removeSuspectedToken(tokenId) {
         window.suspectedTokenManager.removeSuspectedToken(tokenId);
     } else {
         console.error('❌ SuspectedTokenManager not available for removal');
-        alert('Suspected token manager not available. Please refresh the page and try again.');
+        if (typeof toastr !== 'undefined') {
+            toastr.error('Suspected token manager not available. Please refresh the page and try again.', 'Error');
+        }
     }
 }
 
