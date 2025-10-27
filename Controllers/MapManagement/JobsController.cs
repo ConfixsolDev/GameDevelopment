@@ -9,11 +9,16 @@ namespace TechWebSol.Controllers.MapManagement
 	[Route("")]
 	public class JobsController : ControllerBase
 	{
-		// Connection pool for MBTiles files to improve performance
-		private static readonly ConcurrentDictionary<string, string> _connectionStrings = new();
-		
-		// Semaphore to limit concurrent tile requests per file
-		private static readonly ConcurrentDictionary<string, SemaphoreSlim> _fileSemaphores = new();
+	// Connection pool for MBTiles files to improve performance
+	private static readonly ConcurrentDictionary<string, string> _connectionStrings = new();
+	
+	// Semaphore to limit concurrent tile requests per file (configurable limit)
+	private const int MAX_CONCURRENT_TILE_REQUESTS = 100; // Increase to 200-300 if needed, decrease to 50 if issues
+	private static readonly ConcurrentDictionary<string, SemaphoreSlim> _fileSemaphores = new();
+	
+	// Performance monitoring
+	private static long _totalTileRequests = 0;
+	private static long _failedTileRequests = 0;
 		private readonly JobStore _jobs;
 		private readonly TileService _tiles;
 		private readonly TerrainDownloadService _terrain;
@@ -25,27 +30,47 @@ namespace TechWebSol.Controllers.MapManagement
 			_terrain = terrain;
 		}
 
-		[HttpGet("/jobs")]
-		public IActionResult Jobs()
+	[HttpGet("/jobs")]
+	public IActionResult Jobs()
+	{
+		var list = _jobs.Jobs.Select(kvp => new
 		{
-			var list = _jobs.Jobs.Select(kvp => new
-			{
-				id = kvp.Key,
-				progress = kvp.Value.Progress,
-				total = kvp.Value.Total,
-				done = kvp.Value.Done,
-				error = kvp.Value.Error,
-				format = kvp.Value.Format,
-				style = kvp.Value.Style,
-				createdUtc = kvp.Value.CreatedUtc,
-				completedUtc = kvp.Value.CompletedUtc,
-				size = kvp.Value.FileBytes?.Length ?? 0,
-				fileName = kvp.Value.FileName,
-				terrainDataFileName = kvp.Value.TerrainDataFileName,
-				terrainDataError = kvp.Value.TerrainDataError
-			}).OrderByDescending(x => x.createdUtc).ToList();
-			return new JsonResult(list);
-		}
+			id = kvp.Key,
+			progress = kvp.Value.Progress,
+			total = kvp.Value.Total,
+			done = kvp.Value.Done,
+			error = kvp.Value.Error,
+			format = kvp.Value.Format,
+			style = kvp.Value.Style,
+			createdUtc = kvp.Value.CreatedUtc,
+			completedUtc = kvp.Value.CompletedUtc,
+			size = kvp.Value.FileBytes?.Length ?? 0,
+			fileName = kvp.Value.FileName,
+			terrainDataFileName = kvp.Value.TerrainDataFileName,
+			terrainDataError = kvp.Value.TerrainDataError
+		}).OrderByDescending(x => x.createdUtc).ToList();
+		return new JsonResult(list);
+	}
+	
+	[HttpGet("/mbtiles/stats")]
+	public IActionResult GetTileStats()
+	{
+		var total = Interlocked.Read(ref _totalTileRequests);
+		var failed = Interlocked.Read(ref _failedTileRequests);
+		var successRate = total > 0 ? ((total - failed) / (double)total * 100) : 100;
+		
+		return new JsonResult(new
+		{
+			maxConcurrentRequests = MAX_CONCURRENT_TILE_REQUESTS,
+			totalRequests = total,
+			failedRequests = failed,
+			successRate = Math.Round(successRate, 2),
+			activeFiles = _fileSemaphores.Count,
+			recommendation = failed > (total * 0.05) 
+				? "⚠️ High failure rate - consider increasing MAX_CONCURRENT_TILE_REQUESTS"
+				: "✅ Tile server performing well"
+		});
+	}
 
 		[HttpPost("/preview_tile_count")]
 		public IActionResult PreviewTileCount([FromBody] PreviewRequest body)
@@ -439,89 +464,103 @@ namespace TechWebSol.Controllers.MapManagement
 			return new JsonResult(maps);
 		}
 
-		[HttpGet("/mbtiles/tile/{z}/{x}/{y}.png")]
-		[ResponseCache(Duration = 86400, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "file" })]
-		public async Task<IActionResult> GetMbTile(int z, int x, int y, [FromQuery] string file)
+	[HttpGet("/mbtiles/tile/{z}/{x}/{y}.png")]
+	[ResponseCache(Duration = 86400, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "file" })]
+	public async Task<IActionResult> GetMbTile(int z, int x, int y, [FromQuery] string file)
+	{
+		if (string.IsNullOrEmpty(file))
 		{
-			if (string.IsNullOrEmpty(file))
-			{
-				return BadRequest("Missing 'file' query parameter");
-			}
-			
-			var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-			// Convert web path (forward slashes) to OS path
-			var normalizedFilename = file.Replace('/', Path.DirectorySeparatorChar);
-			var filePath = Path.Combine(wwwRoot, normalizedFilename);
-
-		if (!System.IO.File.Exists(filePath))
-		{
-			return NotFound("MBTiles file not found");
+			return BadRequest("Missing 'file' query parameter");
 		}
-
-		// Get semaphore for this file to limit concurrent access
-		var semaphore = _fileSemaphores.GetOrAdd(filePath, _ => new SemaphoreSlim(10, 10)); // Max 10 concurrent requests per file
 		
-		await semaphore.WaitAsync();
-		try
+		var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+		// Convert web path (forward slashes) to OS path
+		var normalizedFilename = file.Replace('/', Path.DirectorySeparatorChar);
+		var filePath = Path.Combine(wwwRoot, normalizedFilename);
+
+	if (!System.IO.File.Exists(filePath))
+	{
+		return NotFound("MBTiles file not found");
+	}
+
+	// Track request for monitoring
+	Interlocked.Increment(ref _totalTileRequests);
+	
+	// Get semaphore for this file - uses configurable limit
+	var semaphore = _fileSemaphores.GetOrAdd(filePath, _ => new SemaphoreSlim(MAX_CONCURRENT_TILE_REQUESTS, MAX_CONCURRENT_TILE_REQUESTS));
+	
+	// Use TryWait with timeout to avoid blocking - fail fast if overloaded
+	if (!await semaphore.WaitAsync(TimeSpan.FromSeconds(2)))
+	{
+		Interlocked.Increment(ref _failedTileRequests);
+		return StatusCode(503, "Tile server busy - too many concurrent requests");
+	}
+	
+	try
+	{
+		// Use cached connection string for better performance
+		var cs = _connectionStrings.GetOrAdd(filePath, path =>
 		{
-			// Use cached connection string for better performance
-			var cs = _connectionStrings.GetOrAdd(filePath, path =>
+			return new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
 			{
-				return new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
-				{
-					DataSource = path,
-					Mode = Microsoft.Data.Sqlite.SqliteOpenMode.ReadOnly,
-					Cache = Microsoft.Data.Sqlite.SqliteCacheMode.Shared,
-					Pooling = true
-				}.ToString();
-			});
+				DataSource = path,
+				Mode = Microsoft.Data.Sqlite.SqliteOpenMode.ReadOnly,
+				Cache = Microsoft.Data.Sqlite.SqliteCacheMode.Shared,
+				Pooling = true
+			}.ToString();
+		});
 
-			// Simple retry mechanism for file lock issues
-			for (int attempt = 0; attempt < 3; attempt++)
+		// Reduced retry attempts and delays for faster response
+		for (int attempt = 0; attempt < 2; attempt++)
+		{
+			try
 			{
-				try
-				{
-					await using var conn = new Microsoft.Data.Sqlite.SqliteConnection(cs);
-					await conn.OpenAsync();
+				await using var conn = new Microsoft.Data.Sqlite.SqliteConnection(cs);
+				await conn.OpenAsync();
 
-					var tmsY = (1 << z) - 1 - y;
+				var tmsY = (1 << z) - 1 - y;
 
-					await using var cmd = conn.CreateCommand();
-					cmd.CommandText = "SELECT tile_data FROM tiles WHERE zoom_level = @z AND tile_column = @x AND tile_row = @y";
-					cmd.Parameters.AddWithValue("@z", z);
-					cmd.Parameters.AddWithValue("@x", x);
-					cmd.Parameters.AddWithValue("@y", tmsY);
+				await using var cmd = conn.CreateCommand();
+				cmd.CommandText = "SELECT tile_data FROM tiles WHERE zoom_level = @z AND tile_column = @x AND tile_row = @y";
+				cmd.Parameters.AddWithValue("@z", z);
+				cmd.Parameters.AddWithValue("@x", x);
+				cmd.Parameters.AddWithValue("@y", tmsY);
 
-					var result = await cmd.ExecuteScalarAsync();
-					if (result is byte[] tileData)
-					{
-						return File(tileData, "image/png");
-					}
-					return NotFound();
-				}
-				catch (System.IO.IOException ex) when (ex.Message.Contains("being used by another process") && attempt < 2)
+				var result = await cmd.ExecuteScalarAsync();
+				if (result is byte[] tileData)
 				{
-					// Wait before retry (exponential backoff)
-					await Task.Delay(50 * (attempt + 1));
-					continue;
+					// Add aggressive caching headers
+					Response.Headers["Cache-Control"] = "public, max-age=86400, immutable";
+					Response.Headers["Expires"] = DateTime.UtcNow.AddDays(1).ToString("R");
+					return File(tileData, "image/png");
 				}
-				catch (Exception ex)
-				{
-					if (attempt == 2) // Last attempt
-					{
-						return StatusCode(500, $"Error reading tile after 3 attempts: {ex.Message}");
-					}
-					await Task.Delay(50 * (attempt + 1));
-				}
+				return NotFound();
 			}
-			
-			return StatusCode(500, "Failed to read tile after multiple attempts");
+			catch (System.IO.IOException ex) when (ex.Message.Contains("being used by another process") && attempt < 1)
+			{
+				// Reduced retry delay from 50ms to 10ms
+				await Task.Delay(10);
+				continue;
+			}
+			catch (Exception ex)
+			{
+				if (attempt == 1) // Last attempt
+				{
+					Interlocked.Increment(ref _failedTileRequests);
+					return StatusCode(500, $"Error reading tile: {ex.Message}");
+				}
+				await Task.Delay(10);
+			}
 		}
-		finally
-		{
-			semaphore.Release();
-		}
-		}
+		
+		Interlocked.Increment(ref _failedTileRequests);
+		return StatusCode(500, "Failed to read tile");
+	}
+	finally
+	{
+		semaphore.Release();
+	}
+	}
 
 		[HttpGet("/mbtiles/metadata")]
 		[ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "file" })]

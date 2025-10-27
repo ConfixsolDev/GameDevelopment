@@ -1,6 +1,13 @@
 /**
  * Tile Server Configuration
  * Centralized configuration for map tile sources
+ * 
+ * Local mode routes are served by GamePlayController:
+ * - GET /gameplay/mbtiles/tile/{z}/{x}/{y}.png - Serve map tiles
+ * - GET /gameplay/mbtiles/metadata - Get map metadata
+ * - GET /gameplay/mbtiles/list - List available maps
+ * - GET /gameplay/mbtiles/stats - Performance statistics
+ * - GET /gameplay/terrain/list - List terrain databases
  */
 
 const TileServerConfig = {
@@ -14,11 +21,11 @@ const TileServerConfig = {
         metadataEndpoint: '/data/{mapId}.json' // Metadata endpoint
     },
     
-    // Local tile server configuration (current ASP.NET endpoint)
+    // Local tile server configuration - served by GamePlayController with /gameplay/ prefix
     local: {
         baseUrl: '',
-        endpoint: '/mbtiles/tile/{z}/{x}/{y}.png',
-        metadataEndpoint: '/mbtiles/metadata'
+        endpoint: '/gameplay/mbtiles/tile/{z}/{x}/{y}.png',
+        metadataEndpoint: '/gameplay/mbtiles/metadata'
     },
     
     /**

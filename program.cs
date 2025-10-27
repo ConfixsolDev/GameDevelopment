@@ -201,21 +201,22 @@ builder.Services.AddMvc(options =>
 // Response Caching for Map Tiles and Metadata
 builder.Services.AddResponseCaching();
 
-// Memory Cache for frequently accessed data
+// Memory Cache for frequently accessed data (500MB for tile caching)
 builder.Services.AddMemoryCache(options =>
 {
-    options.SizeLimit = 1024; // Limit cache size
+    options.SizeLimit = 500 * 1024 * 1024; // 500MB limit for tile cache
     options.CompactionPercentage = 0.25; // Compact 25% when limit is reached
+    options.ExpirationScanFrequency = TimeSpan.FromMinutes(5); // Scan for expired entries every 5 minutes
 });
 
-// Response Compression for better network performance
+// Response Compression for better network performance (includes PNG tiles)
 builder.Services.AddResponseCompression(options =>
 {
     options.EnableForHttps = true;
     options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
     options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
     options.MimeTypes = Microsoft.AspNetCore.ResponseCompression.ResponseCompressionDefaults.MimeTypes.Concat(
-        new[] { "application/json", "application/javascript", "text/css", "text/html" });
+        new[] { "application/json", "application/javascript", "text/css", "text/html", "image/png" });
 });
 
 builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProviderOptions>(options =>

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using TechWebSol.Data;
 using TechWebSol.Filters;
 using TechWebSol.Models;
@@ -8,16 +9,30 @@ using TechWebSol.Services;
 using TechWebSol.Services.MapManagement;
 using TechWebSol.Services.TokenManagement;
 using TechWebSol.ViewModels;
+using System.Collections.Concurrent;
 
 namespace TechWebSol.Controllers
 {
     [Authorize]
     public class GamePlayController : Controller
     {
+        // Tile serving infrastructure - moved from JobsController for better architecture
+        private static readonly ConcurrentDictionary<string, string> _tileConnectionStrings = new();
+        private static readonly ConcurrentDictionary<string, SemaphoreSlim> _tileSemaphores = new();
+        private const int MAX_CONCURRENT_TILE_REQUESTS = 100;
+        private static long _totalTileRequests = 0;
+        private static long _failedTileRequests = 0;
+        
+        // In-memory tile cache configuration (500MB max, 1 hour sliding expiration)
+        private const long TILE_CACHE_SIZE_MB = 500;
+        private static long _cacheHits = 0;
+        private static long _cacheMisses = 0;
+        
         private readonly ApplicationDbContext _context;
         private readonly IUserSessionService _userSessionService;
         private readonly ITokenPlacementService _tokenPlacementService;
         private readonly ILogger<GamePlayController> _logger;
+        private readonly IMemoryCache _memoryCache;
         private readonly ApplicationUserVM user;
 
 
@@ -25,13 +40,15 @@ namespace TechWebSol.Controllers
             ApplicationDbContext context,
             IUserSessionService userSessionService,
             ITokenPlacementService tokenPlacementService,
-            ILogger<GamePlayController> logger)
+            ILogger<GamePlayController> logger,
+            IMemoryCache memoryCache)
         {
             _context = context;
             _userSessionService = userSessionService;
             _tokenPlacementService = tokenPlacementService;
             user = userSessionService.GetCurrentUser();
             _logger = logger;
+            _memoryCache = memoryCache;
         }
 
         public IActionResult Index()
@@ -2358,6 +2375,311 @@ namespace TechWebSol.Controllers
                 return PartialView("Partials/_ErrorPartial", new { Message = "Error loading tokens for data entry" });
             }
         }
+
+        #region MBTiles Tile Serving - GamePlay Specific Routes
+
+        /// <summary>
+        /// Get list of available MBTiles maps
+        /// </summary>
+        [HttpGet("/gameplay/mbtiles/list")]
+        [AllowAnonymous]
+        public IActionResult ListMaps()
+        {
+            var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            var maps = new List<object>();
+
+            if (!Directory.Exists(wwwRoot))
+            {
+                return Json(maps);
+            }
+
+            // Search for all .mbtiles files recursively
+            var mbtilesFiles = Directory.GetFiles(wwwRoot, "*.mbtiles", SearchOption.AllDirectories);
+
+            foreach (var fullPath in mbtilesFiles)
+            {
+                var fileInfo = new FileInfo(fullPath);
+                var relativePath = Path.GetRelativePath(wwwRoot, fullPath).Replace('\\', '/');
+
+                maps.Add(new
+                {
+                    path = relativePath,
+                    name = Path.GetFileNameWithoutExtension(fullPath),
+                    size = fileInfo.Length,
+                    modified = fileInfo.LastWriteTimeUtc
+                });
+            }
+
+            return Json(maps.OrderByDescending(m => ((dynamic)m).modified));
+        }
+
+        /// <summary>
+        /// Serve individual map tiles - optimized for performance
+        /// </summary>
+        [HttpGet("/gameplay/mbtiles/tile/{z}/{x}/{y}.png")]
+        [ResponseCache(Duration = 86400, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "file" })]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetMbTile(int z, int x, int y, [FromQuery] string file)
+        {
+            if (string.IsNullOrEmpty(file))
+            {
+                return BadRequest("Missing 'file' query parameter");
+            }
+
+            var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            var normalizedFilename = file.Replace('/', Path.DirectorySeparatorChar);
+            var filePath = Path.Combine(wwwRoot, normalizedFilename);
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                return NotFound("MBTiles file not found");
+            }
+
+            // Track request for monitoring
+            Interlocked.Increment(ref _totalTileRequests);
+
+            // Create unique cache key for this tile
+            var cacheKey = $"tile:{file}:{z}:{x}:{y}";
+            
+            // Check memory cache first (dramatically faster than SQLite)
+            if (_memoryCache.TryGetValue(cacheKey, out byte[] cachedTile))
+            {
+                Interlocked.Increment(ref _cacheHits);
+                Response.Headers["Cache-Control"] = "public, max-age=2592000, immutable"; // 30 days
+                Response.Headers["Expires"] = DateTime.UtcNow.AddDays(30).ToString("R");
+                Response.Headers["X-Cache"] = "HIT";
+                return File(cachedTile, "image/png");
+            }
+            
+            Interlocked.Increment(ref _cacheMisses);
+
+            // Get semaphore for this file - uses configurable limit
+            var semaphore = _tileSemaphores.GetOrAdd(filePath, _ => new SemaphoreSlim(MAX_CONCURRENT_TILE_REQUESTS, MAX_CONCURRENT_TILE_REQUESTS));
+
+            // Use TryWait with timeout to avoid blocking - fail fast if overloaded
+            if (!await semaphore.WaitAsync(TimeSpan.FromSeconds(2)))
+            {
+                Interlocked.Increment(ref _failedTileRequests);
+                return StatusCode(503, "Tile server busy - too many concurrent requests");
+            }
+
+            try
+            {
+                // Use cached connection string for better performance
+                var cs = _tileConnectionStrings.GetOrAdd(filePath, path =>
+                {
+                    return new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
+                    {
+                        DataSource = path,
+                        Mode = Microsoft.Data.Sqlite.SqliteOpenMode.ReadOnly,
+                        Cache = Microsoft.Data.Sqlite.SqliteCacheMode.Shared,
+                        Pooling = true
+                    }.ToString();
+                });
+
+                // Reduced retry attempts and delays for faster response
+                for (int attempt = 0; attempt < 2; attempt++)
+                {
+                    try
+                    {
+                        await using var conn = new Microsoft.Data.Sqlite.SqliteConnection(cs);
+                        await conn.OpenAsync();
+
+                        var tmsY = (1 << z) - 1 - y;
+
+                        await using var cmd = conn.CreateCommand();
+                        cmd.CommandText = "SELECT tile_data FROM tiles WHERE zoom_level = @z AND tile_column = @x AND tile_row = @y";
+                        cmd.Parameters.AddWithValue("@z", z);
+                        cmd.Parameters.AddWithValue("@x", x);
+                        cmd.Parameters.AddWithValue("@y", tmsY);
+
+                        var result = await cmd.ExecuteScalarAsync();
+                        if (result is byte[] tileData)
+                        {
+                            // Store in memory cache with sliding expiration (1 hour)
+                            var cacheOptions = new MemoryCacheEntryOptions
+                            {
+                                SlidingExpiration = TimeSpan.FromHours(1),
+                                Size = tileData.Length // Track size for cache size limit
+                            };
+                            _memoryCache.Set(cacheKey, tileData, cacheOptions);
+                            
+                            // Add aggressive caching headers (30 days)
+                            Response.Headers["Cache-Control"] = "public, max-age=2592000, immutable";
+                            Response.Headers["Expires"] = DateTime.UtcNow.AddDays(30).ToString("R");
+                            Response.Headers["X-Cache"] = "MISS";
+                            return File(tileData, "image/png");
+                        }
+                        return NotFound();
+                    }
+                    catch (System.IO.IOException ex) when (ex.Message.Contains("being used by another process") && attempt < 1)
+                    {
+                        await Task.Delay(10);
+                        continue;
+                    }
+                    catch (Exception ex)
+                    {
+                        if (attempt == 1)
+                        {
+                            Interlocked.Increment(ref _failedTileRequests);
+                            _logger.LogError(ex, "Error reading tile z={Z}, x={X}, y={Y} from {File}", z, x, y, file);
+                            return StatusCode(500, $"Error reading tile: {ex.Message}");
+                        }
+                        await Task.Delay(10);
+                    }
+                }
+
+                Interlocked.Increment(ref _failedTileRequests);
+                return StatusCode(500, "Failed to read tile");
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }
+
+        /// <summary>
+        /// Get metadata for an MBTiles file
+        /// </summary>
+        [HttpGet("/gameplay/mbtiles/metadata")]
+        [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "file" })]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetMbTilesMetadata([FromQuery] string file)
+        {
+            if (string.IsNullOrEmpty(file))
+            {
+                return BadRequest("Missing 'file' query parameter");
+            }
+
+            var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            var normalizedFilename = file.Replace('/', Path.DirectorySeparatorChar);
+            var filePath = Path.Combine(wwwRoot, normalizedFilename);
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                return NotFound("MBTiles file not found");
+            }
+
+            try
+            {
+                var cs = _tileConnectionStrings.GetOrAdd(filePath, path =>
+                {
+                    return new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
+                    {
+                        DataSource = path,
+                        Mode = Microsoft.Data.Sqlite.SqliteOpenMode.ReadOnly,
+                        Cache = Microsoft.Data.Sqlite.SqliteCacheMode.Shared,
+                        Pooling = true
+                    }.ToString();
+                });
+
+                await using var conn = new Microsoft.Data.Sqlite.SqliteConnection(cs);
+                await conn.OpenAsync();
+
+                await using var cmd = conn.CreateCommand();
+                cmd.CommandText = "SELECT name, value FROM metadata";
+
+                var metadata = new Dictionary<string, string>();
+                await using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    var name = reader.GetString(0);
+                    var value = reader.GetString(1);
+                    metadata[name] = value;
+                }
+
+                return Json(new { metadata });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error reading metadata from {File}", file);
+                return StatusCode(500, $"Error reading metadata: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Get tile server performance statistics
+        /// </summary>
+        [HttpGet("/gameplay/mbtiles/stats")]
+        [AllowAnonymous]
+        public IActionResult GetTileStats()
+        {
+            var total = Interlocked.Read(ref _totalTileRequests);
+            var failed = Interlocked.Read(ref _failedTileRequests);
+            var hits = Interlocked.Read(ref _cacheHits);
+            var misses = Interlocked.Read(ref _cacheMisses);
+            var successRate = total > 0 ? ((total - failed) / (double)total * 100) : 100;
+            var cacheHitRate = (hits + misses) > 0 ? (hits / (double)(hits + misses) * 100) : 0;
+
+            return Json(new
+            {
+                maxConcurrentRequests = MAX_CONCURRENT_TILE_REQUESTS,
+                totalRequests = total,
+                failedRequests = failed,
+                successRate = Math.Round(successRate, 2),
+                activeFiles = _tileSemaphores.Count,
+                // Memory cache statistics
+                cacheHits = hits,
+                cacheMisses = misses,
+                cacheHitRate = Math.Round(cacheHitRate, 2),
+                cacheSizeLimitMB = TILE_CACHE_SIZE_MB,
+                recommendation = failed > (total * 0.05)
+                    ? "⚠️ High failure rate - consider increasing MAX_CONCURRENT_TILE_REQUESTS"
+                    : cacheHitRate > 80
+                        ? "✅ Tile server performing excellently (high cache hit rate)"
+                        : "✅ Tile server performing well"
+            });
+        }
+
+        #endregion
+
+        #region Terrain Data Serving - GamePlay Specific Routes
+
+        /// <summary>
+        /// Get list of available terrain databases
+        /// </summary>
+        [HttpGet("/gameplay/terrain/list")]
+        [AllowAnonymous]
+        public IActionResult ListTerrainDatabases()
+        {
+            var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            if (!Directory.Exists(wwwRoot))
+            {
+                return Json(new List<object>());
+            }
+
+            var terrainFiles = new List<object>();
+
+            // Look for terrain.db files in map folders
+            var mapFolders = Directory.GetDirectories(wwwRoot)
+                .Where(d => Directory.GetFiles(d, "terrain.db").Any())
+                .Select(d => new DirectoryInfo(d))
+                .OrderByDescending(di => di.CreationTimeUtc)
+                .ToList();
+
+            foreach (var folder in mapFolders)
+            {
+                var terrainFile = Path.Combine(folder.FullName, "terrain.db");
+                if (System.IO.File.Exists(terrainFile))
+                {
+                    var fileInfo = new FileInfo(terrainFile);
+                    terrainFiles.Add(new
+                    {
+                        name = "terrain.db",
+                        path = $"{folder.Name}/terrain.db",
+                        size = fileInfo.Length,
+                        created = fileInfo.CreationTimeUtc,
+                        modified = fileInfo.LastWriteTimeUtc,
+                        jobId = folder.Name.Split('-')[0],
+                        mapFolder = folder.Name
+                    });
+                }
+            }
+
+            return Json(terrainFiles);
+        }
+
+        #endregion
     }
 
     public class PlaceTokenRequest

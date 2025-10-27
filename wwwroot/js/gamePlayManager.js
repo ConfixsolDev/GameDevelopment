@@ -147,6 +147,53 @@ class GamePlayManager {
             lngElement.textContent = lng.toFixed(6);
         }
     }
+    
+    /**
+     * Preload adjacent tiles for smoother panning (performance optimization)
+     * Called during idle time to cache tiles around viewport
+     */
+    preloadAdjacentTiles() {
+        if (!this.map || !this.currentTileLayer) return;
+        
+        try {
+            const zoom = Math.floor(this.map.getZoom());
+            const bounds = this.map.getBounds();
+            const center = bounds.getCenter();
+            
+            // Calculate tile coordinates for current center
+            const scale = Math.pow(2, zoom);
+            const centerX = Math.floor((center.lng + 180) / 360 * scale);
+            const centerY = Math.floor((1 - Math.log(Math.tan(center.lat * Math.PI / 180) + 1 / Math.cos(center.lat * Math.PI / 180)) / Math.PI) / 2 * scale);
+            
+            // Preload 1 tile in each direction around center
+            const tilesToPreload = [];
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    if (dx === 0 && dy === 0) continue; // Skip center tile
+                    tilesToPreload.push({
+                        x: centerX + dx,
+                        y: centerY + dy,
+                        z: zoom
+                    });
+                }
+            }
+            
+            // Preload tiles in background (staggered to avoid overwhelming server)
+            tilesToPreload.forEach((tile, index) => {
+                setTimeout(() => {
+                    const img = new Image();
+                    const tileUrl = this.currentTileLayer._url
+                        .replace('{x}', tile.x)
+                        .replace('{y}', tile.y)
+                        .replace('{z}', tile.z);
+                    img.src = tileUrl;
+                }, index * 100); // 100ms between each preload
+            });
+        } catch (error) {
+            // Silently fail - preloading is optional optimization
+            console.debug('Tile preload skipped:', error.message);
+        }
+    }
 
     /**
      * Load background data (deferred, non-blocking) - OPTIMIZED ORDER
@@ -248,23 +295,21 @@ class GamePlayManager {
                 zoomSnap: 1,
                 zoomDelta: 1,
                 inertia: true,
-                inertiaDeceleration: 6000,
+                inertiaDeceleration: 3000,
                 preferCanvas: true,
-                zoomAnimation: false,
+                zoomAnimation: true,         // Enable smooth zoom animation
                 markerZoomAnimation: false,
-                fadeAnimation: false,
+                fadeAnimation: true,         // Enable fade for better visuals
                 minZoom: 3,
-                maxZoom: 22,
-                center: [0, 0], // Default center, will be updated
-                zoom: defaultZoom, // Default zoom level from region settings
-                // Optimize tile loading
-                maxZoom: 19, // Limit max zoom to reduce tile requests
+                maxZoom: 18,                 // Maximum zoom level
+                center: [0, 0],              // Default center, will be updated
+                zoom: defaultZoom,           // Default zoom level from region settings
+                // Optimize tile loading for performance
                 tileSize: 256,
                 zoomOffset: 0,
-                // Add tile loading optimization
-                updateWhenIdle: true,
-                updateWhenZooming: false,
-                keepBuffer: 2,
+                updateWhenIdle: true,        // Only update when idle
+                updateWhenZooming: false,    // Don't update during zoom
+                keepBuffer: 1,               // Minimal buffer for performance
                 // Disable double-click zoom to prevent conflicts
                 doubleClickZoom: false
             });
@@ -286,7 +331,7 @@ class GamePlayManager {
             }, 100);
         });
         
-        // Add debounced moveend listener to reduce logging
+        // Add debounced moveend listener to reduce logging and preload adjacent tiles
         let moveTimeout;
         this.map.on('moveend', () => {
             clearTimeout(moveTimeout);
@@ -294,6 +339,13 @@ class GamePlayManager {
                 const currentZoom = this.map.getZoom();
                 const center = this.map.getCenter();
                 console.log(`📍 Map moved - Zoom: ${currentZoom}, Center: [${center.lat.toFixed(6)}, ${center.lng.toFixed(6)}]`);
+                
+                // Preload adjacent tiles in idle time for smoother panning
+                if (window.requestIdleCallback) {
+                    requestIdleCallback(() => this.preloadAdjacentTiles(), { timeout: 2000 });
+                } else {
+                    setTimeout(() => this.preloadAdjacentTiles(), 500);
+                }
             }, 100);
         });
         
@@ -926,6 +978,7 @@ class GamePlayManager {
 
     /**
      * Load available MBTiles maps into selector (optimized - no auto-load)
+     * Routes served by GamePlayController
      */
     async loadMapSelector() {
         // Prevent multiple simultaneous loads
@@ -958,7 +1011,8 @@ class GamePlayManager {
             
             console.log('📍 Map selector element found, fetching maps...');
             
-            const response = await fetch('/mbtiles/list');
+            // GET /gameplay/mbtiles/list - served by GamePlayController
+            const response = await fetch('/gameplay/mbtiles/list');
             if (response.ok) {
                 const maps = await response.json();
                 console.log(`📍 Received ${maps.length} maps from server:`, maps);
@@ -1012,6 +1066,7 @@ class GamePlayManager {
 
     /**
      * Load terrain database for the current map
+     * Routes served by GamePlayController
      * @param {string} mapPath - Path to MBTiles file (e.g., "job-123/map.mbtiles")
      */
     async loadTerrainDatabase(mapPath) {
@@ -1020,8 +1075,8 @@ class GamePlayManager {
             const folderName = mapPath.split('/')[0];
             console.log(`🗺️ Loading terrain database for folder: ${folderName}`);
             
-            // Find terrain database with matching folder
-            const terrainResponse = await fetch('/terrain/list');
+            // GET /gameplay/terrain/list - served by GamePlayController
+            const terrainResponse = await fetch('/gameplay/terrain/list');
             const terrainFiles = await terrainResponse.json();
             
             console.log('🔍 Available terrain files:', terrainFiles);
@@ -1432,6 +1487,7 @@ window.showCurrentZoomLevel = function() {
 };
 
 // Map switching function with bounded logic (OPTIMIZED for performance)
+// All routes served by GamePlayController
 window.switchGamePlayMap = async function(mapPath) {
     if (!mapPath) return;
     
@@ -1452,10 +1508,11 @@ window.switchGamePlayMap = async function(mapPath) {
     
     try {
         // Fetch map metadata (with timeout for faster failure)
+        // GET /gameplay/mbtiles/metadata - served by GamePlayController
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
         
-        const response = await fetch(`/mbtiles/metadata?file=${encodeURIComponent(mapPath)}`, {
+        const response = await fetch(`/gameplay/mbtiles/metadata?file=${encodeURIComponent(mapPath)}`, {
             signal: controller.signal
         });
         clearTimeout(timeoutId);
@@ -1469,11 +1526,11 @@ window.switchGamePlayMap = async function(mapPath) {
         
         console.log('📋 Map metadata loaded:', metadata);
         
-        // Parse metadata with minimum zoom of 12
+        // Parse metadata with minimum zoom of 12 and FORCE maximum zoom to 18
         const minZoom = Math.max(12, parseInt(metadata.minzoom || 12));
-        const maxZoom = parseInt(metadata.maxzoom || 22);
+        const maxZoom = 18; // FORCE maxZoom to 18 regardless of metadata
         
-        console.log(`🔍 Map zoom limits - Min: ${minZoom}, Max: ${maxZoom}`);
+        console.log(`🔍 Map zoom limits - Min: ${minZoom}, Max: ${maxZoom} (forced)`);
         
         // Parse bounds (west, south, east, north) - CRITICAL for bounded behavior
         let boundsObj = null;
@@ -1597,18 +1654,19 @@ window.switchGamePlayMap = async function(mapPath) {
         
         const newTileLayer = L.tileLayer(tileUrl, {
             minZoom: minZoom,
-            maxZoom: maxZoom,
-            maxNativeZoom: maxZoom,  // Allow overzoom beyond native tiles
+            maxZoom: 18,             // Force maxZoom to 18
+            maxNativeZoom: parseInt(metadata.maxzoom || 14),  // Use actual tile max zoom, allow overzoom beyond this
             minNativeZoom: minZoom,  // Start fetching at min zoom
             bounds: boundsObj,       // Only request tiles within bounds
             noWrap: true,            // No wrapping around the world
-            keepBuffer: 2,           // FIXED: Keep buffer for smooth zooming (was 0)
-            updateWhenIdle: false,   // FIXED: Update during movement for better UX
-            updateWhenZooming: true, // FIXED: Update during zoom (was false)
+            keepBuffer: 2,           // Keep 2 tile buffer for smooth panning
+            updateWhenIdle: true,    // Only update when idle - better performance
+            updateWhenZooming: false, // Don't update during zoom - better performance
             tileSize: 256,
             attribution: metadata.name || 'MBTiles Offline Map',
+            crossOrigin: true,       // Enable CORS for better caching
             // Performance optimizations
-            updateInterval: 100,     // Faster updates
+            updateInterval: 200,     // Slower updates for better performance
             errorTileUrl: '',        // Don't show error tiles
             zoomOffset: 0,
             zoomReverse: false
