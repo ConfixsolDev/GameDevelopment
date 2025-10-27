@@ -14,11 +14,11 @@ const TileServerConfig = {
     // Tile server mode: 'local' or 'external'
     mode: 'local', // Change to 'external' when using dedicated tile server
     
-    // External tile server configuration
+    // External tile server configuration (TileServer-GL)
     external: {
-        baseUrl: 'http://localhost:8080', // Your tile server URL
-        endpoint: '/styles/basic/{z}/{x}/{y}.png', // TileServer GL endpoint
-        metadataEndpoint: '/data/{mapId}.json' // Metadata endpoint
+        baseUrl: 'http://localhost:8080',
+        endpoint: '/data/{mapId}/{z}/{x}/{y}.png',  // TileServer-GL raster tiles endpoint
+        metadataEndpoint: '/data/{mapId}.json'
     },
     
     // Local tile server configuration - served by GamePlayController with /gameplay/ prefix
@@ -37,11 +37,20 @@ const TileServerConfig = {
         const config = this.mode === 'external' ? this.external : this.local;
         
         if (this.mode === 'external') {
-            // Extract map ID from path (e.g., "map-123/map.mbtiles" -> "map-123")
-            const mapId = mapPath.split('/')[0] || 'game-map';
-            return `${config.baseUrl}${config.endpoint.replace('{mapId}', mapId)}`;
+            // TileServer-GL format: /data/{mapId}/{z}/{x}/{y}.png (for raster MBTiles)
+            // Extract mapId from "folder/file.mbtiles" -> "file" (without extension)
+            const fileName = mapPath ? mapPath.split('/').pop().replace('.mbtiles', '') : 'map';
+            
+            // Debug logging
+            console.log('🗺️ TileServerConfig.getTileUrl called:', {
+                mapPath: mapPath,
+                fileName: fileName,
+                resultUrl: `${config.baseUrl}/data/${fileName}/{z}/{x}/{y}.png`
+            });
+            
+            return `${config.baseUrl}/data/${fileName}/{z}/{x}/{y}.png`;
         } else {
-            // Local mode includes file parameter
+            // Local C# server format
             return `${config.endpoint}?file=${encodeURIComponent(mapPath)}`;
         }
     },
@@ -55,10 +64,10 @@ const TileServerConfig = {
         const config = this.mode === 'external' ? this.external : this.local;
         
         if (this.mode === 'external') {
-            const mapId = mapPath.split('/')[0] || 'game-map';
-            return `${config.baseUrl}${config.metadataEndpoint.replace('{mapId}', mapId)}`;
+            const fileName = mapPath.split('/').pop().replace('.mbtiles', '');
+            return `${config.baseUrl}/data/${fileName}.json`;
         } else {
-            return `${config.endpoint}?file=${encodeURIComponent(mapPath)}`;
+            return `${config.metadataEndpoint}?file=${encodeURIComponent(mapPath)}`;
         }
     },
     

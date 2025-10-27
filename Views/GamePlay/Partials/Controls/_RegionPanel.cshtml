@@ -119,6 +119,20 @@
                 </div>
             </div>
 
+            <!-- Tile Server Mode -->
+            <div class="control-section">
+                <h6><i class="fas fa-server"></i> Tile Server Mode</h6>
+                <div class="control-row">
+                    <select id="tileServerMode" class="overlay-btn" style="width: 100%; padding: 8px; border: 1px solid #444; background: #2d3748; color: #e2e8f0; border-radius: 4px;">
+                        <option value="local">Local (C# Server)</option>
+                        <option value="external">External (TileServer-GL ⚡)</option>
+                    </select>
+                </div>
+                <small style="color: #a0aec0; font-size: 11px; display: block; margin-top: 4px;">
+                    <i class="fas fa-info-circle"></i> External: 10-50x faster (requires TileServer-GL on port 8080)
+                </small>
+            </div>
+
             <!-- Layer Visibility -->
             <div class="control-section">
                 <br />
@@ -367,19 +381,104 @@ function toggleLayer(layer) {
     }
 }
 
+// Initialize tile server mode selector
+function initializeTileServerModeSelector() {
+    const selector = document.getElementById('tileServerMode');
+    if (!selector) return;
+    
+    // Load saved preference
+    const savedMode = localStorage.getItem('tileServerMode') || 'local';
+    selector.value = savedMode;
+    
+    // Apply saved mode
+    if (window.TileServerConfig) {
+        if (savedMode === 'external') {
+            window.TileServerConfig.useExternalServer('http://localhost:8080');
+        } else {
+            window.TileServerConfig.useLocalServer();
+        }
+    }
+    
+    // Handle changes
+    selector.addEventListener('change', (e) => {
+        const newMode = e.target.value;
+        
+        if (newMode === 'external') {
+            // Check if external server is running
+            fetch('http://localhost:8080/')
+                .then(response => {
+                    if (response.ok) {
+                        if (window.TileServerConfig) {
+                            window.TileServerConfig.useExternalServer('http://localhost:8080');
+                        }
+                        localStorage.setItem('tileServerMode', 'external');
+                        
+                        if (typeof toastr !== 'undefined') {
+                            toastr.success('Switched to TileServer-GL (10-50x faster!)', 'Tile Server');
+                        }
+                        
+                        // Reload current map if one is loaded
+                        if (window.gamePlayManager && window.gamePlayManager.currentTileLayer) {
+                            const currentMapPath = document.getElementById('mapSelector')?.value;
+                            if (currentMapPath) {
+                                window.switchGamePlayMap(currentMapPath);
+                            }
+                        }
+                    } else {
+                        throw new Error('Server responded but not OK');
+                    }
+                })
+                .catch(err => {
+                    console.error('External tile server not reachable:', err);
+                    selector.value = 'local';
+                    
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error('TileServer-GL not running on port 8080. Please start it first.', 'Connection Error');
+                    } else {
+                        alert('TileServer-GL not running on port 8080. Please start the tile server first.');
+                    }
+                });
+        } else {
+            if (window.TileServerConfig) {
+                window.TileServerConfig.useLocalServer();
+            }
+            localStorage.setItem('tileServerMode', 'local');
+            
+            if (typeof toastr !== 'undefined') {
+                toastr.info('Switched to C# Server', 'Tile Server');
+            }
+            
+            // Reload current map
+            if (window.gamePlayManager && window.gamePlayManager.currentTileLayer) {
+                const currentMapPath = document.getElementById('mapSelector')?.value;
+                if (currentMapPath) {
+                    window.switchGamePlayMap(currentMapPath);
+                }
+            }
+        }
+    });
+    
+    console.log('✅ Tile server mode selector initialized:', savedMode);
+}
+
 // Initialize region settings manager when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     window.regionSettingsManager = new RegionSettingsManager();
     console.log('🔧 Region Settings Manager initialized');
+    
+    // Initialize tile server mode selector
+    initializeTileServerModeSelector();
 });
 
 // Also initialize if DOM is already loaded
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
         window.regionSettingsManager = new RegionSettingsManager();
+        initializeTileServerModeSelector();
     });
 } else {
     window.regionSettingsManager = new RegionSettingsManager();
+    initializeTileServerModeSelector();
 }
 </script>
 
