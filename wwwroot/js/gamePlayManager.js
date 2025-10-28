@@ -662,7 +662,13 @@ class GamePlayManager {
             if (typeof tokenManager !== 'undefined' && tokenManager.tokenPlacementManager) {
                 // Use the existing TokenPlacementManager to create marker
                 const marker = tokenManager.tokenPlacementManager.createTokenMarker(tokenData, latlng);
-                this.map.addLayer(marker);
+                
+                // Add to token layer instead of directly to map
+                if (window.tokenLayer) {
+                    window.tokenLayer.addLayer(marker);
+                } else {
+                    this.map.addLayer(marker);
+                }
                 
                 // Create coverage areas using token attributes and areaCoverages data
                 tokenManager.tokenPlacementManager.createCoverageAreas(tokenData.areaCoverages, latlng, tokenData.forceType, tokenData);

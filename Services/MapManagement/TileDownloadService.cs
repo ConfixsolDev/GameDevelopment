@@ -22,7 +22,12 @@ namespace TechWebSol.Services.MapManagement
         private static readonly Dictionary<string, string> TileServers = new()
         {
             ["map"] = "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-            ["satellite"] = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            ["satellite"] = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+            ["terrain"] = "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+            ["carto-dark"] = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+            ["carto-light"] = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+            ["carto-voyager"] = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+            ["terrain-rgb"] = "https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=pk.eyJ1Ijoibm9vcmtoYW4xIiwiYSI6ImNtaGEyOWw0eDAzcm0ya3NkeDBtb2Rvc3MifQ.h_088R52Y0rneGPowla8RQ"
         };
 
         public TileService(HttpClient httpClient, ILogger<TileService> logger)
@@ -86,9 +91,19 @@ namespace TechWebSol.Services.MapManagement
         private static string UrlFor(string style, int z, int x, int y)
         {
             var template = TileServers.TryGetValue(style, out var t) ? t : TileServers["map"];
-            return template.Replace("{z}", z.ToString())
+            var url = template.Replace("{z}", z.ToString())
                            .Replace("{x}", x.ToString())
                            .Replace("{y}", y.ToString());
+            
+            // Handle subdomain round-robin for URLs with {s} placeholder
+            if (url.Contains("{s}"))
+            {
+                var subdomains = new[] { "a", "b", "c" };
+                var subdomain = subdomains[(x + y + z) % subdomains.Length];
+                url = url.Replace("{s}", subdomain);
+            }
+            
+            return url;
         }
 
         private async Task<(byte[]? Data, bool Cached)> DownloadSingleTileAsync(int z, int x, int y, string style)
@@ -110,6 +125,27 @@ namespace TechWebSol.Services.MapManagement
             }
             return (data, false);
         }
+
+        private static string GetStyleDisplayName(string style) => style switch
+        {
+            "map" => "Street Map",
+            "satellite" => "Satellite",
+            "terrain" => "Topographic",
+            "carto-dark" => "Carto Dark",
+            "carto-light" => "Carto Light",
+            "carto-voyager" => "Carto Voyager",
+            "terrain-rgb" => "3D Terrain (RGB)",
+            _ => "Street Map"
+        };
+
+        private static string GetAttribution(string style) => style switch
+        {
+            "satellite" => "<a href='https://www.esri.com'>Esri</a>",
+            "terrain" => "© <a href='https://opentopomap.org'>OpenTopoMap</a> & <a href='https://www.openstreetmap.org/copyright'>© OpenStreetMap contributors</a>",
+            "carto-dark" or "carto-light" or "carto-voyager" => "© <a href='https://carto.com/'>CARTO</a> & <a href='https://www.openstreetmap.org/copyright'>© OpenStreetMap contributors</a>",
+            "terrain-rgb" => "© <a href='https://www.mapbox.com'>Mapbox</a> & <a href='https://www.openstreetmap.org/copyright'>© OpenStreetMap contributors</a>",
+            _ => "<a href='https://www.openstreetmap.org/copyright'>© OpenStreetMap contributors</a>"
+        };
 
         public async Task<byte[]?> CreateZipAsync(List<(int z, int x, int y)> tiles, string jobId, string style, Action<int> onProgress)
         {
@@ -315,7 +351,7 @@ namespace TechWebSol.Services.MapManagement
 
                     var mapName = !string.IsNullOrWhiteSpace(displayName)
                         ? displayName!
-                        : $"Offline Map - {(style == "satellite" ? "Satellite" : "Street")}";
+                        : $"Offline Map - {GetStyleDisplayName(style)}";
                     var timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
                     
                     await InsertMetadata("name", mapName);
@@ -329,9 +365,7 @@ namespace TechWebSol.Services.MapManagement
                     await InsertMetadata("center", $"{centerLon:F7},{centerLat:F7},{centerZoom}");
                     await InsertMetadata("minzoom", minZoom.ToString());
                     await InsertMetadata("maxzoom", maxZoom.ToString());
-                    await InsertMetadata("attribution", style == "satellite" 
-                        ? "<a href='https://www.esri.com'>Esri</a>" 
-                        : "<a href='https://www.openstreetmap.org/copyright'>© OpenStreetMap contributors</a>");
+                    await InsertMetadata("attribution", GetAttribution(style));
                     
                     // Add JSON format for better compatibility with MapTiler Cloud and modern tools
                     await InsertMetadata("json", System.Text.Json.JsonSerializer.Serialize(new
@@ -348,9 +382,7 @@ namespace TechWebSol.Services.MapManagement
                         center = new[] { centerLon, centerLat, (double)centerZoom },
                         minzoom = minZoom,
                         maxzoom = maxZoom,
-                        attribution = style == "satellite" 
-                            ? "<a href='https://www.esri.com'>Esri</a>" 
-                            : "<a href='https://www.openstreetmap.org/copyright'>© OpenStreetMap contributors</a>",
+                        attribution = GetAttribution(style),
                         generator = "OfflineMapDownloader.NET/1.0"
                     }));
 

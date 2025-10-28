@@ -31,7 +31,7 @@
 
       <div><strong>Center:</strong> <span id="coords">-</span></div>
       <div><strong>Zoom:</strong> <span id="zoom">-</span></div>
-      <label>Zoom Range: <span id="zoom-range-value">14 - 16</span></label>
+      <label>Zoom Range: <span id="zoom-range-value">14 - 18</span></label>
       <div id="zoom-slider" style="margin-bottom: 10px;"></div>
 
       <label>Format:</label>
@@ -39,8 +39,13 @@
       <label><input type="radio" name="format" value="mbtiles"> MBTiles</label>
       <label>Map Style:</label>
       <select id="map-style">
-        <option value="map">Map</option>
+        <option value="map">Street Map</option>
         <option value="satellite">Satellite</option>
+        <option value="terrain">Topographic</option>
+        <option value="carto-dark">Carto Dark</option>
+        <option value="carto-light">Carto Light</option>
+        <option value="carto-voyager">Carto Voyager</option>
+        <option value="terrain-rgb">3D Terrain (RGB)</option>
       </select>
       <div id="prediction" style="font-size: 13px; color: #555; min-height: 20px;"></div>
       <div id="area-info" style="font-size: 13px; color: #2b7de9; font-weight: bold; min-height: 20px; margin-top: 4px;"></div>
@@ -75,6 +80,7 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/nouislider@15.6.1/dist/nouislider.min.js"></script>
+  <script src="~/js/mapboxConfig.js"></script>
   <script>
     let currentMapStyle = "map";
     let isDownloading = false;
@@ -99,14 +105,45 @@
       attribution: 'Tiles © Esri'
     });
 
+    const terrainLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      maxZoom: 17,
+      attribution: '&copy; <a href="https://opentopomap.org">OpenTopoMap</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+    });
+
+    const cartoDarkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+    });
+
+    const cartoLightLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+    });
+
+    const cartoVoyagerLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+    });
+
+    const terrainRgbLayer = L.tileLayer('https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=' + (window.MapboxConfig ? window.MapboxConfig.accessToken : 'YOUR_MAPBOX_TOKEN_HERE'), {
+      maxZoom: 15,
+      attribution: '&copy; <a href="https://www.mapbox.com">Mapbox</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+    });
+
     const baseMaps = {
-      "Map": osmLayer,
-      "Satellite": satelliteLayer
+      "Street Map": osmLayer,
+      "Satellite": satelliteLayer,
+      "Topographic": terrainLayer,
+      "Carto Dark": cartoDarkLayer,
+      "Carto Light": cartoLightLayer,
+      "Carto Voyager": cartoVoyagerLayer,
+      "3D Terrain (RGB)": terrainRgbLayer
     };
 
     const map = L.map('map', {
       center: [37.7749, -122.4194],
       zoom: 13,
+      maxZoom: 20,
       layers: [osmLayer]
     });
 
@@ -148,9 +185,9 @@
     const zoomSlider = document.getElementById("zoom-slider");
     const zoomRangeValue = document.getElementById("zoom-range-value");
     noUiSlider.create(zoomSlider, {
-      start: [14, 16],
+      start: [14, 18],
       connect: true,
-      range: { min: 10, max: 19 },
+      range: { min: 10, max: 20 },
       step: 1,
       tooltips: true,
       format: {
@@ -267,9 +304,37 @@
             const dy = offsetY + (y - y_min) * TILE_SIZE * scale;
             ctx.drawImage(img, dx, dy, TILE_SIZE * scale, TILE_SIZE * scale);
           };
-          img.src = currentMapStyle === "map"
-            ? `https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`
-            : `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${y}/${x}`;
+          // Get tile URL based on current map style
+          let tileUrl = `https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`;
+          const subdomains = ["a", "b", "c"];
+          const subdomain = subdomains[(x + y + zoom) % subdomains.length];
+          
+          switch(currentMapStyle) {
+            case "map":
+              tileUrl = `https://${subdomain}.tile.openstreetmap.org/${zoom}/${x}/${y}.png`;
+              break;
+            case "satellite":
+              tileUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${y}/${x}`;
+              break;
+            case "terrain":
+              tileUrl = `https://${subdomain}.tile.opentopomap.org/${zoom}/${x}/${y}.png`;
+              break;
+            case "carto-dark":
+              tileUrl = `https://${subdomain}.basemaps.cartocdn.com/dark_all/${zoom}/${x}/${y}.png`;
+              break;
+            case "carto-light":
+              tileUrl = `https://${subdomain}.basemaps.cartocdn.com/light_all/${zoom}/${x}/${y}.png`;
+              break;
+            case "carto-voyager":
+              tileUrl = `https://${subdomain}.basemaps.cartocdn.com/rastertiles/voyager/${zoom}/${x}/${y}.png`;
+              break;
+            case "terrain-rgb":
+              const mapboxToken = window.MapboxConfig ? window.MapboxConfig.accessToken : 'YOUR_MAPBOX_TOKEN_HERE';
+              tileUrl = `https://api.mapbox.com/v4/mapbox.terrain-rgb/${zoom}/${x}/${y}.pngraw?access_token=${mapboxToken}`;
+              break;
+          }
+          
+          img.src = tileUrl;
         }
       }
     }, 150);
@@ -288,14 +353,17 @@
     });
 
     map.on('baselayerchange', function (e) {
-      if (e.name === "Map") {
-        currentMapStyle = "map";
-        styleSelector.value = "map";
-      } else if (e.name === "Satellite") {
-        currentMapStyle = "satellite";
-        styleSelector.value = "satellite";
-      }
-
+      const styleMap = {
+        "Street Map": "map",
+        "Satellite": "satellite",
+        "Topographic": "terrain",
+        "Carto Dark": "carto-dark",
+        "Carto Light": "carto-light",
+        "Carto Voyager": "carto-voyager",
+        "3D Terrain (RGB)": "terrain-rgb"
+      };
+      currentMapStyle = styleMap[e.name] || "map";
+      styleSelector.value = currentMapStyle;
       updateTilePreview(); 
     });
 
@@ -310,12 +378,28 @@
       const style = styleSelector.value;
       currentMapStyle = style;
 
-      if (style === "map") {
-        map.removeLayer(satelliteLayer);
-        map.addLayer(osmLayer);
+      // Remove all layers
+      map.eachLayer((layer) => {
+        if (layer instanceof L.TileLayer) {
+          map.removeLayer(layer);
+        }
+      });
+
+      // Add the selected layer
+      const layerMap = {
+        "map": osmLayer,
+        "satellite": satelliteLayer,
+        "terrain": terrainLayer,
+        "carto-dark": cartoDarkLayer,
+        "carto-light": cartoLightLayer,
+        "carto-voyager": cartoVoyagerLayer,
+        "terrain-rgb": terrainRgbLayer
+      };
+
+      if (layerMap[style]) {
+        map.addLayer(layerMap[style]);
       } else {
-        map.removeLayer(osmLayer);
-        map.addLayer(satelliteLayer);
+        map.addLayer(osmLayer);
       }
 
       updateTilePreview();

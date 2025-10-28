@@ -33,11 +33,6 @@
             <div id="gameMap"></div>
         </div>
 
-        <!-- LEFT: Region Panel - Direct Include -->
-        <div id="regionPanelContainer">
-            @await Html.PartialAsync("Partials/Controls/_RegionPanel")
-        </div>
-
         <!-- Overlay Controls - Direct Include -->
         <div id="overlayControlsContainer">
             @await Html.PartialAsync("Partials/Controls/_OverlayControls")
@@ -159,6 +154,7 @@
 <script defer src="~/js/suspectedTokenManager.js"></script>
 <script defer src="~/js/RegionManager.js"></script>
 <script defer src="~/js/regionControls.js"></script>
+<script defer src="~/js/mapboxConfig.js"></script>
 <script defer src="~/js/mapControls.js"></script>
 <script defer src="~/js/scenarioPlanning.js"></script>
 <script defer src="~/js/militaryAdjudication.js"></script>

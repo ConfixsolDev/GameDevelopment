@@ -1742,7 +1742,6 @@ namespace TechWebSol.Controllers
                 // Define allowed partials for security
                 var allowedPartials = new Dictionary<string, string>
                 {
-                    { "region-panel", "Partials/Controls/_RegionPanel" },
                     { "overlay-controls", "Partials/Controls/_OverlayControls" },
                     { "data-entry-modal", "Partials/Modals/_DataEntryModal" },
                     { "token-management-modal", "Partials/Modals/_TokenManagementModal" },
