@@ -41,11 +41,6 @@
       <select id="map-style">
         <option value="map">Street Map</option>
         <option value="satellite">Satellite</option>
-        <option value="terrain">Topographic</option>
-        <option value="carto-dark">Carto Dark</option>
-        <option value="carto-light">Carto Light</option>
-        <option value="carto-voyager">Carto Voyager</option>
-        <option value="terrain-rgb">3D Terrain (RGB)</option>
       </select>
       <div id="prediction" style="font-size: 13px; color: #555; min-height: 20px;"></div>
       <div id="area-info" style="font-size: 13px; color: #2b7de9; font-weight: bold; min-height: 20px; margin-top: 4px;"></div>
@@ -105,41 +100,6 @@
       attribution: 'Tiles © Esri'
     });
 
-    const terrainLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-      maxZoom: 17,
-      attribution: '&copy; <a href="https://opentopomap.org">OpenTopoMap</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
-    });
-
-    const cartoDarkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
-    });
-
-    const cartoLightLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
-    });
-
-    const cartoVoyagerLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
-    });
-
-    const terrainRgbLayer = L.tileLayer('https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=' + (window.MapboxConfig ? window.MapboxConfig.accessToken : 'YOUR_MAPBOX_TOKEN_HERE'), {
-      maxZoom: 15,
-      attribution: '&copy; <a href="https://www.mapbox.com">Mapbox</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
-    });
-
-    const baseMaps = {
-      "Street Map": osmLayer,
-      "Satellite": satelliteLayer,
-      "Topographic": terrainLayer,
-      "Carto Dark": cartoDarkLayer,
-      "Carto Light": cartoLightLayer,
-      "Carto Voyager": cartoVoyagerLayer,
-      "3D Terrain (RGB)": terrainRgbLayer
-    };
-
     const map = L.map('map', {
       center: [37.7749, -122.4194],
       zoom: 13,
@@ -147,7 +107,12 @@
       layers: [osmLayer]
     });
 
-    L.control.layers(baseMaps).addTo(map);
+    const baseMaps = {
+      "Street Map": osmLayer,
+      "Satellite": satelliteLayer
+    };
+
+    L.control.layers(baseMaps, null, { collapsed: false }).addTo(map);
     
     const drawnItems = new L.FeatureGroup();
     map.addLayer(drawnItems);
@@ -316,22 +281,6 @@
             case "satellite":
               tileUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${y}/${x}`;
               break;
-            case "terrain":
-              tileUrl = `https://${subdomain}.tile.opentopomap.org/${zoom}/${x}/${y}.png`;
-              break;
-            case "carto-dark":
-              tileUrl = `https://${subdomain}.basemaps.cartocdn.com/dark_all/${zoom}/${x}/${y}.png`;
-              break;
-            case "carto-light":
-              tileUrl = `https://${subdomain}.basemaps.cartocdn.com/light_all/${zoom}/${x}/${y}.png`;
-              break;
-            case "carto-voyager":
-              tileUrl = `https://${subdomain}.basemaps.cartocdn.com/rastertiles/voyager/${zoom}/${x}/${y}.png`;
-              break;
-            case "terrain-rgb":
-              const mapboxToken = window.MapboxConfig ? window.MapboxConfig.accessToken : 'YOUR_MAPBOX_TOKEN_HERE';
-              tileUrl = `https://api.mapbox.com/v4/mapbox.terrain-rgb/${zoom}/${x}/${y}.pngraw?access_token=${mapboxToken}`;
-              break;
           }
           
           img.src = tileUrl;
@@ -355,12 +304,7 @@
     map.on('baselayerchange', function (e) {
       const styleMap = {
         "Street Map": "map",
-        "Satellite": "satellite",
-        "Topographic": "terrain",
-        "Carto Dark": "carto-dark",
-        "Carto Light": "carto-light",
-        "Carto Voyager": "carto-voyager",
-        "3D Terrain (RGB)": "terrain-rgb"
+        "Satellite": "satellite"
       };
       currentMapStyle = styleMap[e.name] || "map";
       styleSelector.value = currentMapStyle;
@@ -388,12 +332,7 @@
       // Add the selected layer
       const layerMap = {
         "map": osmLayer,
-        "satellite": satelliteLayer,
-        "terrain": terrainLayer,
-        "carto-dark": cartoDarkLayer,
-        "carto-light": cartoLightLayer,
-        "carto-voyager": cartoVoyagerLayer,
-        "terrain-rgb": terrainRgbLayer
+        "satellite": satelliteLayer
       };
 
       if (layerMap[style]) {

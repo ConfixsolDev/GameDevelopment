@@ -561,58 +561,7 @@ function changeBasemap(basemapType) {
                         attribution: getAttributionForBasemap(basemapType)
                     });
                     break;
-                case 'terrain':
-                    newLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-                        ...baseConfig,
-                        ...zoomLimits,
-                        attribution: getAttributionForBasemap(basemapType),
-                        subdomains: subdomains
-                    });
-                    break;
-                case 'carto-dark':
-                    newLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
-                        ...baseConfig,
-                        ...zoomLimits,
-                        attribution: getAttributionForBasemap(basemapType),
-                        subdomains: subdomains
-                    });
-                    break;
-                case 'carto-light':
-                    newLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
-                        ...baseConfig,
-                        ...zoomLimits,
-                        attribution: getAttributionForBasemap(basemapType),
-                        subdomains: subdomains
-                    });
-                    break;
-                case 'carto-voyager':
-                    newLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
-                        ...baseConfig,
-                        ...zoomLimits,
-                        attribution: getAttributionForBasemap(basemapType),
-                        subdomains: subdomains
-                    });
-                    break;
-                case 'terrain-rgb':
-                    if (window.MapboxConfig && window.MapboxConfig.isTokenConfigured()) {
-                        newLayer = L.tileLayer(`https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=${window.MapboxConfig.accessToken}`, {
-                            ...baseConfig,
-                            ...zoomLimits,
-                            attribution: getAttributionForBasemap(basemapType)
-                        });
-                    } else {
-                        console.warn('⚠️ Mapbox token not configured. Skipping terrain-rgb layer.');
-                        // Fallback to regular terrain
-                        newLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-                            ...baseConfig,
-                            ...zoomLimits,
-                            attribution: getAttributionForBasemap('terrain'),
-                            subdomains: subdomains
-                        });
-                    }
-                    break;
                 default:
-                    // Fallback to street map
                     newLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                         ...baseConfig,
                         ...zoomLimits,
