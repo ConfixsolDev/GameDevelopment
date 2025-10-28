@@ -108,6 +108,7 @@
 <!-- GamePlay Arena JavaScript Modules - OPTIMIZED LOADING -->
 <!-- Critical path scripts (synchronous - needed immediately) -->
 <script src="~/js/tileServerConfig.js"></script>
+<script src="~/js/FalconViewGridManager.js"></script>
 <script src="~/js/MilitarySymbolRenderer.js"></script>
 <script src="~/js/TokenManager.js"></script>
 <script src="~/js/TokenPlacementManager.js"></script>
@@ -181,6 +182,101 @@ window.currentTeamInfo = {
 };
 
 console.log('🎯 Force type set from session:', window.currentTeamInfo.forceType);
+
+// ========================================
+// Falcon View Functions - Inline Definition
+// ========================================
+window.falconViewGridManager = null;
+window.isFalconViewActive = false;
+
+/**
+ * Toggle Falcon View GIS mode
+ */
+window.toggleFalconView = function() {
+    window.isFalconViewActive = !window.isFalconViewActive;
+    const gameplayContainer = document.querySelector('.gameplay-container');
+    const falconBtn = document.getElementById('btnFalconView');
+    
+    if (window.isFalconViewActive) {
+        // Enable Falcon View
+        if (gameplayContainer) {
+            gameplayContainer.classList.add('falcon-view-active');
+        }
+        
+        // Update button state
+        if (falconBtn) {
+            falconBtn.classList.add('active');
+            falconBtn.innerHTML = '<i class="fas fa-crosshairs"></i><span>Falcon View ON</span>';
+        }
+        
+        // Initialize Falcon View Grid Manager if not already done
+        if (!window.falconViewGridManager && window.gameMap) {
+            if (typeof FalconViewGridManager !== 'undefined') {
+                window.falconViewGridManager = new FalconViewGridManager(window.gameMap);
+            } else {
+                console.warn('⚠️ FalconViewGridManager class not loaded yet');
+            }
+        }
+        
+        // Enable grid
+        if (window.falconViewGridManager) {
+            window.falconViewGridManager.enable();
+        }
+        
+        console.log('✅ Falcon View mode enabled');
+        if (typeof showNotification === 'function') {
+            showNotification('Falcon View GIS: ACTIVE', 'success');
+        }
+    } else {
+        // Disable Falcon View
+        if (gameplayContainer) {
+            gameplayContainer.classList.remove('falcon-view-active');
+        }
+        
+        // Update button state
+        if (falconBtn) {
+            falconBtn.classList.remove('active');
+            falconBtn.innerHTML = '<i class="fas fa-crosshairs"></i><span>Falcon View</span>';
+        }
+        
+        // Disable grid
+        if (window.falconViewGridManager) {
+            window.falconViewGridManager.disable();
+        }
+        
+        console.log('✅ Falcon View mode disabled');
+        if (typeof showNotification === 'function') {
+            showNotification('Falcon View GIS: INACTIVE', 'info');
+        }
+    }
+    
+    // Save state to localStorage
+    localStorage.setItem('falconViewActive', window.isFalconViewActive ? 'true' : 'false');
+};
+
+/**
+ * Toggle Falcon View grid only (without changing style)
+ */
+window.toggleFalconGrid = function() {
+    if (!window.falconViewGridManager && window.gameMap) {
+        if (typeof FalconViewGridManager !== 'undefined') {
+            window.falconViewGridManager = new FalconViewGridManager(window.gameMap);
+        } else {
+            console.warn('⚠️ FalconViewGridManager class not loaded yet');
+            alert('Grid system is still loading. Please try again in a moment.');
+            return;
+        }
+    }
+    
+    if (window.falconViewGridManager) {
+        window.falconViewGridManager.toggle();
+    } else {
+        console.error('❌ Failed to initialize Falcon View Grid Manager');
+        alert('Grid system not available. Make sure the map is loaded.');
+    }
+};
+
+console.log('✅ Falcon View functions defined inline');
 
 // Global defense planning functions
 function startKillZoneDrawing(type) {

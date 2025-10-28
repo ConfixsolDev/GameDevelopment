@@ -7,6 +7,8 @@
 let isFullscreen = false;
 let isEditMode = false;
 let currentBasemap = 'map'; // Default to Street Map
+let falconViewGridManager = null;
+let isFalconViewActive = false;
 
 /**
  * Initialize basemap dropdown with saved state - OFFLINE ONLY
@@ -801,6 +803,90 @@ function checkTokenLayerStatus() {
 }
 
 /**
+ * Toggle Falcon View GIS mode
+ */
+function toggleFalconView() {
+    isFalconViewActive = !isFalconViewActive;
+    const gameplayContainer = document.querySelector('.gameplay-container');
+    const falconBtn = document.getElementById('btnFalconView');
+    
+    if (isFalconViewActive) {
+        // Enable Falcon View
+        if (gameplayContainer) {
+            gameplayContainer.classList.add('falcon-view-active');
+        }
+        
+        // Update button state
+        if (falconBtn) {
+            falconBtn.classList.add('active');
+            falconBtn.innerHTML = '<i class="fas fa-crosshairs"></i><span>Falcon View ON</span>';
+        }
+        
+        // Initialize Falcon View Grid Manager if not already done
+        if (!falconViewGridManager && window.gameMap) {
+            falconViewGridManager = new FalconViewGridManager(window.gameMap);
+        }
+        
+        // Enable grid
+        if (falconViewGridManager) {
+            falconViewGridManager.enable();
+        }
+        
+        console.log('✅ Falcon View mode enabled');
+        if (typeof showNotification === 'function') {
+            showNotification('Falcon View GIS: ACTIVE', 'success');
+        }
+    } else {
+        // Disable Falcon View
+        if (gameplayContainer) {
+            gameplayContainer.classList.remove('falcon-view-active');
+        }
+        
+        // Update button state
+        if (falconBtn) {
+            falconBtn.classList.remove('active');
+            falconBtn.innerHTML = '<i class="fas fa-crosshairs"></i><span>Falcon View</span>';
+        }
+        
+        // Disable grid
+        if (falconViewGridManager) {
+            falconViewGridManager.disable();
+        }
+        
+        console.log('✅ Falcon View mode disabled');
+        if (typeof showNotification === 'function') {
+            showNotification('Falcon View GIS: INACTIVE', 'info');
+        }
+    }
+    
+    // Save state to localStorage
+    localStorage.setItem('falconViewActive', isFalconViewActive ? 'true' : 'false');
+}
+
+/**
+ * Toggle Falcon View grid only (without changing style)
+ */
+function toggleFalconGrid() {
+    if (!falconViewGridManager && window.gameMap) {
+        falconViewGridManager = new FalconViewGridManager(window.gameMap);
+    }
+    
+    if (falconViewGridManager) {
+        falconViewGridManager.toggle();
+    }
+}
+
+/**
+ * Initialize Falcon View Grid Manager
+ */
+function initializeFalconViewGrid() {
+    if (window.gameMap && !falconViewGridManager) {
+        falconViewGridManager = new FalconViewGridManager(window.gameMap);
+        console.log('✅ Falcon View Grid Manager initialized');
+    }
+}
+
+/**
  * Initialize map controls
  */
 function initializeMapControls() {
@@ -838,6 +924,20 @@ function initializeMapControls() {
             saveZoomLevel(currentZoom);
         });
         console.log('Zoom level monitoring enabled');
+        
+        // Initialize Falcon View Grid Manager
+        initializeFalconViewGrid();
+        
+        // Restore Falcon View state if it was active
+        const savedFalconViewState = localStorage.getItem('falconViewActive');
+        if (savedFalconViewState === 'true') {
+            // Small delay to ensure map is fully initialized
+            setTimeout(() => {
+                if (!isFalconViewActive) {
+                    toggleFalconView();
+                }
+            }, 500);
+        }
     }
     
     console.log('Map controls initialized');
@@ -870,3 +970,6 @@ window.loadZoomLevel = loadZoomLevel;
 window.saveBasemap = saveBasemap;
 window.loadBasemap = loadBasemap;
 window.restoreMapSettings = restoreMapSettings;
+window.toggleFalconView = toggleFalconView;
+window.toggleFalconGrid = toggleFalconGrid;
+window.initializeFalconViewGrid = initializeFalconViewGrid;
