@@ -1,10 +1,61 @@
+@using Microsoft.EntityFrameworkCore
 @inject IUserSessionService _userSessionService
+@inject TechWebSol.Data.ApplicationDbContext _context
 @{
     var currentUser = _userSessionService.GetCurrentUser();
     bool isControlUser = (currentUser?.TeamId == null || currentUser?.TeamId == Guid.Empty);
+    
+    var TeamName = "CONTROL";
+    var TeamColor = "#888888";
+    var TeamIcon = "fa-shield-alt";
+    
+    if (currentUser != null && currentUser.TeamId != null && currentUser.TeamId != Guid.Empty)
+    {
+        var forceType = currentUser.ForceType;
+        
+        if (string.IsNullOrEmpty(forceType))
+        {
+            var team = _context.Teams.AsNoTracking().FirstOrDefault(t => t.Id == currentUser.TeamId);
+            forceType = team?.ForceType;
+        }
+        
+        if (!string.IsNullOrEmpty(forceType))
+        {
+            var forceTypeLower = forceType.ToLower().Trim();
+            
+            if (forceTypeLower.Contains("fox") || forceTypeLower.Contains("red"))
+            {
+                TeamName = "FOX LAND";
+                TeamColor = "#ff0000";
+                TeamIcon = "fa-chess-rook";
+            }
+            else if (forceTypeLower.Contains("blue"))
+            {
+                TeamName = "BLUE LAND";
+                TeamColor = "#0080ff";
+                TeamIcon = "fa-shield-alt";
+            }
+            else if (forceTypeLower.Contains("neutral") || forceTypeLower.Contains("un"))
+            {
+                TeamName = "NEUTRAL";
+                TeamColor = "#00AA00";
+                TeamIcon = "fa-balance-scale";
+            }
+            else
+            {
+                TeamName = forceType.ToUpper();
+            }
+        }
+    }
 }
 
 <div class="map-overlay-controls">
+    <!-- Team Command Badge -->
+    <div class="team-badge-overlay" style="background: linear-gradient(135deg, @TeamColor 0%, @(TeamColor)ee 100%); box-shadow: 0 0 15px @(TeamColor)66; border: 2px solid @(TeamColor);">
+        <i class="fas @TeamIcon"></i>
+        <span style="color: @TeamColor; text-shadow: 0 0 8px @(TeamColor)66;">@TeamName</span>
+    </div>
+    
     <div class="overlay-control-group">
         <h6>War Game Tools</h6>
         <!-- Token Actions Section -->
@@ -59,7 +110,10 @@
         </div>
         <!-- Defense Planning Section -->
         <div class="defense-planning-section">
-            <h6 class="section-subtitle">Defense Planning</h6>
+            <h6 class="section-subtitle collapsible-header" data-section="defense-planning" onclick="toggleSection('defense-planning')">
+                <i class="fas fa-chevron-right chevron-icon"></i> Defense Planning
+            </h6>
+            <div class="collapsible-content" id="defense-planning-content" style="display: none;">
             
             <!-- Kill Zones (Red) -->
             <div class="control-row">
@@ -134,6 +188,7 @@
                     <span>Cancel Drawing</span>
                 </button>
             </div>
+            </div>
         </div>
 
       
@@ -154,7 +209,10 @@
 
 
     <div class="overlay-control-group">
-        <h6>Enemy Intelligence</h6>
+        <h6 class="collapsible-header" data-section="enemy-intelligence" onclick="toggleSection('enemy-intelligence')">
+            <i class="fas fa-chevron-right chevron-icon"></i> Enemy Intelligence
+        </h6>
+        <div class="collapsible-content" id="enemy-intelligence-content" style="display: none;">
         <div class="control-row">
             <button class="overlay-btn overlay-btn-intel" onclick="openSuspectedTokenModal()">
                 <i class="fas fa-crosshairs"></i>
@@ -164,6 +222,7 @@
                 <i class="fas fa-list-ul"></i>
                 <span>Manage Enemy Token</span>
             </button>
+        </div>
         </div>
     </div>
 
@@ -195,8 +254,55 @@
     }
 
     <div class="overlay-control-group">
-        <h6>View Controls</h6>
+        <h6 class="collapsible-header" data-section="view-controls" onclick="toggleSection('view-controls')">
+            <i class="fas fa-chevron-right chevron-icon"></i> View Controls
+        </h6>
+        <div class="collapsible-content" id="view-controls-content" style="display: none;">
+        
+        <!-- Zoom and Basemap on one line -->
         <div class="control-row">
+            <div style="flex: 1; margin-right: 5px;">
+                <label style="font-size: 10px; color: #a0aec0; display: block; margin-bottom: 4px;"><i class="fas fa-cog"></i> Zoom</label>
+                <select id="defaultZoomLevel" onchange="updateDefaultZoomLevel(this.value)" style="width: 100%; padding: 6px; border: 1px solid #444; background: #2d3748; color: #e2e8f0; border-radius: 4px; font-size: 12px;">
+                    <option value="12">12</option>
+                    <option value="13">13</option>
+                    <option value="14" selected>14</option>
+                    <option value="15">15</option>
+                    <option value="16">16</option>
+                    <option value="17">17</option>
+                    <option value="18">18</option>
+                    <option value="19">19</option>
+                    <option value="20">20</option>
+                </select>
+            </div>
+            <div style="flex: 1; margin-left: 5px;">
+                <label style="font-size: 10px; color: #a0aec0; display: block; margin-bottom: 4px;"><i class="fas fa-globe"></i> Basemap</label>
+                <select id="basemapDropdown" onchange="changeBasemap(this.value)" style="width: 100%; padding: 6px; border: 1px solid #444; background: #2d3748; color: #e2e8f0; border-radius: 4px; font-size: 12px;">
+                    <option value="map" selected>Street Map</option>
+                    <option value="satellite">Satellite</option>
+                    <option value="terrain">Topographic</option>
+                    <option value="carto-dark">Carto Dark</option>
+                    <option value="carto-light">Carto Light</option>
+                    <option value="carto-voyager">Carto Voyager</option>
+                    <option value="terrain-rgb">3D Terrain (RGB)</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Tile Server Mode (Hidden by default, always uses external) -->
+        <div class="control-section" style="display: none;">
+            <label style="font-size: 11px; color: #a0aec0;"><i class="fas fa-server"></i> Tile Server</label>
+            <select id="tileServerMode" class="overlay-btn" style="width: 100%; padding: 8px; border: 1px solid #444; background: #2d3748; color: #e2e8f0; border-radius: 4px; margin-bottom: 8px;">
+                <option value="local">Local (C# Server)</option>
+                <option value="external" selected>External (TileServer-GL ⚡)</option>
+            </select>
+            <small style="color: #a0aec0; font-size: 10px;">
+                <i class="fas fa-info-circle"></i> External: 10-50x faster
+            </small>
+        </div>
+        
+        <!-- View Buttons -->
+        <div class="control-row" style="margin-top: 8px;">
             <button class="overlay-btn" onclick="toggleFullscreen()">
                 <i class="fas fa-expand"></i>
                 <span>Fullscreen</span>
@@ -206,10 +312,30 @@
                 <span>Reset View</span>
             </button>
         </div>
+        </div>
     </div>
 </div>
 
 <style>
+    .team-badge-overlay {
+        position: absolute;
+        top: -60px;
+        right: 20px;
+        padding: 10px 15px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        font-weight: bold;
+        z-index: 1001;
+    }
+    
+    .team-badge-overlay i {
+        font-size: 18px;
+        color: #fff;
+    }
+    
     .map-selector-dropdown {
         width: 100%;
         padding: 8px 12px;
@@ -372,4 +498,257 @@
     .defensezone-btn span {
         color: #fff !important;
     }
+
+    /* Collapsible Headers */
+    .collapsible-header {
+        cursor: pointer;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 0 !important;
+    }
+
+    .collapsible-header:hover {
+        color: var(--gameplay-primary);
+        border-bottom-color: var(--gameplay-primary);
+    }
+
+    .collapsible-header .chevron-icon {
+        transition: transform 0.2s ease;
+        font-size: 10px;
+        color: var(--gameplay-primary);
+    }
+
+    .collapsible-header.expanded .chevron-icon {
+        transform: rotate(90deg);
+    }
+
+    .collapsible-content {
+        padding-top: 8px;
+        transition: all 0.3s ease;
+    }
 </style>
+
+<script>
+/**
+ * Region Settings Manager - Moved from _RegionPanel
+ */
+class RegionSettingsManager {
+    constructor() {
+        this.storageKey = 'ksagame_region_settings';
+        this.defaultSettings = {
+            defaultZoomLevel: 14,
+            basemapStyle: 'Offline',
+            showRegions: true,
+            showLabels: true
+        };
+        this.settings = this.loadSettings();
+        this.initializeSettings();
+    }
+    
+    loadSettings() {
+        try {
+            const stored = localStorage.getItem(this.storageKey);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                console.log('🔧 Region settings loaded:', parsed);
+                return { ...this.defaultSettings, ...parsed };
+            }
+        } catch (error) {
+            console.warn('⚠️ Failed to load settings:', error);
+        }
+        return { ...this.defaultSettings };
+    }
+    
+    saveSettings() {
+        try {
+            localStorage.setItem(this.storageKey, JSON.stringify(this.settings));
+            console.log('💾 Settings saved');
+        } catch (error) {
+            console.error('❌ Failed to save settings:', error);
+        }
+    }
+    
+    initializeSettings() {
+        const zoomDropdown = document.getElementById('defaultZoomLevel');
+        if (zoomDropdown) {
+            zoomDropdown.value = this.settings.defaultZoomLevel;
+        }
+        const basemapDropdown = document.getElementById('basemapDropdown');
+        if (basemapDropdown) {
+            basemapDropdown.value = this.settings.basemapStyle;
+        }
+    }
+    
+    updateDefaultZoomLevel(zoomLevel) {
+        const level = parseInt(zoomLevel);
+        this.settings.defaultZoomLevel = level;
+        this.saveSettings();
+        console.log(`🔧 Zoom level: ${level}`);
+        if (window.gamePlayManager) {
+            window.gamePlayManager.defaultZoomLevel = level;
+        }
+    }
+    
+    getDefaultZoomLevel() {
+        return this.settings.defaultZoomLevel || 14;
+    }
+    
+    getBasemapStyle() {
+        return this.settings.basemapStyle || 'Offline';
+    }
+    
+    updateBasemapStyle(style) {
+        this.settings.basemapStyle = style;
+        this.saveSettings();
+        console.log(`🔧 Basemap: ${style}`);
+    }
+    
+    resetToDefaults() {
+        this.settings = { ...this.defaultSettings };
+        this.saveSettings();
+        this.initializeSettings();
+        console.log('🔧 Region settings reset to defaults');
+        
+        if (typeof showNotification === 'function') {
+            showNotification('Region settings reset to defaults', 'info');
+        }
+    }
+}
+
+function updateDefaultZoomLevel(zoomLevel) {
+    if (window.regionSettingsManager) {
+        window.regionSettingsManager.updateDefaultZoomLevel(zoomLevel);
+    }
+}
+
+function changeBasemap(style) {
+    if (window.regionSettingsManager) {
+        window.regionSettingsManager.updateBasemapStyle(style);
+    }
+}
+
+function initializeTileServerModeSelector() {
+    const selector = document.getElementById('tileServerMode');
+    if (!selector) return;
+    
+    // Default to external (TileServer-GL) for better performance
+    const savedMode = 'external';
+    selector.value = savedMode;
+    localStorage.setItem('tileServerMode', savedMode);
+    
+    // Initialize TileServer-GL as default
+    if (window.TileServerConfig) {
+        window.TileServerConfig.useExternalServer('http://localhost:8080');
+    }
+    
+    selector.addEventListener('change', (e) => {
+        const newMode = e.target.value;
+        localStorage.setItem('tileServerMode', newMode);
+        console.log('🔧 Tile server mode:', newMode);
+    });
+    
+    console.log('🔧 Tile Server GL selected by default (hidden from UI)');
+}
+
+/**
+ * Collapsible Sections Manager
+ */
+class CollapsibleSectionsManager {
+    constructor() {
+        this.storageKey = 'ksagame_collapsible_sections';
+        this.sections = {
+            'defense-planning': false,
+            'enemy-intelligence': false,
+            'view-controls': false
+        };
+        this.loadState();
+        this.initializeSections();
+    }
+
+    loadState() {
+        try {
+            const stored = localStorage.getItem(this.storageKey);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                this.sections = { ...this.sections, ...parsed };
+                console.log('🔧 Collapsible sections state loaded:', this.sections);
+            }
+        } catch (error) {
+            console.warn('⚠️ Failed to load collapsible sections state:', error);
+        }
+    }
+
+    saveState() {
+        try {
+            localStorage.setItem(this.storageKey, JSON.stringify(this.sections));
+            console.log('💾 Collapsible sections state saved:', this.sections);
+        } catch (error) {
+            console.error('❌ Failed to save collapsible sections state:', error);
+        }
+    }
+
+    initializeSections() {
+        Object.keys(this.sections).forEach(sectionId => {
+            const content = document.getElementById(`${sectionId}-content`);
+            const header = document.querySelector(`[data-section="${sectionId}"]`);
+            
+            if (content && header) {
+                if (this.sections[sectionId]) {
+                    content.style.display = 'block';
+                    header.classList.add('expanded');
+                } else {
+                    content.style.display = 'none';
+                    header.classList.remove('expanded');
+                }
+            }
+        });
+    }
+
+    toggleSection(sectionId) {
+        if (!this.sections.hasOwnProperty(sectionId)) return;
+        
+        const content = document.getElementById(`${sectionId}-content`);
+        const header = document.querySelector(`[data-section="${sectionId}"]`);
+        
+        if (!content || !header) return;
+        
+        const isExpanded = this.sections[sectionId];
+        this.sections[sectionId] = !isExpanded;
+        
+        if (this.sections[sectionId]) {
+            content.style.display = 'block';
+            header.classList.add('expanded');
+        } else {
+            content.style.display = 'none';
+            header.classList.remove('expanded');
+        }
+        
+        this.saveState();
+        console.log(`🔧 ${sectionId} ${this.sections[sectionId] ? 'expanded' : 'collapsed'}`);
+    }
+}
+
+// Global function for onclick handlers
+function toggleSection(sectionId) {
+    if (window.collapsibleSectionsManager) {
+        window.collapsibleSectionsManager.toggleSection(sectionId);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    window.regionSettingsManager = new RegionSettingsManager();
+    window.collapsibleSectionsManager = new CollapsibleSectionsManager();
+    initializeTileServerModeSelector();
+});
+
+if (document.readyState !== 'loading') {
+    window.regionSettingsManager = new RegionSettingsManager();
+    window.collapsibleSectionsManager = new CollapsibleSectionsManager();
+    initializeTileServerModeSelector();
+}
+</script>
