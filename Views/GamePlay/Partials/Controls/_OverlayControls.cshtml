@@ -536,8 +536,8 @@ class RegionSettingsManager {
     constructor() {
         this.storageKey = 'ksagame_region_settings';
         this.defaultSettings = {
-            defaultZoomLevel: 14,
-            basemapStyle: 'Offline',
+            defaultZoomLevel: 15,
+            basemapStyle: 'map',
             showRegions: true,
             showLabels: true
         };
@@ -594,7 +594,7 @@ class RegionSettingsManager {
     }
     
     getBasemapStyle() {
-        return this.settings.basemapStyle || 'Offline';
+        return this.settings.basemapStyle || 'map';
     }
     
     updateBasemapStyle(style) {
@@ -636,9 +636,14 @@ function initializeTileServerModeSelector() {
     selector.value = savedMode;
     localStorage.setItem('tileServerMode', savedMode);
     
-    // Initialize TileServer-GL as default
+    // Initialize TileServer-GL as default only on HTTP to avoid HTTPS mixed content
     if (window.TileServerConfig) {
-        window.TileServerConfig.useExternalServer('http://localhost:8080');
+        if (location.protocol === 'http:') {
+            window.TileServerConfig.useExternalServer('http://localhost:8080');
+        } else {
+            // Stay on local endpoints under HTTPS
+            window.TileServerConfig.useLocalServer();
+        }
     }
     
     selector.addEventListener('change', (e) => {

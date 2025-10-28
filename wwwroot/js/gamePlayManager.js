@@ -1544,8 +1544,8 @@ window.switchGamePlayMap = async function(mapPath) {
         
         console.log('📋 Map metadata loaded:', metadata);
         
-        // Parse metadata with minimum zoom of 12 and FORCE maximum zoom to 18
-        const minZoom = Math.max(12, parseInt(metadata.minzoom || 12));
+        // Parse metadata, but CAP minimum zoom to 15 so default zoom 15 always allowed
+        const minZoom = Math.min(15, parseInt(metadata.minzoom || 12));
         const maxZoom = 18; // FORCE maxZoom to 18 regardless of metadata
         
         console.log(`🔍 Map zoom limits - Min: ${minZoom}, Max: ${maxZoom} (forced)`);
@@ -1638,7 +1638,8 @@ window.switchGamePlayMap = async function(mapPath) {
         }
         
         // Update map zoom limits
-        window.gameMap.setMinZoom(minZoom);
+        // Allow zooming out to 15 by capping minZoom
+        window.gameMap.setMinZoom(Math.min(minZoom, 15));
         window.gameMap.setMaxZoom(maxZoom);
         
         // Load terrain database for this map
@@ -1674,7 +1675,7 @@ window.switchGamePlayMap = async function(mapPath) {
             minZoom: minZoom,
             maxZoom: 18,             // Force maxZoom to 18
             maxNativeZoom: parseInt(metadata.maxzoom || 14),  // Use actual tile max zoom, allow overzoom beyond this
-            minNativeZoom: minZoom,  // Start fetching at min zoom
+            minNativeZoom: Math.min(minZoom, 15),  // Ensure tiles render at zoom 15
             bounds: boundsObj,       // Only request tiles within bounds
             noWrap: true,            // No wrapping around the world
             keepBuffer: 2,           // Keep 2 tile buffer for smooth panning
@@ -1698,6 +1699,7 @@ window.switchGamePlayMap = async function(mapPath) {
             // Instead of fitBounds (which zooms out), set view to bounds center at stored zoom level
             const boundsCenter = boundsObj.getCenter();
             // Get default zoom level from region settings (default to 15 for satellite)
+            // Keep default zoom level at 15
             let targetZoom = 15;
             if (window.regionSettingsManager) {
                 targetZoom = window.regionSettingsManager.getDefaultZoomLevel();
@@ -1713,9 +1715,10 @@ window.switchGamePlayMap = async function(mapPath) {
             console.log(`✅ Map view set to bounds center with zoom: ${currentZoom} (target: ${targetZoom})`);
             console.log(`📍 Map center: [${boundsCenter.lat.toFixed(6)}, ${boundsCenter.lng.toFixed(6)}]`);
         } else {
-            // Fallback: use center and zoom
-            window.gameMap.setView(center, initialZoom, { animate: false });
-            console.log(`✅ Map view set to center with zoom: ${initialZoom}`);
+            // Fallback: always prefer zoom 15
+            const fallbackZoom = 15;
+            window.gameMap.setView(center, fallbackZoom, { animate: false });
+            console.log(`✅ Map view set to center with zoom: ${fallbackZoom}`);
         }
         
         // NOW add the tile layer after view is set
@@ -1725,6 +1728,14 @@ window.switchGamePlayMap = async function(mapPath) {
         // Set up event handlers for bounds enforcement (after tiles are added)
         if (boundsObj) {
             setupBoundedMapEvents(boundsObj, maxZoom);
+        }
+
+        // If user selected a non-offline basemap (e.g., 'map' or 'satellite'),
+        // re-apply it now to override the offline layer added during switch.
+        if (typeof currentBasemap !== 'undefined' && currentBasemap && currentBasemap !== 'Offline') {
+            if (typeof changeBasemap === 'function') {
+                try { changeBasemap(currentBasemap); } catch (e) { console.warn('Basemap reapply failed:', e); }
+            }
         }
         
         // Show map container now that it's properly loaded

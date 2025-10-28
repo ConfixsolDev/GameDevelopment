@@ -868,8 +868,8 @@ function initializeTileServerModeSelector() {
     const savedMode = localStorage.getItem('tileServerMode') || 'local';
     selector.value = savedMode;
     
-    // Apply saved mode
-    if (savedMode === 'external') {
+    // Apply saved mode (guard external under HTTPS to avoid mixed content)
+    if (savedMode === 'external' && location.protocol === 'http:') {
         if (window.TileServerConfig) {
             window.TileServerConfig.useExternalServer('http://localhost:8080');
         }
@@ -884,6 +884,14 @@ function initializeTileServerModeSelector() {
         const newMode = e.target.value;
         
         if (newMode === 'external') {
+            if (location.protocol !== 'http:') {
+                // Prevent switching to external over HTTPS
+                selector.value = 'local';
+                if (typeof toastr !== 'undefined') {
+                    toastr.warning('External tile server requires HTTP or an HTTPS proxy. Staying on local tiles.', 'Mixed Content');
+                }
+                return;
+            }
             // Check if external server is running
             fetch('http://localhost:8080/')
                 .then(response => {

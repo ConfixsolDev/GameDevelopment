@@ -6,19 +6,19 @@
 // Global variables for map controls
 let isFullscreen = false;
 let isEditMode = false;
-let currentBasemap = 'satellite'; // Default to satellite
+let currentBasemap = 'map'; // Default to Street Map
 
 /**
  * Initialize basemap dropdown with saved state - OFFLINE ONLY
  */
 function initializeBasemapDropdown() {
-    // Load saved basemap from localStorage, default to satellite
+    // Load saved basemap from localStorage, default to Street Map
     const savedBasemap = localStorage.getItem('currentBasemap');
     if (savedBasemap) {
         currentBasemap = savedBasemap;
     } else {
-        // Default to satellite
-        currentBasemap = 'satellite';
+        // Default to Street Map
+        currentBasemap = 'map';
         localStorage.setItem('currentBasemap', currentBasemap);
     }
     
@@ -574,6 +574,11 @@ function changeBasemap(basemapType) {
         }
         
         newLayer.addTo(window.gameMap);
+        // Ensure base layer is at the back and map layout is updated
+        if (typeof newLayer.bringToBack === 'function') {
+            newLayer.bringToBack();
+        }
+        window.gameMap.invalidateSize(false);
         
         // Update map zoom limits to match the new basemap
         window.gameMap.setMinZoom(zoomLimits.minZoom);
