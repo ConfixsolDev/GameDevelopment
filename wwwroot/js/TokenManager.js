@@ -271,7 +271,7 @@ class TokenManager {
                     </div>
                     <div class="deployed-unit-actions">
                         ${status === 'created' ? `<button class="btn btn-sm btn-primary" onclick="placeTokenOnMap('${t.id}')"><i class="fas fa-map-marker-alt"></i> Place on Map</button>` : ''}
-                        ${status === 'placed' ? `<button class="btn btn-sm btn-info" onclick="tokenManager.tokenPlacementManager.startMoveMode('${t.id}')"><i class="fas fa-arrows-alt"></i> Move</button>` : ''}
+                        ${status === 'placed' ? `<button class="btn btn-sm btn-info" onclick="(function(){ if(window.tokenActionModeManager&&typeof window.tokenActionModeManager.setMode==='function'){ window.tokenActionModeManager.setMode('move'); } if(tokenManager&&tokenManager.tokenPlacementManager){ tokenManager.tokenPlacementManager.startMoveMode('${t.id}'); } })()"><i class="fas fa-arrows-alt"></i> Move</button>` : ''}
                         ${status === 'placed' ? `<button class="btn btn-sm btn-warning" onclick="removeTokenFromMapBtn('${t.id}')"><i class="fas fa-map-marker-times"></i> Remove from Map</button>` : ''}
                         ${status === 'created' ? `<button class="btn btn-sm btn-warning" onclick="openTokenDataEntryModal('${t.id}')"><i class="fas fa-edit"></i> Data Entry</button>` : ''}
                         <button class="btn btn-sm btn-danger" onclick="deleteTokenById('${t.id}'); refreshTokenList()"><i class="fas fa-trash"></i> Delete</button>
@@ -398,7 +398,7 @@ class TokenManager {
                             <button class="btn btn-sm btn-success" onclick="window.tokenPlacementManager && window.tokenPlacementManager.openMovementPlanning && window.tokenPlacementManager.openMovementPlanning(${JSON.stringify(token).replace(/"/g, '&quot;')}, null)">
                                 <i class="fas fa-route"></i> Movement Planning
                             </button>
-                            <button class="btn btn-sm btn-primary" onclick="tokenManager.tokenPlacementManager && tokenManager.tokenPlacementManager.startMoveMode && tokenManager.tokenPlacementManager.startMoveMode('${token.id}')">
+                            <button class="btn btn-sm btn-primary" onclick="(function(){ if(window.tokenActionModeManager&&typeof window.tokenActionModeManager.setMode==='function'){ window.tokenActionModeManager.setMode('move'); } if(tokenManager&&tokenManager.tokenPlacementManager&&tokenManager.tokenPlacementManager.startMoveMode){ tokenManager.tokenPlacementManager.startMoveMode('${token.id}'); } })()">
                                 <i class="fas fa-arrows-alt"></i> Move Token
                             </button>
                             <button class="btn btn-sm btn-secondary" onclick="closeTokenDetails()">Close</button>

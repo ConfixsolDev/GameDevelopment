@@ -202,6 +202,11 @@ class TokenPlacementManager {
         const tokenInfo = this.placedTokens.get(tokenId);
         if (!tokenInfo) return;
 
+        // Ensure global mode reflects Move so UI/cursor/banners update
+        if (window.tokenActionModeManager && typeof window.tokenActionModeManager.setMode === 'function') {
+            try { window.tokenActionModeManager.setMode('move'); } catch (e) { console.warn('Failed to set move mode:', e); }
+        }
+
         this.isMovingToken = true;
         this.movingToken = tokenInfo;
         this.map.getContainer().style.cursor = 'move';
@@ -319,6 +324,9 @@ class TokenPlacementManager {
         if (!this.movingToken) return;
 
         try {
+            // Capture previous location before server call so we can append visuals smoothly
+            const prevLatLng = this.movingToken.marker ? this.movingToken.marker.getLatLng() : null;
+
             const response = await fetch('/GamePlay/MoveToken', {
                 method: 'POST',
                 headers: {
@@ -334,7 +342,7 @@ class TokenPlacementManager {
             const result = await response.json();
 
             if (result.success) {
-                // Update marker position
+                // Update marker position immediately
                 this.movingToken.marker.setLatLng(latlng);
 
                 // Update coverage areas
@@ -342,11 +350,12 @@ class TokenPlacementManager {
                     this.updateCoverageAreas(this.movingToken.token.id, result.areaCoverages, latlng);
                 }
 
-                // Clear existing movement history visuals
-                this.clearMovementHistory(this.movingToken.token.id);
-
-                // Refresh movement history to show the new path
-                await this.refreshMovementHistory(this.movingToken.token.id);
+                // Incrementally append the latest segment on the frontend
+                try {
+                    this.appendMovementSegment(this.movingToken, prevLatLng, latlng);
+                } catch (e) {
+                    console.warn('appendMovementSegment failed:', e);
+                }
 
                 this.notificationCallback(result.message, 'success');
             } else {
@@ -358,6 +367,74 @@ class TokenPlacementManager {
         } finally {
             this.cancelMoveMode();
         }
+    }
+
+    /**
+     * Append a new movement segment and waypoint without full redraw
+     * @param {{marker: any, token: any, routeLines?: any[], waypointMarkers?: any[]}} tokenInfo
+     * @param {{lat:number,lng:number}|null} fromLatLng
+     * @param {{lat:number,lng:number}} toLatLng
+     */
+    appendMovementSegment(tokenInfo, fromLatLng, toLatLng) {
+        if (!tokenInfo || !toLatLng) return;
+        if (!tokenInfo.routeLines) tokenInfo.routeLines = [];
+        if (!tokenInfo.waypointMarkers) tokenInfo.waypointMarkers = [];
+
+        // Ensure we have a starting point; if not, use existing movementHistory or marker position
+        if (!fromLatLng && tokenInfo.token.movementHistory && tokenInfo.token.movementHistory.length > 0) {
+            const last = tokenInfo.token.movementHistory[tokenInfo.token.movementHistory.length - 1];
+            fromLatLng = { 
+                lat: typeof last.latitude === 'string' ? parseFloat(last.latitude) : last.latitude, 
+                lng: typeof last.longitude === 'string' ? parseFloat(last.longitude) : last.longitude 
+            };
+        }
+        if (!fromLatLng && tokenInfo.marker) {
+            fromLatLng = tokenInfo.marker.getLatLng();
+        }
+
+        // Determine color by force type
+        let lineColor = '#4299e1';
+        const ft = tokenInfo.token?.forceType;
+        if (ft) {
+            const f = String(ft).toLowerCase();
+            if (f.includes('fox') || f.includes('red') || f.includes('hostile')) lineColor = '#ff0000';
+            else if (f.includes('blue') || f.includes('friendly')) lineColor = '#0000ff';
+        }
+
+        // Draw segment from previous point to new point
+        if (fromLatLng && (Math.abs(fromLatLng.lat - toLatLng.lat) > 1e-9 || Math.abs(fromLatLng.lng - toLatLng.lng) > 1e-9)) {
+            const seg = L.polyline([[fromLatLng.lat, fromLatLng.lng], [toLatLng.lat, toLatLng.lng]], {
+                color: lineColor,
+                weight: 3,
+                opacity: 0.7,
+                dashArray: '10, 10'
+            }).addTo(this.map);
+            tokenInfo.routeLines.push(seg);
+
+            // Add small waypoint at previous point
+            const wp = L.circleMarker([fromLatLng.lat, fromLatLng.lng], {
+                radius: 4,
+                color: lineColor,
+                fillColor: lineColor,
+                fillOpacity: 0.8,
+                weight: 2
+            }).addTo(this.map);
+            tokenInfo.waypointMarkers.push(wp);
+            console.log(`✅ Appended movement segment: [${fromLatLng.lat.toFixed(4)}, ${fromLatLng.lng.toFixed(4)}] → [${toLatLng.lat.toFixed(4)}, ${toLatLng.lng.toFixed(4)}]`);
+        } else {
+            console.log(`⚠️ No valid fromLatLng or same position, skipping segment draw`);
+        }
+
+        // Mutate local token model
+        if (!Array.isArray(tokenInfo.token.movementHistory)) {
+            tokenInfo.token.movementHistory = [];
+        }
+        // Only add fromLatLng if it's not already the last entry
+        if (fromLatLng && tokenInfo.token.movementHistory.length === 0) {
+            tokenInfo.token.movementHistory.push({ latitude: fromLatLng.lat, longitude: fromLatLng.lng, createdDate: new Date().toISOString() });
+        }
+        tokenInfo.token.movementHistory.push({ latitude: toLatLng.lat, longitude: toLatLng.lng, createdDate: new Date().toISOString() });
+        tokenInfo.token.position = { lat: toLatLng.lat, lng: toLatLng.lng };
     }
 
     /**
@@ -1360,6 +1437,9 @@ class TokenPlacementManager {
             if (result.success && result.movementHistory && result.movementHistory.length > 1) {
                 console.log(`📍 Found ${result.movementHistory.length} movement points for complete route`);
                 
+                // Get token data first
+                const tokenData = this.placedTokens.get(tokenId);
+                
                 // Create route lines for each movement segment
                 const positions = result.movementHistory.map(m => [
                     typeof m.latitude === 'string' ? parseFloat(m.latitude) : m.latitude,
@@ -1387,7 +1467,6 @@ class TokenPlacementManager {
                 }).addTo(this.map);
                 
                 // Store route for cleanup
-                const tokenData = this.placedTokens.get(tokenId);
                 if (tokenData) {
                     if (!tokenData.routeLines) tokenData.routeLines = [];
                     tokenData.routeLines.push(routeLine);
@@ -3408,17 +3487,40 @@ class TokenPlacementManager {
      * Refresh movement history for a token after it has been moved
      * This fetches the latest token data (including updated movement history) in one API call
      */
-    async refreshMovementHistory(tokenId) {
+    async refreshMovementHistory(tokenId, expectedLatestLatLng = null) {
         try {
             console.log(`🔄 Refreshing movement history for token ${tokenId}`);
             
-            // Get updated token data with movement history from single API call
-            const response = await fetch('/GamePlay/GetPlacedTokens');
-            const result = await response.json();
+            // Try up to 3 times in case the server is still committing movement history
+            let tokenData = null;
+            for (let attempt = 0; attempt < 3; attempt++) {
+                // Get updated token data with movement history from single API call
+                const response = await fetch('/GamePlay/GetPlacedTokens', { cache: 'no-store' });
+                const result = await response.json();
+                if (result.success && result.tokens) {
+                    tokenData = result.tokens.find(t => t.id === tokenId);
+                }
+                
+                if (!tokenData) break;
+                
+                // If we expect a new final point, verify it is present before drawing
+                if (expectedLatestLatLng && tokenData.movementHistory && tokenData.movementHistory.length > 0) {
+                    const last = tokenData.movementHistory[tokenData.movementHistory.length - 1];
+                    const lastLat = typeof last.latitude === 'string' ? parseFloat(last.latitude) : last.latitude;
+                    const lastLng = typeof last.longitude === 'string' ? parseFloat(last.longitude) : last.longitude;
+                    const dx = Math.abs(lastLat - expectedLatestLatLng.lat);
+                    const dy = Math.abs(lastLng - expectedLatestLatLng.lng);
+                    if (dx < 1e-6 && dy < 1e-6) {
+                        break; // latest point present
+                    }
+                } else {
+                    break; // nothing to verify
+                }
+                // Small delay before retry
+                await new Promise(r => setTimeout(r, 120));
+            }
 
-            if (result.success && result.tokens) {
-                const tokenData = result.tokens.find(t => t.id === tokenId);
-                if (tokenData) {
+            if (tokenData) {
                     // Update stored token data with latest info
                     const tokenInfo = this.placedTokens.get(tokenId);
                     if (tokenInfo) {
@@ -3437,7 +3539,6 @@ class TokenPlacementManager {
                     }
                     
                     console.log(`✅ Movement history refreshed for token ${tokenId}`);
-                }
             }
         } catch (error) {
             console.error(`❌ Error refreshing movement history for token ${tokenId}:`, error);
@@ -3470,7 +3571,7 @@ class TokenPlacementManager {
                 }
             }
 
-            // Create positions array
+            // Create positions array (lat, lng) using raw values
             const positions = movementHistory.map(m => [
                 typeof m.latitude === 'string' ? parseFloat(m.latitude) : m.latitude,
                 typeof m.longitude === 'string' ? parseFloat(m.longitude) : m.longitude

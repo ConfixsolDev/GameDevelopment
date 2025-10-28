@@ -672,6 +672,12 @@ class GamePlayManager {
             
             // Create marker using TokenPlacementManager if available
             if (typeof tokenManager !== 'undefined' && tokenManager.tokenPlacementManager) {
+                // Skip if token is already restored (to preserve incrementally drawn lines)
+                if (tokenManager.tokenPlacementManager.placedTokens.has(tokenData.id)) {
+                    console.log(`⏩ Token ${tokenData.name} already restored, skipping to avoid clearing lines`);
+                    return;
+                }
+                
                 // Use the existing TokenPlacementManager to create marker
                 const marker = tokenManager.tokenPlacementManager.createTokenMarker(tokenData, latlng);
                 
@@ -745,7 +751,7 @@ class GamePlayManager {
                 console.log(`⚠️ No forceType provided, using default blue`);
             }
             
-            // Create route lines for each movement
+            // Create route lines for each movement (lat, lng) using raw values
             const positions = movementHistory.map(m => [
                 typeof m.latitude === 'string' ? parseFloat(m.latitude) : m.latitude,
                 typeof m.longitude === 'string' ? parseFloat(m.longitude) : m.longitude
@@ -1729,6 +1735,11 @@ window.switchGamePlayMap = async function(mapPath) {
         if (boundsObj) {
             setupBoundedMapEvents(boundsObj, maxZoom);
         }
+
+            // Re-bind token action manager to the (possibly new) map instance after switch
+            if (window.tokenActionModeManager && typeof window.tokenActionModeManager.bindMapEvents === 'function') {
+                window.tokenActionModeManager.bindMapEvents(window.gameMap);
+            }
 
         // If user selected a non-offline basemap (e.g., 'map' or 'satellite'),
         // re-apply it now to override the offline layer added during switch.

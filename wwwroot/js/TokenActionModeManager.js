@@ -78,12 +78,35 @@ class TokenActionModeManager {
             }
         });
 
-        // Map click handler for mode actions
+        // Map click handler for mode actions (bind to Leaflet map if available)
+        this.bindMapEvents(window.gameMap);
+        // Fallback document listener when map is not yet ready
         document.addEventListener('click', (e) => {
-            if (e.target.closest('#map') && this.currentMode) {
+            if (e.target.closest('#gameMap') && this.currentMode) {
                 this.handleMapClick(e);
             }
         });
+    }
+
+    // Re-bind to a (potentially new) Leaflet map instance
+    bindMapEvents(map) {
+        try {
+            if (!map || typeof map.on !== 'function') return;
+            if (this._leafletClickHandler) {
+                // Remove old handler if any
+                map.off('click', this._leafletClickHandler);
+            }
+            this._leafletClickHandler = (e) => {
+                if (this.currentMode) {
+                    this.handleMapClick(e);
+                }
+            };
+            map.on('click', this._leafletClickHandler);
+            this.map = map;
+            console.log('✅ TokenActionModeManager bound to Leaflet map click events');
+        } catch (err) {
+            console.warn('Failed to bind map events:', err);
+        }
     }
 
     setMode(mode) {
