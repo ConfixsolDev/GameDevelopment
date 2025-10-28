@@ -135,6 +135,7 @@ class GamePlayManager {
     
     /**
      * Update coordinates display (latitude & longitude)
+     * Converts negative longitude to positive for display
      */
     updateCoordinatesDisplay(lat, lng) {
         const latElement = document.getElementById('latVal');
@@ -144,7 +145,9 @@ class GamePlayManager {
             latElement.textContent = lat.toFixed(6);
         }
         if (lngElement) {
-            lngElement.textContent = lng.toFixed(6);
+            // Convert negative longitude to positive for display
+            const displayLng = lng < 0 ? lng + 360 : lng;
+            lngElement.textContent = displayLng.toFixed(6);
         }
     }
     
@@ -283,8 +286,8 @@ class GamePlayManager {
                 mapContainer.style.opacity = '0';
             }
             
-            // Get default zoom level from region settings
-            let defaultZoom = 14;
+            // Get default zoom level from region settings, default to 15 for satellite
+            let defaultZoom = 15; // Default zoom for satellite view
             if (window.regionSettingsManager) {
                 defaultZoom = window.regionSettingsManager.getDefaultZoomLevel();
             }
@@ -367,9 +370,18 @@ class GamePlayManager {
         // Initialize coordinates display with map center
         const initialCenter = this.map.getCenter();
         this.updateCoordinatesDisplay(initialCenter.lat, initialCenter.lng);
+        
+        // Force zoom to 15 after a short delay to ensure map is fully loaded
+        setTimeout(() => {
+            if (this.map) {
+                this.map.setZoom(15);
+                console.log('🔍 Forced zoom to level 15');
+            }
+        }, 500);
+        
         this.updateZoomDisplay(this.map.getZoom());
             
-            console.log(`🔍 Map initialized with default zoom: ${this.map.getZoom()}`);
+        console.log(`🔍 Map initialized with default zoom: ${this.map.getZoom()}`);
             
             // Create layer groups
             window.regionGroup = new L.FeatureGroup().addTo(this.map);
@@ -1558,8 +1570,8 @@ window.switchGamePlayMap = async function(mapPath) {
         
         // Parse center
         let center = [0, 0];
-        // Get default zoom level from region settings (default to 14)
-        let initialZoom = 14;
+        // Get default zoom level from region settings (default to 15 for satellite)
+        let initialZoom = 15;
         if (window.regionSettingsManager) {
             initialZoom = window.regionSettingsManager.getDefaultZoomLevel();
             console.log(`🔧 Using stored default zoom level: ${initialZoom}`);
@@ -1685,8 +1697,8 @@ window.switchGamePlayMap = async function(mapPath) {
             
             // Instead of fitBounds (which zooms out), set view to bounds center at stored zoom level
             const boundsCenter = boundsObj.getCenter();
-            // Get default zoom level from region settings
-            let targetZoom = 14;
+            // Get default zoom level from region settings (default to 15 for satellite)
+            let targetZoom = 15;
             if (window.regionSettingsManager) {
                 targetZoom = window.regionSettingsManager.getDefaultZoomLevel();
             }

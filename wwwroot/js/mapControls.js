@@ -49,7 +49,7 @@ function loadZoomLevel() {
         console.log(`📖 Zoom level loaded: ${zoomLevel}`);
         return zoomLevel;
     }
-    return null; // No saved zoom level
+    return 15; // Default zoom level for satellite
 }
 
 /**
@@ -86,13 +86,13 @@ function restoreMapSettings() {
     }
     
     // Restore zoom level after a short delay to ensure map is ready
-    setTimeout(() => {
-        const savedZoom = loadZoomLevel();
-        if (savedZoom && window.gameMap) {
-            console.log(`🔍 Restoring zoom level: ${savedZoom}`);
-            window.gameMap.setZoom(savedZoom);
-        }
-    }, 1000);
+        setTimeout(() => {
+            const savedZoom = loadZoomLevel();
+            if (window.gameMap) {
+                console.log(`🔍 Restoring zoom level: ${savedZoom}`);
+                window.gameMap.setZoom(savedZoom);
+            }
+        }, 1000);
 }
 
 /**
@@ -165,7 +165,7 @@ function resetMapView() {
             }
         }
         
-        // Fallback to Yemen area where tokens are located
+        // Fallback to Yemen area where tokens are located (using positive longitude)
         window.gameMap.setView([12.7, 44.8], 15);
         console.log('Map view reset to Yemen area (token region)');
     } else {
