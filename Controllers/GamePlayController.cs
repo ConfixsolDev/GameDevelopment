@@ -1702,7 +1702,12 @@ namespace TechWebSol.Controllers
                             }).ToList()
                     }).AsQueryable();
 
-                if (user.TeamId != Guid.Empty && user.TeamId != null)
+                // Control users (or users without a team) should see ALL active tokens
+                bool isControl = string.Equals(user?.ForceType, "Control", StringComparison.OrdinalIgnoreCase)
+                                 || user?.TeamId == null
+                                 || user.TeamId == Guid.Empty;
+
+                if (!isControl)
                 {
                     placedTokensvar = placedTokensvar.Where(t => t.TeamId == user.TeamId && t.isActive);
                 }

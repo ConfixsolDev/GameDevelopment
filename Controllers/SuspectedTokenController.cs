@@ -37,9 +37,22 @@ namespace TechWebSol.Controllers
         {
             try
             {
-                var suspectedTokens = await _context.SuspectedTokens
-                    .Where(st => st.TeamId == user.TeamId && st.IsActive)
+                // Control users (or users without a team) should see ALL suspected tokens
+                bool isControl = string.Equals(user?.ForceType, "Control", StringComparison.OrdinalIgnoreCase)
+                                 || !user?.TeamId.HasValue == true
+                                 || user?.TeamId == Guid.Empty;
+
+                var query = _context.SuspectedTokens
+                    .Where(st => st.IsActive)
                     .Include(st => st.ISRMissions)
+                    .AsQueryable();
+
+                if (!isControl && user?.TeamId.HasValue == true && user.TeamId != Guid.Empty)
+                {
+                    query = query.Where(st => st.TeamId == user.TeamId);
+                }
+
+                var suspectedTokens = await query
                     .OrderByDescending(st => st.CreatedDate)
                     .Select(st => new
                     {
