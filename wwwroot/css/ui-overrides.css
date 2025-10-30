@@ -3,6 +3,36 @@
 :root {
 	--accent-secondary: #00bcd4; /* cyan base */
 	--accent-secondary-strong: #008fa1; /* darker for readable text */
+    --base-font-size: 18px; /* ~ +2pt for 50-60 audience */
+}
+
+/* Global readable base */
+html,
+body {
+    font-size: var(--base-font-size);
+    line-height: 1.6;
+}
+
+/* Ensure common controls inherit readable sizing */
+.btn,
+.form-control,
+.form-select,
+.input-group-text,
+label,
+.modal-title,
+.table,
+.list-group-item {
+    font-size: 1rem; /* follows root 18px */
+}
+
+/* Do NOT upscale token visual labels (keep design proportions) */
+.token-option,
+.token-option *,
+.token-status,
+.token-status *,
+.token-card,
+.token-card * {
+    font-size: 14px;
 }
 
 /* Modal background slightly grey for eye comfort */

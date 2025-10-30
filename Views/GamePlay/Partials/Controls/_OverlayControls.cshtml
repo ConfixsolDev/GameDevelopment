@@ -83,16 +83,13 @@
                     <span>Plan Move</span>
                 </button>
             </div>
-            <div class="control-row">
-               
-            </div>
+        
             <div class="control-row" hidden>
                 <button class="overlay-btn token-action-btn" id="btnSelectToken" data-mode="select">
                     <i class="fas fa-hand-pointer"></i>
                     <span>Select Token</span>
                 </button>
             </div>
-            <h6 class="section-subtitle">Token Actions</h6>
             <div class="control-row">
                 <button class="overlay-btn token-action-btn" id="btnPlaceToken" data-mode="place">
                     <i class="fas fa-plus"></i>
@@ -341,6 +338,25 @@
     .team-badge-overlay i {
         font-size: 18px;
         color: #fff;
+    }
+    
+    /* Readability upgrades for overlay controls */
+    .map-overlay-controls h6,
+    .map-overlay-controls .section-subtitle {
+        font-size: 18px;
+        line-height: 1.4;
+    }
+    .map-overlay-controls .overlay-btn span {
+        font-size: 16px;
+    }
+    .map-overlay-controls .overlay-btn i {
+        font-size: 16px;
+    }
+    .map-overlay-controls label {
+        font-size: 14px !important;
+    }
+    .map-overlay-controls select {
+        font-size: 15px !important;
     }
     
     .map-selector-dropdown {
