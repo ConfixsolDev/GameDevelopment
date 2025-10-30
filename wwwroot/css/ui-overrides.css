@@ -11,6 +11,8 @@ html,
 body {
     font-size: var(--base-font-size);
     line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* Ensure common controls inherit readable sizing */
@@ -148,3 +150,40 @@ a.link-accent:hover {
 /* Keep optional .btn-accent alias pointing to primary */
 .btn-accent { background-color: var(--accent-secondary); border-color: var(--accent-secondary); color:#fff; }
 .btn-accent:hover, .btn-accent:focus { background-color: var(--accent-secondary-strong); border-color: var(--accent-secondary-strong); color:#fff; }
+
+/* Landing page scoped colors (Material-inspired) */
+.landing h1,
+.landing h3,
+.landing h4,
+.landing .title-accent { color: var(--accent-secondary-strong); }
+
+.landing .lead { color: #2e3a49; }
+.landing p,
+.landing li,
+.landing .text-muted { color: #354b5e; }
+
+.landing .btn-outline-secondary {
+	border-color: #cfd8dc;
+	color: #344767;
+	background: #ffffff;
+}
+.landing .btn-outline-secondary:hover,
+.landing .btn-outline-secondary:focus {
+	border-color: var(--accent-secondary);
+	color: var(--accent-secondary-strong);
+	background: #f1fbfd;
+}
+
+/* Use brand cyan for badges on landing timeline */
+.landing .badge.bg-info {
+	background-color: var(--accent-secondary) !important;
+	color: #ffffff !important;
+	border: 0;
+}
+
+/* Darker, richer hero card */
+.landing .hero-card {
+	background: linear-gradient(135deg, #d3edf4 0%, #e7f2f8 100%);
+	border: 1px solid #cfe2e8;
+	box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}

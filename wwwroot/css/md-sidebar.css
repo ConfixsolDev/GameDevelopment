@@ -1,9 +1,11 @@
 /* Material Dashboard-like light sidebar (non-destructive) */
 .md-sidebar {
-    background: #ffffff;
+    background: rgba(255,255,255,0.82);
     border-right: 1px solid #eef0f2;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
     width: 260px;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
 }
 
 .md-sidebar .menu-title {
@@ -119,7 +121,8 @@
     background-size: cover;
     background-position: center center;
     z-index: 1;
-    opacity: .1;
+    opacity: .18;
+    filter: saturate(1.15) contrast(1.05);
 }
 .md-sidebar .h-100,
 .md-sidebar #sidebar-menu {

@@ -1,0 +1,153 @@
+@{
+    ViewData["Title"] = "Welcome";
+}
+
+<div class="container py-4 landing">
+    <!-- HERO -->
+    <section class="mb-4 p-4 rounded hero-card">
+        <div class="row align-items-center">
+            <div class="col-md-7">
+                <h1 class="mb-2 title-accent title-underline" style="font-weight:800;">War Game Strategy Lab</h1>
+                <p class="lead mb-3" style="max-width: 720px;">
+                    Train decision‑making under pressure. Plan, maneuver, and learn doctrine by practicing
+                    realistic scenarios with your team. Review historical/archived games to see what worked,
+                    what failed, and why.
+                </p>
+                <div class="d-flex flex-wrap gap-2" style="gap:10px;">
+                    <a asp-controller="GamePlay" asp-action="Index" class="btn btn-primary">
+                        <i class="fas fa-gamepad me-1"></i> Enter the Arena
+                    </a>
+                    <a asp-controller="AttackPlanning" asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="fas fa-crosshairs me-1"></i> Strategy Learning
+                    </a>
+                    <a asp-controller="GameManagement" asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="fas fa-archive me-1"></i> Browse Archives
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-5 mt-3 mt-md-0">
+                <div class="p-3 rounded" style="background:#fff; border:1px solid #edf2f6;">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="badge bg-info me-2" style="min-width:28px;">1</div>
+                        <div>
+                            <strong>Prepare</strong>
+                            <div class="text-muted">Define map, forces, objectives, ROE.</div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="badge bg-info me-2" style="min-width:28px;">2</div>
+                        <div>
+                            <strong>Plan</strong>
+                            <div class="text-muted">Design movements, attack corridors, defenses.</div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="badge bg-info me-2" style="min-width:28px;">3</div>
+                        <div>
+                            <strong>Fight</strong>
+                            <div class="text-muted">Adjudicate contact, logistics, and tempo.</div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="badge bg-info me-2" style="min-width:28px;">4</div>
+                        <div>
+                            <strong>Debrief</strong>
+                            <div class="text-muted">After‑action review, export artifacts, archive.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- THREE PILLARS -->
+    <section class="mb-4">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="h-100 p-3 rounded" style="background:#ffffff; border:1px solid #edf0f2;">
+                    <div class="mb-2"><i class="fas fa-route" style="color:#00bcd4;"></i></div>
+                    <h5 class="mb-1">Plan & Maneuver</h5>
+                    <p class="mb-0 text-muted">Create routes, phases, FEBA/kill zones, minefields, and support zones using NATO‑style overlays.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="h-100 p-3 rounded" style="background:#ffffff; border:1px solid #edf0f2;">
+                    <div class="mb-2"><i class="fas fa-brain" style="color:#00bcd4;"></i></div>
+                    <h5 class="mb-1">Learn Doctrine</h5>
+                    <p class="mb-0 text-muted">Built‑in strategy modules and checklists help teams practice offensive/defensive frameworks and staff battle rhythm.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="h-100 p-3 rounded" style="background:#ffffff; border:1px solid #edf0f2;">
+                    <div class="mb-2"><i class="fas fa-archive" style="color:#00bcd4;"></i></div>
+                    <h5 class="mb-1">Review & Archive</h5>
+                    <p class="mb-0 text-muted">Every session can be exported and archived so new leaders can replay decisions, timelines, and outcomes.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="mb-4 p-3 rounded" style="background:#fff; border:1px solid #edf0f2;">
+        <h3 class="title-accent mb-2">How a War Game Session Works</h3>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <ul class="mb-0" style="padding-left:18px;">
+                    <li class="mb-2"><strong>Map & Forces</strong> — select the AO, sectors, OOB, and victory conditions.</li>
+                    <li class="mb-2"><strong>Intelligence</strong> — load suspected tokens, terrain effects, and constraints.</li>
+                    <li class="mb-2"><strong>COA Development</strong> — sketch attacks, movements, fires, and defenses.</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <ul class="mb-0" style="padding-left:18px;">
+                    <li class="mb-2"><strong>Adjudication</strong> — use built‑in calculators for detection, mobility, and combat effects.</li>
+                    <li class="mb-2"><strong>AAR</strong> — capture decisions, timing, and branches/sequels; publish to the archive.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- STRATEGY LEARNING & ARCHIVES CTA -->
+    <section class="mb-4">
+        <div class="row g-3">
+            <div class="col-md-7">
+                <div class="p-3 rounded h-100" style="background: #f8fbfc; border:1px solid #edf0f2;">
+                    <h4 class="mb-2 title-accent">Strategy Learning</h4>
+                    <p class="text-muted mb-3">
+                        Explore short primers on operational graphics, movement tables, kill‑zone design, and
+                        logistics pacing. Practice with bite‑sized scenarios to build speed and shared language across the team.
+                    </p>
+                    <a asp-controller="AttackPlanning" asp-action="Index" class="btn btn-primary">
+                        <i class="fas fa-book-open me-1"></i> Open Strategy Modules
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="p-3 rounded h-100" style="background:#ffffff; border:1px solid #edf0f2;">
+                    <h4 class="mb-2 title-accent">Archived War Games</h4>
+                    <p class="text-muted mb-3">Browse prior sessions to study decisions and outcomes. Use them in workshops or as self‑study.</p>
+                    <a asp-controller="GameManagement" asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="fas fa-history me-1"></i> Browse Archive
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- QUICK LINKS -->
+    <section>
+        <div class="d-flex flex-wrap" style="gap:10px;">
+            <a asp-controller="GamePlay" asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-map me-1"></i> Quick Start: Open Map
+            </a>
+            <a asp-controller="TeamManagement" asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-users me-1"></i> Manage Teams
+            </a>
+            <a asp-controller="AdminToken" asp-action="Dashboard" class="btn btn-outline-secondary">
+                <i class="fas fa-database me-1"></i> Token Admin
+            </a>
+        </div>
+    </section>
+</div>
+
+
