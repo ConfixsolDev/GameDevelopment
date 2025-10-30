@@ -15,7 +15,7 @@ using TechWebSol.Constants;
 
 namespace TechWebSol.Areas.Identity.Controllers
 {
-    [AuthorizeDynamic]
+    [Authorize]
     [Area("Identity")]
     [DisplayName("Account Admin: Permission for User Account managment across applications")]
     public class AccountAdminController : Controller

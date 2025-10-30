@@ -4,7 +4,8 @@ using TechWebSol.Filters;
 
 namespace TechWebSol.Controllers.TokenManagement
 {
-    [AuthorizeDynamic]
+    [Authorize]
+
     public class TokenSystemController : Controller
     {
         public IActionResult Index()

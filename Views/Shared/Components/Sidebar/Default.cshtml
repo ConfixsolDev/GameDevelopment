@@ -1,22 +1,34 @@
-﻿<div class="vertical-menu">
+﻿@{
+    var currentController = (string?)ViewContext.RouteData.Values["controller"] ?? "";
+    var currentAction = (string?)ViewContext.RouteData.Values["action"] ?? "";
+}
+
+<div class="vertical-menu md-sidebar">
     <div data-simplebar class="h-100">
         <div id="sidebar-menu">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-brand">
+                    <img src="~/assets/images/logo-sm.png" alt="" width="28" height="28">
+                    <span class="brand-text">PWGS</span>
+                </a>
+            </div>
             <cache expires-after="@TimeSpan.FromMinutes(10)" vary-by-user="true">
             </cache>
 
             <ul class="metismenu list-unstyled" id="side-menu">
 
                 <li>
-                    <a asp-area="" asp-controller="Home" asp-action="Index">
-                        <i class="fas fa-download"></i> <span>Home</span>
+                    <a asp-area="" asp-controller="Home" asp-action="Index" class="menu-link @(currentController == "Home" ? "active" : "")">
+                        <i class="fas fa-home menu-icon"></i>
+                        <span class="menu-text">Home</span>
                     </a>
                 </li>
 
                 <secure-content asp-area="TokenManagement" asp-controller="TokenSystem" asp-action="Index">
                     <li>
-                        <a asp-area="TokenManagement" asp-controller="TokenSystem" asp-action="Index">
-                            <i class="fas fa-fingerprint"></i>
-                            <span>Token System </span>
+                        <a asp-area="TokenManagement" asp-controller="TokenSystem" asp-action="Index" class="menu-link @(currentController == "TokenSystem" ? "active" : "")">
+                            <i class="fas fa-fingerprint menu-icon"></i>
+                            <span class="menu-text">Token System</span>
                         </a>
                     </li>
                 </secure-content>
@@ -26,36 +38,36 @@
                 
                 <secure-content asp-area="" asp-controller="AdminToken" asp-action="Index">
                     <li>
-                        <a asp-area="" asp-controller="AdminToken" asp-action="Dashboard">
-                            <i class="fas fa-cogs"></i>
-                            <span>Admin Dashboard </span>
+                        <a asp-area="" asp-controller="AdminToken" asp-action="Dashboard" class="menu-link @((currentController == "AdminToken" && currentAction == "Dashboard") ? "active" : "")">
+                            <i class="fas fa-cogs menu-icon"></i>
+                            <span class="menu-text">Admin Dashboard</span>
                         </a>
                     </li>
                 </secure-content>
 
                 <secure-content asp-area="" asp-controller="DataManagement" asp-action="Index">
                     <li>
-                        <a asp-area="" asp-controller="DataManagement" asp-action="Index">
-                            <i class="fas fa-database"></i>
-                            <span>Data Management </span>
+                        <a asp-area="" asp-controller="DataManagement" asp-action="Index" class="menu-link @(currentController == "DataManagement" ? "active" : "")">
+                            <i class="fas fa-database menu-icon"></i>
+                            <span class="menu-text">Data Management</span>
                         </a>
                     </li>
                 </secure-content>
                 
                 <secure-content asp-area="" asp-controller="AdminToken" asp-action="ManageTokenGroups">
                     <li>
-                        <a asp-area="" asp-controller="AdminToken" asp-action="ManageTokenGroups">
-                            <i class="fas fa-layer-group"></i>
-                            <span>Token Groups </span>
+                        <a asp-area="" asp-controller="AdminToken" asp-action="ManageTokenGroups" class="menu-link @((currentController == "AdminToken" && currentAction == "ManageTokenGroups") ? "active" : "")">
+                            <i class="fas fa-layer-group menu-icon"></i>
+                            <span class="menu-text">Token Groups</span>
                         </a>
                     </li>
                 </secure-content>
 
                 <secure-content asp-area="" asp-controller="AdminToken" asp-action="Index">
                     <li>
-                        <a asp-area="" asp-controller="AdminToken" asp-action="Index">
-                            <i class="fas fa-plus-circle"></i>
-                            <span>Tokens </span>
+                        <a asp-area="" asp-controller="AdminToken" asp-action="Index" class="menu-link @((currentController == "AdminToken" && currentAction == "Index") ? "active" : "")">
+                            <i class="fas fa-plus-circle menu-icon"></i>
+                            <span class="menu-text">Tokens</span>
                         </a>
                     </li>
                 </secure-content>
@@ -81,9 +93,9 @@
                 
 
                     <li>
-                        <a asp-area="" asp-controller="GamePlay" asp-action="Index">
-                            <i class="fas fa-crosshairs"></i>
-                            <span>Game Play Arena </span>
+                        <a asp-area="" asp-controller="GamePlay" asp-action="Index" class="menu-link @(currentController == "GamePlay" ? "active" : "")">
+                            <i class="fas fa-crosshairs menu-icon"></i>
+                            <span class="menu-text">Game Play Arena</span>
                         </a>
                     </li>
 
@@ -92,18 +104,18 @@
                 
                 <secure-content asp-area="" asp-controller="TeamManagement" asp-action="Index">
                     <li>
-                        <a asp-area="" asp-controller="TeamManagement" asp-action="Index">
-                            <i class="fas fa-users"></i>
-                            <span>Teams </span>
+                        <a asp-area="" asp-controller="TeamManagement" asp-action="Index" class="menu-link @(currentController == "TeamManagement" && currentAction == "Index" ? "active" : "")">
+                            <i class="fas fa-users menu-icon"></i>
+                            <span class="menu-text">Teams</span>
                         </a>
                     </li>
                 </secure-content>
 
                 <secure-content asp-area="" asp-controller="TeamManagement" asp-action="Create">
                     <li>
-                        <a asp-area="" asp-controller="TeamManagement" asp-action="Create">
-                            <i class="fas fa-plus"></i>
-                            <span>Create Team </span>
+                        <a asp-area="" asp-controller="TeamManagement" asp-action="Create" class="menu-link @(currentController == "TeamManagement" && currentAction == "Create" ? "active" : "")">
+                            <i class="fas fa-plus menu-icon"></i>
+                            <span class="menu-text">Create Team</span>
                         </a>
                     </li>
                 </secure-content>
@@ -113,18 +125,18 @@
              
                 <secure-content asp-area="Identity" asp-controller="Role" asp-action="Index">
                     <li>
-                        <a href="/Identity/Role/Index">
-                            <i class="fas fa-users-cog"></i>
-                            <span>Role Management </span>
+                        <a href="/Identity/Role/Index" class="menu-link @((currentController == "Role") ? "active" : "")">
+                            <i class="fas fa-users-cog menu-icon"></i>
+                            <span class="menu-text">Role Management</span>
                         </a>
                     </li>
                 </secure-content>
 
                 <secure-content asp-area="Identity" asp-controller="AccountAdmin" asp-action="Index">
                     <li>
-                        <a href="/Identity/AccountAdmin/Index">
-                            <i class="fas fa-users-cog"></i>
-                            <span>User Management </span>
+                        <a href="/Identity/AccountAdmin/Index" class="menu-link @((currentController == "AccountAdmin") ? "active" : "")">
+                            <i class="fas fa-users-cog menu-icon"></i>
+                            <span class="menu-text">User Management</span>
                         </a>
                     </li>
                 </secure-content>

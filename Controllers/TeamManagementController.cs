@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +14,7 @@ namespace TechWebSol.Controllers
     /// Team Management Controller
     /// Handles team creation, management, and user assignment
     /// </summary>
-    [AuthorizeDynamic]
+    [Authorize]
     public class TeamManagementController : Controller
     {
         private readonly ApplicationDbContext _context;

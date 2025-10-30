@@ -194,7 +194,7 @@ builder.Logging.AddDebug();
 // MVC filters and binders
 builder.Services.AddMvc(options =>
 {
-    options.Filters.Add(typeof(DynamicAuthorizationFilter));
+    //options.Filters.Add(typeof(DynamicAuthorizationFilter));
     options.ModelBinderProviders.Insert(0, new DateTimeModelBinderProvider());
 });
 

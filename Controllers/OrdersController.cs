@@ -1,15 +1,17 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 using TechWebSol.Data;
 using TechWebSol.Filters;
 using TechWebSol.Models;
 using TechWebSol.Services;
 using TechWebSol.ViewModels;
-using System.Text.Json;
 
 namespace TechWebSol.Controllers
 {
-    [AuthorizeDynamic]
+    [Authorize]
+
     public class OrdersController : Controller
     {
         private readonly ApplicationDbContext _context;

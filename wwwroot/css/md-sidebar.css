@@ -1,0 +1,137 @@
+/* Material Dashboard-like light sidebar (non-destructive) */
+.md-sidebar {
+    background: #ffffff;
+    border-right: 1px solid #eef0f2;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    width: 260px;
+}
+
+.md-sidebar .menu-title {
+    padding: 12px 20px;
+	font-size: 11px;
+	letter-spacing: .08em;
+	text-transform: uppercase;
+	color: #99a1ab;
+	font-weight: 600;
+}
+
+.md-sidebar #side-menu {
+	margin: 8px 0 16px 0;
+}
+
+.md-sidebar #side-menu > li {
+    margin: 2px 10px;
+    border-radius: 8px;
+}
+
+.md-sidebar .menu-link {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+    padding: 10px 16px;
+	border-radius: 8px;
+	color: #344767;
+	text-decoration: none;
+	transition: background-color .15s ease, color .15s ease;
+}
+
+.md-sidebar .menu-link:hover {
+    background: #f8f9fa;
+    color: #111827;
+}
+
+.md-sidebar .menu-icon {
+	width: 18px;
+	text-align: center;
+	color: #5c6f8a;
+	font-size: 14px;
+}
+
+.md-sidebar .menu-text {
+	flex: 1;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+/* Active state (approximate without server-side active detection) */
+/* Active state — apply to direct active link and MetisMenu's mm-active */
+.md-sidebar #side-menu > li > a.menu-link.active,
+.md-sidebar #side-menu > li.mm-active > a.menu-link,
+.md-sidebar .menu-link[aria-current="page"] {
+    background-color: rgb(0, 188, 212) !important;
+    color: #ffffff !important;
+    box-shadow: rgba(0, 0, 0, 0.14) 0px 4px 20px 0px, rgba(0, 188, 212, 0.4) 0px 7px 10px -5px !important;
+}
+
+.md-sidebar .menu-link.active .menu-icon,
+.md-sidebar #side-menu > li.mm-active > a.menu-link .menu-icon,
+.md-sidebar .menu-link[aria-current="page"] .menu-icon {
+    color: #ffffff !important;
+}
+
+/* Ensure text span inherits white on active */
+.md-sidebar #side-menu > li > a.menu-link.active .menu-text,
+.md-sidebar #side-menu > li.mm-active > a.menu-link .menu-text,
+.md-sidebar .menu-link[aria-current="page"] .menu-text {
+    color: #ffffff !important;
+}
+
+/* Keep active background on hover/focus */
+.md-sidebar #side-menu > li > a.menu-link.active:hover,
+.md-sidebar #side-menu > li.mm-active > a.menu-link:hover,
+.md-sidebar .menu-link[aria-current="page"]:hover {
+    background-color: rgb(0, 188, 212) !important;
+    color: #ffffff !important;
+}
+
+/* Compact scroll area */
+.md-sidebar [data-simplebar] {
+	background: #fff;
+}
+
+/* Header / Brand */
+.md-sidebar .sidebar-header {
+	padding: 16px 16px 8px 16px;
+	border-bottom: 1px solid #f0f2f4;
+}
+.md-sidebar .sidebar-brand {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	text-decoration: none;
+}
+.md-sidebar .sidebar-brand .brand-text {
+	font-weight: 700;
+	font-size: 15px;
+	color: #2c3e50;
+}
+
+/* Sidebar background image support (like Material Dashboard) */
+.md-sidebar[data-image] {
+    position: relative;
+}
+.md-sidebar .sidebar-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background-size: cover;
+    background-position: center center;
+    z-index: 1;
+    opacity: .1;
+}
+.md-sidebar .h-100,
+.md-sidebar #sidebar-menu {
+    position: relative;
+    z-index: 2;
+}
+
+/* Remove default list bullets and tighten spacing (MD-like) */
+.md-sidebar #side-menu {
+    list-style: none;
+    padding: 8px 0 16px 0;
+}
+.md-sidebar #side-menu > li + li {
+    margin-top: 4px;
+}

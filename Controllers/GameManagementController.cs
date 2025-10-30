@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TechWebSol.Data;
@@ -11,7 +12,8 @@ namespace TechWebSol.Controllers
     /// Game Management MVC Controller
     /// Handles UI pages for game session management
     /// </summary>
-    [AuthorizeDynamic]
+    [Authorize]
+
     public class GameManagementController : Controller
     {
         private readonly ApplicationDbContext _context;

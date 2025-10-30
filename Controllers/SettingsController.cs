@@ -6,7 +6,8 @@ using System.ComponentModel;
 
 namespace TechWebSol.Controllers
 {
-    [AuthorizeDynamic]
+    [Authorize]
+
     [DisplayName("Settings: User Roles and Application Drop Down List (Assigned to Management)")]
     public class SettingsController : Controller
     {

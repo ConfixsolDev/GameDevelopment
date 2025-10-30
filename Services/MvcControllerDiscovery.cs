@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using System.ComponentModel;
+using System.Net;
 using System.Reflection;
 using TechWebSol.Filters;
 using TechWebSol.ViewModels;
@@ -77,11 +79,11 @@ namespace TechWebSol.Services
             if (actionMethodInfo.GetCustomAttribute<AuthorizeAttribute>(true) != null)
                 return false;
 
-            if (controllerTypeInfo.GetCustomAttribute<AuthorizeDynamicAttribute>(true) != null)
-                return true;
+            //if (controllerTypeInfo.GetCustomAttribute<Authorization>(true) != null)
+            //    return true;
 
-            if (actionMethodInfo.GetCustomAttribute<AuthorizeDynamicAttribute>(true) != null)
-                return true;
+            //if (actionMethodInfo.GetCustomAttribute<AuthorizeDynamicAttribute>(true) != null)
+            //    return true;
 
             return false;
         }

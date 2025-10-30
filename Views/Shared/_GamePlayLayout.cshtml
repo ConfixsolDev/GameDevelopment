@@ -77,30 +77,15 @@
     // If no TeamId (Director/Super Admin), default to CONTROL
 }
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#1a1a1a" />
+    <meta name="theme-color" content="#ffffff" />
     <title>@ViewData["Title"] - Game Play Arena</title>
     <link rel="shortcut icon" href="~/favicon.ico" type="image/x-icon">
 
-    <!-- Critical CSS - Inline for instant dark theme (prevents white flash) -->
-    <style>
-        :root, html, body {
-            background-color: #0a0a0a !important;
-            color: #ffffff !important;
-            margin: 0;
-            padding: 0;
-        }
-        html[data-theme="dark"] {
-            background-color: #0a0a0a;
-        }
-        .gameplay-container {
-            background: #1a1a1a;
-            min-height: 100vh;
-        }
-    </style>
+    
 
     <!-- Core CSS -->
     <link href="~/assets/css/bootstrap.min.css" rel="stylesheet">
@@ -127,8 +112,7 @@
     <!-- Falcon View GIS Styles -->
     <link href="~/css/FalconView.css" rel="stylesheet" asp-append-version="true" />
     
-    <!-- Unified Dark Theme - Single Source of Truth -->
-    <link href="~/css/unified-dark-theme.css" rel="stylesheet" asp-append-version="true">
+    <link href="~/css/ui-overrides.css" rel="stylesheet" asp-append-version="true" />
     
     <!-- Google Fonts for Professional Typography -->
     @* Google Fonts - DISABLED FOR OFFLINE USE

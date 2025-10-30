@@ -1,0 +1,120 @@
+/* Global UI overrides to soften whites and define accent system */
+
+:root {
+	--accent-secondary: #00bcd4; /* cyan base */
+	--accent-secondary-strong: #008fa1; /* darker for readable text */
+}
+
+/* Modal background slightly grey for eye comfort */
+.modal-content {
+	background-color: #f7f8fa; /* light grey */
+}
+
+/* Modal header/footer keep white text contrast and subtle separators */
+.modal-header,
+.modal-footer {
+	background-color: #f9fafb;
+	border-color: #edf0f2;
+}
+
+/* Form controls: soften input backgrounds */
+.form-control,
+.form-select,
+.input-group-text,
+textarea.form-control {
+	background-color: #fbfcfe;
+	border-color: #e2e6ea;
+}
+
+/* Cards/panels if used */
+.card,
+.panel,
+.list-group-item {
+	background-color: #fbfcfe;
+	border-color: #edf0f2;
+}
+
+/* Accent heading color for improved readability */
+.modal-title,
+h1.heading-accent,
+h2.heading-accent,
+h3.heading-accent,
+.title-accent {
+	color: var(--accent-secondary-strong);
+	font-weight: 700;
+}
+
+/* Thin underline accent utility */
+.title-underline {
+	position: relative;
+}
+.title-underline:after {
+	content: "";
+	position: absolute;
+	left: 0;
+	bottom: -6px;
+	width: 120px;
+	height: 3px;
+	background: var(--accent-secondary);
+	border-radius: 2px;
+}
+
+/* Close buttons: clearer, consistent across B4/B5 */
+.modal .btn-close,
+.modal .close {
+	filter: none;
+	opacity: .75;
+	text-shadow: none;
+}
+.modal .btn-close:hover,
+.modal .close:hover {
+	opacity: 1;
+}
+.modal .btn-close:focus,
+.modal .close:focus {
+	outline: 2px solid var(--accent-secondary);
+	outline-offset: 2px;
+}
+
+/* Accent link helper */
+a.link-accent {
+	color: var(--accent-secondary-strong);
+}
+a.link-accent:hover {
+	color: var(--accent-secondary);
+}
+
+/* Accent button (use on Edit Data) */
+/* Primary button follows heading accent */
+.btn-primary {
+    background: linear-gradient(60deg, var(--accent-secondary), #00acc1);
+    border-color: var(--accent-secondary);
+    color: #ffffff;
+    box-shadow: rgba(0, 0, 0, 0.14) 0 4px 20px 0, rgba(0, 188, 212, 0.4) 0 7px 10px -5px;
+    border-radius: .375rem;
+    transition: background-color .15s ease, box-shadow .15s ease, transform .05s ease;
+}
+.btn-primary:hover,
+.btn-primary:focus {
+    background: linear-gradient(60deg, var(--accent-secondary-strong), #0097a7);
+    border-color: var(--accent-secondary-strong);
+    color: #ffffff;
+    box-shadow: rgba(0, 0, 0, 0.18) 0 6px 22px 0, rgba(0, 143, 161, 0.5) 0 8px 12px -5px;
+}
+.btn-primary:focus {
+    outline: 2px solid var(--accent-secondary);
+    outline-offset: 2px;
+}
+.btn-primary:active {
+    transform: translateY(1px);
+    box-shadow: rgba(0, 0, 0, 0.2) 0 3px 12px 0, rgba(0, 143, 161, 0.45) 0 5px 8px -4px;
+}
+.btn-primary:disabled,
+.btn-primary.disabled {
+    opacity: .65;
+    box-shadow: none;
+}
+
+/* Keep optional .btn-accent alias pointing to primary */
+.btn-accent { background-color: var(--accent-secondary); border-color: var(--accent-secondary); color:#fff; }
+.btn-accent:hover, .btn-accent:focus { background-color: var(--accent-secondary-strong); border-color: var(--accent-secondary-strong); color:#fff; }

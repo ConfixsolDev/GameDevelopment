@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TechWebSol.Data;
@@ -9,7 +10,9 @@ using TechWebSol.ViewModels;
 
 namespace TechWebSol.Controllers
 {
-    [AuthorizeDynamic]
+
+    [Authorize]
+
     public class AdminTokenController : Controller
     {
         private readonly ApplicationDbContext _context;

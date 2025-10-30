@@ -9,7 +9,8 @@ using System.Text.Json;
 
 namespace TechWebSol.Controllers
 {
-    [AuthorizeDynamic]
+    [Authorize]
+
     public class MapController : Controller
     {
         private readonly ApplicationDbContext _context;

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TechWebSol.Data;
@@ -11,7 +12,7 @@ namespace TechWebSol.Controllers.TokenManagement
     /// Unified Token Controller - Single API for all token operations
     /// Uses the TokenIdentificationDAL for consistent behavior across all systems
     /// </summary>
-    [AuthorizeDynamic]
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class UnifiedTokenController : ControllerBase

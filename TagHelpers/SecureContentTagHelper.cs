@@ -6,7 +6,6 @@ using TechWebSol.ViewModels;
 
 namespace TechWebSol.TagHelpers
 {
-    [HtmlTargetElement("secure-content")]
     public class SecureContentTagHelper : TagHelper
     {
         private readonly IUserSessionService _userSessionService;
