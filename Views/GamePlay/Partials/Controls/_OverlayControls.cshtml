@@ -278,7 +278,7 @@
 
             <!-- Zoom and Basemap on one line -->
             <div class="control-row">
-                <div style="flex: 1; margin-right: 5px;">
+            @*     <div style="flex: 1; margin-right: 5px;">
                     <label style="font-size: 10px; color: #a0aec0; display: block; margin-bottom: 4px;"><i class="fas fa-cog"></i> Zoom</label>
                     <select id="defaultZoomLevel" onchange="updateDefaultZoomLevel(this.value)" style="width: 100%; padding: 6px; border: 1px solid #444; background: #2d3748; color: #e2e8f0; border-radius: 4px; font-size: 12px;">
                         <option value="12">12</option>
@@ -291,7 +291,7 @@
                         <option value="19">19</option>
                         <option value="20">20</option>
                     </select>
-                </div>
+                </div> *@
                 <div style="flex: 1; margin-left: 5px;">
                     <label style="font-size: 10px; color: #a0aec0; display: block; margin-bottom: 4px;"><i class="fas fa-globe"></i> Basemap</label>
                     <select id="basemapDropdown" onchange="changeBasemap(this.value)" style="width: 100%; padding: 6px; border: 1px solid #444; background: #2d3748; color: #e2e8f0; border-radius: 4px; font-size: 12px;">
@@ -314,16 +314,12 @@
             </div>
 
             <!-- Falcon View Toggle -->
-            <div class="control-row" style="margin-top: 8px;">
-                <button class="overlay-btn overlay-btn-falcon" id="btnFalconView" onclick="toggleFalconView()" title="Toggle Falcon View GIS Mode">
-                    <i class="fas fa-crosshairs"></i>
-                    <span>Falcon View</span>
-                </button>
-                <button class="overlay-btn" onclick="toggleFalconGrid()" title="Toggle Grid Only">
-                    <i class="fas fa-th"></i>
-                    <span>Grid</span>
-                </button>
-            </div>
+                <div class="control-row" style="margin-top: 8px;">
+                    <button class="overlay-btn overlay-btn-falcon" id="btnGridToggle" onclick="toggleFalconGrid()" title="Toggle Grid">
+                        <i class="fas fa-th"></i>
+                        <span>Grid</span>
+                    </button>
+                </div>
 
             <!-- View Buttons -->
             <div class="control-row" style="margin-top: 8px;">

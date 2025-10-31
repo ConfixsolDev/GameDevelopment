@@ -11,12 +11,13 @@ class FalconViewGridManager {
         this.gridLines = [];
         this.gridLabels = [];
         this.enabled = false;
-        this.gridSize = 1000; // Grid size in meters (adjustable)
+        this.gridSize = 1000; // Default grid size in meters (cell size)
         this.gridColor = '#00bcd4'; // Primary cyan
         this.gridOpacity = 0.4;
         this.labelColor = '#00bcd4';
         this.labelOpacity = 0.8;
-        this.gridSpacing = 0.01; // Default spacing in degrees
+        // We now render in projected meters (EPSG:3857) so spacing is fixed in meters
+        this.gridSpacingMeters = this.gridSize; // meters between grid lines
         
         console.log('🎯 Falcon View Grid Manager initialized');
     }
@@ -113,34 +114,8 @@ class FalconViewGridManager {
      */
     onMapZoom() {
         if (this.enabled) {
-            // Adjust grid spacing based on zoom level
-            this.adjustGridSpacing();
             this.updateGrid();
         }
-    }
-
-    /**
-     * Adjust grid spacing based on zoom level
-     */
-    adjustGridSpacing() {
-        const zoom = this.map.getZoom();
-        
-        // Adjust grid spacing based on zoom level for optimal visibility
-        if (zoom <= 8) {
-            this.gridSpacing = 1.0;   // Large grid for world view
-        } else if (zoom <= 10) {
-            this.gridSpacing = 0.5;   // Medium-large grid
-        } else if (zoom <= 12) {
-            this.gridSpacing = 0.1;   // Medium grid
-        } else if (zoom <= 14) {
-            this.gridSpacing = 0.05;  // Small-medium grid
-        } else if (zoom <= 16) {
-            this.gridSpacing = 0.01;  // Small grid
-        } else {
-            this.gridSpacing = 0.005; // Very small grid for detailed view
-        }
-
-        console.log(`🎯 Grid spacing adjusted to ${this.gridSpacing} degrees for zoom level ${zoom}`);
     }
 
     /**
@@ -167,47 +142,59 @@ class FalconViewGridManager {
      */
     drawGrid() {
         const bounds = this.map.getBounds();
-        const zoom = this.map.getZoom();
+        const crs = this.map.options.crs || L.CRS.EPSG3857;
 
-        // Calculate grid boundaries
-        const south = Math.floor(bounds.getSouth() / this.gridSpacing) * this.gridSpacing;
-        const north = Math.ceil(bounds.getNorth() / this.gridSpacing) * this.gridSpacing;
-        const west = Math.floor(bounds.getWest() / this.gridSpacing) * this.gridSpacing;
-        const east = Math.ceil(bounds.getEast() / this.gridSpacing) * this.gridSpacing;
+        // Project bounds to meters (Spherical Mercator)
+        const sw = crs.project(bounds.getSouthWest());
+        const ne = crs.project(bounds.getNorthEast());
 
-        // Limit number of grid lines for performance
-        const maxLines = 50;
-        const latLines = Math.ceil((north - south) / this.gridSpacing);
-        const lngLines = Math.ceil((east - west) / this.gridSpacing);
+        // Align start positions to the grid spacing in meters
+        const startX = Math.floor(sw.x / this.gridSpacingMeters) * this.gridSpacingMeters;
+        const endX = Math.ceil(ne.x / this.gridSpacingMeters) * this.gridSpacingMeters;
+        const startY = Math.floor(sw.y / this.gridSpacingMeters) * this.gridSpacingMeters;
+        const endY = Math.ceil(ne.y / this.gridSpacingMeters) * this.gridSpacingMeters;
 
-        if (latLines > maxLines || lngLines > maxLines) {
-            console.warn('⚠️ Too many grid lines, increasing spacing...');
-            this.gridSpacing *= 2;
-            return this.drawGrid();
+        // Safety: cap number of lines for performance and maintain visibility at any zoom
+        const spanX = endX - startX;
+        const spanY = endY - startY;
+        const maxLines = 120; // total lines target per axis (keeps perf OK)
+        let stepMeters = this.gridSpacingMeters;
+
+        // If too many lines would be drawn, increase step to fit within maxLines
+        const neededX = Math.ceil(spanX / stepMeters) + 1;
+        const neededY = Math.ceil(spanY / stepMeters) + 1;
+        if (neededX > maxLines || neededY > maxLines) {
+            const maxSpan = Math.max(spanX, spanY);
+            stepMeters = Math.ceil(maxSpan / maxLines);
+            // Round stepMeters to nearest 100 meters for neat grid
+            stepMeters = Math.max(100, Math.ceil(stepMeters / 100) * 100);
+            console.warn(`⚠️ Grid too dense at this zoom. Using coarser spacing: ${stepMeters}m`);
         }
 
-        // Draw vertical grid lines (longitude)
-        for (let lng = west; lng <= east; lng += this.gridSpacing) {
-            this.drawVerticalLine(lng, south, north);
+        // Draw vertical lines (constant meter spacing)
+        for (let x = startX; x <= endX; x += stepMeters) {
+            const southLatLng = crs.unproject(L.point(x, startY));
+            const northLatLng = crs.unproject(L.point(x, endY));
+            this.drawVerticalLineLatLng(southLatLng, northLatLng);
         }
 
-        // Draw horizontal grid lines (latitude)
-        for (let lat = south; lat <= north; lat += this.gridSpacing) {
-            this.drawHorizontalLine(lat, west, east);
+        // Draw horizontal lines
+        for (let y = startY; y <= endY; y += stepMeters) {
+            const westLatLng = crs.unproject(L.point(startX, y));
+            const eastLatLng = crs.unproject(L.point(endX, y));
+            this.drawHorizontalLineLatLng(westLatLng, eastLatLng);
         }
-
-        // Draw grid labels
-        this.drawGridLabels(south, north, west, east);
-
-        console.log(`🎯 Falcon View grid drawn: ${latLines}x${lngLines} cells`);
+        const xLines = Math.ceil(spanX / stepMeters) + 1;
+        const yLines = Math.ceil(spanY / stepMeters) + 1;
+        console.log(`🎯 Falcon View grid drawn (meters): ${xLines}x${yLines} cells of ${stepMeters}m`);
     }
 
     /**
-     * Draw vertical grid line
+     * Draw vertical grid line (LatLng endpoints)
      */
-    drawVerticalLine(lng, south, north) {
+    drawVerticalLineLatLng(southLatLng, northLatLng) {
         const line = L.polyline(
-            [[south, lng], [north, lng]],
+            [southLatLng, northLatLng],
             {
                 color: this.gridColor,
                 weight: 1,
@@ -222,11 +209,11 @@ class FalconViewGridManager {
     }
 
     /**
-     * Draw horizontal grid line
+     * Draw horizontal grid line (LatLng endpoints)
      */
-    drawHorizontalLine(lat, west, east) {
+    drawHorizontalLineLatLng(westLatLng, eastLatLng) {
         const line = L.polyline(
-            [[lat, west], [lat, east]],
+            [westLatLng, eastLatLng],
             {
                 color: this.gridColor,
                 weight: 1,
