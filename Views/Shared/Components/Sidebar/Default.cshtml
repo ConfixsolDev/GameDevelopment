@@ -29,28 +29,27 @@
                 <li>
                     <a asp-area="" asp-controller="GamePlay" asp-action="Index" class="menu-link @(currentController == "GamePlay" ? "active" : "")">
                         <i class="fas fa-crosshairs menu-icon"></i>
-                        <span class="menu-text">War Archive </span>
+                        <span class="menu-text">Wargame Archive </span>
                     </a>
                 </li>
 
                 <li class="menu-title">Token Management</li>
 
-                <secure-content asp-area="TokenManagement" asp-controller="TokenSystem" asp-action="Index">
-                    <li>
-                        <a asp-area="TokenManagement" asp-controller="TokenSystem" asp-action="Index" class="menu-link @(currentController == "TokenSystem" ? "active" : "")">
-                            <i class="fas fa-fingerprint menu-icon"></i>
-                            <span class="menu-text">Token System</span>
-                        </a>
-                    </li>
-                </secure-content>
-
                 <!-- Token Management Section -->
                 
-                <secure-content asp-area="" asp-controller="AdminToken" asp-action="Index">
+             @*    <secure-content asp-area="" asp-controller="AdminToken" asp-action="Index">
                     <li>
                         <a asp-area="" asp-controller="AdminToken" asp-action="Dashboard" class="menu-link @((currentController == "AdminToken" && currentAction == "Dashboard") ? "active" : "")">
                             <i class="fas fa-cogs menu-icon"></i>
                             <span class="menu-text">Admin Dashboard</span>
+                        </a>
+                    </li>
+                </secure-content> *@
+                <secure-content asp-area="" asp-controller="AdminToken" asp-action="Index">
+                    <li>
+                        <a asp-area="" asp-controller="AdminToken" asp-action="Index" class="menu-link @((currentController == "AdminToken" && currentAction == "Index") ? "active" : "")">
+                            <i class="fas fa-plus-circle menu-icon"></i>
+                            <span class="menu-text">Tokens</span>
                         </a>
                     </li>
                 </secure-content>
@@ -59,7 +58,16 @@
                     <li>
                         <a asp-area="" asp-controller="DataManagement" asp-action="Index" class="menu-link @(currentController == "DataManagement" ? "active" : "")">
                             <i class="fas fa-database menu-icon"></i>
-                            <span class="menu-text">Data Management</span>
+                            <span class="menu-text">Token Preperation</span>
+                        </a>
+                    </li>
+                </secure-content>
+
+                <secure-content asp-area="TokenManagement" asp-controller="TokenSystem" asp-action="Index">
+                    <li>
+                        <a asp-area="TokenManagement" asp-controller="TokenSystem" asp-action="Index" class="menu-link @(currentController == "TokenSystem" ? "active" : "")">
+                            <i class="fas fa-fingerprint menu-icon"></i>
+                            <span class="menu-text">Physical Token System</span>
                         </a>
                     </li>
                 </secure-content>
@@ -73,14 +81,7 @@
                     </li>
                 </secure-content>
 
-                <secure-content asp-area="" asp-controller="AdminToken" asp-action="Index">
-                    <li>
-                        <a asp-area="" asp-controller="AdminToken" asp-action="Index" class="menu-link @((currentController == "AdminToken" && currentAction == "Index") ? "active" : "")">
-                            <i class="fas fa-plus-circle menu-icon"></i>
-                            <span class="menu-text">Tokens</span>
-                        </a>
-                    </li>
-                </secure-content>
+              
 
               @*   <secure-content asp-area="" asp-controller="GameManagement" asp-action="Index">
                     <li>

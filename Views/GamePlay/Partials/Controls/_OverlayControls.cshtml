@@ -276,7 +276,7 @@
         </h6>
         <div class="collapsible-content" id="view-controls-content" style="display: none;">
 
-            <!-- Zoom and Basemap on one line -->
+            <!-- Basemap + Grid on one line -->
             <div class="control-row">
             @*     <div style="flex: 1; margin-right: 5px;">
                     <label style="font-size: 10px; color: #a0aec0; display: block; margin-bottom: 4px;"><i class="fas fa-cog"></i> Zoom</label>
@@ -299,6 +299,12 @@
                         <option value="satellite">Satellite</option>
                     </select>
                 </div>
+                <div style="margin-left: 8px; display: flex; align-items: flex-end;">
+                    <button class="overlay-btn overlay-btn-falcon" id="btnGridToggle" onclick="toggleFalconGrid()" title="Toggle Grid" style="min-width: 100px;">
+                        <i class="fas fa-th"></i>
+                        <span>Grid</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Tile Server Mode (Hidden by default, always uses external) -->
@@ -313,13 +319,7 @@
                 </small>
             </div>
 
-            <!-- Falcon View Toggle -->
-                <div class="control-row" style="margin-top: 8px;">
-                    <button class="overlay-btn overlay-btn-falcon" id="btnGridToggle" onclick="toggleFalconGrid()" title="Toggle Grid">
-                        <i class="fas fa-th"></i>
-                        <span>Grid</span>
-                    </button>
-                </div>
+            <!-- Falcon View Toggle moved next to Basemap -->
 
             <!-- View Buttons -->
             <div class="control-row" style="margin-top: 8px;">
@@ -603,6 +603,7 @@
             transition: transform 0.2s ease;
             font-size: 10px;
             color: var(--gameplay-primary);
+            padding-left: 8px;
         }
 
         .collapsible-header.expanded .chevron-icon {
@@ -614,44 +615,28 @@
         transition: all 0.3s ease;
     }
 
-    /* Falcon View Button Styling */
+    /* Falcon View Button Styling - match bottom buttons by default; cyan when active */
     .overlay-btn-falcon {
-        background: linear-gradient(135deg, #00FF88 0%, #00CC66 100%) !important;
-        color: #000 !important;
-        font-weight: bold;
-        border: 2px solid #00FF88 !important;
-        animation: pulse-falcon 2s infinite;
-        box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+        background: rgba(255,255,255,0.08) !important;
+        border: 1px solid rgba(255,255,255,0.18) !important;
+        color: #eaf4f7 !important;
+        font-weight: 600;
+        box-shadow: none;
     }
 
-        .overlay-btn-falcon:hover {
-            background: linear-gradient(135deg, #00FF88 0%, #00FF88 100%) !important;
-            box-shadow: 0 0 25px rgba(0, 255, 136, 0.7);
-            transform: scale(1.05);
-        }
-
-        .overlay-btn-falcon i {
-            color: #000 !important;
-        }
-
-        .overlay-btn-falcon span {
-            color: #000 !important;
+        .overlay-btn-falcon:hover,
+        .overlay-btn-falcon:focus {
+            background: rgba(0, 188, 212, 0.15) !important;
+            border-color: rgba(0, 188, 212, 0.35) !important;
+            color: #ffffff !important;
         }
 
         .overlay-btn-falcon.active {
-            background: linear-gradient(135deg, #00CC66 0%, #009944 100%) !important;
-            box-shadow: 0 0 30px rgba(0, 255, 136, 0.9);
+            background: linear-gradient(135deg, #00bcd4 0%, #00acc1 100%) !important;
+            border-color: #00bcd4 !important;
+            color: #fff !important;
+            box-shadow: 0 4px 16px rgba(0, 188, 212, 0.35) !important;
         }
-
-    @@keyframes pulse-falcon {
-        0%, 100% {
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
-        }
-
-        50% {
-            box-shadow: 0 0 25px rgba(0, 255, 136, 0.7);
-        }
-    }
 </style>
 
 <script>

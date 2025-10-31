@@ -2,7 +2,7 @@
 
 <!-- Using unified dark theme - no additional CSS needed -->
 <!-- Token Summary Modal - Bootstrap Modal -->
-<div class="modal fade" id="tokenSummaryModal" tabindex="-1" role="dialog" aria-labelledby="tokenSummaryModalLabel" aria-hidden="true">
+<div class="modal fade gameplay-modal" id="tokenSummaryModal" tabindex="-1" role="dialog" aria-labelledby="tokenSummaryModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -15,346 +15,145 @@
             </div>
 
             <div class="modal-body">
-               @*  <!-- Token Basic Info -->
-                <div class="token-summary-section">
-                    <h6><i class="fas fa-info-circle"></i> Token Information</h6>
-                    <div class="summary-grid">
-                        <div class="summary-item">
-                            <strong>Token ID:</strong> @Model.Token.Id
-                        </div>
-                        <div class="summary-item">
-                            <strong>Token Name:</strong> @Model.Token.Name
-                        </div>
-                        <div class="summary-item">
-                            <strong>Token Group:</strong> @(Model.Token.TokenGroup?.Name ?? "N/A")
-                        </div>
-                        <div class="summary-item">
-                            <strong>Status:</strong> <span class="badge-military">@(Model.Token.IsActive ? "Active" : "Inactive")</span>
-                        </div>
-                    </div>
-                </div> *@
 
                 @if (Model.Brigades != null || Model.InfantryBattalions.Any() || Model.ArmouredRegiments.Any() || Model.ArtilleryRegiments.Any() || Model.LogisticsUnits.Any() || Model.CombatEngineeringCompanies.Any() || Model.Recon.Any())
                 {
-                    <!-- Complete ORBAT (Order of Battle) -->
-                    <div class="token-summary-section">
-                        <h6><i class="fas fa-sitemap"></i> Complete ORBAT - Order of Battle</h6>
-
-                        @if (Model.Brigades != null && !string.IsNullOrEmpty(Model.Brigades.BrigadeCode))
-                        {
-                            var brigade = Model.Brigades;
-                            <div class="summary-item brigade">
-                                <div class="unit-header">
-                                    <strong><i class="fas fa-flag"></i> @(Model.Token?.OrganizationLevel ):</strong> @(brigade.BrigadeCode ?? "No Code")
-                                    <span class="badge-military">@(brigade.ForceType ?? "Unknown")</span>
-                                </div>
-
-                                <!-- Infantry Units -->
-                                @{
-                                    var brigadeInfantry = Model.InfantryBattalions.Where(i => i.BrigadeId == brigade.Id).ToList();
-                                }
-                                @if (brigadeInfantry.Any())
-                                {
-                                    @foreach (var infantry in brigadeInfantry)
-                                    {
-                                        <div class="hierarchy-level">
-                                            <div class="summary-item infantry">
-                                                <div class="unit-header">
-                                                    <strong><i class="fas fa-walking"></i> Infantry Battalion:</strong> @(infantry.Name ?? "Unnamed Infantry")
-                                                    <span class="badge-military">Strength: @(infantry.Strength)</span>
-                                                    <span class="badge-military">Companies: @(infantry.Companies)</span>
-                                                </div>
-                                                <div class="unit-description">@(infantry.Description ?? "")</div>
-                                                <div class="weapons-grid">
-                                                    <div class="weapon-item">ATGMs: @(infantry.ATGMS)</div>
-                                                    <div class="weapon-item">Rocket Launchers: @(infantry.RocketLauncher)</div>
-                                                    <div class="weapon-item">81mm Mortars: @(infantry.Mortars81mm)</div>
-                                                    <div class="weapon-item">120mm Mortars: @(infantry.Mortars120mm)</div>
-                                                    <div class="weapon-item">Grenade Launchers: @(infantry.GrenadeLaunchers)</div>
-                                                    <div class="weapon-item">HMG/AGL: @(infantry.HMG_AGL)</div>
-                                                    <div class="weapon-item">MG/LMG: @(infantry.MG_LMG)</div>
-                                                    <div class="weapon-item">MANPADS: @(infantry.MANPADS)</div>
-                                                    <div class="weapon-item">Drones: @(infantry.Drones)</div>
-                                                </div>
-                                                <div class="mobility-info">
-                                                    <span class="mobility-item">Road Speed: @(infantry.MarchingSpeedTrucksRoads) km/h</span>
-                                                    <span class="mobility-item">APC Speed: @(infantry.MarchingSpeedAPCs) km/h</span>
-                                                    <span class="mobility-item">Cross Country: @(infantry.MarchingSpeedCrossCountry) km/h</span>
-                                                    <span class="mobility-item">Combat Speed: @(infantry.CombatAdvanceSpeed) km/h</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    }
-                                }
-
-                                <!-- Armoured Units under this Brigade -->
-                                @{
-                                    var brigadeArmoured = Model.ArmouredRegiments.Where(a => a.BrigadeId == brigade.Id).ToList();
-                                }
-                                @if (brigadeArmoured.Any())
-                                {
-                                    @foreach (var armoured in brigadeArmoured)
-                                    {
-                                        <div class="hierarchy-level">
-                                            <div class="summary-item armoured">
-                                                <div class="unit-header">
-                                                    <strong><i class="fas fa-tank"></i> Armoured Regiment:</strong> @(armoured.Name ?? "Unnamed Armoured")
-                                                    <span class="badge-military">Strength: @(armoured.Strength)</span>
-                                                    <span class="badge-military">Squadrons: @(armoured.Squadrons)</span>
-                                                </div>
-                                                <div class="unit-description">@(armoured.Description ?? "")</div>
-                                                <div class="weapons-grid">
-                                                    <div class="weapon-item">Tanks: @(armoured.Tanks)</div>
-                                                    <div class="weapon-item">ATGMs: @(armoured.ATGMS)</div>
-                                                    <div class="weapon-item">120mm Mortars: @(armoured.Mortars120mm)</div>
-                                                    <div class="weapon-item">HMGs: @(armoured.HMG)</div>
-                                                    <div class="weapon-item">Drones: @(armoured.Drones)</div>
-                                                </div>
-                                                <div class="mobility-info">
-                                                    <span class="mobility-item">Road Speed: @(armoured.MarchingSpeedRoads) km/h</span>
-                                                    <span class="mobility-item">Cross Country: @(armoured.MarchingSpeedCrossCountry) km/h</span>
-                                                    <span class="mobility-item">Combat Speed: @(armoured.CombatAdvanceSpeed) km/h</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    }
-                                }
-
-                                <!-- Artillery Units under this Brigade -->
-                                @{
-                                    var brigadeArtillery = Model.ArtilleryRegiments.Where(a => a.BrigadeId == brigade.Id).ToList();
-                                }
-                                @if (brigadeArtillery.Any())
-                                {
-                                    @foreach (var artillery in brigadeArtillery)
-                                    {
-                                        <div class="hierarchy-level">
-                                            <div class="summary-item artillery">
-                                                <div class="unit-header">
-                                                    <strong><i class="fas fa-crosshairs"></i> Artillery Regiment:</strong> @(artillery.Name ?? "Unnamed Artillery")
-                                                    <span class="badge-military">Strength: @(artillery.Strength)</span>
-                                                    <span class="badge-military">Batteries: @(artillery.Batteries)</span>
-                                                </div>
-                                                <div class="unit-description">@(artillery.Description ?? "")</div>
-                                                <div class="weapons-grid">
-                                                    <div class="weapon-item">Guns: @(artillery.Guns)</div>
-                                                    <div class="weapon-item">Caliber: @(artillery.GunCaliber)</div>
-                                                    <div class="weapon-item">Range: @(artillery.GunRange) km</div>
-                                                    <div class="weapon-item">HMGs: @(artillery.HMG)</div>
-                                                    <div class="weapon-item">Drones: @(artillery.Drones)</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    }
-                                }
-
-                                <!-- Logistics Units under this Brigade -->
-                                @{
-                                    var brigadeLogistics = Model.LogisticsUnits.Where(l => l.BrigadeId == brigade.Id).ToList();
-                                }
-                                @if (brigadeLogistics.Any())
-                                {
-                                    @foreach (var logistics in brigadeLogistics)
-                                    {
-                                        <div class="hierarchy-level">
-                                            <div class="summary-item logistics">
-                                                <div class="unit-header">
-                                                    <strong><i class="fas fa-truck"></i> Logistics Unit:</strong> @(logistics.Name ?? "Unnamed Logistics")
-                                                    <span class="badge-military">Strength: @(logistics.Strength)</span>
-                                                    <span class="badge-military">Companies: @(logistics.Companies)</span>
-                                                </div>
-                                                <div class="unit-description">@(logistics.Description ?? "")</div>
-                                                <div class="logistics-grid">
-                                                    <div class="logistics-item">Supply Trucks: @(logistics.SupplyTrucks)</div>
-                                                    <div class="logistics-item">Fuel Trucks: @(logistics.FuelTrucks)</div>
-                                                    <div class="logistics-item">Water Trucks: @(logistics.WaterTrucks)</div>
-                                                    <div class="logistics-item">Ammo Trucks: @(logistics.AmmunitionTrucks)</div>
-                                                    <div class="logistics-item">Maintenance: @(logistics.MaintenanceVehicles)</div>
-                                                    <div class="logistics-item">Recovery: @(logistics.RecoveryVehicles)</div>
-                                                </div>
-                                                <div class="capacity-info">
-                                                    <span class="capacity-item">Fuel: @(logistics.FuelCapacity) L</span>
-                                                    <span class="capacity-item">Water: @(logistics.WaterCapacity) L</span>
-                                                    <span class="capacity-item">Ammo: @(logistics.AmmunitionStorage) T</span>
-                                                    <span class="capacity-item">Supply: @(logistics.SupplyCapacity) T</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    }
-                                }
-
-                                <!-- Combat Engineering Companies under this Brigade -->
-                                @{
-                                    var brigadeEngineering = Model.CombatEngineeringCompanies.Where(e => e.BrigadeId == brigade.Id).ToList();
-                                }
-                                @if (brigadeEngineering.Any())
-                                {
-                                    @foreach (var engineering in brigadeEngineering)
-                                    {
-                                        <div class="hierarchy-level">
-                                            <div class="summary-item engineering">
-                                                <div class="unit-header">
-                                                    <strong><i class="fas fa-tools"></i> Combat Engineering Company:</strong> @(engineering.Name ?? "Unnamed Engineering")
-                                                    <span class="badge-military">Strength: @(engineering.Strength)</span>
-                                                    <span class="badge-military">Platoons: @(engineering.Platoons)</span>
-                                                </div>
-                                                <div class="unit-description">@(engineering.Description ?? "")</div>
-                                                <div class="engineering-grid">
-                                                    <div class="engineering-item">Engineer Vehicles: @(engineering.EngineerVehicles)</div>
-                                                    <div class="engineering-item">Bridge Layers: @(engineering.BridgeLayingVehicles)</div>
-                                                    <div class="engineering-item">Mine Clearers: @(engineering.MineClearingVehicles)</div>
-                                                    <div class="engineering-item">Bulldozers: @(engineering.Bulldozers)</div>
-                                                    <div class="engineering-item">Excavators: @(engineering.Excavators)</div>
-                                                    <div class="engineering-item">Cranes: @(engineering.Cranes)</div>
-                                                </div>
-                                                <div class="capability-info">
-                                                    <span class="capability-item">Bridge: @(engineering.BridgeBuildingCapacity)</span>
-                                                    <span class="capability-item">Fortifications: @(engineering.FortificationBuildingCapacity)</span>
-                                                    <span class="capability-item">Clearing: @(engineering.ObstacleClearingCapacity)</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    }
-                                }
-                            </div>
-                        }
-                        
-                        <!-- Direct Units (No Brigade) -->
-                        @{
-                            var directInfantry = Model.InfantryBattalions.Where(i => i.BrigadeId == null).ToList();
-                            var directArmoured = Model.ArmouredRegiments.Where(a => a.BrigadeId == null).ToList();
-                            var directArtillery = Model.ArtilleryRegiments.Where(a => a.BrigadeId == null).ToList();
-                            var directLogistics = Model.LogisticsUnits.Where(l => l.BrigadeId == null).ToList();
-                            var directEngineering = Model.CombatEngineeringCompanies.Where(e => e.BrigadeId == null).ToList();
-                        }
-                        
-                        @if (directInfantry.Any() || directArmoured.Any() || directArtillery.Any() || directLogistics.Any() || directEngineering.Any())
-                        {
-                            <div class="summary-item direct-units-section">
-                                <div class="unit-header">
-                                    <strong><i class="fas fa-users"></i> Direct Units</strong>
-                                    <span class="badge-military">@((directInfantry.Count + directArmoured.Count + directArtillery.Count + directLogistics.Count + directEngineering.Count)) Units</span>
-                                </div>
-                                
-                                <!-- Direct Infantry -->
-                                @foreach (var infantry in directInfantry)
-                                {
-                                    <div class="hierarchy-level">
-                                        <div class="summary-item infantry">
-                                            <div class="unit-header">
-                                                <strong><i class="fas fa-user-shield"></i> Infantry Battalion:</strong> @(infantry.Name ?? "Unnamed Infantry")
-                                                <span class="badge-military">Strength: @(infantry.Strength)</span>
-                                                <span class="badge-military">Companies: @(infantry.Companies)</span>
-                                            </div>
-                                            <div class="unit-description">@(infantry.Description ?? "")</div>
-                                            <div class="weapons-grid">
-                                                <div class="weapon-item">ATGMs: @(infantry.ATGMS)</div>
-                                                <div class="weapon-item">Rocket Launchers: @(infantry.RocketLauncher)</div>
-                                                <div class="weapon-item">81mm Mortars: @(infantry.Mortars81mm)</div>
-                                                <div class="weapon-item">120mm Mortars: @(infantry.Mortars120mm)</div>
-                                                <div class="weapon-item">Drones: @(infantry.Drones)</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                                
-                                <!-- Direct Armoured -->
-                                @foreach (var armoured in directArmoured)
-                                {
-                                    <div class="hierarchy-level">
-                                        <div class="summary-item armoured">
-                                            <div class="unit-header">
-                                                <strong><i class="fas fa-shield-alt"></i> Armoured Regiment:</strong> @(armoured.Name ?? "Unnamed Armoured")
-                                                <span class="badge-military">Strength: @(armoured.Strength)</span>
-                                                <span class="badge-military">Tanks: @(armoured.Tanks)</span>
-                                            </div>
-                                            <div class="unit-description">@(armoured.Description ?? "")</div>
-                                            <div class="weapons-grid">
-                                                <div class="weapon-item">Tanks: @(armoured.Tanks)</div>
-                                                <div class="weapon-item">ATGMs: @(armoured.ATGMS)</div>
-                                                <div class="weapon-item">Drones: @(armoured.Drones)</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                                
-                                <!-- Direct Artillery -->
-                                @foreach (var artillery in directArtillery)
-                                {
-                                    <div class="hierarchy-level">
-                                        <div class="summary-item artillery">
-                                            <div class="unit-header">
-                                                <strong><i class="fas fa-crosshairs"></i> Artillery Regiment:</strong> @(artillery.Name ?? "Unnamed Artillery")
-                                                <span class="badge-military">Strength: @(artillery.Strength)</span>
-                                                <span class="badge-military">Guns: @(artillery.Guns)</span>
-                                            </div>
-                                            <div class="unit-description">@(artillery.Description ?? "")</div>
-                                            <div class="weapons-grid">
-                                                <div class="weapon-item">Guns: @(artillery.Guns)</div>
-                                                <div class="weapon-item">Caliber: @(artillery.GunCaliber)</div>
-                                                <div class="weapon-item">Range: @(artillery.GunRange) km</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                                
-                                <!-- Direct Logistics -->
-                                @foreach (var logistics in directLogistics)
-                                {
-                                    <div class="hierarchy-level">
-                                        <div class="summary-item logistics">
-                                            <div class="unit-header">
-                                                <strong><i class="fas fa-truck"></i> Logistics Unit:</strong> @(logistics.Name ?? "Unnamed Logistics")
-                                                <span class="badge-military">Strength: @(logistics.Strength)</span>
-                                            </div>
-                                            <div class="unit-description">@(logistics.Description ?? "")</div>
-                                            <div class="logistics-grid">
-                                                <div class="logistics-item">Supply Trucks: @(logistics.SupplyTrucks)</div>
-                                                <div class="logistics-item">Fuel Trucks: @(logistics.FuelTrucks)</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                                
-                                <!-- Direct Engineering -->
-                                @foreach (var engineering in directEngineering)
-                                {
-                                    <div class="hierarchy-level">
-                                        <div class="summary-item engineering">
-                                            <div class="unit-header">
-                                                <strong><i class="fas fa-hard-hat"></i> Engineering Company:</strong> @(engineering.Name ?? "Unnamed Engineering")
-                                                <span class="badge-military">Strength: @(engineering.Strength)</span>
-                                            </div>
-                                            <div class="unit-description">@(engineering.Description ?? "")</div>
-                                            <div class="engineering-grid">
-                                                <div class="engineering-item">Bridge Layers: @(engineering.BridgeLayingVehicles)</div>
-                                                <div class="engineering-item">Bulldozers: @(engineering.Bulldozers)</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                        }
+                    <!-- ORBAT Overview -->
+                    <div class="token-summary-section mb-4">
+                        <div class="col-md-6">
+                            <h6 class="token-section-title mb-2">
+                                <i class="fas fa-project-diagram " style="padding-left: 10px; padding-top: 10px;"></i> ORBAT Overview
+                            </h6>
+                        </div>
                     </div>
+
+                    @if (Model.Brigades?.BrigadeCode != null)
+                    {
+                        <table class="table table-sm table-bordered table-hover orbat-table mb-0">
+                            <thead>
+                                @{
+                                    var b = Model.Brigades;
+                                }
+                                <tr class="unit-row unit-type-brigade">
+                                    <td colspan="5">
+                                        <strong><i class="fas fa-flag"></i> @(Model.Token?.OrganizationLevel):</strong>
+                                        @b.BrigadeCode
+                                        <span class="badge badge-primary ml-2">@b.ForceType</span>
+                                    </td>
+                                </tr>
+                            </thead>
+                        </table>
+                    }
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered table-hover orbat-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="col-unit">Unit</th>
+                                    <th class="col-strength">Strength</th>
+                                    <th class="col-organization">Organization</th>
+                                    <th class="col-weapons">Key Weapons/Assets</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+
+                                @foreach (var inf in Model.InfantryBattalions)
+                                {
+                                    <tr class="unit-row unit-type-infantry">
+                                        <td>
+                                            <strong><i class="fas fa-walking"></i> Infantry Battalion</strong> — @inf.Name
+                                        </td>
+                                        <td>@inf.Strength</td>
+                                        <td>Companies: @inf.Companies</td>
+                                        <td>ATGMs: @inf.ATGMS, 81mm: @inf.Mortars81mm, 120mm: @inf.Mortars120mm, Drones: @inf.Drones</td>
+                                    </tr>
+                                }
+                                @foreach (var ar in Model.ArmouredRegiments)
+                                {
+                                    <tr class="unit-row unit-type-armoured">
+                                        <td>
+                                            <strong><i class="fas fa-tank"></i> Armoured Regiment</strong> — @ar.Name
+                                        </td>
+                                        <td>@ar.Strength</td>
+                                        <td>Squadrons: @ar.Squadrons</td>
+                                        <td>ATGMs: @ar.ATGMS, Drones: @ar.Drones</td>
+                                    </tr>
+                                }
+                                @foreach (var art in Model.ArtilleryRegiments)
+                                {
+                                    <tr class="unit-row unit-type-artillery">
+                                        <td>
+                                            <strong><i class="fas fa-crosshairs"></i> Artillery Regiment</strong> — @art.Name
+                                        </td>
+                                        <td>@art.Strength</td>
+                                        <td>Batteries: @art.Batteries</td>
+                                        <td>Caliber: @art.GunCaliber, Range: @art.GunRange km</td>
+                                    </tr>
+                                }
+                                @foreach (var log in Model.LogisticsUnits)
+                                {
+                                    <tr class="unit-row unit-type-logistics">
+                                        <td>
+                                            <strong><i class="fas fa-truck"></i> Logistics Unit</strong> — @log.Name
+                                        </td>
+                                        <td>@log.Strength</td>
+                                        <td>Companies: @log.Companies</td>
+                                        <td>Supply: @log.SupplyTrucks, Fuel: @log.FuelTrucks</td>
+                                    </tr>
+                                }
+                                @foreach (var eng in Model.CombatEngineeringCompanies)
+                                {
+                                    <tr class="unit-row unit-type-engineering">
+                                        <td>
+                                            <strong><i class="fas fa-tools"></i> Engineering Company</strong> — @eng.Name
+                                        </td>
+                                        <td>@eng.Strength</td>
+                                        <td>Platoons: @eng.Platoons</td>
+                                        <td>Bridge: @eng.BridgeLayingVehicles, Dozers: @eng.Bulldozers</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+
 
 
                     @if (Model.Recon.Any())
                     {
                         <!-- Reconnaissance Reports -->
-                        <div class="token-summary-section">
-                            <h6><i class="fas fa-search"></i> Reconnaissance Reports (@Model.Recon.Count)</h6>
+                        <div class="token-summary-section mb-4">
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <h6 class="token-section-title">
+                                        <i class="fas fa-search"></i> Reconnaissance Reports (@Model.Recon.Count)
+                                    </h6>
+                                </div>
+                            </div>
                             @foreach (var reconItem in Model.Recon.Take(3))
                             {
-                                <div class="summary-item recon">
-                                    <strong>@(reconItem.ReconType ?? "Untitled Recon")</strong>
-                                    <span class="badge-military">@(reconItem.Confidence ?? "Unknown Confidence")</span>
-                                    <div class="text-muted">Location: @(reconItem.Location ?? "Unknown")</div>
-                                    <div class="text-muted">@(reconItem.Description?.Length > 100 ? reconItem.Description.Substring(0, 100) + "..." : reconItem.Description ?? "")</div>
+                                <div class="card mb-2">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <strong>@(reconItem.ReconType ?? "Untitled Recon")</strong>
+                                            </div>
+                                            <div class="col-md-4 text-md-right">
+                                                <span class="badge badge-primary">@(reconItem.Confidence ?? "Unknown Confidence")</span>
+                                            </div>
+                                        </div>
+                                        <p class="text-muted small mb-1"><i class="fas fa-map-marker-alt"></i> Location: @(reconItem.Location ?? "Unknown")</p>
+                                        @if (!string.IsNullOrEmpty(reconItem.Description))
+                                        {
+                                            <p class="text-muted small mb-0">@(reconItem.Description.Length > 100 ? reconItem.Description.Substring(0, 100) + "..." : reconItem.Description)</p>
+                                        }
+                                    </div>
                                 </div>
                             }
                             @if (Model.Recon.Count > 3)
                             {
-                                <div class="text-muted text-center">... and @(Model.Recon.Count - 3) more reconnaissance reports</div>
+                                <div class="text-center text-muted small">... and @(Model.Recon.Count - 3) more reconnaissance reports</div>
                             }
                         </div>
                     }
@@ -377,7 +176,7 @@
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">
                     <i class="fas fa-times"></i> Close
                 </button>
-                @if (Model.Brigades!= null || Model.InfantryBattalions.Any() || Model.ArmouredRegiments.Any() || Model.ArtilleryRegiments.Any() || Model.LogisticsUnits.Any() || Model.CombatEngineeringCompanies.Any() || Model.Recon.Any())
+                @if (Model.Brigades != null || Model.InfantryBattalions.Any() || Model.ArmouredRegiments.Any() || Model.ArtilleryRegiments.Any() || Model.LogisticsUnits.Any() || Model.CombatEngineeringCompanies.Any() || Model.Recon.Any())
                 {
                     <button type="button" class="btn btn-primary" onclick="editTokenData(); return false;">
                         <i class="fas fa-edit"></i> Edit Data
@@ -408,23 +207,23 @@
 
     window.editTokenData = function() {
         console.log('🖱️ Edit Data button clicked');
-        
+
         // Get token ID directly from Model (most reliable)
         var tokenId = '@(Model.Token?.Id.ToString() ?? "")';
         console.log('📍 Token ID from Model:', tokenId);
-        
+
         if (!tokenId || tokenId.trim() === '') {
             console.error('❌ No token ID available');
             alert('Error: Token ID not set. Please try again.');
             return false;
         }
-        
+
         console.log('✏️ Opening data entry for token:', tokenId);
         closeTokenSummaryModal();
-        
+
         // Open data entry form directly
         showLoader();
-        
+
         $.ajax({
             url: '/DataManagement/TokenDataEntryForm',
             type: 'GET',
@@ -445,29 +244,29 @@
                 hideLoader();
             }
         });
-        
+
         return false;
     }
 
     window.addTokenData = function() {
         console.log('🖱️ Add Data button clicked');
-        
+
         // Get token ID directly from Model (same as editTokenData)
         var tokenId = '@(Model.Token?.Id.ToString() ?? "")';
         console.log('📍 Token ID from Model:', tokenId);
-        
+
         if (!tokenId || tokenId.trim() === '') {
             console.error('❌ No token ID available');
             alert('Error: Token ID not set. Please try again.');
             return false;
         }
-        
+
         console.log('➕ Opening data entry for token:', tokenId);
         closeTokenSummaryModal();
-        
+
         // Open data entry form directly
         showLoader();
-        
+
         $.ajax({
             url: '/DataManagement/TokenDataEntryForm',
             type: 'GET',
@@ -488,37 +287,37 @@
                 hideLoader();
             }
         });
-        
+
         return false;
     }
 
             // Set the current token ID immediately when script loads
             @if (Model.Token != null)
             {
-                <text>
-                currentTokenId = '@Model.Token.Id';
-                console.log('🎯 Token ID set immediately:', currentTokenId);
-                </text>
+                            <text>
+                            currentTokenId = '@Model.Token.Id';
+                            console.log('🎯 Token ID set immediately:', currentTokenId);
+                            </text>
             }
             else
             {
-                <text>
-                console.error('❌ Model.Token is null - cannot set currentTokenId');
-                </text>
+                            <text>
+                            console.error('❌ Model.Token is null - cannot set currentTokenId');
+                            </text>
             }
 
             // Remove modal backdrop when modal is shown
             $('#tokenSummaryModal').on('show.bs.modal', function () {
                 console.log('🎯 Modal showing - removing backdrop');
                 $('.modal-backdrop').remove();
-                
+
                 // Ensure token ID is set
                 @if (Model.Token != null)
                 {
-                    <text>
-                    currentTokenId = '@Model.Token.Id';
-                    console.log('🔄 Token ID re-confirmed on modal show:', currentTokenId);
-                    </text>
+                                <text>
+                                currentTokenId = '@Model.Token.Id';
+                                console.log('🔄 Token ID re-confirmed on modal show:', currentTokenId);
+                                </text>
                 }
             });
 
