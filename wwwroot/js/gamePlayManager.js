@@ -1703,6 +1703,12 @@ window.switchGamePlayMap = async function(mapPath) {
                 const baseUrl = (window.TileServerConfig?.external?.baseUrl) || 'http://localhost:8080';
                 if (!(location.protocol === 'https:' && /^http:\/\//i.test(baseUrl))) {
                     const pickId = async () => {
+                        // Use a preferred id if caller set it for this mapPath
+                        try {
+                            if (window.__preferredDatasetId && window.__preferredDatasetId.path === mp && window.__preferredDatasetId.id) {
+                                return window.__preferredDatasetId.id;
+                            }
+                        } catch {}
                         // Prefer explicit IDs
                         if (window.defaultMapSettings) {
                             const { street, satellite, streetId, satelliteId } = window.defaultMapSettings;

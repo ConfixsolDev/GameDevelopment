@@ -737,31 +737,22 @@
             if (window.regionSettingsManager) {
                 window.regionSettingsManager.updateBasemapStyle(style);
             }
-            // Refresh defaults from server to avoid stale cache
+            // Always use fresh defaults from the server (no sibling derivation)
+            const res = await fetch('/gameplay/mbtiles/defaults?ts=' + Date.now(), { cache: 'no-store' });
+            const defaults = res.ok ? await res.json() : {};
+            const isSat = (style === 'satellite');
+            const targetPath = isSat ? (defaults.satellite || '') : (defaults.street || '');
+            // Hint the resolver with the exact dataset id for External
             try {
-                const res = await fetch('/gameplay/mbtiles/defaults?ts=' + Date.now(), { cache: 'no-store' });
-                if (res.ok) {
-                    window.defaultMapSettings = await res.json();
-                }
+                window.__preferredDatasetId = {
+                    path: targetPath,
+                    id: isSat ? (defaults.satelliteId || null) : (defaults.streetId || null)
+                };
             } catch {}
-
-            // Determine target map path from refreshed defaults; fallback to sibling file in same folder
-            const defaults = window.defaultMapSettings || {};
-            let targetPath = (style === 'satellite') ? (defaults.satellite || '') : (defaults.street || '');
-            if (!targetPath) {
-                const current = document.getElementById('currentMapPath') ? document.getElementById('currentMapPath').value : '';
-                if (current) {
-                    const parts = current.split('/');
-                    if (parts.length > 0) {
-                        parts[parts.length - 1] = (style === 'satellite') ? 'satellite.mbtiles' : 'street.mbtiles';
-                        targetPath = parts.join('/');
-                    }
-                }
-            }
             if (targetPath && typeof window.switchGamePlayMap === 'function') {
-                window.switchGamePlayMap(targetPath);
+                await window.switchGamePlayMap(targetPath);
             } else {
-                console.warn('Basemap change skipped - targetPath not resolved or switchGamePlayMap not available');
+                console.warn('Basemap change skipped - missing default path');
             }
         } catch (e) {
             console.warn('Basemap change failed:', e);
