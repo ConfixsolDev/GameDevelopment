@@ -1037,7 +1037,7 @@ class GamePlayManager {
             if (response.ok) {
                 const defaults = await response.json();
                 window.defaultMapSettings = { street: defaults.street, satellite: defaults.satellite, streetId: defaults.streetId, satelliteId: defaults.satelliteId };
-                const defaultMap = defaults.street || defaults.satellite;
+                const defaultMap = defaults.satellite || defaults.street;
                 if (!defaultMap) {
                     selector.innerHTML = '<option value="">No default map configured</option>';
                     console.warn('⚠️ No default map configured in appsettings');
