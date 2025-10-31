@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using TechWebSol.Data;
 using TechWebSol.Filters;
 using TechWebSol.Models;
@@ -33,22 +34,36 @@ namespace TechWebSol.Controllers
         private readonly ITokenPlacementService _tokenPlacementService;
         private readonly ILogger<GamePlayController> _logger;
         private readonly IMemoryCache _memoryCache;
+		private readonly IConfiguration _configuration;
+		private readonly string _mapsDirectory;
+		private readonly string? _defaultMapPath;
+		private readonly string? _defaultSatelliteMapPath;
+		private readonly string? _defaultTerrainDbPath;
         private readonly ApplicationUserVM user;
 
 
-        public GamePlayController(
-            ApplicationDbContext context,
-            IUserSessionService userSessionService,
-            ITokenPlacementService tokenPlacementService,
-            ILogger<GamePlayController> logger,
-            IMemoryCache memoryCache)
+		public GamePlayController(
+			ApplicationDbContext context,
+			IUserSessionService userSessionService,
+			ITokenPlacementService tokenPlacementService,
+			ILogger<GamePlayController> logger,
+			IMemoryCache memoryCache,
+			IConfiguration configuration)
         {
             _context = context;
             _userSessionService = userSessionService;
             _tokenPlacementService = tokenPlacementService;
             user = userSessionService.GetCurrentUser();
             _logger = logger;
-            _memoryCache = memoryCache;
+			_memoryCache = memoryCache;
+			_configuration = configuration;
+
+			// Map settings from appsettings.json
+			var mapSettings = _configuration.GetSection("MapSettings");
+			_mapsDirectory = mapSettings["MapsDirectory"] ?? "wwwroot/maps";
+			_defaultMapPath = mapSettings["DefaultMapPath"];
+			_defaultSatelliteMapPath = mapSettings["DefaultSatelliteMapPath"];
+			_defaultTerrainDbPath = mapSettings["DefaultTerrainDbPath"];
         }
 
         public IActionResult Index()
@@ -62,19 +77,22 @@ namespace TechWebSol.Controllers
         /// Set the current terrain database path in session
         /// </summary>
         [HttpPost]
-        public IActionResult SetTerrainDatabase([FromBody] SetTerrainDatabaseRequest request)
+		public IActionResult SetTerrainDatabase([FromBody] SetTerrainDatabaseRequest request)
         {
             try
             {
-                if (string.IsNullOrEmpty(request.TerrainDbPath))
-                {
-                    return BadRequest(new { success = false, message = "Terrain database path is required" });
-                }
+				// Always use configured default (ignore request value)
+				var terrainPath = _defaultTerrainDbPath;
+
+				if (string.IsNullOrWhiteSpace(terrainPath))
+				{
+					return BadRequest(new { success = false, message = "Terrain database path is required (and no default configured)" });
+				}
                 
-                // Validate that the terrain database exists
-                var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-                var normalizedPath = request.TerrainDbPath.Replace('/', Path.DirectorySeparatorChar);
-                var dbPath = Path.Combine(wwwRoot, normalizedPath);
+				// Validate that the terrain database exists under wwwroot
+				var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+				var normalizedPath = terrainPath.Replace('/', Path.DirectorySeparatorChar);
+				var dbPath = Path.Combine(wwwRoot, normalizedPath);
                 
                 if (!System.IO.File.Exists(dbPath))
                 {
@@ -82,14 +100,8 @@ namespace TechWebSol.Controllers
                     return NotFound(new { success = false, message = "Terrain database not found" });
                 }
                 
-                // Store in session
-                HttpContext.Session.SetString("CurrentTerrainDb", request.TerrainDbPath);
-                
-                _logger.LogInformation("Terrain database set in session: {Path}", request.TerrainDbPath);
-                _logger.LogInformation("Session ID: {SessionId}", HttpContext.Session.Id);
-                _logger.LogInformation("Session CurrentTerrainDb value: {Value}", HttpContext.Session.GetString("CurrentTerrainDb"));
-                
-                return Json(new { success = true, message = "Terrain database set successfully", path = request.TerrainDbPath });
+				_logger.LogInformation("Terrain database validated: {Path}", terrainPath);
+				return Json(new { success = true, message = "Terrain database selected", path = terrainPath });
             }
             catch (Exception ex)
             {
@@ -1083,9 +1095,8 @@ namespace TechWebSol.Controllers
                 {
                     try
                     {
-                        var terrainDb = Request.Headers["X-Terrain-Database"].FirstOrDefault() 
-                                        ?? HttpContext.Session.GetString("CurrentTerrainDb") 
-                                        ?? null;
+					var terrainDb = Request.Headers["X-Terrain-Database"].FirstOrDefault() 
+										?? _defaultTerrainDbPath;
                         
                         if (string.IsNullOrEmpty(terrainDb))
                         {
@@ -2387,34 +2398,24 @@ namespace TechWebSol.Controllers
         /// </summary>
         [HttpGet("/gameplay/mbtiles/list")]
         [AllowAnonymous]
-        public IActionResult ListMaps()
+		public IActionResult ListMaps()
         {
-            var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-            var maps = new List<object>();
-
-            if (!Directory.Exists(wwwRoot))
-            {
-                return Json(maps);
-            }
-
-            // Search for all .mbtiles files recursively
-            var mbtilesFiles = Directory.GetFiles(wwwRoot, "*.mbtiles", SearchOption.AllDirectories);
-
-            foreach (var fullPath in mbtilesFiles)
-            {
-                var fileInfo = new FileInfo(fullPath);
-                var relativePath = Path.GetRelativePath(wwwRoot, fullPath).Replace('\\', '/');
-
-                maps.Add(new
-                {
-                    path = relativePath,
-                    name = Path.GetFileNameWithoutExtension(fullPath),
-                    size = fileInfo.Length,
-                    modified = fileInfo.LastWriteTimeUtc
-                });
-            }
-
-            return Json(maps.OrderByDescending(m => ((dynamic)m).modified));
+			// Return only appsettings-defined maps
+			var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+			var results = new List<object>();
+			void addIfExists(string? rel)
+			{
+				if (string.IsNullOrWhiteSpace(rel)) return;
+				var full = Path.Combine(wwwRoot, rel.Replace('/', Path.DirectorySeparatorChar));
+				if (System.IO.File.Exists(full))
+				{
+					var fi = new FileInfo(full);
+					results.Add(new { path = rel.Replace('\\', '/'), name = Path.GetFileNameWithoutExtension(full), size = fi.Length, modified = fi.LastWriteTimeUtc });
+				}
+			}
+			addIfExists(_defaultMapPath);
+			addIfExists(_defaultSatelliteMapPath);
+			return Json(results.OrderByDescending(m => ((dynamic)m).modified));
         }
 
         /// <summary>
@@ -2423,15 +2424,15 @@ namespace TechWebSol.Controllers
         [HttpGet("/gameplay/mbtiles/tile/{z}/{x}/{y}.png")]
         [ResponseCache(Duration = 86400, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "file" })]
         [AllowAnonymous]
-        public async Task<IActionResult> GetMbTile(int z, int x, int y, [FromQuery] string file)
+		public async Task<IActionResult> GetMbTile(int z, int x, int y, [FromQuery] string file)
         {
-            if (string.IsNullOrEmpty(file))
-            {
-                return BadRequest("Missing 'file' query parameter");
-            }
+			// Enforce appsettings-only: allow only default street or satellite
+			var requested = file ?? string.Empty;
+			var allowed = new HashSet<string?>(StringComparer.OrdinalIgnoreCase) { _defaultMapPath, _defaultSatelliteMapPath };
+			var fileToServe = allowed.Contains(requested) ? requested : _defaultMapPath;
 
             var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-            var normalizedFilename = file.Replace('/', Path.DirectorySeparatorChar);
+			var normalizedFilename = (fileToServe ?? string.Empty).Replace('/', Path.DirectorySeparatorChar);
             var filePath = Path.Combine(wwwRoot, normalizedFilename);
 
             if (!System.IO.File.Exists(filePath))
@@ -2526,7 +2527,7 @@ namespace TechWebSol.Controllers
                         if (attempt == 1)
                         {
                             Interlocked.Increment(ref _failedTileRequests);
-                            _logger.LogError(ex, "Error reading tile z={Z}, x={X}, y={Y} from {File}", z, x, y, file);
+							_logger.LogError(ex, "Error reading tile z={Z}, x={X}, y={Y} from {File}", z, x, y, fileToServe);
                             return StatusCode(500, $"Error reading tile: {ex.Message}");
                         }
                         await Task.Delay(10);
@@ -2548,15 +2549,15 @@ namespace TechWebSol.Controllers
         [HttpGet("/gameplay/mbtiles/metadata")]
         [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "file" })]
         [AllowAnonymous]
-        public async Task<IActionResult> GetMbTilesMetadata([FromQuery] string file)
+		public async Task<IActionResult> GetMbTilesMetadata([FromQuery] string file)
         {
-            if (string.IsNullOrEmpty(file))
-            {
-                return BadRequest("Missing 'file' query parameter");
-            }
+			// Enforce appsettings-only: allow only default street or satellite
+			var requested = file ?? string.Empty;
+			var allowed = new HashSet<string?>(StringComparer.OrdinalIgnoreCase) { _defaultMapPath, _defaultSatelliteMapPath };
+			var fileToServe = allowed.Contains(requested) ? requested : _defaultMapPath;
 
             var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-            var normalizedFilename = file.Replace('/', Path.DirectorySeparatorChar);
+			var normalizedFilename = (fileToServe ?? string.Empty).Replace('/', Path.DirectorySeparatorChar);
             var filePath = Path.Combine(wwwRoot, normalizedFilename);
 
             if (!System.IO.File.Exists(filePath))
@@ -2596,7 +2597,7 @@ namespace TechWebSol.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error reading metadata from {File}", file);
+				_logger.LogError(ex, "Error reading metadata from {File}", fileToServe);
                 return StatusCode(500, $"Error reading metadata: {ex.Message}");
             }
         }
@@ -2644,43 +2645,30 @@ namespace TechWebSol.Controllers
         /// </summary>
         [HttpGet("/gameplay/terrain/list")]
         [AllowAnonymous]
-        public IActionResult ListTerrainDatabases()
+		public IActionResult ListTerrainDatabases()
         {
-            var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-            if (!Directory.Exists(wwwRoot))
-            {
-                return Json(new List<object>());
-            }
-
-            var terrainFiles = new List<object>();
-
-            // Look for terrain.db files in map folders
-            var mapFolders = Directory.GetDirectories(wwwRoot)
-                .Where(d => Directory.GetFiles(d, "terrain.db").Any())
-                .Select(d => new DirectoryInfo(d))
-                .OrderByDescending(di => di.CreationTimeUtc)
-                .ToList();
-
-            foreach (var folder in mapFolders)
-            {
-                var terrainFile = Path.Combine(folder.FullName, "terrain.db");
-                if (System.IO.File.Exists(terrainFile))
-                {
-                    var fileInfo = new FileInfo(terrainFile);
-                    terrainFiles.Add(new
-                    {
-                        name = "terrain.db",
-                        path = $"{folder.Name}/terrain.db",
-                        size = fileInfo.Length,
-                        created = fileInfo.CreationTimeUtc,
-                        modified = fileInfo.LastWriteTimeUtc,
-                        jobId = folder.Name.Split('-')[0],
-                        mapFolder = folder.Name
-                    });
-                }
-            }
-
-            return Json(terrainFiles);
+			// Return only appsettings-defined terrain database
+			var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+			var results = new List<object>();
+			if (!string.IsNullOrWhiteSpace(_defaultTerrainDbPath))
+			{
+				var full = Path.Combine(wwwRoot, _defaultTerrainDbPath.Replace('/', Path.DirectorySeparatorChar));
+				if (System.IO.File.Exists(full))
+				{
+					var fi = new FileInfo(full);
+					var folderName = new DirectoryInfo(Path.GetDirectoryName(full) ?? string.Empty).Name;
+					results.Add(new {
+						name = "terrain.db",
+						path = _defaultTerrainDbPath.Replace('\\', '/'),
+						size = fi.Length,
+						created = fi.CreationTimeUtc,
+						modified = fi.LastWriteTimeUtc,
+						jobId = folderName.Split('-')[0],
+						mapFolder = folderName
+					});
+				}
+			}
+			return Json(results);
         }
 
         #endregion

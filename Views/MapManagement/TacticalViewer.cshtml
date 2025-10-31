@@ -155,6 +155,7 @@
         <div>
             <select id="file-selector" style="max-width: 200px; width: auto;"><option value="">Select Map...</option></select>
             <span id="terrain-status" style="color:#ff6600;font-size:11px;white-space:nowrap;">No terrain</span>
+            <span id="source-indicator" style="color:#66c0ff;font-size:11px;white-space:nowrap;">Source: -</span>
             <a href="/" style="color:#00ff00;padding:6px 12px;white-space:nowrap;">Home</a>
         </div>
     </header>
@@ -275,16 +276,16 @@
         });
 
         // Load map with bounded logic
-        document.getElementById('file-selector').addEventListener('change', e => {
+        document.getElementById('file-selector').addEventListener('change', async e => {
             if (!e.target.value) return;
             
             // Load terrain database for this map
             loadTerrainDatabase(e.target.value);
             
-            fetch(`/mbtiles/metadata?file=${encodeURIComponent(e.target.value)}`)
-                .then(r => r.json())
-                .then(data => {
-                    const md = data?.metadata || {};
+            try {
+                const metaResp = await fetch(`/mbtiles/metadata?file=${encodeURIComponent(e.target.value)}`);
+                const data = await metaResp.json();
+                const md = data?.metadata || {};
                     
                     // Destroy existing map if present
                     if (map) {
@@ -351,12 +352,43 @@
                     // Create tile layer with strict zoom constraints
                     // Use TileServerConfig to get the correct tile URL based on mode (external/local)
                     let tileUrl;
+                    const sourceEl = document.getElementById('source-indicator');
                     if (window.TileServerConfig && window.TileServerConfig.mode === 'external') {
-                        tileUrl = window.TileServerConfig.getTileUrl(e.target.value);
-                        console.log('🗺️ TacticalViewer using EXTERNAL tile server:', tileUrl);
+                        const info = window.TileServerConfig.getInfo();
+                        const baseUrl = info?.config?.baseUrl || 'http://localhost:8080';
+                        // Try to resolve correct mapId for TileServer-GL using common patterns
+                        const parts = (e.target.value || '').split('/');
+                        const fileName = (parts.pop() || '').replace('.mbtiles', '');
+                        const folderName = parts.pop() || '';
+                        const candidates = [fileName];
+                        if (folderName && fileName) {
+                            candidates.push(`${folderName}-${fileName}`);
+                            candidates.push(`${folderName}_${fileName}`);
+                        }
+                        let externalResolved = null;
+                        for (const id of candidates) {
+                            try {
+                                const metaCheck = await fetch(`${baseUrl}/data/${id}.json`, { method: 'GET', mode: 'cors' });
+                                if (metaCheck.ok) { externalResolved = id; break; }
+                            } catch {}
+                        }
+                        if (externalResolved) {
+                            tileUrl = `${baseUrl}/data/${externalResolved}/{z}/{x}/{y}.png`;
+                            sourceEl.textContent = `Source: External (${baseUrl})`;
+                            sourceEl.style.color = '#66c0ff';
+                            console.log('🗺️ TacticalViewer using EXTERNAL tile server (id):', externalResolved, tileUrl);
+                        } else {
+                            // Could not resolve external map id -> use local
+                            tileUrl = `/mbtiles/tile/{z}/{x}/{y}.png?file=${encodeURIComponent(e.target.value)}`;
+                            sourceEl.textContent = 'Source: Local (C#)';
+                            sourceEl.style.color = '#00ff00';
+                            console.warn('⚠️ External metadata not found, using LOCAL C# tile server');
+                        }
                     } else {
                         // Fallback to local C# server
                         tileUrl = `/mbtiles/tile/{z}/{x}/{y}.png?file=${encodeURIComponent(e.target.value)}`;
+                        sourceEl.textContent = 'Source: Local (C#)';
+                        sourceEl.style.color = '#00ff00';
                         console.log('🗺️ TacticalViewer using LOCAL C# tile server:', tileUrl);
                     }
                     
@@ -380,6 +412,11 @@
                         if (window.TileServerConfig && window.TileServerConfig.mode === 'external') {
                             console.warn('⚠️ External tile server failed, falling back to local C# server');
                             window.TileServerConfig.useLocalServer();
+                            // Update source indicator immediately
+                            try {
+                                const srcEl = document.getElementById('source-indicator');
+                                if (srcEl) { srcEl.textContent = 'Source: Local (C#)'; srcEl.style.color = '#00ff00'; }
+                            } catch {}
                             
                             // Reload the map with local server
                             setTimeout(() => {
@@ -507,7 +544,9 @@
                             }
                         }
                     });
-                });
+            } catch (err) {
+                console.error('Failed loading metadata or tiles:', err);
+            }
         });
 
         // Toggle waypoint mode

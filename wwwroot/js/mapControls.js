@@ -484,6 +484,23 @@ function toggleEditMode() {
  */
 function changeBasemap(basemapType) {
     if (window.gameMap) {
+        // Resolve offline path from appsettings defaults
+        let targetPath = '';
+        if (window.defaultMapSettings) {
+            if (basemapType === 'satellite') {
+                targetPath = window.defaultMapSettings.satellite || '';
+            } else {
+                targetPath = window.defaultMapSettings.street || '';
+            }
+        }
+
+        // Persist current map path so TileServerConfig builds correct URL
+        const currentMapPathEl = document.getElementById('currentMapPath');
+        if (currentMapPathEl && targetPath) {
+            currentMapPathEl.value = targetPath;
+            window.currentMapPath = targetPath;
+        }
+
         // Remove current basemap
         window.gameMap.eachLayer(function(layer) {
             if (layer instanceof L.TileLayer) {
@@ -530,33 +547,17 @@ function changeBasemap(basemapType) {
         
         const zoomLimits = getZoomLimits(basemapType);
         
-        // Use TileServerConfig to get the appropriate tile URL
-        if (typeof TileServerConfig !== 'undefined' && TileServerConfig.getTileUrl && basemapType === 'Offline') {
-            // Only use TileServerConfig for offline maps
-            const tileConfig = TileServerConfig.getTileUrl(window.currentMapPath || 'map');
-            const attribution = getAttributionForBasemap(basemapType);
-            
-            newLayer = L.tileLayer(tileConfig, {
-                ...baseConfig,
-                ...zoomLimits,
-                attribution: attribution
-            });
-            
-            console.log(`🗺️ Using TileServerConfig for offline map:`, tileConfig);
-        } else {
-            // Offline fallback: build from current map path
-            const currentMapPathEl = document.getElementById('currentMapPath');
-            const currentMapPath = currentMapPathEl ? currentMapPathEl.value : '';
-            let urlTemplate = window.TileServerConfig
-                ? window.TileServerConfig.getTileUrl(currentMapPath)
-                : `/gameplay/mbtiles/tile/{z}/{x}/{y}.png?file=${encodeURIComponent(currentMapPath)}`;
-            newLayer = L.tileLayer(urlTemplate, {
-                ...baseConfig,
-                ...zoomLimits,
-                attribution: getAttributionForBasemap(basemapType)
-            });
-            console.log(`🗺️ Using OFFLINE tile URL for ${basemapType}`);
-        }
+        // Always use local TileServerConfig (no external)
+        const currentMapPath = document.getElementById('currentMapPath') ? document.getElementById('currentMapPath').value : '';
+        const urlTemplate = window.TileServerConfig
+            ? window.TileServerConfig.getTileUrl(currentMapPath)
+            : `/gameplay/mbtiles/tile/{z}/{x}/{y}.png?file=${encodeURIComponent(currentMapPath)}`;
+        newLayer = L.tileLayer(urlTemplate, {
+            ...baseConfig,
+            ...zoomLimits,
+            attribution: getAttributionForBasemap(basemapType)
+        });
+        console.log(`🗺️ Basemap switched to ${basemapType} using ${currentMapPath}`);
         
         newLayer.addTo(window.gameMap);
         // Ensure base layer is at the back and map layout is updated
