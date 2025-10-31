@@ -490,7 +490,8 @@ namespace TechWebSol.Controllers
                 // Also persist DefaultMapPath to appsettings.json for offline consumers
                 if (!string.IsNullOrWhiteSpace(request.Key) &&
                     (request.Key.Equals("DefaultMapPath", StringComparison.OrdinalIgnoreCase) ||
-                     request.Key.Equals("DefaultSatelliteMapPath", StringComparison.OrdinalIgnoreCase)))
+                     request.Key.Equals("DefaultSatelliteMapPath", StringComparison.OrdinalIgnoreCase) ||
+                     request.Key.Equals("DefaultTerrainDbPath", StringComparison.OrdinalIgnoreCase)))
                 {
                     try
                     {

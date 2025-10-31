@@ -176,7 +176,7 @@
 
             const streetView = f.street_path ? `<a class="btn btn-secondary" href="/MapManagement/TacticalViewer?file=${encodeURIComponent(f.street_path)}" target="_blank">View Street</a>` : '';
             const satelliteView = f.satellite_path ? `<a class="btn btn-secondary" href="/MapManagement/TacticalViewer?file=${encodeURIComponent(f.satellite_path)}" target="_blank">View Satellite</a>` : '';
-            const setDefaultBtn = `<button class="btn btn-primary" data-default-street="${f.street_path ? encodeURIComponent(f.street_path) : ''}" data-default-sat="${f.satellite_path ? encodeURIComponent(f.satellite_path) : ''}">Set Default</button>`;
+            const setDefaultBtn = `<button class="btn btn-primary" data-default-street="${f.street_path ? encodeURIComponent(f.street_path) : ''}" data-default-sat="${f.satellite_path ? encodeURIComponent(f.satellite_path) : ''}" data-terrain="${f.has_terrain ? encodeURIComponent('maps/' + folder + '/terrain.db') : ''}">Set Default</button>`;
 
             tr.innerHTML = `
                 <td>${folder}</td>
@@ -196,9 +196,28 @@
             btn.addEventListener('click', async (e) => {
                 const street = e.currentTarget.getAttribute('data-default-street');
                 const sat = e.currentTarget.getAttribute('data-default-sat');
+                const terrain = e.currentTarget.getAttribute('data-terrain');
                 const streetPath = street ? decodeURIComponent(street) : null;
                 const satPath = sat ? decodeURIComponent(sat) : null;
                 await setDefaultMap(streetPath, satPath);
+                // Persist terrain default if available
+                if (terrain) {
+                    const terrainPath = decodeURIComponent(terrain);
+                    const payloadTerrain = {
+                        ConfigurationType: 'Map',
+                        Key: 'DefaultTerrainDbPath',
+                        Value: terrainPath,
+                        Properties: null,
+                        Description: 'Default offline terrain database path'
+                    };
+                    try {
+                        await fetch('/Map/SaveConfiguration', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payloadTerrain)
+                        });
+                    } catch {}
+                }
             });
         });
     }
