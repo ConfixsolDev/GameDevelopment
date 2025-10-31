@@ -39,8 +39,8 @@
         </div>
 
         <!-- BOTTOM-LEFT: Coordinates -->
-        <a href="/Home/Index" title="Home" style="position: fixed; left: 10px; bottom: 160px; z-index: 9999; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: rgba(0, 0, 0, 0.6); color: #00ff88; border: 1px solid rgba(0,255,136,0.5); box-shadow: 0 0 10px rgba(0,255,136,0.3); text-decoration: none;">
-            <i class="fas fa-home"></i>
+        <a href="/Home/Index" title="Home" style="position: fixed; left: 20px; bottom: 140px; z-index: 9999; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(45, 55, 72, 0.8); color: #00bcd4; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 6px 16px rgba(0,0,0,0.35); text-decoration: none;">
+            <i class="fas fa-home" style="font-size: 18px;"></i>
         </a>
         <div class="coordinates-display slide-up" id="coordsBox">
             <div class="coord-item"><span class="coord-label">Lat:</span><span class="coord-value" id="latVal">—</span></div>
@@ -179,6 +179,18 @@
 
 <!-- Defense Planning Functions -->
 <script>
+// Lighten coordinates box background to softer grey
+try {
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .coordinates-display {
+            background: rgba(45, 55, 72, 0.85) !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.35) !important;
+        }
+    `;
+    document.head.appendChild(style);
+} catch (e) { console.warn('coords style init failed', e); }
 // Set force type directly from server-side session
 window.currentTeamInfo = {
     forceType: '@(currentUser?.ForceType ?? "Neutral")'

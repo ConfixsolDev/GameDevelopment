@@ -365,6 +365,43 @@
     .map-overlay-controls .section-subtitle {
         font-size: 18px;
         line-height: 1.4;
+        color: #00bcd4; /* cyan accent to match home icon */
+        text-shadow: none;
+    }
+
+    /* Soften dark backgrounds: use modern grey with subtle borders */
+    .overlay-control-group {
+        background: rgba(45, 55, 72, 0.78); /* soft charcoal grey */
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        padding: 10px 14px;
+        margin-bottom: 12px;
+        color: #eaf4f7; /* readable on dark */
+        box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+
+    .collapsible-header {
+        background: rgba(45, 55, 72, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
+        padding: 12px 14px;
+        color: #00bcd4;
+    }
+
+    .collapsible-header .chevron-icon { color: #00bcd4; }
+
+    /* Buttons inside panels: soften background and use cyan focus */
+    .overlay-btn {
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.18);
+        color: #eaf4f7;
+    }
+
+    .overlay-btn:hover,
+    .overlay-btn:focus {
+        background: rgba(0, 188, 212, 0.15);
+        border-color: rgba(0, 188, 212, 0.35);
+        color: #ffffff;
     }
 
     .map-overlay-controls .overlay-btn span {
