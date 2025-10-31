@@ -487,11 +487,13 @@ namespace TechWebSol.Controllers
 
                 await _context.SaveChangesAsync();
 
-                // Also persist DefaultMapPath to appsettings.json for offline consumers
+                // Also persist map defaults to appsettings.json for offline consumers
                 if (!string.IsNullOrWhiteSpace(request.Key) &&
                     (request.Key.Equals("DefaultMapPath", StringComparison.OrdinalIgnoreCase) ||
                      request.Key.Equals("DefaultSatelliteMapPath", StringComparison.OrdinalIgnoreCase) ||
-                     request.Key.Equals("DefaultTerrainDbPath", StringComparison.OrdinalIgnoreCase)))
+                     request.Key.Equals("DefaultTerrainDbPath", StringComparison.OrdinalIgnoreCase) ||
+                     request.Key.Equals("TileServerMapIdStreet", StringComparison.OrdinalIgnoreCase) ||
+                     request.Key.Equals("TileServerMapIdSatellite", StringComparison.OrdinalIgnoreCase)))
                 {
                     try
                     {

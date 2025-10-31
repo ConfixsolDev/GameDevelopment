@@ -702,8 +702,30 @@
     }
 
     function changeBasemap(style) {
-        if (window.regionSettingsManager) {
-            window.regionSettingsManager.updateBasemapStyle(style);
+        try {
+            if (window.regionSettingsManager) {
+                window.regionSettingsManager.updateBasemapStyle(style);
+            }
+            // Determine target map path from defaults; fallback to sibling file in same folder
+            const defaults = window.defaultMapSettings || {};
+            let targetPath = (style === 'satellite') ? (defaults.satellite || '') : (defaults.street || '');
+            if (!targetPath) {
+                const current = document.getElementById('currentMapPath') ? document.getElementById('currentMapPath').value : '';
+                if (current) {
+                    const parts = current.split('/');
+                    if (parts.length > 0) {
+                        parts[parts.length - 1] = (style === 'satellite') ? 'satellite.mbtiles' : 'street.mbtiles';
+                        targetPath = parts.join('/');
+                    }
+                }
+            }
+            if (targetPath && typeof window.switchGamePlayMap === 'function') {
+                window.switchGamePlayMap(targetPath);
+            } else {
+                console.warn('Basemap change skipped - targetPath not resolved or switchGamePlayMap not available');
+            }
+        } catch (e) {
+            console.warn('Basemap change failed:', e);
         }
     }
 

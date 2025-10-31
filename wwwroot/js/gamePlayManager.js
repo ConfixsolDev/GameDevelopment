@@ -1001,8 +1001,7 @@ class GamePlayManager {
     }
 
     /**
-     * Load available MBTiles maps into selector (optimized - no auto-load)
-     * Routes served by GamePlayController
+     * Initialize map from appsettings defaults (no listing needed)
      */
     async loadMapSelector() {
         // Prevent multiple simultaneous loads
@@ -1033,49 +1032,36 @@ class GamePlayManager {
                 return;
             }
             
-            console.log('📍 Map selector element found, fetching maps...');
-            
-            // GET /gameplay/mbtiles/list - served by GamePlayController
-            const response = await fetch('/gameplay/mbtiles/list');
+            console.log('📍 Fetching default map paths...');
+            const response = await fetch('/gameplay/mbtiles/defaults');
             if (response.ok) {
-                const maps = await response.json();
-                console.log(`📍 Received ${maps.length} maps from server:`, maps);
-                
-                if (maps.length > 0) {
-                    selector.innerHTML = '<option value="">⚡ Select a map to start...</option>';
-                    
-                    maps.forEach(map => {
-                        const option = document.createElement('option');
-                        option.value = map.path;
-                        option.textContent = `${map.name} (${(map.size / 1024 / 1024).toFixed(1)} MB)`;
-                        selector.appendChild(option);
-                    });
-                    
-                    // Add event listener for map selection (only once)
-                    selector.addEventListener('change', async (e) => {
-                        if (e.target.value) {
-                            await window.switchGamePlayMap(e.target.value);
-                        }
-                    }, { once: false });
-                    
-                    console.log(`✅ Loaded ${maps.length} maps into selector`);
-                    
-                    // AUTO-LOAD DEFAULT MAP: Load the first (most recent) map automatically
-                    if (maps.length > 0) {
-                        const defaultMap = maps[0].path;
-                        console.log(`🗺️ Auto-loading default map: ${defaultMap}`);
-                        console.log('🔍 About to call switchGamePlayMap for auto-load...');
-                        selector.value = defaultMap;
-                        await window.switchGamePlayMap(defaultMap);
-                        console.log('🔍 switchGamePlayMap auto-load completed');
-                    }
+                const defaults = await response.json();
+                window.defaultMapSettings = { street: defaults.street, satellite: defaults.satellite, streetId: defaults.streetId, satelliteId: defaults.satelliteId };
+                const defaultMap = defaults.street || defaults.satellite;
+                if (!defaultMap) {
+                    selector.innerHTML = '<option value="">No default map configured</option>';
+                    console.warn('⚠️ No default map configured in appsettings');
                 } else {
-                    selector.innerHTML = '<option value="">No offline maps available</option>';
-                    console.warn('⚠️ No maps available from server');
+                    selector.innerHTML = '';
+                    // Populate selector minimally for debug; select default
+                    if (defaults.street) {
+                        const opt = document.createElement('option');
+                        opt.value = defaults.street; opt.textContent = 'Default Street'; selector.appendChild(opt);
+                    }
+                    if (defaults.satellite) {
+                        const opt2 = document.createElement('option');
+                        opt2.value = defaults.satellite; opt2.textContent = 'Default Satellite'; selector.appendChild(opt2);
+                    }
+                    selector.value = defaultMap;
+                    await window.switchGamePlayMap(defaultMap);
+                    // Allow switching between the two defaults only
+                    selector.addEventListener('change', async (e) => {
+                        if (e.target.value) await window.switchGamePlayMap(e.target.value);
+                    });
                 }
             } else {
-                console.error('❌ Failed to fetch maps list, status:', response.status);
-                selector.innerHTML = '<option value="">Error loading maps</option>';
+                console.error('❌ Failed to fetch defaults, status:', response.status);
+                selector.innerHTML = '<option value="">Error loading defaults</option>';
             }
         } catch (error) {
             console.error('❌ Error loading map selector:', error);
@@ -1095,8 +1081,9 @@ class GamePlayManager {
      */
     async loadTerrainDatabase(mapPath) {
         try {
-            // Extract folder name from path
-            const folderName = mapPath.split('/')[0];
+            // Extract folder name from path (e.g., maps/first-test/street.mbtiles -> first-test)
+            const parts = (mapPath || '').split('/').filter(Boolean);
+            const folderName = parts.length >= 2 ? parts[parts.length - 2] : (parts[0] || '');
             console.log(`🗺️ Loading terrain database for folder: ${folderName}`);
             
             // GET /gameplay/terrain/list - served by GamePlayController
@@ -1669,15 +1656,59 @@ window.switchGamePlayMap = async function(mapPath) {
             console.warn('⚠️ currentMapPath hidden field not found');
         }
         
-        // Create new tile layer with BALANCED settings (performance + reliability)
-        // Use TileServerConfig to get the correct tile URL based on mode
-        const tileUrl = window.TileServerConfig ? 
-            window.TileServerConfig.getTileUrl(mapPath) : 
-            `/mbtiles/tile/{z}/{x}/{y}.png?file=${encodeURIComponent(mapPath)}`;
-        
+        // Create new tile layer with external->local fallback like TacticalViewer
+        function setSourceIndicator(text, color) {
+            try {
+                const el = document.getElementById('gp-source-indicator');
+                if (el) { el.textContent = `Source: ${text}`; if (color) el.style.color = color; }
+            } catch {}
+        }
+
+        async function resolveTileUrlWithFallback(mp) {
+            try {
+                // Try external regardless of current mode; if it works, switch to external
+                const baseUrl = (window.TileServerConfig?.external?.baseUrl) || 'http://localhost:8080';
+                if (!(location.protocol === 'https:' && /^http:\/\//i.test(baseUrl))) {
+                    const pickId = async () => {
+                        // Prefer explicit IDs
+                        if (window.defaultMapSettings) {
+                            const { street, satellite, streetId, satelliteId } = window.defaultMapSettings;
+                            if (mp && street && mp === street && streetId) return streetId;
+                            if (mp && satellite && mp === satellite && satelliteId) return satelliteId;
+                        }
+                        // Derive candidates
+                        const parts = (mp || '').split('/');
+                        const fileName = (parts.pop() || '').replace('.mbtiles', '');
+                        const folderName = parts.pop() || '';
+                        const candidates = [fileName];
+                        if (folderName && fileName) candidates.push(`${folderName}-${fileName}`, `${folderName}_${fileName}`);
+                        for (const id of candidates) {
+                            try {
+                                const resp = await fetch(`${baseUrl}/data/${id}.json`, { method: 'GET', mode: 'cors' });
+                                if (resp.ok) return id;
+                            } catch {}
+                        }
+                        return null;
+                    };
+                    const resolvedId = await pickId();
+                    if (resolvedId) {
+                        try { window.TileServerConfig?.useExternalServer(baseUrl); } catch {}
+                        setSourceIndicator(`External (${baseUrl})`, '#66c0ff');
+                        return `${baseUrl}/data/${resolvedId}/{z}/{x}/{y}.png`;
+                    }
+                } else {
+                    console.warn('Mixed content: HTTPS page with HTTP TileServer-GL; using local.');
+                }
+            } catch {}
+            // Fallback to local C# server
+            setSourceIndicator('Local (C#)', '#00ff00');
+            return `/gameplay/mbtiles/tile/{z}/{x}/{y}.png?file=${encodeURIComponent(mp)}`;
+        }
+
+        const tileUrl = await resolveTileUrlWithFallback(mapPath);
         console.log('🗺️ Using tile URL:', tileUrl);
-        
-        const newTileLayer = L.tileLayer(tileUrl, {
+
+        let newTileLayer = L.tileLayer(tileUrl, {
             minZoom: minZoom,
             maxZoom: 18,             // Force maxZoom to 18
             maxNativeZoom: parseInt(metadata.maxzoom || 14),  // Use actual tile max zoom, allow overzoom beyond this
@@ -1689,12 +1720,42 @@ window.switchGamePlayMap = async function(mapPath) {
             updateWhenZooming: false, // Don't update during zoom - better performance
             tileSize: 256,
             attribution: metadata.name || 'MBTiles Offline Map',
-            crossOrigin: true,       // Enable CORS for better caching
+            // Do NOT force crossOrigin; external tile servers may not send CORS headers
             // Performance optimizations
             updateInterval: 200,     // Slower updates for better performance
             errorTileUrl: '',        // Don't show error tiles
             zoomOffset: 0,
             zoomReverse: false
+        });
+
+        // Auto-fallback if external tiles fail at runtime
+        newTileLayer.on('tileerror', async function() {
+            if (window.TileServerConfig && window.TileServerConfig.mode === 'external') {
+                try { window.TileServerConfig.useLocalServer(); } catch {}
+                const localUrl = `/gameplay/mbtiles/tile/{z}/{x}/{y}.png?file=${encodeURIComponent(mapPath)}`;
+                console.warn('⚠️ External tile error, switching to LOCAL:', localUrl);
+                window.gameMap.removeLayer(newTileLayer);
+                newTileLayer = L.tileLayer(localUrl, {
+                    minZoom: minZoom,
+                    maxZoom: 18,
+                    maxNativeZoom: parseInt(metadata.maxzoom || 14),
+                    minNativeZoom: Math.min(minZoom, 15),
+                    bounds: boundsObj,
+                    noWrap: true,
+                    keepBuffer: 2,
+                    updateWhenIdle: true,
+                    updateWhenZooming: false,
+                    tileSize: 256,
+                    attribution: metadata.name || 'MBTiles Offline Map',
+                    // No crossOrigin for local tile server
+                    updateInterval: 200,
+                    errorTileUrl: '',
+                    zoomOffset: 0,
+                    zoomReverse: false
+                }).addTo(window.gameMap);
+                window.gamePlayManager.currentTileLayer = newTileLayer;
+                setSourceIndicator('Local (C#)', '#00ff00');
+            }
         });
         
         // Set view BEFORE adding tile layer to prevent visual jump

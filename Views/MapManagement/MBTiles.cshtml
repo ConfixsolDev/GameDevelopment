@@ -150,6 +150,42 @@
                 alert('Failed to set default satellite map');
             }
         }
+        // Persist TileServer-GL dataset IDs derived from filenames (without extension)
+        try {
+            const getId = (p) => {
+                if (!p) return null;
+                const f = p.split('/').pop() || '';
+                return f.toLowerCase().endsWith('.mbtiles') ? f.slice(0, -8) : f;
+            };
+            const streetId = getId(pathStreet);
+            const satId = getId(pathSat);
+            if (streetId) {
+                await fetch('/Map/SaveConfiguration', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ConfigurationType: 'Map',
+                        Key: 'TileServerMapIdStreet',
+                        Value: streetId,
+                        Properties: null,
+                        Description: 'TileServer-GL dataset ID for default street map'
+                    })
+                });
+            }
+            if (satId) {
+                await fetch('/Map/SaveConfiguration', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ConfigurationType: 'Map',
+                        Key: 'TileServerMapIdSatellite',
+                        Value: satId,
+                        Properties: null,
+                        Description: 'TileServer-GL dataset ID for default satellite map'
+                    })
+                });
+            }
+        } catch {}
         currentDefault = pathStreet ?? '';
         currentDefaultSat = pathSat ?? '';
         renderTable(lastFiles);

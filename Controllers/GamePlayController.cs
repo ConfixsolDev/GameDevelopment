@@ -39,6 +39,8 @@ namespace TechWebSol.Controllers
 		private readonly string? _defaultMapPath;
 		private readonly string? _defaultSatelliteMapPath;
 		private readonly string? _defaultTerrainDbPath;
+		private readonly string? _tileServerStreetId;
+		private readonly string? _tileServerSatelliteId;
         private readonly ApplicationUserVM user;
 
 
@@ -64,6 +66,8 @@ namespace TechWebSol.Controllers
 			_defaultMapPath = mapSettings["DefaultMapPath"];
 			_defaultSatelliteMapPath = mapSettings["DefaultSatelliteMapPath"];
 			_defaultTerrainDbPath = mapSettings["DefaultTerrainDbPath"];
+			_tileServerStreetId = mapSettings["TileServerMapIdStreet"];
+			_tileServerSatelliteId = mapSettings["TileServerMapIdSatellite"];
         }
 
         public IActionResult Index()
@@ -2394,6 +2398,40 @@ namespace TechWebSol.Controllers
         #region MBTiles Tile Serving - GamePlay Specific Routes
 
         /// <summary>
+        /// Get default map paths from appsettings (street, satellite, terrain)
+        /// </summary>
+        [HttpGet("/gameplay/mbtiles/defaults")]
+        [AllowAnonymous]
+        public IActionResult GetDefaultMapPaths()
+        {
+			// Resolve latest values from DB if available, fallback to appsettings captured in ctor
+			string? GetDbConfig(string key)
+			{
+				try
+				{
+					var cfg = _context.MapConfigurations.FirstOrDefault(c => c.Key == key && c.IsActive);
+					return cfg?.Value;
+				}
+				catch { return null; }
+			}
+
+			var streetPath = GetDbConfig("DefaultMapPath") ?? _defaultMapPath;
+			var satellitePath = GetDbConfig("DefaultSatelliteMapPath") ?? _defaultSatelliteMapPath;
+			var terrainPath = GetDbConfig("DefaultTerrainDbPath") ?? _defaultTerrainDbPath;
+			var streetId = GetDbConfig("TileServerMapIdStreet") ?? _tileServerStreetId;
+			var satelliteId = GetDbConfig("TileServerMapIdSatellite") ?? _tileServerSatelliteId;
+
+			return Json(new
+			{
+				street = streetPath?.Replace('\\','/'),
+				satellite = satellitePath?.Replace('\\','/'),
+				terrain = terrainPath?.Replace('\\','/'),
+				streetId = streetId,
+				satelliteId = satelliteId
+			});
+        }
+
+        /// <summary>
         /// Get list of available MBTiles maps
         /// </summary>
         [HttpGet("/gameplay/mbtiles/list")]
@@ -2403,14 +2441,15 @@ namespace TechWebSol.Controllers
 			// Return only appsettings-defined maps
 			var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
 			var results = new List<object>();
-			void addIfExists(string? rel)
+            void addIfExists(string? rel)
 			{
 				if (string.IsNullOrWhiteSpace(rel)) return;
 				var full = Path.Combine(wwwRoot, rel.Replace('/', Path.DirectorySeparatorChar));
 				if (System.IO.File.Exists(full))
 				{
 					var fi = new FileInfo(full);
-					results.Add(new { path = rel.Replace('\\', '/'), name = Path.GetFileNameWithoutExtension(full), size = fi.Length, modified = fi.LastWriteTimeUtc });
+                    var pathNorm = rel.Replace('\\', '/');
+                    results.Add(new { path = pathNorm, name = Path.GetFileNameWithoutExtension(full), size = fi.Length, modified = fi.LastWriteTimeUtc, isDefault = string.Equals(pathNorm, _defaultMapPath?.Replace('\\','/'), StringComparison.OrdinalIgnoreCase) });
 				}
 			}
 			addIfExists(_defaultMapPath);
