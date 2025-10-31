@@ -2,7 +2,7 @@
 
 # Find MBTiles files - search in wwwroot/maps for all .mbtiles files
 $projectRoot = "E:\Strategy Game\GameDevelopment"
-$mapsPath = "$projectRoot\wwwroot\maps"
+$mapsPath = "$projectRoot\wwwroot\maps\first-test"
 $port = 8080
 
 Write-Host "========================================" -ForegroundColor Cyan

@@ -9,9 +9,7 @@
 
 
 <div class="gameplay-container">
-    <div id="gp-source-indicator" style="position: fixed; top: 66px; right: 12px; z-index: 10000; background: rgba(0,0,0,0.75); color: #66c0ff; border: 1px solid #2b2b2b; padding: 6px 10px; border-radius: 6px; font-family: Consolas, monospace; font-size: 12px;">
-        Source: -
-    </div>
+    
     <!-- Hidden field to store current map path for terrain database loading -->
     <input type="hidden" id="currentMapPath" value="" />
     
@@ -49,6 +47,7 @@
             <div class="coord-item"><span class="coord-label">Lat:</span><span class="coord-value" id="latVal">—</span></div>
             <div class="coord-item"><span class="coord-label">Lng:</span><span class="coord-value" id="lngVal">—</span></div>
             <div class="coord-item"><span class="coord-label">Zoom:</span><span class="coord-value" id="zoomVal">—</span></div>
+            <div class="coord-item"><span class="coord-label">Source:</span><span class="coord-value" id="gp-source-indicator">-</span></div>
         </div>
 
         <!-- BOTTOM-RIGHT: Quick Actions -->

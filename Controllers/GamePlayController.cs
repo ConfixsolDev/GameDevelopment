@@ -2401,7 +2401,8 @@ namespace TechWebSol.Controllers
         /// <summary>
         /// Get default map paths from appsettings (street, satellite, terrain)
         /// </summary>
-        [HttpGet("/gameplay/mbtiles/defaults")]
+		[HttpGet("/gameplay/mbtiles/defaults")]
+		[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         [AllowAnonymous]
         public IActionResult GetDefaultMapPaths()
         {

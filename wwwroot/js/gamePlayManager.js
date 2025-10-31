@@ -403,6 +403,31 @@ class GamePlayManager {
             window.gamePlayManager = this;
             
             console.log('✅ Map initialized with dynamic bounds support and layer groups');
+
+            // Always-on grid overlay (darker) without needing the button
+            try {
+                if (typeof FalconViewGridManager !== 'undefined') {
+                    if (!window.falconViewGridManager) {
+                        window.falconViewGridManager = new FalconViewGridManager(this.map);
+                    } else {
+                        window.falconViewGridManager.map = this.map;
+                    }
+                    // Use earlier cyan color with thicker lines
+                    window.falconViewGridManager.setGridColor('#00bcd4');
+                    window.falconViewGridManager.setGridOpacity(0.45);
+                    if (typeof window.falconViewGridManager.setGridWeight === 'function') {
+                        window.falconViewGridManager.setGridWeight(2);
+                    }
+                    if (!window.falconViewGridManager.isEnabled()) {
+                        window.falconViewGridManager.enable();
+                    } else {
+                        window.falconViewGridManager.updateGrid();
+                    }
+                    // Hide the grid toggle button if present
+                    const btn = document.getElementById('btnGridToggle');
+                    if (btn) btn.style.display = 'none';
+                }
+            } catch (e) { console.warn('Grid init failed', e); }
         } else {
             console.warn('⚠️ Leaflet not loaded, map initialization skipped');
         }
@@ -1033,7 +1058,7 @@ class GamePlayManager {
             }
             
             console.log('📍 Fetching default map paths...');
-            const response = await fetch('/gameplay/mbtiles/defaults');
+            const response = await fetch('/gameplay/mbtiles/defaults?ts=' + Date.now(), { cache: 'no-store' });
             if (response.ok) {
                 const defaults = await response.json();
                 window.defaultMapSettings = { street: defaults.street, satellite: defaults.satellite, streetId: defaults.streetId, satelliteId: defaults.satelliteId };
@@ -1659,7 +1684,16 @@ window.switchGamePlayMap = async function(mapPath) {
         function setSourceIndicator(text, color) {
             try {
                 const el = document.getElementById('gp-source-indicator');
-                if (el) { el.textContent = `Source: ${text}`; if (color) el.style.color = color; }
+                if (el) {
+                    // Show concise label only: 'External' or 'Local'
+                    let short = text;
+                    if (typeof text === 'string') {
+                        if (text.toLowerCase().startsWith('external')) short = 'External';
+                        else if (text.toLowerCase().startsWith('local')) short = 'Local';
+                    }
+                    el.textContent = short;
+                    if (color) el.style.color = color;
+                }
             } catch {}
         }
 

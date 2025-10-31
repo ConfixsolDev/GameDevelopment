@@ -732,12 +732,20 @@
         }
     }
 
-    function changeBasemap(style) {
+    async function changeBasemap(style) {
         try {
             if (window.regionSettingsManager) {
                 window.regionSettingsManager.updateBasemapStyle(style);
             }
-            // Determine target map path from defaults; fallback to sibling file in same folder
+            // Refresh defaults from server to avoid stale cache
+            try {
+                const res = await fetch('/gameplay/mbtiles/defaults?ts=' + Date.now(), { cache: 'no-store' });
+                if (res.ok) {
+                    window.defaultMapSettings = await res.json();
+                }
+            } catch {}
+
+            // Determine target map path from refreshed defaults; fallback to sibling file in same folder
             const defaults = window.defaultMapSettings || {};
             let targetPath = (style === 'satellite') ? (defaults.satellite || '') : (defaults.street || '');
             if (!targetPath) {

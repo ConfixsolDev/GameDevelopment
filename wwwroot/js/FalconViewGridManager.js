@@ -14,6 +14,7 @@ class FalconViewGridManager {
         this.gridSize = 1000; // Default grid size in meters (cell size)
         this.gridColor = '#00bcd4'; // Primary cyan
         this.gridOpacity = 0.4;
+        this.gridWeight = 1;
         this.labelColor = '#00bcd4';
         this.labelOpacity = 0.8;
         // We now render in projected meters (EPSG:3857) so spacing is fixed in meters
@@ -148,28 +149,22 @@ class FalconViewGridManager {
         const sw = crs.project(bounds.getSouthWest());
         const ne = crs.project(bounds.getNorthEast());
 
-        // Align start positions to the grid spacing in meters
-        const startX = Math.floor(sw.x / this.gridSpacingMeters) * this.gridSpacingMeters;
-        const endX = Math.ceil(ne.x / this.gridSpacingMeters) * this.gridSpacingMeters;
-        const startY = Math.floor(sw.y / this.gridSpacingMeters) * this.gridSpacingMeters;
-        const endY = Math.ceil(ne.y / this.gridSpacingMeters) * this.gridSpacingMeters;
+        // Compute consistent grid spacing so it covers the entire visible map uniformly
+        // Approx meters per pixel at current latitude/zoom in EPSG:3857
+        const center = this.map.getCenter();
+        const zoom = this.map.getZoom();
+        const metersPerPixel = 156543.03392 * Math.cos(center.lat * Math.PI / 180) / Math.pow(2, zoom);
+        const desiredPx = 64; // target cell size in pixels
+        let stepMeters = Math.max(50, Math.round((desiredPx * metersPerPixel) / 10) * 10);
 
-        // Safety: cap number of lines for performance and maintain visibility at any zoom
+        // Align start positions to the chosen stepMeters
+        const startX = Math.floor(sw.x / stepMeters) * stepMeters;
+        const endX = Math.ceil(ne.x / stepMeters) * stepMeters;
+        const startY = Math.floor(sw.y / stepMeters) * stepMeters;
+        const endY = Math.ceil(ne.y / stepMeters) * stepMeters;
+
         const spanX = endX - startX;
         const spanY = endY - startY;
-        const maxLines = 120; // total lines target per axis (keeps perf OK)
-        let stepMeters = this.gridSpacingMeters;
-
-        // If too many lines would be drawn, increase step to fit within maxLines
-        const neededX = Math.ceil(spanX / stepMeters) + 1;
-        const neededY = Math.ceil(spanY / stepMeters) + 1;
-        if (neededX > maxLines || neededY > maxLines) {
-            const maxSpan = Math.max(spanX, spanY);
-            stepMeters = Math.ceil(maxSpan / maxLines);
-            // Round stepMeters to nearest 100 meters for neat grid
-            stepMeters = Math.max(100, Math.ceil(stepMeters / 100) * 100);
-            console.warn(`⚠️ Grid too dense at this zoom. Using coarser spacing: ${stepMeters}m`);
-        }
 
         // Draw vertical lines (constant meter spacing)
         for (let x = startX; x <= endX; x += stepMeters) {
@@ -197,7 +192,7 @@ class FalconViewGridManager {
             [southLatLng, northLatLng],
             {
                 color: this.gridColor,
-                weight: 1,
+                weight: this.gridWeight,
                 opacity: this.gridOpacity,
                 interactive: false,
                 className: 'falcon-grid-line falcon-grid-vertical'
@@ -216,7 +211,7 @@ class FalconViewGridManager {
             [westLatLng, eastLatLng],
             {
                 color: this.gridColor,
-                weight: 1,
+                weight: this.gridWeight,
                 opacity: this.gridOpacity,
                 interactive: false,
                 className: 'falcon-grid-line falcon-grid-horizontal'
@@ -372,6 +367,17 @@ class FalconViewGridManager {
             this.updateGrid();
         }
         console.log(`🎯 Grid opacity set to: ${opacity}`);
+    }
+
+    /**
+     * Set grid line weight
+     */
+    setGridWeight(weight) {
+        this.gridWeight = Math.max(1, weight|0);
+        if (this.enabled) {
+            this.updateGrid();
+        }
+        console.log(`🎯 Grid weight set to: ${this.gridWeight}`);
     }
 
     /**

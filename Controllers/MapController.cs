@@ -9,6 +9,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Text;
 
 namespace TechWebSol.Controllers
 {
@@ -532,6 +533,58 @@ namespace TechWebSol.Controllers
                             }
 
                             await System.IO.File.WriteAllTextAsync(appSettingsPath, text);
+                        }
+
+                        // Update tileserver script to point to the default map folder when DefaultMapPath changes
+                        if (request.Key.Equals("DefaultMapPath", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(request.Value))
+                        {
+                            try
+                            {
+                                // Derive default folder name from path like: maps/{folder}/street.mbtiles
+                                var rel = request.Value.Replace('/', Path.DirectorySeparatorChar);
+                                var folder = new DirectoryInfo(Path.GetDirectoryName(rel) ?? string.Empty).Name;
+                                var scriptPath = Path.Combine(_env.ContentRootPath, "tileserver", "start-tileserver.ps1");
+                                Directory.CreateDirectory(Path.GetDirectoryName(scriptPath)!);
+
+                                // Replacement line: $projectRoot\wwwroot\maps\<folder>
+                                var replacement = "$mapsPath = \"$projectRoot\\wwwroot\\maps\\" + folder + "\"";
+
+                                if (System.IO.File.Exists(scriptPath))
+                                {
+                                    // Safe line-based update: only replace the $mapsPath line, preserve everything else
+                                    var lines = (await System.IO.File.ReadAllLinesAsync(scriptPath)).ToList();
+                                    var idxMap = lines.FindIndex(l => l.TrimStart().StartsWith("$mapsPath = "));
+                                    if (idxMap >= 0)
+                                    {
+                                        lines[idxMap] = replacement;
+                                    }
+                                    else
+                                    {
+                                        // Ensure $projectRoot is present (insert at top if missing)
+                                        var hasProjectRoot = lines.Any(l => l.TrimStart().StartsWith("$projectRoot = "));
+                                        if (!hasProjectRoot)
+                                        {
+                                            lines.Insert(0, "$projectRoot = Split-Path -Parent $PSScriptRoot");
+                                        }
+                                        // Insert $mapsPath right after $projectRoot line
+                                        var prIndex = lines.FindIndex(l => l.TrimStart().StartsWith("$projectRoot = "));
+                                        lines.Insert(prIndex + 1, replacement);
+                                    }
+                                    await System.IO.File.WriteAllLinesAsync(scriptPath, lines);
+                                }
+                                else
+                                {
+                                    // Create or re-create without deleting future custom content
+                                    var content = new StringBuilder();
+                                    content.AppendLine("$projectRoot = Split-Path -Parent $PSScriptRoot");
+                                    content.AppendLine(replacement);
+                                    await System.IO.File.WriteAllTextAsync(scriptPath, content.ToString());
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "Failed to update tileserver start script with default folder");
+                            }
                         }
                     }
                     catch (Exception ex)
