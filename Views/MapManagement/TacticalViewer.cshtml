@@ -5,7 +5,7 @@
 <html>
 <head>
     <title>Tactical Route Planner - Real World Data</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="~/map/css/leaflet.css" />
     <style>
         * {
             margin: 0;
@@ -28,17 +28,29 @@
             padding: 12px 20px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
             border-bottom: 2px solid #00ff00;
-            height: 56px;
+            height: 60px;
+            gap: 15px;
         }
 
             header h1 {
                 font-size: 18px;
+                flex-shrink: 0;
+                white-space: nowrap;
+            }
+
+            header > div {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-shrink: 1;
+                min-width: 0;
             }
 
         #map {
             position: absolute;
-            top: 56px; /* below header */
+            top: 60px; /* match new header height */
             left: 0;   /* full-width behind overlay panel */
             right: 0;
             bottom: 0;
@@ -139,11 +151,11 @@
 </head>
 <body>
     <header>
-        <h1>⚔️ TACTICAL ROUTE PLANNER [OFFLINE MODE]</h1>
+        <h1>⚔️ TACTICAL ROUTE PLANNER</h1>
         <div>
-            <select id="file-selector"><option value="">Select Map...</option></select>
-            <span id="terrain-status" style="color:#ff6600;font-size:11px;margin-right:12px;">No terrain data</span>
-            <a href="/" style="color:#00ff00;padding:6px 12px;">Home</a>
+            <select id="file-selector" style="max-width: 200px; width: auto;"><option value="">Select Map...</option></select>
+            <span id="terrain-status" style="color:#ff6600;font-size:11px;white-space:nowrap;">No terrain</span>
+            <a href="/" style="color:#00ff00;padding:6px 12px;white-space:nowrap;">Home</a>
         </div>
     </header>
 
@@ -192,7 +204,8 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="~/map/js/leaflet.js"></script>
+    <script src="~/js/tileServerConfig.js"></script>
     <script>
         let map, waypoints = [], routeLine, markers = [], obstacleMarkers = [], geojsonLayer = null;
         let currentTerrainDb = null; // Store terrain database filename
@@ -201,8 +214,9 @@
         // Function to find and load terrain database for the current map
         async function loadTerrainDatabase(mbtilesPath) {
             try {
-                // Extract folder name from path: "folder-name/map.mbtiles" -> "folder-name"
-                const folderName = mbtilesPath.split('/')[0];
+                // Extract folder name from path: "maps/folder-name/street.mbtiles" -> "folder-name"
+                const pathParts = mbtilesPath.split('/');
+                const folderName = pathParts[1]; // Get folder name after "maps/"
                 
                 // Find terrain database with matching folder
                 const terrainResponse = await fetch('/terrain/list');
@@ -232,17 +246,29 @@
         fetch('/mbtiles/list').then(r => r.json()).then(files => {
             const sel = document.getElementById('file-selector');
             files.forEach(f => {
-                const opt = document.createElement('option');
-                opt.value = f.path; // Use path (folder/map.mbtiles) instead of just name
-                opt.textContent = f.name; // Display friendly folder name
-                sel.appendChild(opt);
+                // Add street map option
+                if (f.street_path) {
+                    const streetOpt = document.createElement('option');
+                    streetOpt.value = f.street_path;
+                    streetOpt.textContent = `${f.name} (Street)`;
+                    sel.appendChild(streetOpt);
+                }
+                // Add satellite map option
+                if (f.satellite_path) {
+                    const satOpt = document.createElement('option');
+                    satOpt.value = f.satellite_path;
+                    satOpt.textContent = `${f.name} (Satellite)`;
+                    sel.appendChild(satOpt);
+                }
             });
             const q = new URLSearchParams(location.search);
             const initial = q.get('file');
             if (initial) {
-                const match = files.find(x => x.path === initial || x.name === initial);
+                // Try to find matching option by value
+                const options = Array.from(sel.options);
+                const match = options.find(opt => opt.value === initial || opt.value.includes(initial));
                 if (match) {
-                    sel.value = match.path;
+                    sel.value = match.value;
                     sel.dispatchEvent(new Event('change'));
                 }
             }
@@ -323,7 +349,16 @@
                     });
 
                     // Create tile layer with strict zoom constraints
-                    const tileUrl = `/mbtiles/tile/{z}/{x}/{y}.png?file=${encodeURIComponent(e.target.value)}`;
+                    // Use TileServerConfig to get the correct tile URL based on mode (external/local)
+                    let tileUrl;
+                    if (window.TileServerConfig && window.TileServerConfig.mode === 'external') {
+                        tileUrl = window.TileServerConfig.getTileUrl(e.target.value);
+                        console.log('🗺️ TacticalViewer using EXTERNAL tile server:', tileUrl);
+                    } else {
+                        // Fallback to local C# server
+                        tileUrl = `/mbtiles/tile/{z}/{x}/{y}.png?file=${encodeURIComponent(e.target.value)}`;
+                        console.log('🗺️ TacticalViewer using LOCAL C# tile server:', tileUrl);
+                    }
                     
                     const tiles = L.tileLayer(tileUrl, {
                         minZoom: minZoom,
@@ -336,7 +371,21 @@
                         updateWhenIdle: true,    // Update tiles when map stops moving
                         updateWhenZooming: false, // Don't update during zoom animation
                         tileSize: 256,
-                        attribution: 'MBTiles Data'
+                        attribution: 'MBTiles Data',
+                        errorTileUrl: ''  // Don't show error tiles
+                    });
+                    
+                    // Add error handler to auto-fallback to local server if external fails
+                    tiles.on('tileerror', function(error, tile) {
+                        if (window.TileServerConfig && window.TileServerConfig.mode === 'external') {
+                            console.warn('⚠️ External tile server failed, falling back to local C# server');
+                            window.TileServerConfig.useLocalServer();
+                            
+                            // Reload the map with local server
+                            setTimeout(() => {
+                                e.target.dispatchEvent(new Event('change'));
+                            }, 1000);
+                        }
                     });
 
                     tiles.addTo(map);

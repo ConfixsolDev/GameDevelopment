@@ -34,15 +34,15 @@
       <label>Zoom Range: <span id="zoom-range-value">14 - 18</span></label>
       <div id="zoom-slider" style="margin-bottom: 10px;"></div>
 
-      <label>Format:</label>
-      <label><input type="radio" name="format" value="zip" checked> ZIP</label>
-      <label><input type="radio" name="format" value="mbtiles"> MBTiles</label>
-      <label>Map Style:</label>
-      <select id="map-style">
+      <label for="map-name">Map Name (required):</label>
+      <input type="text" id="map-name" placeholder="e.g., Operation Desert Storm" required />
+
+      <label>Preview Style:</label>
+      <select id="preview-style">
         <option value="map">Street Map</option>
         <option value="satellite">Satellite</option>
       </select>
-      <div id="prediction" style="font-size: 13px; color: #555; min-height: 20px;"></div>
+      <div id="prediction" style="font-size: 13px; color: #555; min-height: 20px;">Downloading both Street and Satellite styles</div>
       <div id="area-info" style="font-size: 13px; color: #2b7de9; font-weight: bold; min-height: 20px; margin-top: 4px;"></div>
       <canvas id="tile-preview" width="280" height="180"
         style="border-radius: 8px; margin-top: 10px; background: #f0f0f0;"></canvas>
@@ -217,7 +217,6 @@
 
 
     let lastJobId = null;
-    let lastFormat = null;
 
     const updateTilePreview = debounce(async function () {
       const canvas = document.getElementById("tile-preview");
@@ -269,12 +268,12 @@
             const dy = offsetY + (y - y_min) * TILE_SIZE * scale;
             ctx.drawImage(img, dx, dy, TILE_SIZE * scale, TILE_SIZE * scale);
           };
-          // Get tile URL based on current map style
+          // Get tile URL based on preview style selector
           let tileUrl = `https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`;
           const subdomains = ["a", "b", "c"];
           const subdomain = subdomains[(x + y + zoom) % subdomains.length];
           
-          switch(currentMapStyle) {
+          switch(document.getElementById("preview-style").value) {
             case "map":
               tileUrl = `https://${subdomain}.tile.openstreetmap.org/${zoom}/${x}/${y}.png`;
               break;
@@ -307,7 +306,6 @@
         "Satellite": "satellite"
       };
       currentMapStyle = styleMap[e.name] || "map";
-      styleSelector.value = currentMapStyle;
       updateTilePreview(); 
     });
 
@@ -316,31 +314,8 @@
       updateTilePreview();
     });
 
-    const styleSelector = document.getElementById("map-style");
-
-    styleSelector.addEventListener("change", () => {
-      const style = styleSelector.value;
-      currentMapStyle = style;
-
-      // Remove all layers
-      map.eachLayer((layer) => {
-        if (layer instanceof L.TileLayer) {
-          map.removeLayer(layer);
-        }
-      });
-
-      // Add the selected layer
-      const layerMap = {
-        "map": osmLayer,
-        "satellite": satelliteLayer
-      };
-
-      if (layerMap[style]) {
-        map.addLayer(layerMap[style]);
-      } else {
-        map.addLayer(osmLayer);
-      }
-
+    // Preview style selector change event
+    document.getElementById("preview-style").addEventListener("change", () => {
       updateTilePreview();
     });
 
@@ -378,8 +353,16 @@
 
     document.getElementById("download").addEventListener("click", async (evt) => {
       const statusEl = document.getElementById("status");
+      const mapName = document.getElementById("map-name").value.trim();
+      
+      // Validate map name
+      if (!mapName) {
+        statusEl.textContent = "Please enter a map name.";
+        statusEl.style.color = "red";
+        return;
+      }
+      
       const [zmin, zmax] = zoomSlider.noUiSlider.get().map(v => parseInt(v));
-      const format = document.querySelector('input[name="format"]:checked').value;
       const downloadBtn = document.getElementById("download");
       if (isDownloading) return; // prevent double-clicks
       if (!selectedBounds) {
@@ -398,8 +381,7 @@
           west: selectedBounds.getWest()
         },
         zoom_levels: zoomLevels,
-        format: format,
-        map_style: currentMapStyle
+        name: mapName
       };
 
       try {
@@ -456,9 +438,8 @@
               try {
                 statusEl.textContent = "Starting download...";
                 const fileUrl = `/get_file/${job_id}`;
-                // Store job ID and format for validation
+                // Store job ID for validation
                 lastJobId = job_id;
-                lastFormat = format;
                 
                 // Trigger a real browser download via a temporary anchor to avoid gesture restrictions
                 const a = document.createElement('a');
@@ -470,30 +451,20 @@
                 statusEl.textContent = "Download started.";
                 // Provide a manual link as backup; prefer static path for MBTiles
                 const link = document.getElementById('download-link');
-                if ((typeof format !== 'undefined') && format === 'mbtiles') {
-                  link.href = `/downloads/mbtiles/${job_id}.mbtiles`;
-                } else {
-                  link.href = fileUrl;
-                }
+                link.href = fileUrl;
                 link.style.display = 'inline-block';
                 
-                // Show validate button for MBTiles
+                // Always show validate button since we only support MBTiles
                 const validateBtn = document.getElementById('validate-mbtiles');
                 const validationHint = document.getElementById('validation-hint');
-                console.log('Download complete. Format:', format, 'JobId:', job_id);
-                if (format === 'mbtiles') {
-                  validateBtn.style.display = 'inline-block';
-                  validationHint.style.display = 'block';
-                  console.log('Validate button shown for MBTiles');
-                } else {
-                  validateBtn.style.display = 'none';
-                  validationHint.style.display = 'none';
-                }
+                validateBtn.style.display = 'inline-block';
+                validationHint.style.display = 'block';
+                console.log('Validate button shown for MBTiles');
               } catch (e) {
                 statusEl.textContent = "Failed to open download. Please click the link.";
                 statusEl.style.color = 'red';
                 const link = document.getElementById('download-link');
-                link.href = (typeof format !== 'undefined' && format === 'mbtiles') ? `/downloads/mbtiles/${job_id}.mbtiles` : `/get_file/${job_id}`;
+                link.href = fileUrl;
                 link.style.display = 'inline-block';
               } finally {
                 setLoading(false);
@@ -506,7 +477,7 @@
 
           const [done, total] = msg.split(" / ").map(Number);
           const pct = total > 0 ? Math.floor((done / total) * 100) : 0;
-          statusEl.textContent = `Progress: ${done} / ${total}`;
+          statusEl.textContent = `Downloading tiles: ${done} / ${total}`;
           progressFill.style.width = pct + '%';
           const elapsedSec = (Date.now() - startTime) / 1000;
           const rate = done > 0 ? done / elapsedSec : 0; // tiles/sec
@@ -546,9 +517,9 @@
       const validationResult = document.getElementById("validation-result");
       const validationDetails = document.getElementById("validation-details");
       
-      console.log('Validate button clicked. LastJobId:', lastJobId, 'LastFormat:', lastFormat);
+      console.log('Validate button clicked. LastJobId:', lastJobId);
       
-      if (!lastJobId || lastFormat !== 'mbtiles') {
+      if (!lastJobId) {
         alert("No MBTiles file available to validate");
         return;
       }

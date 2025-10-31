@@ -1,0 +1,236 @@
+@{
+    ViewData["Title"] = "Map Library";
+    Layout = "_GamePlayLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>Downloaded Maps Library</h6>
+                        <div class="btn-group">
+                            <a href="/MapManagement/Index" class="btn btn-primary btn-sm">
+                                <i class="fas fa-download"></i> Download New Map
+                            </a>
+                            <button class="btn btn-success btn-sm" onclick="startTileServer()" title="Start TileServer-GL">
+                                <i class="fas fa-play"></i> Start TileServer-GL
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div class="table-responsive p-3">
+                        <table id="mapsDataTable" class="table table-hover align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Name</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Style</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Size</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Zoom</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tiles</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Downloaded</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Usage</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<link rel="stylesheet" href="~/lib/jquery.dataTables/css/dataTables.bootstrap5.min.css" />
+<script src="~/lib/jquery.dataTables/js/dataTables.dataTables.js"></script>
+<script src="~/lib/jquery.dataTables/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    const table = $('#mapsDataTable').DataTable({
+        ajax: {
+            url: '/MapManagement/GetDownloadedMaps',
+            dataSrc: 'data'
+        },
+        columns: [
+            { 
+                data: 'name',
+                render: function(data, type, row) {
+                    const star = row.isFavorite ? '<i class="fas fa-star text-warning"></i> ' : '';
+                    const defaultBadge = row.isDefault ? ' <span class="badge bg-success">Default</span>' : '';
+                    return star + data + defaultBadge;
+                }
+            },
+            { 
+                data: 'style',
+                render: function(data) {
+                    const badges = {
+                        'satellite': 'primary',
+                        'street': 'success',
+                        'political': 'info',
+                        'terrain': 'warning'
+                    };
+                    return `<span class="badge bg-${badges[data] || 'secondary'}">${data}</span>`;
+                }
+            },
+            { data: 'fileSizeFriendly' },
+            { data: 'zoomRange' },
+            { 
+                data: 'tileCount',
+                render: function(data) {
+                    return data.toLocaleString();
+                }
+            },
+            { 
+                data: 'downloadedAt',
+                render: function(data) {
+                    return new Date(data).toLocaleString();
+                }
+            },
+            {
+                data: 'accessCount',
+                render: function(data, type, row) {
+                    const lastAccess = row.lastAccessedAt 
+                        ? `<br><small>Last: ${new Date(row.lastAccessedAt).toLocaleString()}</small>`
+                        : '';
+                    return `${data} times${lastAccess}`;
+                }
+            },
+            {
+                data: 'id',
+                render: function(data, type, row) {
+                    return `
+                        <button class="btn btn-sm btn-info" onclick="editMapName('${data}')" title="Rename">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-warning" onclick="toggleFavorite('${data}')" title="Favorite">
+                            <i class="fas fa-star"></i>
+                        </button>
+                        <button class="btn btn-sm btn-primary" onclick="setDefaultMap('${data}')" title="Set as Default">
+                            <i class="fas fa-check-circle"></i>
+                        </button>
+                        <button class="btn btn-sm btn-success" onclick="loadMap('${row.filePath}')" title="Load in TileServer-GL">
+                            <i class="fas fa-server"></i> Load
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteMap('${data}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                }
+            }
+        ],
+        order: [[5, 'desc']], // Sort by downloaded date
+        pageLength: 25
+    });
+});
+
+function editMapName(id) {
+    const newName = prompt('Enter new map name:');
+    if (newName) {
+        $.ajax({
+            url: '/MapManagement/UpdateMapName',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ id: id, name: newName }),
+            success: function() {
+                $('#mapsDataTable').DataTable().ajax.reload();
+                showNotification('Map name updated', 'success');
+            },
+            error: function() {
+                showNotification('Failed to update map name', 'error');
+            }
+        });
+    }
+}
+
+function toggleFavorite(id) {
+    $.ajax({
+        url: '/MapManagement/ToggleFavorite',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ id: id }),
+        success: function() {
+            $('#mapsDataTable').DataTable().ajax.reload();
+            showNotification('Favorite status updated', 'success');
+        }
+    });
+}
+
+function setDefaultMap(id) {
+    if (confirm('Set this map as the default map for your team?')) {
+        $.ajax({
+            url: '/MapManagement/SetDefaultMap',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ id: id }),
+            success: function() {
+                $('#mapsDataTable').DataTable().ajax.reload();
+                showNotification('Default map set successfully', 'success');
+            },
+            error: function() {
+                showNotification('Failed to set default map', 'error');
+            }
+        });
+    }
+}
+
+function loadMap(filePath) {
+    // Load map using TileServer-GL
+    // Extract map folder name from path (e.g., "maps/map-name/map.mbtiles" -> "map-name")
+    const pathParts = filePath.split('/');
+    const mapFolder = pathParts[pathParts.length - 2]; // Get folder name
+    
+    // Switch to TileServer-GL mode
+    if (typeof TileServerConfig !== 'undefined') {
+        TileServerConfig.useExternalServer('http://localhost:8080');
+        localStorage.setItem('tileServerMode', 'external');
+    }
+    
+    // Navigate to GamePlay with the map parameter
+    window.location.href = `/GamePlay?map=${encodeURIComponent(mapFolder)}`;
+}
+
+function deleteMap(id) {
+    if (confirm('Delete this map? This will remove the files from disk.')) {
+        $.ajax({
+            url: `/MapManagement/DeleteMap/${id}`,
+            type: 'DELETE',
+            success: function() {
+                $('#mapsDataTable').DataTable().ajax.reload();
+                showNotification('Map deleted successfully', 'success');
+            },
+            error: function() {
+                showNotification('Failed to delete map', 'error');
+            }
+        });
+    }
+}
+
+function showNotification(message, type) {
+    if (typeof window.showNotification === 'function') {
+        window.showNotification(message, type);
+    } else {
+        alert(message);
+    }
+}
+
+function startTileServer() {
+    if (!confirm('Start TileServer-GL in a new window on this server?')) return;
+    $.ajax({
+        url: '/MapManagement/StartTileServer',
+        type: 'POST',
+        success: function (res) {
+            showNotification(res.message || 'TileServer-GL started', res.success ? 'success' : 'error');
+        },
+        error: function () {
+            showNotification('Failed to start TileServer-GL', 'error');
+        }
+    });
+}
+</script>
+}
+

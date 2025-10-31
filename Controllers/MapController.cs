@@ -6,6 +6,9 @@ using TechWebSol.Filters;
 using TechWebSol.Models;
 using TechWebSol.Services;
 using System.Text.Json;
+using Microsoft.AspNetCore.Hosting;
+using System.IO;
+using System.Text.RegularExpressions;
 
 namespace TechWebSol.Controllers
 {
@@ -16,15 +19,18 @@ namespace TechWebSol.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IUserSessionService _userSessionService;
         private readonly ILogger<MapController> _logger;
+        private readonly IWebHostEnvironment _env;
 
         public MapController(
             ApplicationDbContext context,
             IUserSessionService _userSessionService,
-            ILogger<MapController> logger)
+            ILogger<MapController> logger,
+            IWebHostEnvironment env)
         {
             _context = context;
             this._userSessionService = _userSessionService;
             _logger = logger;
+            _env = env;
         }
 
         #region Map Regions
@@ -480,6 +486,56 @@ namespace TechWebSol.Controllers
                 }
 
                 await _context.SaveChangesAsync();
+
+                // Also persist DefaultMapPath to appsettings.json for offline consumers
+                if (!string.IsNullOrWhiteSpace(request.Key) &&
+                    (request.Key.Equals("DefaultMapPath", StringComparison.OrdinalIgnoreCase) ||
+                     request.Key.Equals("DefaultSatelliteMapPath", StringComparison.OrdinalIgnoreCase)))
+                {
+                    try
+                    {
+                        var appSettingsPath = Path.Combine(_env.ContentRootPath, "appsettings.json");
+                        if (System.IO.File.Exists(appSettingsPath))
+                        {
+                            var text = await System.IO.File.ReadAllTextAsync(appSettingsPath);
+
+                            // Replace existing key inside MapSettings
+                            var keyName = request.Key;
+                            var pattern = $"(\\\"{Regex.Escape(keyName)}\\\"\\s*:\\s*)\\\"[^\\\"]*\\\"";
+                            if (Regex.IsMatch(text, pattern))
+                            {
+                                text = Regex.Replace(text, pattern, m =>
+                                {
+                                    var prefix = m.Groups[1].Value;
+                                    var value = request.Value ?? string.Empty;
+                                    return prefix + "\"" + value.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+                                });
+                            }
+                            else
+                            {
+                                // Insert key into MapSettings block if missing
+                                var mapSettingsBlock = Regex.Match(text, "\\\"MapSettings\\\"\\s*:\\s*\\{[\\s\\S]*?\\}");
+                                if (mapSettingsBlock.Success)
+                                {
+                                    var block = mapSettingsBlock.Value;
+                                    // Determine indentation
+                                    var indentMatch = Regex.Match(block, "\\n(\\s*)\\\"MapsDirectory\\\"|");
+                                    var indent = indentMatch.Success ? indentMatch.Groups[1].Value : "    ";
+                                    var insertion = $"\n{indent}\"{keyName}\": \"{request.Value}\",";
+                                    // Insert after opening brace of MapSettings
+                                    var updatedBlock = new Regex("\\{").Replace(block, "{" + insertion, 1);
+                                    text = text.Replace(block, updatedBlock);
+                                }
+                            }
+
+                            await System.IO.File.WriteAllTextAsync(appSettingsPath, text);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to persist DefaultMapPath to appsettings.json");
+                    }
+                }
 
                 return Json(new { success = true, message = "Configuration saved successfully" });
             }

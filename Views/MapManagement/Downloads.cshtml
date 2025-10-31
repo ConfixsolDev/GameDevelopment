@@ -29,10 +29,9 @@
         <th>Status</th>
         <th>Progress</th>
         <th>Format</th>
-        <th>Style</th>
+        <th>Folder</th>
         <th>Created (UTC)</th>
         <th>Completed (UTC)</th>
-        <th>Size</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -62,15 +61,19 @@
           const tr = document.createElement('tr');
           const status = j.error ? `<span class=\"status-error\">Error</span>` : (j.done ? `<span class=\"status-done\">Ready</span>` : 'Running');
           const pct = j.total > 0 ? Math.floor((j.progress / j.total) * 100) : 0;
-          const size = j.size ? (j.size / (1024*1024)).toFixed(2) + ' MB' : '-';
           const completed = formatUtc(j.completedUtc);
           const created = formatUtc(j.createdUtc);
           let actions = '';
           if (j.done && !j.error) {
-            actions = `<a href=\"/get_file/${j.id}\" download>Download</a>`;
-            // Add View button for MBTiles files
-            if (j.format === 'mbtiles' && j.fileName) {
-                  actions += ` <a href=\"/MapManagement/Viewer?file=${encodeURIComponent(j.fileName)}\" target=\"_blank\">View Map</a>`;
+            actions = `<a href=\"/get_file/${j.id}\">File Info</a>`;
+            // Add View buttons for both street and satellite maps
+            if (j.format === 'mbtiles') {
+              if (j.streetFileName) {
+                actions += ` <a href=\"/MapManagement/TacticalViewer?file=${encodeURIComponent(j.streetFileName)}\" target=\"_blank\">View Street</a>`;
+              }
+              if (j.satelliteFileName) {
+                actions += ` <a href=\"/MapManagement/TacticalViewer?file=${encodeURIComponent(j.satelliteFileName)}\" target=\"_blank\">View Satellite</a>`;
+              }
             }
           }
           
@@ -89,10 +92,9 @@
             <td>${status}${terrainStatus}</td>
             <td>${j.progress} / ${j.total} (${pct}%)</td>
             <td>${j.format}</td>
-            <td>${j.style}</td>
+            <td>${j.folderName || '-'}</td>
             <td>${created}</td>
             <td>${completed}</td>
-            <td>${size}</td>
             <td class="actions">${actions}</td>`;
           tbody.appendChild(tr);
         }

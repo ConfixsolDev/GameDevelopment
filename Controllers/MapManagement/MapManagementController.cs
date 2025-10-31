@@ -9,11 +9,6 @@ namespace TechWebSol.Controllers.MapManagement
             return View();
         }
 
-        public IActionResult Cesium()
-        {
-            return View();
-        }
-
         public IActionResult Downloads()
         {
             return View();

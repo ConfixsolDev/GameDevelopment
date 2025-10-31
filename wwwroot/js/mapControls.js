@@ -544,35 +544,18 @@ function changeBasemap(basemapType) {
             
             console.log(`🗺️ Using TileServerConfig for offline map:`, tileConfig);
         } else {
-            // Use direct tile URLs for external map types
-            const subdomains = ["a", "b", "c"];
-            
-            switch (basemapType) {
-                case 'map':
-                    newLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        ...baseConfig,
-                        ...zoomLimits,
-                        attribution: getAttributionForBasemap(basemapType),
-                        subdomains: subdomains
-                    });
-                    break;
-                case 'satellite':
-                    newLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                        ...baseConfig,
-                        ...zoomLimits,
-                        attribution: getAttributionForBasemap(basemapType)
-                    });
-                    break;
-                default:
-                    newLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        ...baseConfig,
-                        ...zoomLimits,
-                        attribution: getAttributionForBasemap('map'),
-                        subdomains: subdomains
-                    });
-            }
-            
-            console.log(`🗺️ Using external tile URL for ${basemapType}`);
+            // Offline fallback: build from current map path
+            const currentMapPathEl = document.getElementById('currentMapPath');
+            const currentMapPath = currentMapPathEl ? currentMapPathEl.value : '';
+            let urlTemplate = window.TileServerConfig
+                ? window.TileServerConfig.getTileUrl(currentMapPath)
+                : `/gameplay/mbtiles/tile/{z}/{x}/{y}.png?file=${encodeURIComponent(currentMapPath)}`;
+            newLayer = L.tileLayer(urlTemplate, {
+                ...baseConfig,
+                ...zoomLimits,
+                attribution: getAttributionForBasemap(basemapType)
+            });
+            console.log(`🗺️ Using OFFLINE tile URL for ${basemapType}`);
         }
         
         newLayer.addTo(window.gameMap);

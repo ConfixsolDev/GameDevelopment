@@ -1,0 +1,16 @@
+{
+    "styles":  {
+
+               },
+    "data":  {
+                 "satellite":  {
+                                   "mbtiles":  "E:\\Strategy Game\\GameDevelopment\\wwwroot\\maps\\first-test\\satellite.mbtiles"
+                               },
+                 "street":  {
+                                "mbtiles":  "E:\\Strategy Game\\GameDevelopment\\wwwroot\\maps\\first-test\\street.mbtiles"
+                            }
+             },
+    "options":  {
+
+                }
+}

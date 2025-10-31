@@ -99,6 +99,21 @@
                         </a>
                     </li>
 
+                <!-- Map Management Section -->
+                <li class="menu-title">Map Management</li>
+                <li>
+                    <a asp-area="" asp-controller="MapManagement" asp-action="MBTiles" class="menu-link @((currentController == "MapManagement" && currentAction == "MBTiles") ? "active" : "")">
+                        <i class="fas fa-map menu-icon"></i>
+                        <span class="menu-text">Offline Maps</span>
+                    </a>
+                </li>
+                <li>
+                    <a asp-area="" asp-controller="MapManagement" asp-action="Index" class="menu-link @((currentController == "MapManagement" && currentAction == "Index") ? "active" : "")">
+                        <i class="fas fa-download menu-icon"></i>
+                        <span class="menu-text">Download Maps</span>
+                    </a>
+                </li>
+
                 <!-- Team Management Section -->
                 <li class="menu-title">Team Management</li>
                 

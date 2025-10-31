@@ -596,8 +596,16 @@ async function saveTileToFolder(dirHandle, layerName, tile, zoom) {
         const zDir = await layerDir.getDirectoryHandle(tile.z.toString(), { create: true });
         const xDir = await zDir.getDirectoryHandle(tile.x.toString(), { create: true });
         
-        // Download tile image
-        const tileUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${tile.z}/${tile.y}/${tile.x}`;
+        // Download tile image from local/offline server using current map path
+        const currentMapPathEl = document.getElementById('currentMapPath');
+        const currentMapPath = currentMapPathEl ? currentMapPathEl.value : '';
+        let tileUrlTemplate = window.TileServerConfig 
+            ? window.TileServerConfig.getTileUrl(currentMapPath)
+            : `/gameplay/mbtiles/tile/{z}/{x}/{y}.png?file=${encodeURIComponent(currentMapPath)}`;
+        const tileUrl = tileUrlTemplate
+            .replace('{z}', tile.z)
+            .replace('{x}', tile.x)
+            .replace('{y}', tile.y);
         
         const response = await fetch(tileUrl);
         if (!response.ok) {

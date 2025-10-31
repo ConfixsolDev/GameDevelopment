@@ -12,9 +12,9 @@
 
 const TileServerConfig = {
     // Tile server mode: 'local' or 'external'
-    mode: 'local', // Change to 'external' when using dedicated tile server
+    mode: 'external', // Use tileserver-gl-light by default
     
-    // External tile server configuration (TileServer-GL)
+    // External tile server configuration (TileServer-GL) - PRIMARY
     external: {
         baseUrl: 'http://localhost:8080',
         endpoint: '/data/{mapId}/{z}/{x}/{y}.png',  // TileServer-GL raster tiles endpoint

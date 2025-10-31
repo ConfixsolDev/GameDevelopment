@@ -196,30 +196,38 @@ namespace TechWebSol.Services.MapManagement
             return ms.ToArray();
         }
 
-        public async Task<MbtilesFile?> CreateMbtilesAsync(List<(int z, int x, int y)> tiles, string jobId, string style, Action<int> onProgress, (double north, double south, double east, double west)? originalBounds = null, string? displayName = null)
+        public async Task<MbtilesFile?> CreateMbtilesAsync(List<(int z, int x, int y)> tiles, string jobId, string style, Action<int> onProgress, (double north, double south, double east, double west)? originalBounds = null, string? displayName = null, string? fileName = null)
         {
+            // Validate that displayName is provided
+            if (string.IsNullOrWhiteSpace(displayName))
+            {
+                throw new ArgumentException("Map name is required", nameof(displayName));
+            }
+            
             var contentRoot = Directory.GetCurrentDirectory();
             var wwwRoot = Path.Combine(contentRoot, "wwwroot");
-            Directory.CreateDirectory(wwwRoot);
+            var mapsRoot = Path.Combine(wwwRoot, "maps");
+            Directory.CreateDirectory(mapsRoot);
             
-            // Build a friendly filename including a slug of the provided display name when available
-            string Slugify(string? text)
+            // Slugify the display name for folder
+            string Slugify(string text)
             {
-                if (string.IsNullOrWhiteSpace(text)) return string.Empty;
                 var s = new string(text.ToLowerInvariant().Select(ch => char.IsLetterOrDigit(ch) ? ch : '-').ToArray());
                 while (s.Contains("--")) s = s.Replace("--", "-");
                 return s.Trim('-');
             }
 
-            // Create organized folder structure
-            var nameSlug = Slugify(displayName);
-            var folderName = !string.IsNullOrEmpty(nameSlug)
-                ? $"{nameSlug}-{DateTime.UtcNow:yyyyMMddHHmmssfff}"
-                : $"map-{DateTime.UtcNow:yyyyMMddHHmmssfff}";
-            var mapFolder = Path.Combine(wwwRoot, folderName);
-            Directory.CreateDirectory(mapFolder);
+            var folderName = Slugify(displayName);
+            var mapFolder = Path.Combine(mapsRoot, folderName);
+            
+            // Create folder if it doesn't exist
+            if (!Directory.Exists(mapFolder))
+            {
+                Directory.CreateDirectory(mapFolder);
+            }
 
-            var finalFileName = "map.mbtiles";
+            // Use provided filename or default to style name
+            var finalFileName = !string.IsNullOrEmpty(fileName) ? $"{fileName}.mbtiles" : "map.mbtiles";
             var finalPath = Path.Combine(mapFolder, finalFileName);
             var stagingDir = Path.Combine(contentRoot, "App_Data", "mb_staging");
             
@@ -566,7 +574,7 @@ namespace TechWebSol.Services.MapManagement
             {
                 Bytes = bytes,
                 // Use forward slashes for web paths (cross-platform compatibility)
-                FileName = $"{folderName}/{finalFileName}"
+                FileName = $"maps/{folderName}/{finalFileName}"
             };
         }
 

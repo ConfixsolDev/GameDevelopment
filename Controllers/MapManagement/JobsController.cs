@@ -41,11 +41,11 @@ namespace TechWebSol.Controllers.MapManagement
 			done = kvp.Value.Done,
 			error = kvp.Value.Error,
 			format = kvp.Value.Format,
-			style = kvp.Value.Style,
 			createdUtc = kvp.Value.CreatedUtc,
 			completedUtc = kvp.Value.CompletedUtc,
-			size = kvp.Value.FileBytes?.Length ?? 0,
-			fileName = kvp.Value.FileName,
+			folderName = kvp.Value.FileName,
+			streetFileName = kvp.Value.StreetFileName,
+			satelliteFileName = kvp.Value.SatelliteFileName,
 			terrainDataFileName = kvp.Value.TerrainDataFileName,
 			terrainDataError = kvp.Value.TerrainDataError
 		}).OrderByDescending(x => x.createdUtc).ToList();
@@ -126,6 +126,12 @@ namespace TechWebSol.Controllers.MapManagement
 		public IActionResult DownloadTiles([FromBody] DownloadRequest body)
 		{
 			if (body == null) return BadRequest("Missing request body.");
+			
+			// Validate name is provided
+			if (string.IsNullOrWhiteSpace(body.Name))
+			{
+				return BadRequest(new { error = "Map name is required" });
+			}
 
 			// Server-side enforcement of minimum area as a safety net
 			const double MIN_AREA_KM2 = 75.0;
@@ -134,6 +140,7 @@ namespace TechWebSol.Controllers.MapManagement
 			{
 				return BadRequest(new { error = $"Selected area is too small: {Math.Round(areaKm2,2)} km². Minimum allowed is {MIN_AREA_KM2} km²" });
 			}
+			
 			var job = new DownloadJob
 			{
 				Progress = 0,
@@ -141,8 +148,7 @@ namespace TechWebSol.Controllers.MapManagement
 				Done = false,
 				Error = null,
 				FileBytes = null,
-				Format = string.IsNullOrWhiteSpace(body.Format) ? "zip" : body.Format.ToLowerInvariant(),
-				Style = string.IsNullOrWhiteSpace(body.Map_Style) ? "map" : body.Map_Style.ToLowerInvariant(),
+				Format = "mbtiles",
 				CreatedUtc = DateTime.UtcNow
 			};
 			var jobId = _jobs.Add(job);
@@ -152,7 +158,6 @@ namespace TechWebSol.Controllers.MapManagement
 				try
 				{
 					var set = new HashSet<(int z, int x, int y)>();
-					// Remove TILE_MARGIN to ensure bounds match exactly what user selected
 					foreach (var z in body.Zoom_Levels)
 					{
 						var n = 1 << z;
@@ -163,7 +168,6 @@ namespace TechWebSol.Controllers.MapManagement
 						var yMin = Math.Min(y1, y2);
 						var yMax = Math.Max(y1, y2);
 						
-						// Clamp to valid tile coordinates without wrapping
 						xMin = Math.Max(0, Math.Min(xMin, n - 1));
 						xMax = Math.Max(0, Math.Min(xMax, n - 1));
 						yMin = Math.Max(0, Math.Min(yMin, n - 1));
@@ -178,74 +182,81 @@ namespace TechWebSol.Controllers.MapManagement
 						}
 					}
 					var tiles = set.ToList();
-					job.Total = tiles.Count;
-
-				byte[]? resultBytes = null;
-				string? mbtilesFolder = null;
-				
-				if (job.Format == "mbtiles")
-				{
-					// Pass original bounds to ensure accurate metadata
+					job.Total = tiles.Count * 2; // Double for both styles
+					
 					var originalBounds = (body.Bounds.North, body.Bounds.South, body.Bounds.East, body.Bounds.West);
-					var mbtilesResult = await _tiles.CreateMbtilesAsync(tiles, jobId, job.Style, p => job.Progress = p, originalBounds, body.Name);
-					if (mbtilesResult != null)
-					{
-						resultBytes = mbtilesResult.Bytes;
-						job.FileName = mbtilesResult.FileName;
-						mbtilesFolder = Path.GetDirectoryName(job.FileName);
-					}
-				}
-				else
-				{
-					resultBytes = await _tiles.CreateZipAsync(tiles, jobId, job.Style, p => job.Progress = p);
-				}
-
-				// Download terrain data for offline tactical analysis (only for mbtiles)
-				if (job.Format == "mbtiles" && !string.IsNullOrEmpty(mbtilesFolder))
-				{
-					try
-					{
-						Console.WriteLine($"[JobsController] Starting terrain download for job {jobId}, folder: {mbtilesFolder}");
-						var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-						// Convert web path (forward slashes) to OS path for file system operations
-						var folderPath = mbtilesFolder.Replace('/', Path.DirectorySeparatorChar);
-						var terrainDbPath = Path.Combine(wwwRoot, folderPath, "terrain.db");
-						Console.WriteLine($"[JobsController] Terrain DB path: {terrainDbPath}");
+					
+					// Download STREET style
+					var streetResult = await _tiles.CreateMbtilesAsync(
+						tiles, 
+						jobId, 
+						"map",  // Street style
+						p => job.Progress = p, 
+						originalBounds, 
+						body.Name,
+						"street");  // Pass filename
 						
-						var terrainDataset = await _terrain.DownloadTerrainDataAsync(
-							jobId,
-							body.Bounds.North,
-							body.Bounds.South,
-							body.Bounds.East,
-							body.Bounds.West,
-							body.Zoom_Levels,
-							job.Style,
-							terrainDbPath,
-							progress => { Console.WriteLine($"[JobsController] Terrain progress: {progress}"); }
-						);
-						
-						// Store as web path (forward slashes) for frontend
-						job.TerrainDataFileName = $"{mbtilesFolder}/terrain.db";
-						Console.WriteLine($"[JobsController] Terrain download completed successfully");
-					}
-					catch (Exception terrainEx)
+					if (streetResult != null)
 					{
-						// Terrain data download is optional - don't fail the entire job
-						// Log the error but continue
-						Console.WriteLine($"[JobsController] Terrain download failed: {terrainEx.Message}");
-						Console.WriteLine($"[JobsController] Stack trace: {terrainEx.StackTrace}");
-						job.TerrainDataError = $"Terrain data download failed: {terrainEx.Message}";
+						job.StreetFileName = streetResult.FileName;
 					}
-				}
-				else
-				{
-					Console.WriteLine($"[JobsController] Skipping terrain download - Format: {job.Format}, Folder: {mbtilesFolder ?? "null"}");
-				}
+					
+					// Download SATELLITE style
+					var satelliteResult = await _tiles.CreateMbtilesAsync(
+						tiles, 
+						jobId, 
+						"satellite",  // Satellite style
+						p => job.Progress = tiles.Count + p,  // Offset progress
+						originalBounds, 
+						body.Name,
+						"satellite");  // Pass filename
+						
+					if (satelliteResult != null)
+					{
+						job.SatelliteFileName = satelliteResult.FileName;
+					}
+					
+					// Store folder path in FileName
+					if (streetResult != null)
+					{
+						job.FileName = Path.GetDirectoryName(streetResult.FileName)?.Replace('\\', '/');
+					}
+					
+					// Download terrain data ONCE for the folder
+					if (job.FileName != null)
+					{
+						try
+						{
+							Console.WriteLine($"[JobsController] Starting terrain download for job {jobId}");
+							var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+							var folderPath = job.FileName.Replace('/', Path.DirectorySeparatorChar);
+							var terrainDbPath = Path.Combine(wwwRoot, folderPath, "terrain.db");
+							
+							await _terrain.DownloadTerrainDataAsync(
+								jobId,
+								body.Bounds.North,
+								body.Bounds.South,
+								body.Bounds.East,
+								body.Bounds.West,
+								body.Zoom_Levels,
+								"map",  // Use street for terrain
+								terrainDbPath,
+								progress => { Console.WriteLine($"[JobsController] Terrain progress: {progress}"); }
+							);
+							
+							job.TerrainDataFileName = $"{job.FileName}/terrain.db";
+							Console.WriteLine($"[JobsController] Terrain download completed");
+						}
+						catch (Exception terrainEx)
+						{
+							Console.WriteLine($"[JobsController] Terrain download failed: {terrainEx.Message}");
+							job.TerrainDataError = $"Terrain data download failed: {terrainEx.Message}";
+						}
+					}
 
-				job.FileBytes = resultBytes;
-				job.Done = resultBytes != null;
-				if (resultBytes == null) job.Error = "Failed to create file";
-				job.CompletedUtc = DateTime.UtcNow;
+					job.Done = (streetResult != null && satelliteResult != null);
+					if (!job.Done) job.Error = "Failed to create map files";
+					job.CompletedUtc = DateTime.UtcNow;
 				}
 				catch (Exception ex)
 				{
@@ -274,19 +285,19 @@ namespace TechWebSol.Controllers.MapManagement
 					break;
 				}
 
-				if (job.Error is not null)
-				{
-					await Response.WriteAsync("data: error\n\n");
-					await Response.Body.FlushAsync();
-					break;
-				}
+			if (job.Error is not null)
+			{
+				await Response.WriteAsync("data: error\n\n");
+				await Response.Body.FlushAsync();
+				break;
+			}
 
-				if (job.Done && job.FileBytes is not null)
-				{
-					await Response.WriteAsync("data: ready\n\n");
-					await Response.Body.FlushAsync();
-					break;
-				}
+			if (job.Done)
+			{
+				await Response.WriteAsync("data: ready\n\n");
+				await Response.Body.FlushAsync();
+				break;
+			}
 
 				await Response.WriteAsync($"data: {job.Progress} / {job.Total}\n\n");
 				await Response.Body.FlushAsync();
@@ -301,14 +312,20 @@ namespace TechWebSol.Controllers.MapManagement
 			{
 				return NotFound("Job not found");
 			}
-			if (job.FileBytes is null)
+			if (!job.Done)
 			{
-				return NotFound("File not ready");
+				return NotFound("Files not ready");
 			}
 
-			var stylePrefix = job.Style == "map" ? "map" : "satellite";
-			var filename = $"{stylePrefix}_tiles.{job.Format}";
-			return File(job.FileBytes, "application/octet-stream", filename);
+			// Return info about both files instead of binary data
+			return new JsonResult(new
+			{
+				folder = job.FileName,
+				street_file = job.StreetFileName,
+				satellite_file = job.SatelliteFileName,
+				terrain_file = job.TerrainDataFileName,
+				message = "Files are available in the maps directory"
+			});
 		}
 
 		[HttpGet("/validate_mbtiles/{jobId}")]
@@ -326,21 +343,27 @@ namespace TechWebSol.Controllers.MapManagement
 					return BadRequest(new { error = $"Job format is '{job.Format}', not 'mbtiles'" });
 				}
 
-				if (job.FileBytes is null)
+				if (!job.Done || string.IsNullOrEmpty(job.StreetFileName))
 				{
 					return BadRequest(new { error = "File not ready yet", done = job.Done, progress = job.Progress, total = job.Total });
 				}
-				// Write to temp file for validation
-				var tempPath = Path.Combine(Path.GetTempPath(), $"validate_{jobId}.mbtiles");
-				await System.IO.File.WriteAllBytesAsync(tempPath, job.FileBytes);
+				
+				// Validate the street MBTiles file from disk
+				var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+				var filePath = Path.Combine(wwwRoot, job.StreetFileName.Replace('/', Path.DirectorySeparatorChar));
+				
+				if (!System.IO.File.Exists(filePath))
+				{
+					return NotFound(new { error = "MBTiles file not found on disk", path = job.StreetFileName });
+				}
 
 				var cs = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
 				{
-					DataSource = tempPath,
+					DataSource = filePath,
 					Mode = Microsoft.Data.Sqlite.SqliteOpenMode.ReadOnly
 				}.ToString();
 
-				var fileSize = job.FileBytes.Length;
+				var fileSize = new FileInfo(filePath).Length;
 				long tileCount = 0;
 				var metadata = new Dictionary<string, string>();
 				var issues = new List<string>();
@@ -391,7 +414,6 @@ namespace TechWebSol.Controllers.MapManagement
 
 				await conn.CloseAsync();
 				Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
-				try { System.IO.File.Delete(tempPath); } catch { }
 
 				var result = new
 				{
@@ -418,51 +440,52 @@ namespace TechWebSol.Controllers.MapManagement
 
 		// ============= Consolidated MBTiles endpoints (from MbtilesController) =============
 
-		[HttpGet("/mbtiles/list")]
-		[ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new string[] { })]
-		public IActionResult ListMbTiles()
+	[HttpGet("/mbtiles/list")]
+	[ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new string[] { })]
+	public IActionResult ListMbTiles()
+	{
+		var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+		var mapsDir = Path.Combine(wwwRoot, "maps");
+		
+		if (!Directory.Exists(mapsDir))
 		{
-			var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-			if (!Directory.Exists(wwwRoot))
-			{
-				return new JsonResult(new List<object>());
-			}
-
-			var maps = new List<object>();
-			
-			// Look for map folders
-			var mapFolders = Directory.GetDirectories(wwwRoot)
-				.Where(d => Directory.GetFiles(d, "map.mbtiles").Any())
-				.Select(d => new DirectoryInfo(d))
-				.OrderByDescending(di => di.CreationTimeUtc)
-				.ToList();
-
-			foreach (var folder in mapFolders)
-			{
-				var mbtilesFile = Path.Combine(folder.FullName, "map.mbtiles");
-				var terrainFile = Path.Combine(folder.FullName, "terrain.db");
-				
-				if (System.IO.File.Exists(mbtilesFile))
-				{
-					var fileInfo = new FileInfo(mbtilesFile);
-					var terrainExists = System.IO.File.Exists(terrainFile);
-					var terrainSize = terrainExists ? new FileInfo(terrainFile).Length : 0;
-					
-					maps.Add(new
-					{
-						name = folder.Name,
-						path = $"{folder.Name}/map.mbtiles", // Use forward slashes for web paths
-						size = fileInfo.Length,
-						terrain_size = terrainSize,
-						has_terrain = terrainExists,
-						created = folder.CreationTimeUtc,
-						modified = folder.LastWriteTimeUtc
-					});
-				}
-			}
-
-			return new JsonResult(maps);
+			return new JsonResult(new List<object>());
 		}
+
+		var maps = new List<object>();
+		var mapFolders = Directory.GetDirectories(mapsDir)
+			.Select(d => new DirectoryInfo(d))
+			.OrderByDescending(di => di.CreationTimeUtc)
+			.ToList();
+
+		foreach (var folder in mapFolders)
+		{
+			var streetFile = Path.Combine(folder.FullName, "street.mbtiles");
+			var satelliteFile = Path.Combine(folder.FullName, "satellite.mbtiles");
+			var terrainFile = Path.Combine(folder.FullName, "terrain.db");
+			
+			var hasStreet = System.IO.File.Exists(streetFile);
+			var hasSatellite = System.IO.File.Exists(satelliteFile);
+			
+			if (hasStreet || hasSatellite)
+			{
+				maps.Add(new
+				{
+					name = folder.Name,
+					street_path = hasStreet ? $"maps/{folder.Name}/street.mbtiles" : null,
+					satellite_path = hasSatellite ? $"maps/{folder.Name}/satellite.mbtiles" : null,
+					street_size = hasStreet ? new FileInfo(streetFile).Length : 0,
+					satellite_size = hasSatellite ? new FileInfo(satelliteFile).Length : 0,
+					terrain_size = System.IO.File.Exists(terrainFile) ? new FileInfo(terrainFile).Length : 0,
+					has_terrain = System.IO.File.Exists(terrainFile),
+					created = folder.CreationTimeUtc,
+					modified = folder.LastWriteTimeUtc
+				});
+			}
+		}
+
+		return new JsonResult(maps);
+	}
 
 	[HttpGet("/mbtiles/tile/{z}/{x}/{y}.png")]
 	[ResponseCache(Duration = 86400, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "file" })]
@@ -657,7 +680,9 @@ namespace TechWebSol.Controllers.MapManagement
 		public IActionResult ListTerrainDatabases()
 		{
 			var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-			if (!Directory.Exists(wwwRoot))
+			var mapsDir = Path.Combine(wwwRoot, "maps");
+			
+			if (!Directory.Exists(mapsDir))
 			{
 				return new JsonResult(new List<object>());
 			}
@@ -665,7 +690,7 @@ namespace TechWebSol.Controllers.MapManagement
 			var terrainFiles = new List<object>();
 			
 			// Look for terrain.db files in map folders
-			var mapFolders = Directory.GetDirectories(wwwRoot)
+			var mapFolders = Directory.GetDirectories(mapsDir)
 				.Where(d => Directory.GetFiles(d, "terrain.db").Any())
 				.Select(d => new DirectoryInfo(d))
 				.OrderByDescending(di => di.CreationTimeUtc)
@@ -680,11 +705,10 @@ namespace TechWebSol.Controllers.MapManagement
 					terrainFiles.Add(new
 					{
 						name = "terrain.db",
-						path = $"{folder.Name}/terrain.db", // Use forward slashes for web paths
+						path = $"maps/{folder.Name}/terrain.db",
 						size = fileInfo.Length,
 						created = fileInfo.CreationTimeUtc,
 						modified = fileInfo.LastWriteTimeUtc,
-						jobId = folder.Name.Split('-')[0], // Extract job ID from folder name
 						mapFolder = folder.Name
 					});
 				}

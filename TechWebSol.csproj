@@ -36,4 +36,9 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Remove="wwwroot\maps\**\*.mbtiles-shm" />
+    <Content Remove="wwwroot\maps\**\*.mbtiles-wal" />
+  </ItemGroup>
+
 </Project>
