@@ -12,9 +12,9 @@ class FalconViewGridManager {
         this.gridLabels = [];
         this.enabled = false;
         this.gridSize = 1000; // Grid size in meters (adjustable)
-        this.gridColor = '#00FF88'; // Military green
+        this.gridColor = '#00bcd4'; // Primary cyan
         this.gridOpacity = 0.4;
-        this.labelColor = '#00FF88';
+        this.labelColor = '#00bcd4';
         this.labelOpacity = 0.8;
         this.gridSpacing = 0.01; // Default spacing in degrees
         
