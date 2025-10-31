@@ -4,7 +4,7 @@
 
 :root {
     /* Game Play Color Palette */
-    --gameplay-primary: #00ff88;
+    --gameplay-primary: #00bcd4;
     --gameplay-secondary: #0088ff;
     --gameplay-accent: #ff4444;
     --gameplay-warning: #ffaa00;
@@ -14,8 +14,8 @@
     --gameplay-lighter: #2a2a2a;
     --gameplay-text: #ffffff;
     --gameplay-text-dim: #cccccc;
-    --gameplay-border: rgba(0, 255, 136, 0.3);
-    --gameplay-glow: 0 0 20px rgba(0, 255, 136, 0.5);
+    --gameplay-border: rgba(0, 188, 212, 0.3);
+    --gameplay-glow: 0 0 20px rgba(0, 188, 212, 0.5);
     --gameplay-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
     
     /* Team Colors */
@@ -1369,14 +1369,7 @@ html, body {
     box-shadow: var(--gameplay-shadow);
 }
 
-.overlay-control-group h6 {
-    color: var(--gameplay-primary);
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 8px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
+/* Heading typography for overlay-control-group is defined in DataManagement.css to keep consistency */
 
 .control-row {
     display: flex;
@@ -1390,7 +1383,7 @@ html, body {
 
 .overlay-btn {
     padding: 6px 12px;
-    background: rgba(0, 255, 136, 0.1);
+    background: rgba(0, 188, 212, 0.12);
     border: 1px solid var(--gameplay-border);
     border-radius: 6px;
     color: var(--gameplay-text);
@@ -1405,16 +1398,16 @@ html, body {
 }
 
 .overlay-btn:hover {
-    background: rgba(0, 255, 136, 0.2);
+    background: rgba(0, 188, 212, 0.2);
     border-color: var(--gameplay-primary);
     transform: translateY(-1px);
-    box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+    box-shadow: 0 0 10px rgba(0, 188, 212, 0.35);
 }
 
 .overlay-btn.active {
-    background: rgba(0, 255, 136, 0.3);
+    background: rgba(0, 188, 212, 0.3);
     border-color: var(--gameplay-primary);
-    box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+    box-shadow: 0 0 10px rgba(0, 188, 212, 0.5);
 }
 
 .overlay-btn i {
@@ -1430,7 +1423,7 @@ html, body {
     bottom: 20px;
     left: 20px;
     z-index: 1000;
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(45, 55, 72, 0.85);
     backdrop-filter: blur(10px);
     border: 1px solid var(--gameplay-border);
     border-radius: 8px;

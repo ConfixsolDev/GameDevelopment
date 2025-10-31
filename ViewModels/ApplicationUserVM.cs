@@ -13,6 +13,7 @@ namespace TechWebSol.ViewModels
         public string Theme { get; set; } = string.Empty;
         public string HomeURL { get; set; } = string.Empty;
         public Guid? TeamId { get; set; }
+        public bool ApplicationRole { get; set; } = false;
         public string ForceType { get; set; } = string.Empty; // "Blueland", "Foxland", "Control"
     }
 

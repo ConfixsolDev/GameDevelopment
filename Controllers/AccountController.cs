@@ -1,16 +1,17 @@
-using TechWebSol.ViewModels;
-using TechWebSol.Filters;
-using TechWebSol.Services;
-using TechWebSol.Data;
-using TechWebSol.Constants;
-using TechWebSol.Extensions;
-using TechWebSol.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System.ComponentModel;
+using TechWebSol.Constants;
+using TechWebSol.Data;
+using TechWebSol.Extensions;
+using TechWebSol.Filters;
+using TechWebSol.Helpers;
+using TechWebSol.Models;
+using TechWebSol.Services;
+using TechWebSol.ViewModels;
 
 namespace TechWebSol.Controllers
 {
@@ -153,8 +154,18 @@ namespace TechWebSol.Controllers
                     FullName = user.FullName,
                     RoleName = role?.Name ?? "User",
                     TeamId = user.TeamId,
-                    ForceType = user.ForceType
+                    ForceType = user.ForceType,
                 };
+
+
+                if (user.TeamId != null)
+                {
+                    applicationUserVM.ApplicationRole = false;
+                }
+                else
+                {
+                    applicationUserVM.ApplicationRole = false;
+                }
 
                 HttpContext.Session.SetObject(SessionKeyName, applicationUserVM);
 

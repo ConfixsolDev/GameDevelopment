@@ -6,12 +6,7 @@
 <div class="vertical-menu md-sidebar">
     <div data-simplebar class="h-100">
         <div id="sidebar-menu">
-            <div class="sidebar-header">
-                <a href="/" class="sidebar-brand">
-                    <i class="fas fa-shield-alt" style="color:#00bcd4;"></i>
-                    <span class="brand-text">PWGS</span>
-                </a>
-            </div>
+       
             <cache expires-after="@TimeSpan.FromMinutes(10)" vary-by-user="true">
             </cache>
 
@@ -23,24 +18,38 @@
                         <span class="menu-text">Home</span>
                     </a>
                 </li>
+                <li class="menu-title">War Game</li>
+                <li>
+                    <a asp-area="" asp-controller="GamePlay" asp-action="Index" class="menu-link @(currentController == "GamePlay" ? "active" : "")">
+                        <i class="fas fa-crosshairs menu-icon"></i>
+                        <span class="menu-text">Game Play Arena</span>
+                    </a>
+                </li>
 
-                <secure-content asp-area="TokenManagement" asp-controller="TokenSystem" asp-action="Index">
-                    <li>
-                        <a asp-area="TokenManagement" asp-controller="TokenSystem" asp-action="Index" class="menu-link @(currentController == "TokenSystem" ? "active" : "")">
-                            <i class="fas fa-fingerprint menu-icon"></i>
-                            <span class="menu-text">Token System</span>
-                        </a>
-                    </li>
-                </secure-content>
+                <li>
+                    <a asp-area="" asp-controller="GamePlay" asp-action="Index" class="menu-link @(currentController == "GamePlay" ? "active" : "")">
+                        <i class="fas fa-crosshairs menu-icon"></i>
+                        <span class="menu-text">Wargame Archive </span>
+                    </a>
+                </li>
+
+                <li class="menu-title">Token Management</li>
 
                 <!-- Token Management Section -->
-                <li class="menu-title">Token Management</li>
                 
-                <secure-content asp-area="" asp-controller="AdminToken" asp-action="Index">
+             @*    <secure-content asp-area="" asp-controller="AdminToken" asp-action="Index">
                     <li>
                         <a asp-area="" asp-controller="AdminToken" asp-action="Dashboard" class="menu-link @((currentController == "AdminToken" && currentAction == "Dashboard") ? "active" : "")">
                             <i class="fas fa-cogs menu-icon"></i>
                             <span class="menu-text">Admin Dashboard</span>
+                        </a>
+                    </li>
+                </secure-content> *@
+                <secure-content asp-area="" asp-controller="AdminToken" asp-action="Index">
+                    <li>
+                        <a asp-area="" asp-controller="AdminToken" asp-action="Index" class="menu-link @((currentController == "AdminToken" && currentAction == "Index") ? "active" : "")">
+                            <i class="fas fa-plus-circle menu-icon"></i>
+                            <span class="menu-text">Tokens</span>
                         </a>
                     </li>
                 </secure-content>
@@ -49,7 +58,16 @@
                     <li>
                         <a asp-area="" asp-controller="DataManagement" asp-action="Index" class="menu-link @(currentController == "DataManagement" ? "active" : "")">
                             <i class="fas fa-database menu-icon"></i>
-                            <span class="menu-text">Data Management</span>
+                            <span class="menu-text">Token Preperation</span>
+                        </a>
+                    </li>
+                </secure-content>
+
+                <secure-content asp-area="TokenManagement" asp-controller="TokenSystem" asp-action="Index">
+                    <li>
+                        <a asp-area="TokenManagement" asp-controller="TokenSystem" asp-action="Index" class="menu-link @(currentController == "TokenSystem" ? "active" : "")">
+                            <i class="fas fa-fingerprint menu-icon"></i>
+                            <span class="menu-text">Physical Token System</span>
                         </a>
                     </li>
                 </secure-content>
@@ -63,14 +81,7 @@
                     </li>
                 </secure-content>
 
-                <secure-content asp-area="" asp-controller="AdminToken" asp-action="Index">
-                    <li>
-                        <a asp-area="" asp-controller="AdminToken" asp-action="Index" class="menu-link @((currentController == "AdminToken" && currentAction == "Index") ? "active" : "")">
-                            <i class="fas fa-plus-circle menu-icon"></i>
-                            <span class="menu-text">Tokens</span>
-                        </a>
-                    </li>
-                </secure-content>
+              
 
               @*   <secure-content asp-area="" asp-controller="GameManagement" asp-action="Index">
                     <li>
@@ -92,12 +103,7 @@
 
                 
 
-                    <li>
-                        <a asp-area="" asp-controller="GamePlay" asp-action="Index" class="menu-link @(currentController == "GamePlay" ? "active" : "")">
-                            <i class="fas fa-crosshairs menu-icon"></i>
-                            <span class="menu-text">Game Play Arena</span>
-                        </a>
-                    </li>
+                
 
                 <!-- Map Management Section -->
                 <li class="menu-title">Map Management</li>

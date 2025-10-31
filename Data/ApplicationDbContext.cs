@@ -96,6 +96,9 @@ namespace TechWebSol.Data
 
         public DbSet<MapDocument> MapDocuments { get; set; }
 
+        // War Game Archive
+        public DbSet<WarGameArchive> WarGameArchives { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

@@ -1,0 +1,1015 @@
+<!-- Offline Map Controls -->
+<div class="offline-controls-panel" id="offlineControlsPanel">
+    <div class="panel-header">
+        <h4><i class="fas fa-wifi-slash"></i> Offline Map</h4>
+        <button class="close-btn" onclick="toggleOfflinePanel()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    
+    <div class="panel-content">
+        <!-- Connection Status -->
+        <div class="status-section">
+            <div class="status-item">
+                <span class="status-label">Connection:</span>
+                <span class="status-value" id="connectionStatus">
+                    <i class="fas fa-wifi"></i> Online
+                </span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Cached Tiles:</span>
+                <span class="status-value" id="cachedTilesCount">0</span>
+            </div>
+        </div>
+        
+        <!-- Cache Management -->
+        <div class="cache-section">
+            <h5><i class="fas fa-database"></i> Tile Cache</h5>
+            
+        <div class="cache-actions">
+            <button class="btn btn-primary" id="saveVisibleTiles">
+                <i class="fas fa-download"></i> Save Visible Tiles
+            </button>
+            
+            <button class="btn btn-info" id="saveAreaTiles">
+                <i class="fas fa-map-marked-alt"></i> Save Area Tiles
+            </button>
+            
+            <button class="btn btn-primary" id="saveToFolder">
+                <i class="fas fa-folder-open"></i> Save to Folder
+            </button>
+            
+            <button class="btn btn-success" id="exportTiles">
+                <i class="fas fa-file-archive"></i> Export Tiles
+            </button>
+            
+            <button class="btn btn-secondary" id="storageSettings">
+                <i class="fas fa-cog"></i> Storage Settings
+            </button>
+            
+            <button class="btn btn-warning" id="clearCache">
+                <i class="fas fa-trash"></i> Clear Cache
+            </button>
+            
+            <button class="btn btn-dark" id="verifyOffline">
+                <i class="fas fa-check-circle"></i> Verify Offline
+            </button>
+        </div>
+            
+            <!-- Cache Progress -->
+            <div class="cache-progress" id="cacheProgress" style="display: none;">
+                <div class="progress-label">Saving tiles...</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">0 / 0</div>
+            </div>
+        </div>
+        
+        <!-- Offline Settings -->
+        <div class="settings-section">
+            <h5><i class="fas fa-cog"></i> Offline Settings</h5>
+            
+            <div class="setting-item">
+                <label>
+                    <input type="checkbox" id="autoCacheTiles" checked>
+                    Auto-cache tiles on view
+                </label>
+            </div>
+            
+            <div class="setting-item">
+                <label>
+                    <input type="checkbox" id="showOfflineOnly" checked>
+                    Show offline indicator
+                </label>
+            </div>
+            
+            <div class="setting-item">
+                <label>Max Zoom Level:</label>
+                <select id="maxCacheZoom">
+                    <option value="15">15 (Low Detail)</option>
+                    <option value="16" selected>16 (Medium Detail)</option>
+                    <option value="17">17 (High Detail)</option>
+                    <option value="18">18 (Very High Detail)</option>
+                </select>
+            </div>
+            
+            <div class="setting-item">
+                <label for="tileServerMode">
+                    <i class="fas fa-server"></i> Tile Server Mode
+                </label>
+                <select id="tileServerMode" class="form-control">
+                    <option value="local">Local (C# Server)</option>
+                    <option value="external">External (TileServer-GL - Faster ⚡)</option>
+                </select>
+                <small style="display: block; margin-top: 5px; color: #999; font-size: 11px;">
+                    External server provides 10-50x faster tile loading. Requires TileServer-GL running on port 8080.
+                </small>
+            </div>
+        </div>
+        
+        <!-- Cache Statistics -->
+        <div class="stats-section">
+            <h5><i class="fas fa-chart-bar"></i> Cache Statistics</h5>
+            
+            <div class="stat-item">
+                <span class="stat-label">Total Tiles:</span>
+                <span class="stat-value" id="totalTiles">0</span>
+            </div>
+            
+            <div class="stat-item">
+                <span class="stat-label">Storage Used:</span>
+                <span class="stat-value" id="storageUsed">0 MB</span>
+            </div>
+            
+            <div class="stat-item">
+                <span class="stat-label">Last Updated:</span>
+                <span class="stat-value" id="lastUpdated">Never</span>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button class="btn btn-success" id="testOfflineMode">
+                <i class="fas fa-wifi-slash"></i> Test Offline Mode
+            </button>
+            
+            <button class="btn btn-secondary" id="exportCache">
+                <i class="fas fa-download"></i> Export Cache
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.offline-controls-panel {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 320px;
+    background: rgba(26, 26, 26, 0.95);
+    border: 1px solid #444;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: none;
+}
+
+.offline-controls-panel.show {
+    display: block;
+    animation: slideIn 0.3s ease-out;
+}
+
+@@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #444;
+    background: rgba(40, 40, 40, 0.8);
+}
+
+.panel-header h4 {
+    margin: 0;
+    font-size: 16px;
+    color: #fff;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.panel-content {
+    padding: 20px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.status-section, .cache-section, .settings-section, .stats-section {
+    margin-bottom: 20px;
+}
+
+.status-section h5, .cache-section h5, .settings-section h5, .stats-section h5 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: #ccc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-item, .stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.status-label, .stat-label {
+    color: #ccc;
+    font-size: 13px;
+}
+
+.status-value, .stat-value {
+    color: #fff;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.cache-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cache-actions .btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-info {
+    background: #17a2b8;
+    color: white;
+}
+
+.btn-warning {
+    background: #ffc107;
+    color: #000;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.cache-progress {
+    margin-top: 15px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.progress-label {
+    font-size: 12px;
+    color: #ccc;
+    margin-bottom: 5px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 11px;
+    color: #ccc;
+    text-align: center;
+}
+
+.setting-item {
+    margin-bottom: 10px;
+}
+
+.setting-item label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #ccc;
+    cursor: pointer;
+}
+
+.setting-item input[type="checkbox"] {
+    accent-color: #007bff;
+}
+
+.setting-item select {
+    width: 100%;
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 13px;
+}
+
+.quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive */
+@@media (max-width: 768px) {
+    .offline-controls-panel {
+        width: 280px;
+        right: 10px;
+        top: 10px;
+    }
+    
+    .panel-content {
+        padding: 15px;
+    }
+    
+    .cache-actions .btn {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+}
+</style>
+
+<script>
+// Offline Controls JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    initializeOfflineControls();
+});
+
+function initializeOfflineControls() {
+    console.log('🔧 Initializing offline controls...');
+    
+    // Event listeners
+    document.getElementById('saveVisibleTiles').addEventListener('click', saveVisibleTiles);
+    document.getElementById('saveAreaTiles').addEventListener('click', saveAreaTiles);
+    document.getElementById('saveToFolder').addEventListener('click', saveToFolder);
+    document.getElementById('exportTiles').addEventListener('click', exportTiles);
+    document.getElementById('storageSettings').addEventListener('click', showStorageSettings);
+    document.getElementById('clearCache').addEventListener('click', clearCache);
+    document.getElementById('verifyOffline').addEventListener('click', verifyOfflineFunctionality);
+    document.getElementById('testOfflineMode').addEventListener('click', testOfflineMode);
+    document.getElementById('exportCache').addEventListener('click', exportCache);
+    
+    // Settings listeners
+    document.getElementById('autoCacheTiles').addEventListener('change', updateAutoCacheSetting);
+    document.getElementById('showOfflineOnly').addEventListener('change', updateOfflineIndicatorSetting);
+    document.getElementById('maxCacheZoom').addEventListener('change', updateMaxCacheZoom);
+    
+    // Initialize tile server mode selector
+    initializeTileServerModeSelector();
+    
+    // Update status periodically
+    setInterval(updateCacheStatus, 5000);
+    updateCacheStatus();
+    
+    console.log('✅ Offline controls initialized');
+}
+
+function saveVisibleTiles() {
+    console.log('💾 Saving visible tiles...');
+    
+    if (!window.gameMap) {
+        alert('Map not available');
+        return;
+    }
+    
+    const progressDiv = document.getElementById('cacheProgress');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    
+    progressDiv.style.display = 'block';
+    
+    // Get all offline layers
+    const offlineLayers = [];
+    window.gameMap.eachLayer(layer => {
+        if (layer instanceof L.TileLayer.Offline) {
+            offlineLayers.push(layer);
+        }
+    });
+    
+    if (offlineLayers.length === 0) {
+        alert('No offline-capable layers found');
+        progressDiv.style.display = 'none';
+        return;
+    }
+    
+    let totalTiles = 0;
+    let savedTiles = 0;
+    
+    // Calculate total tiles
+    offlineLayers.forEach(layer => {
+        const bounds = window.gameMap.getBounds();
+        const zoom = Math.min(window.gameMap.getZoom(), parseInt(document.getElementById('maxCacheZoom').value));
+        const tiles = calculateTilesInBounds(bounds, zoom);
+        totalTiles += tiles.length;
+    });
+    
+    progressText.textContent = `0 / ${totalTiles}`;
+    
+    // Save tiles for each layer
+    offlineLayers.forEach(layer => {
+        layer.saveVisibleTiles().then(saved => {
+            savedTiles += saved.length;
+            const progress = Math.min((savedTiles / totalTiles) * 100, 100);
+            progressFill.style.width = progress + '%';
+            progressText.textContent = `${savedTiles} / ${totalTiles}`;
+            
+            if (savedTiles >= totalTiles) {
+                setTimeout(() => {
+                    progressDiv.style.display = 'none';
+                    updateCacheStatus();
+                    alert(`Successfully saved ${savedTiles} tiles!`);
+                }, 1000);
+            }
+        }).catch(error => {
+            console.error('Error saving tiles:', error);
+            progressDiv.style.display = 'none';
+            alert('Error saving tiles: ' + error.message);
+        });
+    });
+}
+
+function saveAreaTiles() {
+    const bounds = prompt('Enter area bounds (lat1,lng1,lat2,lng2):');
+    if (!bounds) return;
+    
+    try {
+        const [lat1, lng1, lat2, lng2] = bounds.split(',').map(Number);
+        const areaBounds = L.latLngBounds([lat1, lng1], [lat2, lng2]);
+        
+        // Fit map to area
+        window.gameMap.fitBounds(areaBounds);
+        
+        // Save tiles after a short delay
+        setTimeout(() => {
+            saveVisibleTiles();
+        }, 1000);
+        
+    } catch (error) {
+        alert('Invalid bounds format. Use: lat1,lng1,lat2,lng2');
+    }
+}
+
+async function saveToFolder() {
+    console.log('📁 Saving tiles to folder...');
+    
+    // Check if File System Access API is available
+    if (!('showDirectoryPicker' in window)) {
+        alert('File System Access API not available. Please use Chrome or Edge browser.');
+        return;
+    }
+    
+    try {
+        // Let user choose a folder
+        const dirHandle = await window.showDirectoryPicker({
+            mode: 'readwrite',
+            startIn: 'documents'
+        });
+        
+        console.log('📁 Selected folder:', dirHandle.name);
+        
+        // Create map-tiles directory in the chosen folder
+        const tilesDir = await dirHandle.getDirectoryHandle('map-tiles', { create: true });
+        
+        // Get current map bounds and zoom level
+        const bounds = window.gameMap.getBounds();
+        const zoom = window.gameMap.getZoom();
+        const layerName = 'satellite'; // Default layer name
+        
+        // Calculate tiles to save
+        const tiles = calculateTilesInBounds(bounds, zoom);
+        
+        if (tiles.length === 0) {
+            alert('No tiles to save in current view');
+            return;
+        }
+        
+        // Show progress
+        showProgress(`Saving ${tiles.length} tiles to folder...`);
+        
+        // Save tiles one by one
+        let savedCount = 0;
+        for (const tile of tiles) {
+            try {
+                await saveTileToFolder(tilesDir, layerName, tile, zoom);
+                savedCount++;
+                
+                // Update progress
+                const progress = (savedCount / tiles.length * 100).toFixed(1);
+                updateProgress(progress, `Saved ${savedCount}/${tiles.length} tiles`);
+                
+            } catch (error) {
+                console.error('Error saving tile:', error);
+            }
+        }
+        
+        hideProgress();
+        alert(`Successfully saved ${savedCount} tiles to folder!\nLocation: ${dirHandle.name}/map-tiles/`);
+        
+    } catch (error) {
+        console.error('Error saving to folder:', error);
+        hideProgress();
+        
+        if (error.name === 'AbortError') {
+            alert('Save cancelled by user');
+        } else {
+            alert('Error saving to folder: ' + error.message);
+        }
+    }
+}
+
+function calculateTilesInBounds(bounds, zoom) {
+    const tiles = [];
+    
+    // Convert bounds to tile coordinates
+    const nw = window.gameMap.project(bounds.getNorthWest(), zoom);
+    const se = window.gameMap.project(bounds.getSouthEast(), zoom);
+    
+    const tileSize = 256;
+    const minX = Math.floor(nw.x / tileSize);
+    const maxX = Math.floor(se.x / tileSize);
+    const minY = Math.floor(nw.y / tileSize);
+    const maxY = Math.floor(se.y / tileSize);
+    
+    for (let x = minX; x <= maxX; x++) {
+        for (let y = minY; y <= maxY; y++) {
+            tiles.push({ x, y, z: zoom });
+        }
+    }
+    
+    return tiles;
+}
+
+async function saveTileToFolder(dirHandle, layerName, tile, zoom) {
+    try {
+        // Create directory structure: layerName/z/x/
+        const layerDir = await dirHandle.getDirectoryHandle(layerName, { create: true });
+        const zDir = await layerDir.getDirectoryHandle(tile.z.toString(), { create: true });
+        const xDir = await zDir.getDirectoryHandle(tile.x.toString(), { create: true });
+        
+        // Download tile image
+        const tileUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${tile.z}/${tile.y}/${tile.x}`;
+        
+        const response = await fetch(tileUrl);
+        if (!response.ok) {
+            throw new Error(`Failed to download tile: ${response.status}`);
+        }
+        
+        const blob = await response.blob();
+        
+        // Save tile file
+        const fileName = `${tile.y}.png`;
+        const fileHandle = await xDir.getFileHandle(fileName, { create: true });
+        const writable = await fileHandle.createWritable();
+        
+        await writable.write(blob);
+        await writable.close();
+        
+        console.log(`💾 Saved tile: ${layerName}/${tile.z}/${tile.x}/${tile.y}.png`);
+        
+    } catch (error) {
+        console.error(`Error saving tile ${tile.x}/${tile.y}/${tile.z}:`, error);
+        throw error;
+    }
+}
+
+function showProgress(message) {
+    const progressDiv = document.getElementById('cacheProgress');
+    if (progressDiv) {
+        progressDiv.style.display = 'block';
+        const label = progressDiv.querySelector('.progress-label');
+        if (label) label.textContent = message;
+    }
+}
+
+function updateProgress(percentage, message) {
+    const progressDiv = document.getElementById('cacheProgress');
+    if (progressDiv) {
+        const label = progressDiv.querySelector('.progress-label');
+        const bar = progressDiv.querySelector('.progress-bar');
+        
+        if (label) label.textContent = message;
+        if (bar) {
+            bar.style.width = percentage + '%';
+            bar.setAttribute('aria-valuenow', percentage);
+        }
+    }
+}
+
+function hideProgress() {
+    const progressDiv = document.getElementById('cacheProgress');
+    if (progressDiv) {
+        progressDiv.style.display = 'none';
+    }
+}
+
+function clearCache() {
+    if (confirm('Are you sure you want to clear all cached tiles?')) {
+        console.log('🗑️ Clearing cache...');
+        
+        const offlineLayers = [];
+        window.gameMap.eachLayer(layer => {
+            if (layer instanceof L.TileLayer.Offline) {
+                offlineLayers.push(layer);
+            }
+        });
+        
+        Promise.all(offlineLayers.map(layer => layer.clearOfflineTiles())).then(() => {
+            updateCacheStatus();
+            alert('Cache cleared successfully!');
+        }).catch(error => {
+            console.error('Error clearing cache:', error);
+            alert('Error clearing cache: ' + error.message);
+        });
+    }
+}
+
+function exportTiles() {
+    console.log('📦 Exporting tiles...');
+    
+    const offlineLayers = [];
+    window.gameMap.eachLayer(layer => {
+        if (layer instanceof L.TileLayer.Offline) {
+            offlineLayers.push(layer);
+        }
+    });
+    
+    if (offlineLayers.length > 0) {
+        offlineLayers[0].exportTilesAsZip().then(() => {
+            alert('Tiles exported successfully!');
+        }).catch(error => {
+            console.error('Error exporting tiles:', error);
+            alert('Error exporting tiles: ' + error.message);
+        });
+    } else {
+        alert('No offline layers found');
+    }
+}
+
+function showStorageSettings() {
+    // Check if storage modal already exists
+    const existingModal = document.querySelector('.offline-storage-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Create storage settings modal
+    const modal = document.createElement('div');
+    modal.className = 'offline-storage-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-family: Arial, sans-serif;
+    `;
+    
+    // Get storage backends info
+    const backends = window.TileStorage ? window.TileStorage.backends : {
+        indexeddb: { name: 'IndexedDB', available: true },
+        filesystem: { name: 'File System', available: false },
+        server: { name: 'Server Storage', available: false }
+    };
+    
+    const currentStorage = window.TileStorage ? window.TileStorage.storageType : 'indexeddb';
+    
+    modal.innerHTML = `
+        <div style="background: #2a2a2a; padding: 30px; border-radius: 10px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+            <h2 style="margin-top: 0; color: #fff;">🗄️ Storage Settings</h2>
+            
+            <div style="margin-bottom: 20px;">
+                <h3>Current Storage: ${backends[currentStorage]?.name || 'Unknown'}</h3>
+                <p style="color: #ccc;">Choose how map tiles are stored for offline use:</p>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                ${Object.entries(backends).map(([key, backend]) => `
+                    <label style="display: block; margin-bottom: 15px; padding: 15px; background: ${key === currentStorage ? '#007bff' : '#444'}; border-radius: 8px; cursor: pointer; border: 2px solid ${key === currentStorage ? '#007bff' : 'transparent'};">
+                        <input type="radio" name="storage" value="${key}" ${key === currentStorage ? 'checked' : ''} 
+                               style="margin-right: 10px; transform: scale(1.2);">
+                        <strong style="font-size: 16px;">${backend.name}</strong>
+                        <div style="font-size: 13px; color: #ccc; margin-top: 8px; line-height: 1.4;">
+                            ${getStorageDescription(key)}
+                        </div>
+                        <div style="font-size: 12px; color: ${backend.available ? '#28a745' : '#dc3545'}; margin-top: 5px;">
+                            ${backend.available ? '✅ Available' : '❌ Not Available'}
+                        </div>
+                    </label>
+                `).join('')}
+            </div>
+            
+            <div style="margin-bottom: 20px; padding: 15px; background: #333; border-radius: 8px;">
+                <h4 style="margin-top: 0;">💡 Storage Tips:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px; color: #ccc; font-size: 13px;">
+                    <li><strong>IndexedDB:</strong> Fast but limited by browser quota (~500MB-2GB)</li>
+                    <li><strong>File System:</strong> Permanent storage on your computer, requires permission</li>
+                    <li><strong>Server:</strong> Stored on game server, accessible from any device</li>
+                    <li><strong>Hybrid:</strong> Saves to multiple locations for maximum reliability</li>
+                </ul>
+            </div>
+            
+            <div style="text-align: right;">
+                <button id="saveStorageSettings" style="background: #28a745; color: white; border: none; padding: 12px 24px; border-radius: 6px; margin-right: 10px; cursor: pointer; font-size: 14px;">
+                    Save Settings
+                </button>
+                <button id="closeStorageModal" style="background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                    Close
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // Add event listeners
+    modal.querySelector('#closeStorageModal').onclick = () => modal.remove();
+    modal.querySelector('#saveStorageSettings').onclick = () => {
+        const selected = modal.querySelector('input[name="storage"]:checked');
+        if (selected && window.TileStorage) {
+            window.TileStorage.storageType = selected.value;
+            console.log(`Storage type changed to: ${selected.value}`);
+            alert(`Storage type changed to: ${backends[selected.value].name}`);
+        }
+        modal.remove();
+    };
+    
+    // Close on background click
+    modal.onclick = (e) => {
+        if (e.target === modal) modal.remove();
+    };
+    
+    document.body.appendChild(modal);
+}
+
+function getStorageDescription(storageType) {
+    const descriptions = {
+        'indexeddb': 'Fast browser storage, automatically available. Limited by browser quota but works offline immediately.',
+        'filesystem': 'Saves tiles to your computer as actual files. Permanent storage but requires permission each time.',
+        'server': 'Uploads tiles to the game server. Accessible from any device but requires internet connection.',
+        'hybrid': 'Saves to multiple locations simultaneously for maximum reliability and backup.'
+    };
+    return descriptions[storageType] || 'Unknown storage type';
+}
+
+function verifyOfflineFunctionality() {
+    console.log('🧪 Starting offline verification...');
+    
+    if (window.offlineVerifier) {
+        window.offlineVerifier.runAllTests();
+    } else {
+        alert('Offline verification not available. Please refresh the page.');
+    }
+}
+
+function testOfflineMode() {
+    console.log('🧪 Testing offline mode...');
+    
+    // Simulate offline mode by blocking network requests
+    const originalFetch = window.fetch;
+    window.fetch = function() {
+        return Promise.reject(new Error('Simulated offline mode'));
+    };
+    
+    alert('Offline mode activated! Map tiles will be loaded from cache only.');
+    
+    // Restore after 30 seconds
+    setTimeout(() => {
+        window.fetch = originalFetch;
+        alert('Online mode restored.');
+    }, 30000);
+}
+
+function exportCache() {
+    console.log('📤 Exporting cache...');
+    alert('Cache export feature coming soon!');
+}
+
+function updateAutoCacheSetting(event) {
+    const enabled = event.target.checked;
+    localStorage.setItem('autoCacheTiles', enabled);
+    console.log('Auto-cache setting updated:', enabled);
+}
+
+function updateOfflineIndicatorSetting(event) {
+    const enabled = event.target.checked;
+    const indicator = document.getElementById('offlineStatus');
+    if (indicator) {
+        indicator.style.display = enabled ? 'block' : 'none';
+    }
+    localStorage.setItem('showOfflineIndicator', enabled);
+}
+
+function updateMaxCacheZoom(event) {
+    const maxZoom = event.target.value;
+    localStorage.setItem('maxCacheZoom', maxZoom);
+    console.log('Max cache zoom updated:', maxZoom);
+}
+
+// Initialize tile server mode selector
+function initializeTileServerModeSelector() {
+    const selector = document.getElementById('tileServerMode');
+    if (!selector) return;
+    
+    // Load saved preference
+    const savedMode = localStorage.getItem('tileServerMode') || 'local';
+    selector.value = savedMode;
+    
+    // Apply saved mode (guard external under HTTPS to avoid mixed content)
+    if (savedMode === 'external' && location.protocol === 'http:') {
+        if (window.TileServerConfig) {
+            window.TileServerConfig.useExternalServer('http://localhost:8080');
+        }
+    } else {
+        if (window.TileServerConfig) {
+            window.TileServerConfig.useLocalServer();
+        }
+    }
+    
+    // Handle changes
+    selector.addEventListener('change', (e) => {
+        const newMode = e.target.value;
+        
+        if (newMode === 'external') {
+            if (location.protocol !== 'http:') {
+                // Prevent switching to external over HTTPS
+                selector.value = 'local';
+                if (typeof toastr !== 'undefined') {
+                    toastr.warning('External tile server requires HTTP or an HTTPS proxy. Staying on local tiles.', 'Mixed Content');
+                }
+                return;
+            }
+            // Check if external server is running
+            fetch('http://localhost:8080/')
+                .then(response => {
+                    if (response.ok) {
+                        if (window.TileServerConfig) {
+                            window.TileServerConfig.useExternalServer('http://localhost:8080');
+                        }
+                        localStorage.setItem('tileServerMode', 'external');
+                        
+                        if (typeof toastr !== 'undefined') {
+                            toastr.success('Switched to TileServer-GL (Faster)', 'Tile Server');
+                        }
+                        
+                        // Reload current map if one is loaded
+                        if (window.gamePlayManager && window.gamePlayManager.currentTileLayer) {
+                            const currentMapPath = document.getElementById('mapSelector')?.value;
+                            if (currentMapPath) {
+                                window.switchGamePlayMap(currentMapPath);
+                            }
+                        }
+                    } else {
+                        throw new Error('Server responded but not OK');
+                    }
+                })
+                .catch(err => {
+                    console.error('External tile server not reachable:', err);
+                    selector.value = 'local';
+                    
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error('TileServer-GL not running on port 8080. Start it first.', 'Connection Error');
+                    } else {
+                        alert('TileServer-GL not running on port 8080. Please start the tile server first.');
+                    }
+                });
+        } else {
+            if (window.TileServerConfig) {
+                window.TileServerConfig.useLocalServer();
+            }
+            localStorage.setItem('tileServerMode', 'local');
+            
+            if (typeof toastr !== 'undefined') {
+                toastr.info('Switched to C# Server', 'Tile Server');
+            }
+            
+            // Reload current map
+            if (window.gamePlayManager && window.gamePlayManager.currentTileLayer) {
+                const currentMapPath = document.getElementById('mapSelector')?.value;
+                if (currentMapPath) {
+                    window.switchGamePlayMap(currentMapPath);
+                }
+            }
+        }
+    });
+    
+    console.log('✅ Tile server mode selector initialized:', savedMode);
+}
+
+function updateCacheStatus() {
+    if (!window.gameMap) return;
+    
+    const offlineLayers = [];
+    window.gameMap.eachLayer(layer => {
+        if (layer instanceof L.TileLayer.Offline) {
+            offlineLayers.push(layer);
+        }
+    });
+    
+    if (offlineLayers.length > 0) {
+        Promise.all(offlineLayers.map(layer => layer.getOfflineTileCount())).then(counts => {
+            const total = counts.reduce((sum, count) => sum + count, 0);
+            document.getElementById('cachedTilesCount').textContent = total;
+            document.getElementById('totalTiles').textContent = total;
+            
+            // Estimate storage (rough calculation: ~20KB per tile)
+            const storageMB = (total * 20 / 1024).toFixed(1);
+            document.getElementById('storageUsed').textContent = storageMB + ' MB';
+            
+            // Update last updated time
+            if (total > 0) {
+                document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+            }
+        }).catch(error => {
+            console.error('Error updating cache status:', error);
+        });
+    }
+    
+    // Update connection status
+    const connectionStatus = document.getElementById('connectionStatus');
+    if (navigator.onLine) {
+        connectionStatus.innerHTML = '<i class="fas fa-wifi"></i> Online';
+        connectionStatus.className = 'status-value online';
+    } else {
+        connectionStatus.innerHTML = '<i class="fas fa-wifi-slash"></i> Offline';
+        connectionStatus.className = 'status-value offline';
+    }
+}
+
+function calculateTilesInBounds(bounds, zoom) {
+    const tiles = [];
+    const west = Math.floor(bounds.getWest());
+    const east = Math.ceil(bounds.getEast());
+    const south = Math.floor(bounds.getSouth());
+    const north = Math.ceil(bounds.getNorth());
+    
+    for (let x = west; x <= east; x++) {
+        for (let y = south; y <= north; y++) {
+            tiles.push({ z: zoom, x: x, y: y });
+        }
+    }
+    
+    return tiles;
+}
+
+function toggleOfflinePanel() {
+    const panel = document.getElementById('offlineControlsPanel');
+    panel.classList.toggle('show');
+}
+
+// Make toggle function globally available
+window.toggleOfflinePanel = toggleOfflinePanel;
+</script>

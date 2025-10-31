@@ -37,16 +37,297 @@ label,
     font-size: 14px;
 }
 
+/* Gameplay modal: readable, light grey with cyan accents */
+.gameplay-modal .modal-content {
+    background: #fafbfc !important;
+    border: 1px solid rgba(0,0,0,0.06) !important;
+    border-radius: 12px !important;
+}
+.gameplay-modal .modal-header,
+.gameplay-modal .modal-footer {
+    background: #f8f9fa !important;
+    border-color: rgba(0,0,0,0.06) !important;
+}
+.gameplay-modal .modal-title {
+    color: var(--accent-secondary-strong) !important;
+    font-weight: 700 !important;
+    font-size: 1.35rem !important;
+    letter-spacing: 0.3px;
+}
+.gameplay-modal .modal-body,
+.gameplay-modal label,
+.gameplay-modal .form-text {
+    color: #344767 !important;
+    font-size: 1.05rem;
+}
+.gameplay-modal .form-control,
+.gameplay-modal .form-select,
+.gameplay-modal .input-group-text,
+.gameplay-modal textarea.form-control {
+    background: #f8f9fa !important;
+    border-color: #e1e5ea !important;
+    font-size: 1.05rem !important;
+    color: #344767 !important;
+}
+.gameplay-modal .form-control:focus,
+.gameplay-modal .form-select:focus,
+.gameplay-modal textarea.form-control:focus {
+    background: #ffffff !important;
+    border-color: var(--accent-secondary) !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 188, 212, 0.15) !important;
+}
+.gameplay-modal .btn-primary {
+    background: linear-gradient(135deg, var(--accent-secondary) 0%, #00acc1 100%) !important;
+}
+
+/* Override dark styles in Attack Planning modal to app theme */
+#attackOrderSelectionModal.gameplay-modal .modal-content,
+#attackOrderSelectionModal.gameplay-modal .modal-header,
+#attackOrderSelectionModal.gameplay-modal .modal-body,
+#attackOrderSelectionModal.gameplay-modal .modal-footer {
+    background: #fafbfc !important;
+    color: #344767 !important;
+    border-color: #e1e5ea !important;
+}
+#attackOrderSelectionModal.gameplay-modal .military-instruction,
+#attackOrderSelectionModal.gameplay-modal .military-order-item {
+    background: #ffffff !important;
+    color: #344767 !important;
+    border-color: #e1e5ea !important;
+}
+#attackOrderSelectionModal.gameplay-modal .military-order-line,
+#attackOrderSelectionModal.gameplay-modal .btn,
+#attackOrderSelectionModal.gameplay-modal .military-status {
+    color: #344767 !important;
+}
+
+/* Token Summary readability on light modal */
+#tokenSummaryModal.gameplay-modal .modal-body {
+    color: #344767 !important;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+}
+#tokenSummaryModal.gameplay-modal .token-summary-section,
+#tokenSummaryModal.gameplay-modal .summary-item,
+#tokenSummaryModal.gameplay-modal .no-data-message {
+    background: #ffffff !important;
+    border: 1px solid #e1e5ea !important;
+    color: #344767 !important;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+#tokenSummaryModal.gameplay-modal .token-section-title,
+#tokenSummaryModal.gameplay-modal .subsection-title,
+#tokenSummaryModal.gameplay-modal h6 {
+    color: var(--accent-secondary-strong) !important;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+#tokenSummaryModal.gameplay-modal .table-responsive {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+/* Token Summary - Unit Cards */
+.unit-card {
+    border: 1px solid #e1e5ea;
+    border-radius: 0.375rem;
+    transition: box-shadow 0.2s ease;
+}
+.unit-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    background-color: #fafbfc;
+}
+
+.unit-card .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e1e5ea;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+}
+
+/* Remove any weird hover colors on card elements */
+.unit-card:hover .card-header,
+.unit-card .card-header:hover {
+    background-color: #f8f9fa !important;
+    color: inherit !important;
+}
+.unit-card:hover .card-body,
+.unit-card .card-body:hover {
+    background-color: #fafbfc !important;
+    color: inherit !important;
+}
+
+.unit-header-brigade {
+    background-color: #e3f2fd !important;
+    border-left: 4px solid #00bcd4;
+}
+.unit-header-brigade:hover {
+    background-color: #e3f2fd !important;
+}
+
+.unit-header-infantry, .infantry-card {
+    border-left: 4px solid #f97316;
+}
+.unit-header-infantry {
+    background-color: #fff7ed !important;
+}
+.unit-header-infantry:hover {
+    background-color: #fff7ed !important;
+}
+
+.unit-header-armoured, .armoured-card {
+    border-left: 4px solid #00bcd4;
+}
+.unit-header-armoured {
+    background-color: #e0f7fa !important;
+}
+.unit-header-armoured:hover {
+    background-color: #e0f7fa !important;
+}
+
+.unit-header-artillery, .artillery-card {
+    border-left: 4px solid #8b5cf6;
+}
+.unit-header-artillery {
+    background-color: #f3e8ff !important;
+}
+.unit-header-artillery:hover {
+    background-color: #f3e8ff !important;
+}
+
+.unit-header-logistics, .logistics-card {
+    border-left: 4px solid #eab308;
+}
+.unit-header-logistics {
+    background-color: #fefce8 !important;
+}
+.unit-header-logistics:hover {
+    background-color: #fefce8 !important;
+}
+
+.unit-header-engineering, .engineering-card {
+    border-left: 4px solid #00acc1;
+}
+.unit-header-engineering {
+    background-color: #e0f2f1 !important;
+}
+.unit-header-engineering:hover {
+    background-color: #e0f2f1 !important;
+}
+
+/* Token Summary - Stats Display */
+.stat-item {
+    padding: 0.4rem 15px;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #f0f0f0;
+}
+.stat-item:last-child {
+    border-bottom: none;
+}
+.stat-label {
+    font-weight: 500;
+    color: #6c757d;
+    font-size: 0.9rem;
+    padding-right: 15px;
+}
+.stat-value {
+    font-weight: 600;
+    color: #344767;
+    font-size: 0.9rem;
+    text-align: right;
+}
+
+.unit-description {
+    color: #6c757d;
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+    padding: 0 15px;
+    font-style: italic;
+}
+
+.unit-count-badges {
+    font-size: 0.9rem;
+}
+
+.subsection-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--accent-secondary-strong);
+    margin-bottom: 0.5rem;
+    padding: 0 15px 0.25rem 15px;
+    border-bottom: 2px solid #e1e5ea;
+}
+
+/* ORBAT table on light modal */
+.gameplay-modal .orbat-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+    border: 1px solid #e1e5ea;
+}
+.gameplay-modal .orbat-table th {
+    background: #f8f9fa;
+    color: var(--accent-secondary-strong);
+    border-bottom: 2px solid #e1e5ea;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+.gameplay-modal .orbat-table td {
+    border-top: 1px solid #e9eef2;
+    padding: 10px 12px;
+    color: #344767;
+    font-size: 0.9rem;
+}
+.gameplay-modal .orbat-table tbody tr:hover {
+    background-color: #f8f9fa !important;
+}
+
+/* ORBAT table column widths */
+.orbat-table .col-unit { width: 38%; }
+.orbat-table .col-strength { width: 14%; }
+.orbat-table .col-organization { width: 24%; }
+.orbat-table .col-weapons { width: 24%; }
+
+/* Unit type row colors */
+.unit-row.unit-type-brigade td { 
+    border-left: 4px solid #00bcd4;
+    background-color: #e3f2fd;
+    font-weight: 600;
+}
+.unit-row.unit-type-infantry td { 
+    border-left: 4px solid #f97316; 
+}
+.unit-row.unit-type-armoured td { 
+    border-left: 4px solid #00bcd4; 
+}
+.unit-row.unit-type-artillery td { 
+    border-left: 4px solid #8b5cf6; 
+}
+.unit-row.unit-type-logistics td { 
+    border-left: 4px solid #eab308; 
+}
+.unit-row.unit-type-engineering td { 
+    border-left: 4px solid #00acc1; 
+}
+
 /* Modal background slightly grey for eye comfort */
 .modal-content {
-	background-color: #f7f8fa; /* light grey */
+	background-color: #fafbfc !important; /* very light grey (10% opacity) */
+	border: 1px solid rgba(0,0,0,0.06) !important;
+	border-radius: 12px !important;
 }
 
 /* Modal header/footer keep white text contrast and subtle separators */
 .modal-header,
 .modal-footer {
-	background-color: #f9fafb;
-	border-color: #edf0f2;
+	background-color: #f8f9fa !important;
+	border-color: #e1e5ea !important;
 }
 
 /* Form controls: soften input backgrounds */
@@ -54,16 +335,25 @@ label,
 .form-select,
 .input-group-text,
 textarea.form-control {
-	background-color: #fbfcfe;
-	border-color: #e2e6ea;
+	background-color: #f8f9fa !important;
+	border-color: #e1e5ea !important;
+	color: #344767 !important;
+}
+
+.form-control:focus,
+.form-select:focus,
+textarea.form-control:focus {
+	background-color: #ffffff !important;
+	border-color: var(--accent-secondary) !important;
+	box-shadow: 0 0 0 0.2rem rgba(0, 188, 212, 0.15) !important;
 }
 
 /* Cards/panels if used */
 .card,
 .panel,
 .list-group-item {
-	background-color: #fbfcfe;
-	border-color: #edf0f2;
+	background-color: #fafbfc !important;
+	border-color: #e1e5ea !important;
 }
 
 /* Accent heading color for improved readability */
@@ -72,8 +362,106 @@ h1.heading-accent,
 h2.heading-accent,
 h3.heading-accent,
 .title-accent {
-	color: var(--accent-secondary-strong);
-	font-weight: 700;
+	color: var(--accent-secondary-strong) !important;
+	font-weight: 700 !important;
+}
+
+/* Modal body text */
+.modal-body,
+.modal-body label,
+.modal-body .form-text {
+	color: #344767 !important;
+}
+
+/* Table styling in modals */
+.modal .table {
+	background-color: #ffffff !important;
+	color: #344767 !important;
+}
+
+.modal .table thead th {
+	background-color: #f8f9fa !important;
+	color: var(--accent-secondary-strong) !important;
+	border-color: #e1e5ea !important;
+}
+
+.modal .table tbody td {
+	border-color: #e9eef2 !important;
+	color: #344767 !important;
+}
+
+.modal .table tbody tr:hover {
+	background-color: #f8f9fa !important;
+}
+
+/* Button styling in modals */
+.modal .btn-primary {
+	background: linear-gradient(135deg, var(--accent-secondary) 0%, #00acc1 100%) !important;
+	border: none !important;
+	color: #ffffff !important;
+}
+
+.modal .btn-secondary {
+	background-color: #6c757d !important;
+	border-color: #6c757d !important;
+	color: #ffffff !important;
+}
+
+.modal .btn-outline-primary {
+	border-color: var(--accent-secondary) !important;
+	color: var(--accent-secondary) !important;
+}
+
+.modal .btn-outline-primary:hover {
+	background-color: var(--accent-secondary) !important;
+	color: #ffffff !important;
+}
+
+/* Badge and Alert styling in modals */
+.modal .badge-primary,
+.modal .badge.badge-primary {
+	background-color: var(--accent-secondary) !important;
+	color: #ffffff !important;
+}
+
+.modal .badge-secondary {
+	background-color: #6c757d !important;
+	color: #ffffff !important;
+}
+
+.modal .alert {
+	background-color: #f8f9fa !important;
+	border-color: #e1e5ea !important;
+	color: #344767 !important;
+}
+
+.modal .alert-info {
+	background-color: #e3f2fd !important;
+	border-color: #00bcd4 !important;
+	color: #344767 !important;
+}
+
+.modal .alert-warning {
+	background-color: #fff3cd !important;
+	border-color: #ffc107 !important;
+	color: #344767 !important;
+}
+
+/* Card styling in modals */
+.modal .card {
+	background-color: #ffffff !important;
+	border-color: #e1e5ea !important;
+}
+
+.modal .card-header {
+	background-color: #f8f9fa !important;
+	border-color: #e1e5ea !important;
+	color: var(--accent-secondary-strong) !important;
+}
+
+.modal .card-body {
+	background-color: #ffffff !important;
+	color: #344767 !important;
 }
 
 /* Thin underline accent utility */

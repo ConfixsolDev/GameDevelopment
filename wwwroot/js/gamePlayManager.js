@@ -1432,7 +1432,6 @@ GamePlayManager.prototype.showCurrentZoomLevel = function() {
  * Available immediately when gamePlayManager loads
  */
 function openDataEntry() {
-    console.log('🎯 Opening Data Entry - Simple AJAX approach');
     
     // Show loading
     $("#loading").show();
