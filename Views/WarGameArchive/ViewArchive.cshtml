@@ -1,0 +1,201 @@
+@inject IUserSessionService _userSessionService;
+@using Newtonsoft.Json
+@{
+    var currentUser = _userSessionService.GetCurrentUser();
+    bool isArchiveView = true; // Mark as archive view (read-only)
+    Layout = "_GamePlayLayout";
+    
+    var archiveDataObj = ViewData["ArchiveData"];
+    var archiveData = archiveDataObj != null ? JsonConvert.SerializeObject(archiveDataObj) : "{}";
+    var archiveId = ViewData["ArchiveId"]?.ToString() ?? "";
+}
+
+<div class="gameplay-container archive-view" data-archive-id="@archiveId">
+    <!-- Hidden field to store archive data -->
+    <input type="hidden" id="archiveData" value="@Html.Raw(archiveData)" />
+    
+    <!-- Archive Header Banner -->
+    <div class="archive-header-banner" style="position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 9999; background: linear-gradient(135deg, #00bcd4 0%, #008fa1 100%); color: white; padding: 10px 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 16px; font-weight: bold; text-align: center;">
+        <i class="fas fa-archive"></i> <span>@ViewData["Title"]</span> - <span>@ViewData["Subtitle"]</span> | <span id="currentTurnDisplay">Turn 1</span>
+        <button id="turnSelector" class="btn btn-sm btn-light ml-2" onclick="showTurnSelector()">
+            <i class="fas fa-history"></i> Select Turn
+        </button>
+    </div>
+
+    <!-- MAIN AREA -->
+    <main class="game-main-area">
+        <!-- MAP -->
+        <div class="game-map-container">
+            <div id="gameMap"></div>
+        </div>
+
+        <!-- Overlay Controls - Read-Only Version -->
+        <div id="overlayControlsContainer">
+            @await Html.PartialAsync("Partials/Controls/_ArchiveOverlayControls")
+        </div>
+
+        <!-- BOTTOM-LEFT: Coordinates -->
+        <div class="coordinates-display slide-up" id="coordsBox">
+            <div class="coord-item"><span class="coord-label">Lat:</span><span class="coord-value" id="latVal">—</span></div>
+            <div class="coord-item"><span class="coord-label">Lng:</span><span class="coord-value" id="lngVal">—</span></div>
+            <div class="coord-item"><span class="coord-label">Zoom:</span><span class="coord-value" id="zoomVal">—</span></div>
+        </div>
+
+        <!-- BOTTOM-RIGHT: Quick Actions (Read-Only) -->
+        <div class="quick-actions slide-up">
+            <button id="centerMapBtn" class="action-btn" title="Center Map">
+                <i class="fas fa-crosshairs"></i>
+            </button>
+            <button id="toggleLayersBtn" class="action-btn" title="Toggle Layers">
+                <i class="fas fa-layer-group"></i>
+            </button>
+            <button id="toggleBoundaryBtn" class="action-btn" title="Toggle Game Area Boundary">
+                <i class="fas fa-square"></i>
+            </button>
+        </div>
+    </main>
+
+    <!-- RIGHT SIDEBAR -->
+    <aside class="game-sidebar">
+        <!-- Will be populated by archive data -->
+    </aside>
+
+    <!-- BOTTOM PANEL -->
+    <div class="game-bottom-panel">
+        <!-- Will be populated by archive data -->
+    </div>
+</div>
+
+<!-- Modal Container - Read-Only Modals -->
+<div id="modalsContainer">
+    @await Html.PartialAsync("Partials/Modals/_ArchiveTokenSummaryModal")
+    @await Html.PartialAsync("Partials/Modals/_ArchiveAttackDetailsModal")
+    @await Html.PartialAsync("Partials/Modals/_ArchiveMovementModal")
+</div>
+
+<!-- Turn Selector Modal -->
+<div class="modal fade" id="turnSelectorModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select Game Turn</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="turnList" class="list-group">
+                    <!-- Turns will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Core Scripts -->
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+<!-- Map Libraries -->
+<script src="~/lib/leaflet/js/leaflet.js"></script>
+<script src="~/lib/leaflet/js/leaflet.draw.js"></script>
+<script src="~/lib/leaflet/js/turf.min.js"></script>
+<script src="~/lib/leaflet/js/leaflet-providers.js"></script>
+
+@section Scripts {
+<!-- Archive Viewer JavaScript - Loads pre-saved data -->
+<script src="~/js/tileServerConfig.js"></script>
+<script src="~/js/FalconViewGridManager.js"></script>
+<script src="~/js/MilitarySymbolRenderer.js"></script>
+<script src="~/js/TokenManager.js"></script>
+<script src="~/js/TokenPlacementManager.js"></script>
+<script src="~/js/DefenseSymbolRenderer.js"></script>
+<script src="~/js/AttackSymbolRenderer.js"></script>
+
+<!-- Archive Data Loader -->
+<script src="~/js/ArchiveViewer.js"></script>
+
+<script>
+// Global archive data
+window.archiveData = null;
+window.currentTurn = 1;
+window.archiveTurns = {};
+
+// Load archive data from hidden field
+$(document).ready(function() {
+    try {
+        const archiveDataJson = $('#archiveData').val();
+        if (archiveDataJson) {
+            window.archiveData = JSON.parse(archiveDataJson);
+            window.currentTurn = window.archiveData.currentTurn || 1;
+            
+            // Parse game turns JSON
+            if (window.archiveData.gameTurnsJson) {
+                try {
+                    window.archiveTurns = JSON.parse(window.archiveData.gameTurnsJson);
+                } catch (e) {
+                    console.warn('Error parsing game turns JSON:', e);
+                    window.archiveTurns = {};
+                }
+            }
+            
+            console.log('📦 Archive data loaded:', window.archiveData);
+            console.log('🎯 Current turn:', window.currentTurn);
+            console.log('📋 Available turns:', Object.keys(window.archiveTurns));
+            
+            // Initialize archive viewer
+            if (typeof ArchiveViewer !== 'undefined') {
+                const archiveViewer = new ArchiveViewer(window.gameMap);
+                archiveViewer.loadArchiveData(window.archiveData);
+            }
+        } else {
+            console.error('❌ No archive data found');
+        }
+    } catch (error) {
+        console.error('❌ Error loading archive data:', error);
+    }
+});
+
+// Show turn selector
+function showTurnSelector() {
+    const totalTurns = window.archiveData?.totalTurns || 1;
+    const turnList = $('#turnList');
+    turnList.empty();
+    
+    for (let i = 1; i <= totalTurns; i++) {
+        const turnKey = `turn${i}`;
+        const hasData = window.archiveTurns[turnKey] || (i === window.currentTurn);
+        
+        const turnItem = $('<a>')
+            .addClass('list-group-item list-group-item-action')
+            .addClass(i === window.currentTurn ? 'active' : '')
+            .attr('href', '#')
+            .html(`<strong>Turn ${i}</strong>${hasData ? '' : ' <span class="text-muted">(No data)</span>'}`)
+            .click(function(e) {
+                e.preventDefault();
+                if (hasData || i === window.currentTurn) {
+                    loadTurn(i);
+                    $('#turnSelectorModal').modal('hide');
+                }
+            });
+        
+        turnList.append(turnItem);
+    }
+    
+    $('#turnSelectorModal').modal('show');
+}
+
+// Load specific turn
+function loadTurn(turnNumber) {
+    window.currentTurn = turnNumber;
+    $('#currentTurnDisplay').text(`Turn ${turnNumber}`);
+    
+    // Reload archive data for this turn
+    if (typeof ArchiveViewer !== 'undefined') {
+        const archiveViewer = new ArchiveViewer(window.gameMap);
+        const turnData = window.archiveTurns[`turn${turnNumber}`] || window.archiveData;
+        archiveViewer.loadArchiveData(turnData);
+    }
+}
+</script>
+}
+

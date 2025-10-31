@@ -1,0 +1,610 @@
+<script>
+// Token Management Functions for GamePlay Arena
+
+// Global variables for token management
+if (typeof tokenPlacementManager === 'undefined') {
+    var tokenPlacementManager = null;
+}
+if (typeof selectedTokenForPlacement === 'undefined') {
+    var selectedTokenForPlacement = null;
+}
+if (typeof isTokenPlacementMode === 'undefined') {
+    var isTokenPlacementMode = false;
+}
+if (typeof availableTokens === 'undefined') {
+    var availableTokens = [];
+}
+
+// Initialize token placement manager
+function initializeTokenManager() {
+    if (window.gameMap && typeof TokenPlacementManager !== 'undefined') {
+        tokenPlacementManager = new TokenPlacementManager(window.gameMap, showNotification);
+        console.log('TokenPlacementManager initialized');
+    } else {
+        console.warn('Cannot initialize TokenPlacementManager - map or class not available');
+    }
+}
+
+// Token placement functions
+function openTokenPlacement() {
+    console.log('Opening token placement...');
+    
+    if (!tokenPlacementManager) {
+        initializeTokenManager();
+    }
+    
+    // Load available tokens and show selection modal
+    loadAvailableTokens().then(() => {
+        openModal('tokenSelectionModal');
+    });
+}
+
+function cancelTokenPlacement() {
+    console.log('Cancelling token placement...');
+    
+    if (tokenPlacementManager) {
+        tokenPlacementManager.cancelPlacement();
+    }
+    
+    cleanupTokenPlacementMode();
+}
+
+// Load available tokens from server
+async function loadAvailableTokens() {
+    try {
+        // Add cache-busting parameter to ensure fresh data
+        const timestamp = Date.now();
+        const response = await fetch(`/GamePlay/GetTeamTokens?t=${timestamp}`, {
+            cache: 'no-cache',
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        });
+        const data = await response.json();
+        
+        console.log('🔄 Loaded tokens with forceType data:', data.tokens?.map(t => ({ name: t.name, forceType: t.forceType })));
+        
+        if (data.success) {
+            availableTokens = data.tokens;
+            populateTokenSelection();
+        } else {
+            showNotification('Failed to load tokens: ' + data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error loading tokens:', error);
+        showNotification('Error loading tokens', 'error');
+    }
+}
+
+// Populate token selection modal
+function populateTokenSelection() {
+    const container = document.getElementById('tokenSelectionGrid');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Add cache-busting timestamp to ensure fresh data
+    const timestamp = Date.now();
+    console.log('🔄 Loading tokens with cache-busting timestamp:', timestamp);
+    
+    availableTokens.forEach(token => {
+        const tokenElement = document.createElement('div');
+        tokenElement.className = 'token-option';
+        
+        // Create military symbol icon matching map tokens
+        const militaryIcon = createTokenIconHTML(token);
+        
+        tokenElement.innerHTML = `
+            <div class="token-icon-military">
+                ${militaryIcon}
+            </div>
+            <div class="token-info">
+                <h5>${token.name}</h5>
+                <p>${token.unitDesignation || token.type || 'Unit'}</p>
+                <span class="token-force-type">${getForceTypeDisplayName(token.forceType)}</span>
+            </div>
+        `;
+        tokenElement.onclick = () => selectTokenForPlacement(token);
+        container.appendChild(tokenElement);
+    });
+}
+
+// Create token icon HTML matching map display
+function createTokenIconHTML(token) {
+    // Determine force class and frame type
+    const forceType = token.forceType || '';
+    const forceTypeLower = forceType.toLowerCase();
+    
+    let forceClass = 'force-unknown';
+    let frameType = 'frame-unknown';
+    let borderColor = '#FFAA00'; // Default yellow for unknown
+    
+    if (forceTypeLower.includes('fox') || forceTypeLower.includes('hostile') || forceTypeLower.includes('red')) {
+        forceClass = 'force-hostile';
+        frameType = 'frame-hostile';
+        borderColor = '#ff0000'; // Red
+        console.log(`🔴 Fox/Hostile token detected: ${token.name} (${forceType})`);
+    } else if (forceTypeLower.includes('blue') || forceTypeLower.includes('friendly')) {
+        forceClass = 'force-friendly';
+        frameType = 'frame-friendly';
+        borderColor = '#0000ff'; // Blue
+        console.log(`🔵 Blue/Friendly token detected: ${token.name} (${forceType})`);
+    } else if (forceTypeLower.includes('neutral') || forceTypeLower.includes('green')) {
+        forceClass = 'force-neutral';
+        frameType = 'frame-neutral';
+        borderColor = '#00AA00'; // Green
+        console.log(`🟢 Neutral token detected: ${token.name} (${forceType})`);
+    } else {
+        console.log(`⚠️ Unknown force type for token: ${token.name} (${forceType})`);
+    }
+    
+    // Get organization symbol
+    const orgLevel = token.organizationLevel || '';
+    let orgSymbol = '●';
+    if (orgLevel.includes('Brigade') || orgLevel.includes('Brigade')) orgSymbol = '✕✕';
+    else if (orgLevel.includes('Division')) orgSymbol = '✕✕✕';
+    else if (orgLevel.includes('Corps')) orgSymbol = '✕✕✕✕';
+    else if (orgLevel.includes('Army')) orgSymbol = '✕✕✕✕✕';
+    else if (orgLevel.includes('Battalion')) orgSymbol = '|||';
+    else if (orgLevel.includes('Company')) orgSymbol = '|';
+    else if (orgLevel.includes('Platoon')) orgSymbol = '●●●';
+    else if (orgLevel.includes('Squad')) orgSymbol = '●';
+    
+    // Get unit type symbol
+    const unitType = token.unitType || 'Infantry';
+    let unitSymbol = '○'; // Infantry default
+    if (unitType.includes('Armoured') || unitType.includes('Armor')) unitSymbol = '⊗';
+    else if (unitType.includes('Artillery')) unitSymbol = '◆';
+    else if (unitType.includes('Aviation')) unitSymbol = '▲';
+    else if (unitType.includes('Engineer')) unitSymbol = '⚒';
+    else if (unitType.includes('Mechanized')) unitSymbol = '⊕';
+    
+    const unitDesignation = token.unitDesignation || 'N/A';
+    
+    return `
+        <div class="military-token-small nato-standard ${forceClass}">
+            <div class="nato-frame-small ${frameType}">
+                ${forceClass === 'force-hostile' ? '<div class="hostile-content-frame-small">' : ''}
+                    <div class="org-level-top-small">
+                        <div class="org-symbol-small">${orgSymbol}</div>
+                    </div>
+                    <div class="unit-symbol-center-small">
+                        <div class="unit-symbol-small">${unitSymbol}</div>
+                        <div class="unit-designation-right-small">
+                            <div class="unit-designation-small">${unitDesignation}</div>
+                        </div>
+                    </div>
+                ${forceClass === 'force-hostile' ? '</div>' : ''}
+            </div>
+        </div>
+    `;
+}
+
+// Get display name for force type
+function getForceTypeDisplayName(forceType) {
+    console.log('🔍 getForceTypeDisplayName called with:', forceType, 'type:', typeof forceType);
+    
+    if (!forceType) {
+        console.log('⚠️ No forceType provided, returning Unknown');
+        return 'Unknown';
+    }
+    
+    const forceTypeLower = forceType.toLowerCase();
+    console.log('🔍 forceTypeLower:', forceTypeLower);
+    
+    // Return the actual force type name
+    if (forceTypeLower.includes('fox')) {
+        console.log('🦊 Fox Land detected');
+        return 'Fox Land';
+    }
+    if (forceTypeLower.includes('blue')) {
+        console.log('🔵 Blue Land detected');
+        return 'Blue Land';
+    }
+    if (forceTypeLower.includes('neutral')) {
+        console.log('🟢 Neutral detected');
+        return 'Neutral';
+    }
+    if (forceTypeLower.includes('hostile')) {
+        console.log('🔴 Hostile detected');
+        return 'Hostile';
+    }
+    if (forceTypeLower.includes('friendly')) {
+        console.log('🤝 Friendly detected');
+        return 'Friendly';
+    }
+    
+    // Return as-is if no match
+    console.log('❓ No match found, returning as-is:', forceType);
+    return forceType;
+}
+
+// Select token for placement
+function selectTokenForPlacement(token) {
+    selectedTokenForPlacement = token;
+    isTokenPlacementMode = true;
+    
+    if (tokenPlacementManager) {
+        tokenPlacementManager.startPlacementMode(token);
+    }
+    
+    closeModal('tokenSelectionModal');
+    showNotification(`Click on the map to place ${token.name}`, 'info');
+    
+    // Change cursor
+    $('#gameMap').css('cursor', 'crosshair');
+    
+    // Create cursor indicator
+    createTokenCursorIndicator(token);
+}
+
+// Create cursor indicator for token placement
+function createTokenCursorIndicator(token) {
+    // Remove existing indicator
+    $('.token-cursor-indicator').remove();
+    
+    // Create military symbol for cursor
+    const militaryIcon = createTokenIconHTML(token);
+    
+    // Create new indicator with military symbol
+    const indicator = $(`
+        <div class="token-cursor-indicator">
+            <div class="cursor-token-preview">
+                ${militaryIcon}
+            </div>
+            <div class="cursor-token-name">${token.name}</div>
+        </div>
+    `);
+    
+    $('body').append(indicator);
+    
+    // Track mouse movement
+    $(document).on('mousemove.tokenPlacement', function(e) {
+        if (isTokenPlacementMode && selectedTokenForPlacement) {
+            indicator.css({
+                left: e.pageX + 15,
+                top: e.pageY - 15
+            });
+        }
+    });
+}
+
+// Clean up token placement mode
+function cleanupTokenPlacementMode() {
+    isTokenPlacementMode = false;
+    selectedTokenForPlacement = null;
+    $('#gameMap').css('cursor', 'default');
+    $('.token-cursor-indicator').remove();
+    $(document).off('mousemove.tokenPlacement');
+}
+
+// Place token at location
+async function placeTokenAtLocation(latlng) {
+    if (!selectedTokenForPlacement) {
+        console.warn('No token selected for placement');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/GamePlay/PlaceToken', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                TokenId: selectedTokenForPlacement.id,
+                Latitude: latlng.lat,
+                Longitude: latlng.lng
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification(`${selectedTokenForPlacement.name} placed successfully`, 'success');
+            
+            // Add token to map if tokenPlacementManager is available
+            if (tokenPlacementManager) {
+                tokenPlacementManager.addTokenToMap(selectedTokenForPlacement, latlng);
+            }
+            
+            // Update token count
+            updateTokenCount();
+        } else {
+            showNotification('Failed to place token: ' + data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error placing token:', error);
+        showNotification('Error placing token', 'error');
+    }
+    
+    // Clean up placement mode
+    cleanupTokenPlacementMode();
+}
+
+// Update token count display
+function updateTokenCount() {
+    // Update any token count displays
+    const countElement = document.getElementById('tokenCount');
+    if (countElement && availableTokens) {
+        countElement.textContent = availableTokens.length;
+    }
+}
+
+// Close token selection modal
+function closeTokenSelectionModal() {
+    closeModal('tokenSelectionModal');
+    selectedTokenForPlacement = null;
+    isTokenPlacementMode = false;
+    $('#gameMap').css('cursor', 'default');
+}
+
+// Handle map clicks for token placement
+function handleMapClick(e) {
+    console.log('Map clicked at:', e.latlng);
+    
+    if (isTokenPlacementMode && selectedTokenForPlacement) {
+        placeTokenAtLocation(e.latlng);
+    }
+}
+
+// Initialize token scripts when document is ready
+$(document).ready(function() {
+    // Initialize token manager when map is available
+    if (window.gameMap) {
+        initializeTokenManager();
+    } else {
+        // Wait for map to be initialized
+        const mapCheck = setInterval(() => {
+            if (window.gameMap) {
+                initializeTokenManager();
+                clearInterval(mapCheck);
+            }
+        }, 100);
+    }
+    
+    // Handle Escape key to cancel token placement
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' && isTokenPlacementMode) {
+            cleanupTokenPlacementMode();
+            showNotification('Token placement cancelled', 'info');
+        }
+    });
+});
+
+// Notification function (fallback if not defined elsewhere)
+if (typeof showNotification === 'undefined') {
+    window.showNotification = function(message, type = 'info') {
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        // Create a simple notification
+        const notification = $(`
+            <div class="notification notification-${type}">
+                <i class="fas fa-info-circle"></i>
+                <span>${message}</span>
+            </div>
+        `);
+        
+        $('body').append(notification);
+        
+        setTimeout(() => {
+            notification.fadeOut(() => notification.remove());
+        }, 3000);
+    };
+}
+</script>
+
+<style>
+    .token-option {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border: 2px solid #444;
+        border-radius: 8px;
+        margin: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: rgba(26, 26, 26, 0.8);
+    }
+    
+    .token-option:hover {
+        background: rgba(255, 176, 0, 0.1);
+        border-color: #ffb000;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 176, 0, 0.3);
+    }
+    
+    .token-icon-military {
+        margin-right: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .token-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .token-info h5 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #ffb000;
+    }
+    
+    .token-info p {
+        margin: 0;
+        font-size: 13px;
+        color: #ccc;
+    }
+    
+    .token-force-type {
+        font-size: 11px;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Small military token styles for selection modal */
+    .military-token-small {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    
+    .nato-frame-small {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        border: 3px solid;
+        background: rgba(0, 0, 0, 0.7);
+    }
+    
+    /* Force type frame shapes - with higher specificity */
+    .military-token-small .nato-frame-small.frame-friendly,
+    .nato-frame-small.frame-friendly {
+        border-color: #0080ff !important;
+        clip-path: none;
+        border-radius: 4px;
+    }
+    
+    .military-token-small .nato-frame-small.frame-hostile,
+    .nato-frame-small.frame-hostile {
+        border-color: #ff0000 !important;
+        clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+        border-radius: 0;
+    }
+    
+    .military-token-small .nato-frame-small.frame-neutral,
+    .nato-frame-small.frame-neutral {
+        border-color: #00AA00 !important;
+        clip-path: none;
+        border-radius: 4px;
+    }
+    
+    .military-token-small .nato-frame-small.frame-unknown,
+    .nato-frame-small.frame-unknown {
+        border-color: #FFAA00 !important;
+        clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
+        border-radius: 0;
+    }
+    
+    .hostile-content-frame-small {
+        width: 85%;
+        height: 85%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .org-level-top-small {
+        position: absolute;
+        top: 2px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 10px;
+        font-weight: bold;
+        color: #fff;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+    
+    .unit-symbol-center-small {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        font-size: 20px;
+        color: #fff;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+    
+    .unit-designation-right-small {
+        position: absolute;
+        right: 4px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 9px;
+        font-weight: bold;
+        color: #fff;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+    
+    /* Force type colors */
+    .force-friendly .nato-frame-small {
+        border-color: #0080ff;
+        background: rgba(0, 128, 255, 0.15);
+    }
+    
+    .force-hostile .nato-frame-small {
+        border-color: #ff0000;
+        background: rgba(255, 0, 0, 0.15);
+    }
+    
+    .force-neutral .nato-frame-small {
+        border-color: #00AA00;
+        background: rgba(0, 170, 0, 0.15);
+    }
+    
+    .force-unknown .nato-frame-small {
+        border-color: #FFAA00;
+        background: rgba(255, 170, 0, 0.15);
+    }
+    
+    .token-cursor-indicator {
+        position: fixed;
+        pointer-events: none;
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .cursor-token-preview {
+        background: rgba(0, 0, 0, 0.9);
+        border: 2px solid #ffb000;
+        border-radius: 8px;
+        padding: 8px;
+        box-shadow: 0 4px 12px rgba(255, 176, 0, 0.5);
+    }
+    
+    .cursor-token-name {
+        background: rgba(0, 0, 0, 0.9);
+        color: #ffb000;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+        text-shadow: 0 0 10px rgba(255, 176, 0, 0.5);
+        border: 1px solid #ffb000;
+    }
+    
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        padding: 10px 15px;
+        border-radius: 5px;
+        color: white;
+        font-size: 14px;
+    }
+    
+    .notification-info { background-color: #17a2b8; }
+    .notification-success { background-color: #28a745; }
+    .notification-error { background-color: #dc3545; }
+    .notification-warning { background-color: #ffc107; color: #212529; }
+</style>

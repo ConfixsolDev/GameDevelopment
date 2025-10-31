@@ -183,6 +183,8 @@ builder.Services.AddScoped<IAttackPreviewService, AttackPreviewService>();
 builder.Services.AddScoped<IOrderPersistenceService, OrderPersistenceService>();
 builder.Services.AddScoped<ISuspectedTokenMatchingService, SuspectedTokenMatchingService>();
 builder.Services.AddScoped<IComprehensiveCombatSimulationService, ComprehensiveCombatSimulationService>();
+builder.Services.AddScoped<IReportRenderService, ReportRenderService>();
+builder.Services.AddScoped<IPdfGeneratorService, PdfGeneratorService>();
 
 // Weapon-level combat simulation services
 builder.Services.AddScoped<IWeaponEffectivenessService, WeaponEffectivenessService>();

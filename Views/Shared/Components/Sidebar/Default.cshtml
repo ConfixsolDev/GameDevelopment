@@ -6,12 +6,7 @@
 <div class="vertical-menu md-sidebar">
     <div data-simplebar class="h-100">
         <div id="sidebar-menu">
-            <div class="sidebar-header">
-                <a href="/" class="sidebar-brand">
-                    <i class="fas fa-shield-alt" style="color:#00bcd4;"></i>
-                    <span class="brand-text">PWGS</span>
-                </a>
-            </div>
+       
             <cache expires-after="@TimeSpan.FromMinutes(10)" vary-by-user="true">
             </cache>
 
@@ -23,6 +18,22 @@
                         <span class="menu-text">Home</span>
                     </a>
                 </li>
+                <li class="menu-title">War Game</li>
+                <li>
+                    <a asp-area="" asp-controller="GamePlay" asp-action="Index" class="menu-link @(currentController == "GamePlay" ? "active" : "")">
+                        <i class="fas fa-crosshairs menu-icon"></i>
+                        <span class="menu-text">Game Play Arena</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a asp-area="" asp-controller="GamePlay" asp-action="Index" class="menu-link @(currentController == "GamePlay" ? "active" : "")">
+                        <i class="fas fa-crosshairs menu-icon"></i>
+                        <span class="menu-text">War Archive </span>
+                    </a>
+                </li>
+
+                <li class="menu-title">Token Management</li>
 
                 <secure-content asp-area="TokenManagement" asp-controller="TokenSystem" asp-action="Index">
                     <li>
@@ -34,7 +45,6 @@
                 </secure-content>
 
                 <!-- Token Management Section -->
-                <li class="menu-title">Token Management</li>
                 
                 <secure-content asp-area="" asp-controller="AdminToken" asp-action="Index">
                     <li>
@@ -92,12 +102,7 @@
 
                 
 
-                    <li>
-                        <a asp-area="" asp-controller="GamePlay" asp-action="Index" class="menu-link @(currentController == "GamePlay" ? "active" : "")">
-                            <i class="fas fa-crosshairs menu-icon"></i>
-                            <span class="menu-text">Game Play Arena</span>
-                        </a>
-                    </li>
+                
 
                 <!-- Team Management Section -->
                 <li class="menu-title">Team Management</li>

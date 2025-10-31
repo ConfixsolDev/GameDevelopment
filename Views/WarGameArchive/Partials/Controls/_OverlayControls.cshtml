@@ -60,66 +60,67 @@
         <i class="fas @TeamIcon"></i>
         <span style="color: @TeamColor; text-shadow: 0 0 8px @(TeamColor)66;">@TeamName</span>
     </div>
-    @if (!isControlUser)
-    {
-        <div class="overlay-control-group">
-            <h6 class="collapsible-header" data-section="war-game-tools" onclick="toggleSection('war-game-tools')">
-                <i class="fas fa-chevron-right chevron-icon"></i> War Game Tools
-            </h6>
-            <!-- Token Actions Section -->
-            <div class="collapsible-content" id="war-game-tools-content" style="display: none;">
 
-                <div class="token-actions-section">
-                    <div class="control-row">
-                        <button class="overlay-btn token-action-btn" id="btnPlanAttack" data-mode="attack">
-                            <i class="fas fa-crosshairs"></i>
-                            <span>Plan Attack</span>
-                        </button>
-                        <button hidden class="overlay-btn token-action-btn" id="btnPanAttack" data-mode="pan-attack">
-                            <i class="fas fa-bullseye"></i>
-                            <span>Pan Attack</span>
-                        </button>
-                        <button class="overlay-btn" id="btnReloadAttackLines" onclick="reloadAttackLines()" title="Reload Attack Lines">
-                            <i class="fas fa-sync-alt"></i>
-                            <span>Reload Attacks</span>
-                        </button>
+    <div class="overlay-control-group">
+        <h6 class="collapsible-header" data-section="war-game-tools" onclick="toggleSection('war-game-tools')">
+            <i class="fas fa-chevron-right chevron-icon"></i> War Game Tools
+        </h6>
+        <!-- Token Actions Section -->
+        <div class="collapsible-content" id="war-game-tools-content" style="display: none;">
+            @if (!isControlUser)
+            {
+            <div class="token-actions-section">
+                <div class="control-row">
+                    <button class="overlay-btn token-action-btn" id="btnPlanAttack" data-mode="attack">
+                        <i class="fas fa-crosshairs"></i>
+                        <span>Plan Attack</span>
+                    </button>
+                    <button hidden class="overlay-btn token-action-btn" id="btnPanAttack" data-mode="pan-attack">
+                        <i class="fas fa-bullseye"></i>
+                        <span>Pan Attack</span>
+                    </button>
+                    <button class="overlay-btn" id="btnReloadAttackLines" onclick="reloadAttackLines()" title="Reload Attack Lines">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Reload Attacks</span>
+                    </button>
 
-                        <button hidden class="overlay-btn" id="btnCheckAttackLines" onclick="checkAttackLines()" title="Check Attack Lines Status">
-                            <i class="fas fa-info-circle"></i>
-                            <span>Check Status</span>
-                        </button>
-                        <button class="overlay-btn token-action-btn" id="btnPlanMove" data-mode="move">
-                            <i class="fas fa-route"></i>
-                            <span>Plan Move</span>
-                        </button>
-                    </div>
+                    <button hidden class="overlay-btn" id="btnCheckAttackLines" onclick="checkAttackLines()" title="Check Attack Lines Status">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Check Status</span>
+                    </button>
+                    <button class="overlay-btn token-action-btn" id="btnPlanMove" data-mode="move">
+                        <i class="fas fa-route"></i>
+                        <span>Plan Move</span>
+                    </button>
+                </div>
 
-                    <div class="control-row" hidden>
-                        <button class="overlay-btn token-action-btn" id="btnSelectToken" data-mode="select">
-                            <i class="fas fa-hand-pointer"></i>
-                            <span>Select Token</span>
-                        </button>
-                    </div>
-                    <div class="control-row">
-                        <button class="overlay-btn token-action-btn" id="btnPlaceToken" data-mode="place">
-                            <i class="fas fa-plus"></i>
-                            <span>Place Token</span>
-                        </button>
-                        <button class="overlay-btn" onclick="openDataEntry()">
-                            <i class="fas fa-database"></i>
-                            <span>Token Preperation</span>
-                        </button>
-                        <button class="overlay-btn" id="btnCancelMode" onclick="cancelTokenMode()">
-                            <i class="fas fa-times"></i>
-                            <span>Cancel Mode</span>
-                        </button>
-                    </div>
+                <div class="control-row" hidden>
+                    <button class="overlay-btn token-action-btn" id="btnSelectToken" data-mode="select">
+                        <i class="fas fa-hand-pointer"></i>
+                        <span>Select Token</span>
+                    </button>
+                </div>
+                <div class="control-row">
+                    <button class="overlay-btn token-action-btn" id="btnPlaceToken" data-mode="place">
+                        <i class="fas fa-plus"></i>
+                        <span>Place Token</span>
+                    </button>
+                    <button class="overlay-btn" onclick="openDataEntry()">
+                        <i class="fas fa-database"></i>
+                        <span>Token Preperation</span>
+                    </button>
+                    <button class="overlay-btn" id="btnCancelMode" onclick="cancelTokenMode()">
+                        <i class="fas fa-times"></i>
+                        <span>Cancel Mode</span>
+                    </button>
                 </div>
             </div>
+            }
+        </div>
+      
 
 
-
-            @*  
+        @*  
                   <button class="overlay-btn" onclick="createObjective()">
                     <i class="fas fa-flag"></i>
                     <span>Objective</span>
@@ -132,110 +133,113 @@
                     <i class="fas fa-chart-line"></i>
                     <span>Unit Status</span>
                 </button> *@
-        </div>
+    </div>
 
-        <div class="overlay-control-group">
-            <div class="defense-planning-section">
-                <h6 class="section-subtitle collapsible-header" data-section="defense-planning" onclick="toggleSection('defense-planning')">
-                    <i class="fas fa-chevron-right chevron-icon"></i> Defense Planning
-                </h6>
-                <div class="collapsible-content" id="defense-planning-content" style="display: none;">
 
-                    <!-- Kill Zones (Red) -->
-                    <div class="control-row">
-                        <button class="overlay-btn defense-btn killzone-btn" id="btnKillZonePrimary" onclick="startKillZoneDrawing('primary')" title="Primary Kill Zone">
-                            <i class="fas fa-crosshairs"></i>
-                            <span>Primary Kill</span>
-                        </button>
-                        <button class="overlay-btn defense-btn killzone-btn" id="btnKillZoneSecondary" onclick="startKillZoneDrawing('secondary')" title="Secondary Kill Zone">
-                            <i class="fas fa-bullseye"></i>
-                            <span>Secondary Kill</span>
-                        </button>
-                        <button class="overlay-btn defense-btn killzone-btn" id="btnKillZoneEngagement" onclick="startKillZoneDrawing('engagement')" title="Engagement Area">
-                            <i class="fas fa-target"></i>
-                            <span>Engagement</span>
-                        </button>
-                    </div>
-
-                    <!-- Obstacles (Orange) -->
-                    <div class="control-row">
-                        <button class="overlay-btn defense-btn obstacle-btn" id="btnObstacle" onclick="startObstacleDrawing('wire')" title="Obstacle">
-                            <i class="fas fa-shield-alt"></i>
-                            <span>Obstacle</span>
-                        </button>
-                        <button class="overlay-btn defense-btn obstacle-btn" id="btnDefensivePosition" onclick="placeDefensivePosition('foxhole')" title="Defensive Position">
-                            <i class="fas fa-circle"></i>
-                            <span>Position</span>
-                        </button>
-                        <button class="overlay-btn defense-btn obstacle-btn" id="btnWithdrawalRoute" onclick="startWithdrawalRouteDrawing('primary')" title="Withdrawal Route">
-                            <i class="fas fa-arrow-left"></i>
-                            <span>Withdrawal</span>
-                        </button>
-                    </div>
-
-                    <!-- Defense Line and Minefield (Orange and Brown) -->
-                    <div class="control-row">
-                        <button class="overlay-btn defense-btn obstacle-btn" id="btnDefensiveLine" onclick="startDefensiveLineDrawing('feba')" title="Defensive Line">
-                            <i class="fas fa-minus"></i>
-                            <span>Defense Line</span>
-                        </button>
-                        <button class="overlay-btn defense-btn mine-btn" id="btnMinefieldAP" onclick="startMinefieldDrawing('antipersonnel')" title="Anti-Personnel Minefield">
-                            <i class="fas fa-bomb"></i>
-                            <span>Mine Field</span>
-                        </button>
-                    </div>
-
-                    <!-- Defense Zones (Blue) -->
-                    <div class="control-row">
-                        <button class="overlay-btn defense-btn defensezone-btn" id="btnDefenseZonePrimary" onclick="startDefenseZoneDrawing('primary')" title="Primary Defense Zone">
-                            <i class="fas fa-shield"></i>
-                            <span>Primary Zone</span>
-                        </button>
-                        <button class="overlay-btn defense-btn defensezone-btn" id="btnDefenseZoneSecondary" onclick="startDefenseZoneDrawing('secondary')" title="Secondary Defense Zone">
-                            <i class="fas fa-shield-alt"></i>
-                            <span>Secondary Zone</span>
-                        </button>
-                        <button class="overlay-btn defense-btn defensezone-btn" id="btnDefenseZoneSupport" onclick="startDefenseZoneDrawing('support')" title="Support Defense Zone">
-                            <i class="fas fa-shield-virus"></i>
-                            <span>Support Zone</span>
-                        </button>
-                    </div>
-
-                    <!-- Cancel Controls -->
-                    <div class="control-row">
-                        <button class="overlay-btn" id="btnCancelDefenseZoneDrawing" onclick="cancelDefenseZoneDrawing()" style="display: none;">
-                            <i class="fas fa-times"></i>
-                            <span>Cancel Drawing</span>
-                        </button>
-                    </div>
-                    <div class="control-row">
-                        <button class="overlay-btn" onclick="cancelDefenseDrawing()">
-                            <i class="fas fa-times"></i>
-                            <span>Cancel Drawing</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="overlay-control-group">
-            <h6 class="collapsible-header" data-section="enemy-intelligence" onclick="toggleSection('enemy-intelligence')">
-                <i class="fas fa-chevron-right chevron-icon"></i> Enemy Intelligence
+    @if (!isControlUser)
+    {
+    <div class="overlay-control-group">
+        <div class="defense-planning-section">
+            <h6 class="section-subtitle collapsible-header" data-section="defense-planning" onclick="toggleSection('defense-planning')">
+                <i class="fas fa-chevron-right chevron-icon"></i> Defense Planning
             </h6>
-            <div class="collapsible-content" id="enemy-intelligence-content" style="display: none;">
+            <div class="collapsible-content" id="defense-planning-content" style="display: none;">
+
+                <!-- Kill Zones (Red) -->
                 <div class="control-row">
-                    <button class="overlay-btn overlay-btn-intel" onclick="openSuspectedTokenModal()">
+                    <button class="overlay-btn defense-btn killzone-btn" id="btnKillZonePrimary" onclick="startKillZoneDrawing('primary')" title="Primary Kill Zone">
                         <i class="fas fa-crosshairs"></i>
-                        <span>Add Enemy Token</span>
+                        <span>Primary Kill</span>
                     </button>
-                    <button class="overlay-btn overlay-btn-intel" onclick="openSuspectedTokensListModal()">
-                        <i class="fas fa-list-ul"></i>
-                        <span>Manage Enemy Token</span>
+                    <button class="overlay-btn defense-btn killzone-btn" id="btnKillZoneSecondary" onclick="startKillZoneDrawing('secondary')" title="Secondary Kill Zone">
+                        <i class="fas fa-bullseye"></i>
+                        <span>Secondary Kill</span>
+                    </button>
+                    <button class="overlay-btn defense-btn killzone-btn" id="btnKillZoneEngagement" onclick="startKillZoneDrawing('engagement')" title="Engagement Area">
+                        <i class="fas fa-target"></i>
+                        <span>Engagement</span>
+                    </button>
+                </div>
+
+                <!-- Obstacles (Orange) -->
+                <div class="control-row">
+                    <button class="overlay-btn defense-btn obstacle-btn" id="btnObstacle" onclick="startObstacleDrawing('wire')" title="Obstacle">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Obstacle</span>
+                    </button>
+                    <button class="overlay-btn defense-btn obstacle-btn" id="btnDefensivePosition" onclick="placeDefensivePosition('foxhole')" title="Defensive Position">
+                        <i class="fas fa-circle"></i>
+                        <span>Position</span>
+                    </button>
+                    <button class="overlay-btn defense-btn obstacle-btn" id="btnWithdrawalRoute" onclick="startWithdrawalRouteDrawing('primary')" title="Withdrawal Route">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Withdrawal</span>
+                    </button>
+                </div>
+
+                <!-- Defense Line and Minefield (Orange and Brown) -->
+                <div class="control-row">
+                    <button class="overlay-btn defense-btn obstacle-btn" id="btnDefensiveLine" onclick="startDefensiveLineDrawing('feba')" title="Defensive Line">
+                        <i class="fas fa-minus"></i>
+                        <span>Defense Line</span>
+                    </button>
+                    <button class="overlay-btn defense-btn mine-btn" id="btnMinefieldAP" onclick="startMinefieldDrawing('antipersonnel')" title="Anti-Personnel Minefield">
+                        <i class="fas fa-bomb"></i>
+                        <span>Mine Field</span>
+                    </button>
+                </div>
+
+                <!-- Defense Zones (Blue) -->
+                <div class="control-row">
+                    <button class="overlay-btn defense-btn defensezone-btn" id="btnDefenseZonePrimary" onclick="startDefenseZoneDrawing('primary')" title="Primary Defense Zone">
+                        <i class="fas fa-shield"></i>
+                        <span>Primary Zone</span>
+                    </button>
+                    <button class="overlay-btn defense-btn defensezone-btn" id="btnDefenseZoneSecondary" onclick="startDefenseZoneDrawing('secondary')" title="Secondary Defense Zone">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Secondary Zone</span>
+                    </button>
+                    <button class="overlay-btn defense-btn defensezone-btn" id="btnDefenseZoneSupport" onclick="startDefenseZoneDrawing('support')" title="Support Defense Zone">
+                        <i class="fas fa-shield-virus"></i>
+                        <span>Support Zone</span>
+                    </button>
+                </div>
+
+                <!-- Cancel Controls -->
+                <div class="control-row">
+                    <button class="overlay-btn" id="btnCancelDefenseZoneDrawing" onclick="cancelDefenseZoneDrawing()" style="display: none;">
+                        <i class="fas fa-times"></i>
+                        <span>Cancel Drawing</span>
+                    </button>
+                </div>
+                <div class="control-row">
+                    <button class="overlay-btn" onclick="cancelDefenseDrawing()">
+                        <i class="fas fa-times"></i>
+                        <span>Cancel Drawing</span>
                     </button>
                 </div>
             </div>
         </div>
+    </div>
     }
+
+    <div class="overlay-control-group">
+        <h6 class="collapsible-header" data-section="enemy-intelligence" onclick="toggleSection('enemy-intelligence')">
+            <i class="fas fa-chevron-right chevron-icon"></i> Enemy Intelligence
+        </h6>
+        <div class="collapsible-content" id="enemy-intelligence-content" style="display: none;">
+            <div class="control-row">
+                <button class="overlay-btn overlay-btn-intel" onclick="openSuspectedTokenModal()">
+                    <i class="fas fa-crosshairs"></i>
+                    <span>Add Enemy Token</span>
+                </button>
+                <button class="overlay-btn overlay-btn-intel" onclick="openSuspectedTokensListModal()">
+                    <i class="fas fa-list-ul"></i>
+                    <span>Manage Enemy Token</span>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <div class="overlay-control-group" style="display:none;">
         <h6>Map Selection</h6>
@@ -259,12 +263,6 @@
                 <button class="overlay-btn overlay-btn-combat" onclick="runCombatSimulation()">
                     <i class="fas fa-crosshairs"></i>
                     <span>Combat Simulation</span>
-                </button>
-            </div>
-            <div class="control-row">
-                <button class="overlay-btn" style="background: #00bcd4; color: #fff;" onclick="saveCurrentGameTurn()">
-                    <i class="fas fa-save"></i>
-                    <span>Save Game Turn</span>
                 </button>
             </div>
         </div>
@@ -844,51 +842,5 @@
         window.regionSettingsManager = new RegionSettingsManager();
         window.collapsibleSectionsManager = new CollapsibleSectionsManager();
         initializeTileServerModeSelector();
-    }
-</script>
-
-<script>
-    async function saveCurrentGameTurn() {
-        try {
-            const defaultTitle = `War Game ${new Date().toISOString().slice(0,19).replace('T',' ')}`;
-            const gameTitle = prompt('Enter game title (optional):', defaultTitle) || defaultTitle;
-            const turnStr = prompt('Enter turn number to save:', '1');
-            const turnNumber = parseInt(turnStr || '1', 10) || 1;
-
-            const payload = {
-                gameTitle: gameTitle,
-                description: 'Saved from Military Analysis panel',
-                gameCode: null,
-                turnNumber: turnNumber,
-                totalTurns: turnNumber,
-                gameSessionId: null,
-                mapConfigurationId: null,
-                archiveId: null,
-                isTurnSave: true
-            };
-
-            const resp = await fetch('/WarGameArchive/SaveLastGame', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (!resp.ok) {
-                const txt = await resp.text();
-                alert('Failed to save game: ' + txt);
-                return;
-            }
-            const result = await resp.json();
-            if (result.success) {
-                const reportUrl = `/WarGameArchive/DownloadReport/${result.archiveId}`;
-                alert('Game turn saved successfully. A printable PDF report has been generated.');
-                window.open(reportUrl, '_blank');
-            } else {
-                alert('Save failed: ' + (result.message || 'Unknown error'));
-            }
-        } catch (e) {
-            console.error(e);
-            alert('Unexpected error while saving the game.');
-        }
     }
 </script>

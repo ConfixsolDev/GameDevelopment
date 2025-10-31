@@ -1,0 +1,144 @@
+@model dynamic
+@{
+    Layout = null; // Print-friendly standalone
+    var data = Model;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>@(data?.gameTitle ?? "War Game Report")</title>
+    <style>
+        body { font-family: Arial, sans-serif; color: #333; }
+        h1, h2, h3 { color: #008fa1; }
+        .muted { color: #777; }
+        .section { margin: 24px 0; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #e0e0e0; padding: 8px; text-align: left; }
+        th { background: #f7f8fa; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; background: #e0f7fa; color: #006064; font-size: 12px; }
+        .small { font-size: 12px; }
+        .code { font-family: Consolas, monospace; font-size: 12px; white-space: pre-wrap; background: #fbfbfb; padding: 8px; border: 1px solid #eee; }
+        .page-break { page-break-after: always; }
+    </style>
+}</head>
+<body>
+    <h1>@(data?.gameTitle ?? "War Game Report")</h1>
+    <div class="muted">@data?.gameMonth @data?.gameYear • Turn @data?.currentTurn of @data?.totalTurns</div>
+
+    <div class="section">
+        <h2>Executive Summary</h2>
+        <p>This report documents the complete state of the war game, including both sides' deployments, movements, engagements, and adjudication highlights for educational debrief and research.</p>
+    </div>
+
+    <div class="section">
+        <h2>Order of Battle</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Unit</th>
+                    <th>Force</th>
+                    <th>Type</th>
+                    <th>Last Position</th>
+                </tr>
+            </thead>
+            <tbody>
+@{
+    var forces = data?.forcesJson != null ? Newtonsoft.Json.JsonConvert.DeserializeObject<IEnumerable<dynamic>>(data.forcesJson) : Enumerable.Empty<dynamic>();
+    foreach (var f in forces)
+    {
+        var markers = (IEnumerable<dynamic>)f.markers ?? Array.Empty<dynamic>();
+        var last = markers.LastOrDefault();
+        <tr>
+            <td>@(f.name)</td>
+            <td>@(f.forceType)</td>
+            <td>@(f.tokenGroup)</td>
+            <td>@(last != null ? $"{last.latitude}, {last.longitude}" : "—")</td>
+        </tr>
+    }
+}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Engagements</h2>
+@{
+    var attacksObj = data?.attacksJson != null ? Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(data.attacksJson) : null;
+    var attackOrders = attacksObj?.attackOrders as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+}
+        <table>
+            <thead>
+                <tr>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Status</th>
+                    <th>Turns</th>
+                </tr>
+            </thead>
+            <tbody>
+@foreach (var a in attackOrders)
+{
+    <tr>
+        <td>@(a.attackerTokenName)</td>
+        <td>@(a.targetTokenName)</td>
+        <td><span class="badge">@a.status</span></td>
+        <td>@a.durationTurns</td>
+    </tr>
+}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Defense Plan Summary</h2>
+@{
+    var defenses = data?.defenseElementsJson != null ? Newtonsoft.Json.JsonConvert.DeserializeObject<IEnumerable<dynamic>>(data.defenseElementsJson) : Enumerable.Empty<dynamic>();
+}
+        <table>
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Type</th>
+                    <th>Strength</th>
+                    <th>Assigned Unit</th>
+                </tr>
+            </thead>
+            <tbody>
+@foreach (var d in defenses)
+{
+    <tr>
+        <td>@(d.category)</td>
+        <td>@(d.type)</td>
+        <td>@(d.strength)</td>
+        <td>@(d.tokenName ?? "—")</td>
+    </tr>
+}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section page-break">
+        <h2>Turn Snapshot</h2>
+        <div class="code">@Newtonsoft.Json.JsonConvert.SerializeObject(data?.gameStateJson, Newtonsoft.Json.Formatting.Indented)</div>
+    </div>
+
+    <div class="section">
+        <h2>Adjudication Highlights</h2>
+        <div class="code">@Newtonsoft.Json.JsonConvert.SerializeObject(data?.adjudicationResultsJson, Newtonsoft.Json.Formatting.Indented)</div>
+    </div>
+
+    <div class="section">
+        <h2>Combat Results</h2>
+        <div class="code">@Newtonsoft.Json.JsonConvert.SerializeObject(data?.combatResultsJson, Newtonsoft.Json.Formatting.Indented)</div>
+    </div>
+
+    <div class="section small muted">
+        Generated on @DateTime.UtcNow.ToString("u")
+    </div>
+</body>
+</html>
+
+

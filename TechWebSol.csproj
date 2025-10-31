@@ -27,6 +27,7 @@
 		</PackageReference>
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.8" />
 		<PackageReference Include="System.Linq.Dynamic.Core" Version="1.6.7" />
+		<PackageReference Include="PuppeteerSharp" Version="13.0.2" />
 	</ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,271 @@
+<!-- Data Entry Modal - Bootstrap Modal -->
+<div class="modal fade" id="dataEntryModal" tabindex="-1" role="dialog" aria-labelledby="dataEntryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dataEntryModalLabel">
+                    <i class="fas fa-database"></i> Data Management
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+            <!-- Data Management Tabs -->
+            <div class="data-management-tabs">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="switchTab('brigades')">
+                        <i class="fas fa-flag"></i> Brigades
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('infantry')">
+                        <i class="fas fa-user-soldier"></i> Infantry Battalions
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('armoured')">
+                        <i class="fas fa-tank"></i> Armoured Regiments
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('artillery')">
+                        <i class="fas fa-bomb"></i> Artillery Regiments
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('terrain')">
+                        <i class="fas fa-mountain"></i> Terrain Factors
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('protection')">
+                        <i class="fas fa-shield-alt"></i> Force Protection
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('intel')">
+                        <i class="fas fa-eye"></i> Intelligence
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('recon')">
+                        <i class="fas fa-binoculars"></i> Recon
+                    </button>
+                </div>
+
+                <!-- Brigade Tab -->
+                <div id="brigades-tab" class="tab-content active">
+                    <div class="tab-header">
+                        <h4>Brigade Management</h4>
+                        <button class="btn btn-primary" onclick="addBrigade()">
+                            <i class="fas fa-plus"></i> Add Brigade
+                        </button>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table" id="brigadesTable">
+                            <thead>
+                                <tr>
+                                    <th>Brigade Name</th>
+                                    <th>Commander</th>
+                                    <th>Personnel</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Brigade data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Infantry Tab -->
+                <div id="infantry-tab" class="tab-content">
+                    <div class="tab-header">
+                        <h4>Infantry Battalion Management</h4>
+                        <button class="btn btn-primary" onclick="addInfantryBattalion()">
+                            <i class="fas fa-plus"></i> Add Battalion
+                        </button>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table" id="infantryTable">
+                            <thead>
+                                <tr>
+                                    <th>Battalion</th>
+                                    <th>Brigade</th>
+                                    <th>Personnel</th>
+                                    <th>Equipment</th>
+                                    <th>Readiness</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Infantry data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Armoured Tab -->
+                <div id="armoured-tab" class="tab-content">
+                    <div class="tab-header">
+                        <h4>Armoured Regiment Management</h4>
+                        <button class="btn btn-primary" onclick="addArmouredRegiment()">
+                            <i class="fas fa-plus"></i> Add Regiment
+                        </button>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table" id="armouredTable">
+                            <thead>
+                                <tr>
+                                    <th>Regiment</th>
+                                    <th>Brigade</th>
+                                    <th>Vehicles</th>
+                                    <th>Personnel</th>
+                                    <th>Fuel Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Armoured data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Artillery Tab -->
+                <div id="artillery-tab" class="tab-content">
+                    <div class="tab-header">
+                        <h4>Artillery Regiment Management</h4>
+                        <button class="btn btn-primary" onclick="addArtilleryRegiment()">
+                            <i class="fas fa-plus"></i> Add Regiment
+                        </button>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table" id="artilleryTable">
+                            <thead>
+                                <tr>
+                                    <th>Regiment</th>
+                                    <th>Brigade</th>
+                                    <th>Gun Type</th>
+                                    <th>Ammunition</th>
+                                    <th>Range</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Artillery data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Terrain Tab -->
+                <div id="terrain-tab" class="tab-content">
+                    <div class="tab-header">
+                        <h4>Terrain Factor Management</h4>
+                        <button class="btn btn-primary" onclick="addTerrainFactor()">
+                            <i class="fas fa-plus"></i> Add Factor
+                        </button>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table" id="terrainTable">
+                            <thead>
+                                <tr>
+                                    <th>Factor Name</th>
+                                    <th>Type</th>
+                                    <th>Modifier</th>
+                                    <th>Description</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Terrain data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Protection Tab -->
+                <div id="protection-tab" class="tab-content">
+                    <div class="tab-header">
+                        <h4>Force Protection Management</h4>
+                        <button class="btn btn-primary" onclick="addProtectionMeasure()">
+                            <i class="fas fa-plus"></i> Add Measure
+                        </button>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table" id="protectionTable">
+                            <thead>
+                                <tr>
+                                    <th>Measure</th>
+                                    <th>Type</th>
+                                    <th>Effectiveness</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Protection data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Intelligence Tab -->
+                <div id="intel-tab" class="tab-content">
+                    <div class="tab-header">
+                        <h4>Intelligence Management</h4>
+                        <button class="btn btn-primary" onclick="addIntelligence()">
+                            <i class="fas fa-plus"></i> Add Intel
+                        </button>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table" id="intelTable">
+                            <thead>
+                                <tr>
+                                    <th>Source</th>
+                                    <th>Type</th>
+                                    <th>Reliability</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Intelligence data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Recon Tab -->
+                <div id="recon-tab" class="tab-content">
+                    <div class="tab-header">
+                        <h4>Reconnaissance Management</h4>
+                        <button class="btn btn-primary" onclick="addRecon()">
+                            <i class="fas fa-plus"></i> Add Recon
+                        </button>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table" id="reconTable">
+                            <thead>
+                                <tr>
+                                    <th>Unit</th>
+                                    <th>Mission</th>
+                                    <th>Area</th>
+                                    <th>Duration</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Recon data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-info" onclick="exportDataManagement()">
+                <i class="fas fa-download"></i> Export Data
+            </button>
+            <button type="button" class="btn btn-info" onclick="importDataManagement()">
+                <i class="fas fa-upload"></i> Import Data
+            </button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                <i class="fas fa-times"></i> Close
+            </button>
+        </div>
+    </div>
+    </div>
+</div>

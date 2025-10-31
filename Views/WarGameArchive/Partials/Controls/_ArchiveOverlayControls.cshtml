@@ -1,0 +1,190 @@
+@{
+    // Archive view - read-only controls
+    // No editing capabilities, just viewing archived game data
+}
+
+<div class="map-overlay-controls archive-controls">
+    <!-- Archive Header Badge -->
+    <div class="team-badge-overlay" style="background: linear-gradient(135deg, #00bcd4 0%, #008fa1 100%); box-shadow: 0 0 15px rgba(0, 188, 212, 0.4); border: 2px solid #00bcd4;">
+        <i class="fas fa-archive"></i>
+        <span style="color: white; text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);">ARCHIVE VIEW</span>
+    </div>
+
+    <div class="overlay-control-group">
+        <h6 class="collapsible-header" data-section="archive-info" onclick="toggleSection('archive-info')">
+            <i class="fas fa-chevron-right chevron-icon"></i> Archive Information
+        </h6>
+        <div class="collapsible-content" id="archive-info-content" style="display: block;">
+            <div class="archive-info-section">
+                <div class="info-item">
+                    <strong>Game:</strong> <span id="archiveGameTitle">—</span>
+                </div>
+                <div class="info-item">
+                    <strong>Month:</strong> <span id="archiveGameMonth">—</span>
+                </div>
+                <div class="info-item">
+                    <strong>Turn:</strong> <span id="archiveCurrentTurn">—</span> / <span id="archiveTotalTurns">—</span>
+                </div>
+                <div class="info-item">
+                    <strong>Saved:</strong> <span id="archiveSavedDate">—</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay-control-group">
+        <h6 class="collapsible-header" data-section="view-controls" onclick="toggleSection('view-controls')">
+            <i class="fas fa-chevron-right chevron-icon"></i> View Controls
+        </h6>
+        <div class="collapsible-content" id="view-controls-content" style="display: block;">
+            <div class="control-row">
+                <button class="overlay-btn" onclick="toggleTokenView()" title="Toggle Token View">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Tokens</span>
+                </button>
+                <button class="overlay-btn" onclick="toggleAttackView()" title="Toggle Attack Lines">
+                    <i class="fas fa-crosshairs"></i>
+                    <span>Attacks</span>
+                </button>
+                <button class="overlay-btn" onclick="toggleDefenseView()" title="Toggle Defense Elements">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Defense</span>
+                </button>
+            </div>
+            <div class="control-row">
+                <button class="overlay-btn" onclick="toggleOverlayView()" title="Toggle Map Overlays">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Overlays</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay-control-group">
+        <h6 class="collapsible-header" data-section="adjudication" onclick="toggleSection('adjudication')">
+            <i class="fas fa-chevron-right chevron-icon"></i> Adjudication Results
+        </h6>
+        <div class="collapsible-content" id="adjudication-content" style="display: none;">
+            <div class="info-item">
+                <p class="text-muted"><small>Adjudication results from archived game</small></p>
+                <button class="overlay-btn" onclick="showAdjudicationResults()" title="View Adjudication Results">
+                    <i class="fas fa-chart-line"></i>
+                    <span>View Results</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay-control-group">
+        <h6 class="collapsible-header" data-section="combat-results" onclick="toggleSection('combat-results')">
+            <i class="fas fa-chevron-right chevron-icon"></i> Combat Results
+        </h6>
+        <div class="collapsible-content" id="combat-results-content" style="display: none;">
+            <div class="info-item">
+                <p class="text-muted"><small>Combat simulation results from archived game</small></p>
+                <button class="overlay-btn" onclick="showCombatResults()" title="View Combat Results">
+                    <i class="fas fa-crosshairs"></i>
+                    <span>View Results</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .archive-controls {
+            pointer-events: auto;
+        }
+        
+        .archive-controls .overlay-btn {
+            cursor: pointer;
+            opacity: 1;
+        }
+        
+        .archive-controls .overlay-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .archive-info-section {
+            padding: 10px;
+        }
+        
+        .archive-info-section .info-item {
+            padding: 5px 0;
+            font-size: 14px;
+            color: #344767;
+        }
+        
+        .archive-info-section .info-item strong {
+            color: #00bcd4;
+        }
+    </style>
+
+    <script>
+        // Archive view controls - read-only
+        function toggleTokenView() {
+            console.log('Toggle token view');
+            // TODO: Toggle token visibility
+        }
+
+        function toggleAttackView() {
+            console.log('Toggle attack view');
+            // TODO: Toggle attack lines visibility
+        }
+
+        function toggleDefenseView() {
+            console.log('Toggle defense view');
+            // TODO: Toggle defense elements visibility
+        }
+
+        function toggleOverlayView() {
+            console.log('Toggle overlay view');
+            // TODO: Toggle map overlays visibility
+        }
+
+        function showAdjudicationResults() {
+            console.log('Show adjudication results');
+            // TODO: Show adjudication results modal
+        }
+
+        function showCombatResults() {
+            console.log('Show combat results');
+            // TODO: Show combat results modal
+        }
+
+        // Toggle section (same as game play)
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId + '-content');
+            const header = document.querySelector(`[data-section="${sectionId}"]`);
+            const icon = header?.querySelector('.chevron-icon');
+            
+            if (content && header) {
+                if (content.style.display === 'none') {
+                    content.style.display = 'block';
+                    if (icon) icon.classList.remove('fa-chevron-right');
+                    if (icon) icon.classList.add('fa-chevron-down');
+                } else {
+                    content.style.display = 'none';
+                    if (icon) icon.classList.remove('fa-chevron-down');
+                    if (icon) icon.classList.add('fa-chevron-right');
+                }
+            }
+        }
+
+        // Populate archive info from window.archiveData
+        $(document).ready(function() {
+            if (window.archiveData) {
+                $('#archiveGameTitle').text(window.archiveData.gameTitle || '—');
+                $('#archiveGameMonth').text(window.archiveData.gameMonth || '—');
+                $('#archiveCurrentTurn').text(window.archiveData.currentTurn || '—');
+                $('#archiveTotalTurns').text(window.archiveData.totalTurns || '—');
+                
+                if (window.archiveData.savedDate) {
+                    const savedDate = new Date(window.archiveData.savedDate);
+                    $('#archiveSavedDate').text(savedDate.toLocaleDateString());
+                }
+            }
+        });
+    </script>
+</div>
+
