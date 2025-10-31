@@ -209,63 +209,43 @@ window.isFalconViewActive = false;
  */
 window.toggleFalconView = function() {
     window.isFalconViewActive = !window.isFalconViewActive;
-    const gameplayContainer = document.querySelector('.gameplay-container');
     const falconBtn = document.getElementById('btnFalconView');
-    
+
+    // Initialize Grid Manager once
+    if (!window.falconViewGridManager && window.gameMap && typeof FalconViewGridManager !== 'undefined') {
+        window.falconViewGridManager = new FalconViewGridManager(window.gameMap);
+    }
+
     if (window.isFalconViewActive) {
-        // Enable Falcon View
-        if (gameplayContainer) {
-            gameplayContainer.classList.add('falcon-view-active');
+        // Enable ONLY the grid overlay; do not change page/layout styles
+        if (window.falconViewGridManager) {
+            window.falconViewGridManager.enable();
         }
-        
-        // Update button state
+
         if (falconBtn) {
             falconBtn.classList.add('active');
             falconBtn.innerHTML = '<i class="fas fa-crosshairs"></i><span>Falcon View ON</span>';
         }
-        
-        // Initialize Falcon View Grid Manager if not already done
-        if (!window.falconViewGridManager && window.gameMap) {
-            if (typeof FalconViewGridManager !== 'undefined') {
-                window.falconViewGridManager = new FalconViewGridManager(window.gameMap);
-            } else {
-                console.warn('⚠️ FalconViewGridManager class not loaded yet');
-            }
-        }
-        
-        // Enable grid
-        if (window.falconViewGridManager) {
-            window.falconViewGridManager.enable();
-        }
-        
-        console.log('✅ Falcon View mode enabled');
+
         if (typeof showNotification === 'function') {
-            showNotification('Falcon View GIS: ACTIVE', 'success');
+            showNotification('Falcon View Grid: ON', 'success');
         }
     } else {
-        // Disable Falcon View
-        if (gameplayContainer) {
-            gameplayContainer.classList.remove('falcon-view-active');
+        // Disable grid overlay only
+        if (window.falconViewGridManager) {
+            window.falconViewGridManager.disable();
         }
-        
-        // Update button state
+
         if (falconBtn) {
             falconBtn.classList.remove('active');
             falconBtn.innerHTML = '<i class="fas fa-crosshairs"></i><span>Falcon View</span>';
         }
-        
-        // Disable grid
-        if (window.falconViewGridManager) {
-            window.falconViewGridManager.disable();
-        }
-        
-        console.log('✅ Falcon View mode disabled');
+
         if (typeof showNotification === 'function') {
-            showNotification('Falcon View GIS: INACTIVE', 'info');
+            showNotification('Falcon View Grid: OFF', 'info');
         }
     }
-    
-    // Save state to localStorage
+
     localStorage.setItem('falconViewActive', window.isFalconViewActive ? 'true' : 'false');
 };
 
