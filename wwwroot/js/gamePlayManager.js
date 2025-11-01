@@ -1106,39 +1106,45 @@ class GamePlayManager {
      */
     async loadTerrainDatabase(mapPath) {
         try {
-            // Extract folder name from path (e.g., maps/first-test/street.mbtiles -> first-test)
+            // Prefer terrain DB from appsettings (server defaults)
+            const defsRes = await fetch('/gameplay/mbtiles/defaults?ts=' + Date.now(), { cache: 'no-store' });
+            if (defsRes.ok) {
+                const defs = await defsRes.json();
+                if (defs && defs.terrain) {
+                    window.currentTerrainDb = defs.terrain;
+                    try {
+                        await fetch('/GamePlay/SetTerrainDatabase', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ terrainDbPath: defs.terrain })
+                        });
+                    } catch {}
+                    console.log(`✅ Terrain database (defaults): ${defs.terrain}`);
+                    // Update UI hint if present
+                    const ts = document.getElementById('terrain-status');
+                    if (ts) { ts.textContent = '✓ Terrain data loaded'; ts.style.color = '#00ff00'; }
+                    return;
+                }
+            }
+
+            // Fallback to legacy folder-based lookup if defaults not present
             const parts = (mapPath || '').split('/').filter(Boolean);
             const folderName = parts.length >= 2 ? parts[parts.length - 2] : (parts[0] || '');
-            console.log(`🗺️ Loading terrain database for folder: ${folderName}`);
-            
-            // GET /gameplay/terrain/list - served by GamePlayController
+            console.log(`🗺️ Loading terrain database (fallback) for folder: ${folderName}`);
             const terrainResponse = await fetch('/gameplay/terrain/list');
             const terrainFiles = await terrainResponse.json();
-            
-            console.log('🔍 Available terrain files:', terrainFiles);
-            console.log('🔍 Looking for mapFolder:', folderName);
-            
             const terrainDb = terrainFiles.find(f => f.mapFolder === folderName);
-            
             if (terrainDb) {
-                // Store globally for use in adjudication
                 window.currentTerrainDb = terrainDb.path;
-                
-                
-                // Also set in session on server-side
                 await fetch('/GamePlay/SetTerrainDatabase', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ terrainDbPath: terrainDb.path })
                 });
-                
-                console.log(`✅ Terrain database loaded: ${terrainDb.path}`);
-                this.log(`Terrain data loaded for ${folderName}`, true);
+                console.log(`✅ Terrain database (fallback): ${terrainDb.path}`);
             } else {
                 window.currentTerrainDb = null;
                 console.warn(`⚠️ No terrain database found for folder: ${folderName}`);
-                console.warn('Available mapFolders:', terrainFiles.map(f => f.mapFolder));
-                this.log('⚠️ No terrain data available for this map', false);
             }
         } catch (error) {
             console.error('❌ Failed to load terrain database:', error);

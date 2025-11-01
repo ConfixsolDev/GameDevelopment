@@ -82,12 +82,21 @@ namespace TechWebSol.Controllers
         /// Set the current terrain database path in session
         /// </summary>
         [HttpPost]
-		public IActionResult SetTerrainDatabase([FromBody] SetTerrainDatabaseRequest request)
+        public IActionResult SetTerrainDatabase([FromBody] SetTerrainDatabaseRequest request)
         {
             try
             {
-				// Always use configured default (ignore request value)
-				var terrainPath = _defaultTerrainDbPath;
+                // Always use latest configured default from DB if available (avoid cached ctor value)
+                string? terrainPath = null;
+                try
+                {
+                    var cfg = _context.MapConfigurations.FirstOrDefault(c => c.Key == "DefaultTerrainDbPath" && c.IsActive);
+                    terrainPath = cfg?.Value ?? _defaultTerrainDbPath;
+                }
+                catch
+                {
+                    terrainPath = _defaultTerrainDbPath;
+                }
 
 				if (string.IsNullOrWhiteSpace(terrainPath))
 				{
@@ -95,7 +104,7 @@ namespace TechWebSol.Controllers
 				}
                 
 				// Validate that the terrain database exists under wwwroot
-				var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
 				var normalizedPath = terrainPath.Replace('/', Path.DirectorySeparatorChar);
 				var dbPath = Path.Combine(wwwRoot, normalizedPath);
                 
