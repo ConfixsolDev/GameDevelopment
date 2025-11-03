@@ -412,11 +412,11 @@ class GamePlayManager {
                     } else {
                         window.falconViewGridManager.map = this.map;
                     }
-                    // Use earlier cyan color with thicker lines
-                    window.falconViewGridManager.setGridColor('#00bcd4');
-                    window.falconViewGridManager.setGridOpacity(0.45);
+                    // Use grey color for grid lines
+                    window.falconViewGridManager.setGridColor('#CCCCCC');
+                    window.falconViewGridManager.setGridOpacity(0.6);
                     if (typeof window.falconViewGridManager.setGridWeight === 'function') {
-                        window.falconViewGridManager.setGridWeight(2);
+                        window.falconViewGridManager.setGridWeight(1.5);
                     }
                     if (!window.falconViewGridManager.isEnabled()) {
                         window.falconViewGridManager.enable();
@@ -1063,7 +1063,22 @@ class GamePlayManager {
                 const defaults = await response.json();
                 window.defaultMapSettings = { street: defaults.street, satellite: defaults.satellite, streetId: defaults.streetId, satelliteId: defaults.satelliteId };
                 const defaultMap = defaults.satellite || defaults.street;
-                if (!defaultMap) {
+                
+                // Check localStorage for previously selected map
+                let selectedMap = null;
+                try {
+                    selectedMap = localStorage.getItem('selectedMapPath');
+                    if (selectedMap) {
+                        console.log('📦 Restoring map from localStorage:', selectedMap);
+                    }
+                } catch (e) {
+                    console.warn('⚠️ Failed to read from localStorage:', e);
+                }
+                
+                // Use stored map if available, otherwise use default
+                const mapToLoad = selectedMap || defaultMap;
+                
+                if (!mapToLoad) {
                     selector.innerHTML = '<option value="">No default map configured</option>';
                     console.warn('⚠️ No default map configured in appsettings');
                 } else {
@@ -1077,8 +1092,11 @@ class GamePlayManager {
                         const opt2 = document.createElement('option');
                         opt2.value = defaults.satellite; opt2.textContent = 'Default Satellite'; selector.appendChild(opt2);
                     }
-                    selector.value = defaultMap;
-                    await window.switchGamePlayMap(defaultMap);
+                    
+                    // Set selector to the map we're loading (stored or default)
+                    selector.value = mapToLoad;
+                    await window.switchGamePlayMap(mapToLoad);
+                    
                     // Allow switching between the two defaults only
                     selector.addEventListener('change', async (e) => {
                         if (e.target.value) await window.switchGamePlayMap(e.target.value);
@@ -1532,6 +1550,14 @@ window.showCurrentZoomLevel = function() {
 window.switchGamePlayMap = async function(mapPath) {
     if (!mapPath) return;
     
+    // Save map selection to localStorage for persistence across page refreshes
+    try {
+        localStorage.setItem('selectedMapPath', mapPath);
+        console.log('💾 Map selection saved to localStorage:', mapPath);
+    } catch (e) {
+        console.warn('⚠️ Failed to save map selection to localStorage:', e);
+    }
+    
     console.log('🗺️ Switching to map:', mapPath);
     console.log('🔍 switchGamePlayMap called with mapPath:', mapPath);
     
@@ -1694,7 +1720,7 @@ window.switchGamePlayMap = async function(mapPath) {
                     // Show concise label only: 'External' or 'Local'
                     let short = text;
                     if (typeof text === 'string') {
-                        if (text.toLowerCase().startsWith('external')) short = 'External';
+                        if (text.toLowerCase().startsWith('external')) short = 'Own Server';
                         else if (text.toLowerCase().startsWith('local')) short = 'Local';
                     }
                     el.textContent = short;

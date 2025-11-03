@@ -2,7 +2,7 @@
 @model NewBrigadeDataEntryViewModel
 
 <!-- New Brigade Data Entry Form Modal - Brigade Only - Bootstrap Modal -->
-<div class="modal fade" id="newBrigadeDataEntryModal" tabindex="-1" role="dialog" aria-labelledby="newBrigadeDataEntryModalLabel" aria-hidden="true">
+<div class="modal fade gameplay-modal" id="newBrigadeDataEntryModal" tabindex="-1" role="dialog" aria-labelledby="newBrigadeDataEntryModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -21,7 +21,7 @@
                 <input type="hidden" id="forceType" value="@Model.Token.ForceType" />
                 
                 <!-- Token Information as Base Data (Primary) -->
-                <div class="token-base-section">
+          @*       <div class="token-base-section">
                     <h5><i class="fas fa-crosshairs"></i> Token Base Information</h5>
                     <div class="token-display">
                         <div class="token-preview-placeholder">
@@ -40,7 +40,7 @@
                         <i class="fas fa-check-circle"></i> 
                         <strong>Token Selected:</strong> This token will serve as the base for your brigade data entry.
                     </div>
-                </div>
+                </div> *@
 
                 <!-- Brigade Information (Secondary) -->
                 <div class="data-section">

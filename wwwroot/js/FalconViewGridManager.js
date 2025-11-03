@@ -12,10 +12,10 @@ class FalconViewGridManager {
         this.gridLabels = [];
         this.enabled = false;
         this.gridSize = 1000; // Default grid size in meters (cell size)
-        this.gridColor = '#00bcd4'; // Primary cyan
-        this.gridOpacity = 0.4;
-        this.gridWeight = 1;
-        this.labelColor = '#00bcd4';
+        this.gridColor = '#CCCCCC'; // Light grey for subtle grid
+        this.gridOpacity = 0.6;
+        this.gridWeight = 1.5;
+        this.labelColor = '#999999'; // Darker grey for labels
         this.labelOpacity = 0.8;
         // We now render in projected meters (EPSG:3857) so spacing is fixed in meters
         this.gridSpacingMeters = this.gridSize; // meters between grid lines
@@ -145,9 +145,19 @@ class FalconViewGridManager {
         const bounds = this.map.getBounds();
         const crs = this.map.options.crs || L.CRS.EPSG3857;
 
-        // Project bounds to meters (Spherical Mercator)
-        const sw = crs.project(bounds.getSouthWest());
-        const ne = crs.project(bounds.getNorthEast());
+        // Extend bounds by 50% on each side to ensure full screen coverage
+        const swExtended = L.latLng(
+            bounds.getSouth() - (bounds.getNorth() - bounds.getSouth()) * 0.5,
+            bounds.getWest() - (bounds.getEast() - bounds.getWest()) * 0.5
+        );
+        const neExtended = L.latLng(
+            bounds.getNorth() + (bounds.getNorth() - bounds.getSouth()) * 0.5,
+            bounds.getEast() + (bounds.getEast() - bounds.getWest()) * 0.5
+        );
+
+        // Project extended bounds to meters (Spherical Mercator)
+        const sw = crs.project(swExtended);
+        const ne = crs.project(neExtended);
 
         // Compute consistent grid spacing so it covers the entire visible map uniformly
         // Approx meters per pixel at current latitude/zoom in EPSG:3857

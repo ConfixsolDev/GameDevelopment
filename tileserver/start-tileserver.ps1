@@ -1,8 +1,8 @@
 # TileServer-GL Startup Script for Strategy Game
 
 # Find MBTiles files - search in wwwroot/maps for all .mbtiles files
-$projectRoot = "E:\Strategy Game\GameDevelopment"
-$mapsPath = "$projectRoot\wwwroot\maps\first-test"
+$projectRoot = "D:\KSAGame"
+$mapsPath = "$projectRoot\wwwroot\maps\202511one"
 $port = 8080
 
 Write-Host "========================================" -ForegroundColor Cyan

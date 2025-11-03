@@ -16,7 +16,7 @@
             <div class="modal-body">
             <div class="data-entry-container">
                 <!-- Token Base Information (Primary) - Professional Dark Theme -->
-                <div class="token-base-section">
+         @*        <div class="token-base-section">
                     <div class="section-title-bar">
                         <i class="fas fa-crosshairs"></i> TOKEN BASE INFORMATION
                     </div>
@@ -39,11 +39,11 @@
                             <span><strong>Token Selected:</strong> This token serves as the base for all brigade data management.</span>
                         </div>
                     </div>
-                </div>
+                </div> *@
 
                 <!-- Data Entry Form -->
                 <div class="data-entry-form-section">
-                    @if (Model.ExistingBrigade != null)
+                    @if (Model.ExistingBrigade?.BrigadeCode != null)
                     {
                         <!-- Professional Brigade Header -->
                         <div class="brigade-section-professional">

@@ -13,9 +13,6 @@
                     <span class="target-info">Target: <span id="targetName">-</span></span>
                     <span class="completion-status">Completion: <span id="completionPercentage">0%</span></span>
                 </div>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeAttackPlanningModal()">
-                    <i class="fas fa-times"></i>
-                </button>
             </div>
             
             <div class="modal-body">
@@ -104,14 +101,6 @@
             </div>
         </div>
         
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="closeAttackPlanningModal()">
-                <i class="fas fa-times"></i> Cancel
-            </button>
-            <button type="button" class="btn btn-primary" onclick="saveAttackDraft()">
-                <i class="fas fa-save"></i> Save Attack Order
-            </button>
-        </div>
     </div>
     </div>
 </div>
@@ -127,31 +116,31 @@
 .attack-planning-header-info {
     display: flex;
     gap: 20px;
-    font-size: 12px;
-    color: #ccc;
+    font-size: 0.85rem;
+    color: #6c757d;
     margin-left: 20px;
 }
 
 .attacker-info, .target-info, .completion-status {
     padding: 4px 8px;
-    background: #2a2a2a;
     border-radius: 4px;
-    border: 1px solid #444;
+    border: 1px solid #e1e5ea;
+    color: #344767;
 }
 
 .attack-planning-tabs {
     display: flex;
     gap: 2px;
     margin-bottom: 20px;
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid #e1e5ea;
     overflow-x: auto;
 }
 
 .tab-button {
-    background: #2a2a2a;
-    border: 1px solid #444;
+    background: #f8f9fa;
+    border: 1px solid #e1e5ea;
     border-bottom: none;
-    color: #ccc;
+    color: #344767;
     padding: 12px 16px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -160,14 +149,14 @@
 }
 
 .tab-button:hover {
-    background: #3a3a3a;
-    color: #fff;
+    background: #e3f2fd;
+    color: #008fa1;
 }
 
 .tab-button.active {
-    background: #00d4ff;
-    color: #000;
-    border-color: #00d4ff;
+    background: #00bcd4;
+    color: #ffffff;
+    border-color: #00bcd4;
 }
 
 .tab-button i {
@@ -176,7 +165,7 @@
 
 .attack-planning-content {
     min-height: 400px;
-    background: #1a1a1a;
+    background: #fafbfc;
     border-radius: 8px;
     padding: 20px;
 }
@@ -192,7 +181,7 @@
 .tab-loading {
     text-align: center;
     padding: 40px;
-    color: #888;
+    color: #6c757d;
 }
 
 .auto-save-indicator {
@@ -200,11 +189,11 @@
     bottom: 10px;
     right: 20px;
     font-size: 11px;
-    color: #888;
-    background: #2a2a2a;
+    color: #6c757d;
+    background: #f8f9fa;
     padding: 4px 8px;
     border-radius: 4px;
-    border: 1px solid #444;
+    border: 1px solid #e1e5ea;
 }
 
 .attack-planning-actions {

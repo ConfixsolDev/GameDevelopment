@@ -37,19 +37,20 @@
 }
 
 .falcon-grid-vertical {
-    stroke: #00FF88;
-    stroke-width: 1px;
-    opacity: 0.4;
+    stroke: #CCCCCC !important;
+    stroke-width: 1.5px !important;
+    opacity: 0.6 !important;
 }
 
 .falcon-grid-horizontal {
-    stroke: #00FF88;
-    stroke-width: 1px;
-    opacity: 0.4;
+    stroke: #CCCCCC !important;
+    stroke-width: 1.5px !important;
+    opacity: 0.6 !important;
 }
 
 /* Emphasized grid lines (every 5th line) */
 .falcon-grid-line.emphasized {
-    stroke-width: 2px;
-    opacity: 0.6;
+    stroke: #AAAAAA !important;
+    stroke-width: 2px !important;
+    opacity: 0.7 !important;
 }

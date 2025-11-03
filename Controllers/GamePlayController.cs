@@ -41,6 +41,7 @@ namespace TechWebSol.Controllers
 		private readonly string? _defaultTerrainDbPath;
 		private readonly string? _tileServerStreetId;
 		private readonly string? _tileServerSatelliteId;
+		private readonly string? _terrainPath;
         private readonly ApplicationUserVM user;
 
 
@@ -68,6 +69,7 @@ namespace TechWebSol.Controllers
 			_defaultTerrainDbPath = mapSettings["DefaultTerrainDbPath"];
 			_tileServerStreetId = mapSettings["TileServerMapIdStreet"];
 			_tileServerSatelliteId = mapSettings["TileServerMapIdSatellite"];
+			_terrainPath = mapSettings["TerrainPath"];
         }
 
         public IActionResult Index()
@@ -928,22 +930,22 @@ namespace TechWebSol.Controllers
                 {
                     try
                     {
-                        // Get terrain database from current map path
-                        var currentMapPath = Request.Headers["X-Current-Map-Path"].FirstOrDefault();
+                        // Get terrain database path from appsettings
                         string terrainDb = null;
                         
-                        if (!string.IsNullOrEmpty(currentMapPath))
+                        if (!string.IsNullOrEmpty(_terrainPath))
                         {
-                            // Extract folder name from map path
-                            var folderName = currentMapPath.Split('/')[0];
+                            // Use terrain path from appsettings
+                            terrainDb = _terrainPath;
                             
-                            // Check if terrain.db exists in the same folder
+                            // Verify the terrain.db file exists
                             var wwwRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-                            var terrainDbPath = Path.Combine(wwwRoot, folderName, "terrain.db");
+                            var terrainDbPath = Path.Combine(wwwRoot, _terrainPath);
                             
-                            if (System.IO.File.Exists(terrainDbPath))
+                            if (!System.IO.File.Exists(terrainDbPath))
                             {
-                                terrainDb = $"{folderName}/terrain.db";
+                                _logger.LogWarning($"Terrain database not found at path: {terrainDbPath}");
+                                terrainDb = null;
                             }
                         }
                         

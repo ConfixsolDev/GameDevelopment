@@ -1370,14 +1370,6 @@ class TokenActionModeManager {
         
         summaryHtml += `
                 </div>
-                <div class="summary-actions">
-                    <button class="btn btn-primary" onclick="saveAttackDraft()">
-                        <i class="fas fa-save"></i> Save Complete Order
-                    </button>
-                    <button class="btn btn-secondary" onclick="closeAttackPlanningModal()">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
-                </div>
             </div>
         `;
         
@@ -1567,6 +1559,11 @@ window.saveAttackDraft = async function() {
             if (window.attackVisualizationManager) {
                 const attackId = `${attackOrderData.attackerTokenId}_${attackOrderData.targetTokenId}`;
                 await window.attackVisualizationManager.saveAttackOrderToDatabase(attackId, attackOrderData);
+            }
+            
+            // Close the modal on successful save
+            if (window.closeAttackPlanningModal) {
+                window.closeAttackPlanningModal();
             }
             
             return true;

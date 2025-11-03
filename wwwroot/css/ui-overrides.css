@@ -51,14 +51,14 @@ label,
 .gameplay-modal .modal-title {
     color: var(--accent-secondary-strong) !important;
     font-weight: 700 !important;
-    font-size: 1.35rem !important;
+    font-size: 1.4rem !important;
     letter-spacing: 0.3px;
 }
 .gameplay-modal .modal-body,
 .gameplay-modal label,
 .gameplay-modal .form-text {
     color: #344767 !important;
-    font-size: 1.05rem;
+    font-size: 1.1rem;
 }
 .gameplay-modal .form-control,
 .gameplay-modal .form-select,
@@ -66,7 +66,7 @@ label,
 .gameplay-modal textarea.form-control {
     background: #f8f9fa !important;
     border-color: #e1e5ea !important;
-    font-size: 1.05rem !important;
+    font-size: 1.1rem !important;
     color: #344767 !important;
 }
 .gameplay-modal .form-control:focus,
@@ -317,7 +317,8 @@ label,
 }
 
 /* Modal background slightly grey for eye comfort */
-.modal-content {
+.modal-content,
+.gameplay-modal .modal-content {
 	background-color: #fafbfc !important; /* very light grey (10% opacity) */
 	border: 1px solid rgba(0,0,0,0.06) !important;
 	border-radius: 12px !important;
@@ -325,7 +326,9 @@ label,
 
 /* Modal header/footer keep white text contrast and subtle separators */
 .modal-header,
-.modal-footer {
+.modal-footer,
+.gameplay-modal .modal-header,
+.gameplay-modal .modal-footer {
 	background-color: #f8f9fa !important;
 	border-color: #e1e5ea !important;
 }
@@ -334,7 +337,11 @@ label,
 .form-control,
 .form-select,
 .input-group-text,
-textarea.form-control {
+textarea.form-control,
+.gameplay-modal .form-control,
+.gameplay-modal .form-select,
+.gameplay-modal .input-group-text,
+.gameplay-modal textarea.form-control {
 	background-color: #f8f9fa !important;
 	border-color: #e1e5ea !important;
 	color: #344767 !important;
@@ -342,7 +349,10 @@ textarea.form-control {
 
 .form-control:focus,
 .form-select:focus,
-textarea.form-control:focus {
+textarea.form-control:focus,
+.gameplay-modal .form-control:focus,
+.gameplay-modal .form-select:focus,
+.gameplay-modal textarea.form-control:focus {
 	background-color: #ffffff !important;
 	border-color: var(--accent-secondary) !important;
 	box-shadow: 0 0 0 0.2rem rgba(0, 188, 212, 0.15) !important;
@@ -351,13 +361,29 @@ textarea.form-control:focus {
 /* Cards/panels if used */
 .card,
 .panel,
-.list-group-item {
+.list-group-item,
+.gameplay-modal .card,
+.gameplay-modal .panel,
+.gameplay-modal .list-group-item {
 	background-color: #fafbfc !important;
 	border-color: #e1e5ea !important;
+	color: #344767 !important;
+}
+
+.gameplay-modal .card-header {
+	background-color: #f8f9fa !important;
+	border-color: #e1e5ea !important;
+	color: var(--accent-secondary-strong) !important;
+}
+
+.gameplay-modal .card-body {
+	background-color: #ffffff !important;
+	color: #344767 !important;
 }
 
 /* Accent heading color for improved readability */
 .modal-title,
+.gameplay-modal .modal-title,
 h1.heading-accent,
 h2.heading-accent,
 h3.heading-accent,
@@ -369,8 +395,12 @@ h3.heading-accent,
 /* Modal body text */
 .modal-body,
 .modal-body label,
-.modal-body .form-text {
+.modal-body .form-text,
+.gameplay-modal .modal-body,
+.gameplay-modal .modal-body label,
+.gameplay-modal .modal-body .form-text {
 	color: #344767 !important;
+	background-color: #fafbfc !important;
 }
 
 /* Table styling in modals */
@@ -502,6 +532,261 @@ a.link-accent {
 }
 a.link-accent:hover {
 	color: var(--accent-secondary);
+}
+
+/* Attack Planning Forms - Light Theme Override with Larger Font Sizes */
+.attack-form-section {
+    background: #ffffff !important;
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid #e1e5ea !important;
+}
+
+.attack-form-section .section-header {
+    border-bottom: 1px solid #e1e5ea !important;
+}
+
+.attack-form-section .section-header h4 {
+    color: #008fa1 !important;
+    font-size: 1.25rem !important;
+}
+
+.attack-form-section .section-header p {
+    color: #6c757d !important;
+    font-size: 0.95rem !important;
+}
+
+.attack-form-section .form-label {
+    color: #344767 !important;
+    font-size: 0.9rem !important;
+}
+
+.attack-form-section .form-control {
+    background: #f8f9fa !important;
+    border: 1px solid #e1e5ea !important;
+    color: #344767 !important;
+    font-size: 0.95rem !important;
+}
+
+.attack-form-section .form-control:focus {
+    background: #ffffff !important;
+    border-color: #00bcd4 !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 188, 212, 0.15) !important;
+}
+
+.attack-form-section .form-text {
+    color: #6c757d !important;
+    font-size: 0.85rem !important;
+}
+
+/* Waypoints Section */
+.waypoints-section {
+    margin-top: 20px;
+    background: #f8f9fa !important;
+    border-radius: 6px;
+    padding: 15px;
+    border: 1px solid #e1e5ea !important;
+}
+
+.waypoints-header h5 {
+    color: #008fa1 !important;
+    font-size: 1.1rem !important;
+}
+
+/* Engagement Rules Section */
+.engagement-rules {
+    margin-top: 20px;
+    background: #f8f9fa !important;
+    border-radius: 6px;
+    padding: 15px;
+    border: 1px solid #e1e5ea !important;
+}
+
+.engagement-rules h5 {
+    color: #008fa1 !important;
+    margin: 0 0 15px 0;
+    font-size: 1.1rem !important;
+}
+
+.rules-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.rule-item {
+    background: #ffffff !important;
+    border: 1px solid #e1e5ea !important;
+    color: #344767 !important;
+}
+
+.rule-name {
+    color: #344767 !important;
+    font-size: 0.95rem !important;
+}
+
+.rule-details {
+    color: #6c757d !important;
+    font-size: 0.9rem !important;
+}
+
+.waypoint-item {
+    background: #ffffff !important;
+    border: 1px solid #e1e5ea !important;
+    color: #344767 !important;
+}
+
+/* Range Slider Container */
+.range-container {
+    background: #f8f9fa !important;
+    border: 1px solid #e1e5ea !important;
+}
+
+.range-value {
+    color: #344767 !important;
+    font-size: 1rem !important;
+}
+
+/* Summary Sections */
+.summary-section {
+    background: #f8f9fa !important;
+    border: 1px solid #e1e5ea !important;
+}
+
+.summary-section h5 {
+    color: #008fa1 !important;
+    font-size: 1.1rem !important;
+}
+
+/* Attack Planning Headers */
+.attack-planning-header {
+    background: #f8f9fa !important;
+    border-bottom: 2px solid #e1e5ea !important;
+}
+
+.attack-planning-header-title {
+    color: #344767 !important;
+    font-size: 1.3rem !important;
+}
+
+.attack-planning-header-info {
+    color: #6c757d !important;
+    font-size: 0.95rem !important;
+}
+
+.attack-planning-header-info .attacker-info,
+.attack-planning-header-info .target-info,
+.attack-planning-header-info .completion-status {
+    background: #f8f9fa !important;
+    border: 1px solid #e1e5ea !important;
+    color: #344767 !important;
+}
+
+/* Override ALL dark backgrounds in attack planning */
+.attack-planning-content .form-group,
+.attack-planning-content .input-group,
+.attack-planning-content .card,
+.attack-planning-content .panel {
+    background: #ffffff !important;
+}
+
+/* Override ALL dark text colors */
+.attack-planning-content label,
+.attack-planning-content .form-label,
+.attack-planning-content h1,
+.attack-planning-content h2,
+.attack-planning-content h3,
+.attack-planning-content h4,
+.attack-planning-content h5,
+.attack-planning-content h6 {
+    color: #344767 !important;
+}
+
+/* Override ALL dark borders */
+.attack-planning-content .border,
+.attack-planning-content [class*="border"] {
+    border-color: #e1e5ea !important;
+}
+
+/* Specific attack planning modal overrides */
+#attackPlanningModal .modal-content {
+    background: #fafbfc !important;
+    color: #344767 !important;
+}
+
+#attackPlanningModal .modal-header {
+    background: #f8f9fa !important;
+    border-bottom: 2px solid #00bcd4 !important;
+}
+
+#attackPlanningModal .modal-title {
+    color: #008fa1 !important;
+    font-size: 1.4rem !important;
+}
+
+#attackPlanningModal .modal-body {
+    background: #fafbfc !important;
+    font-size: 0.95rem !important;
+}
+
+/* Override select, textarea, input in attack planning */
+.attack-planning-content select,
+.attack-planning-content textarea,
+.attack-planning-content input[type="text"],
+.attack-planning-content input[type="number"],
+.attack-planning-content input[type="email"] {
+    background: #f8f9fa !important;
+    border: 1px solid #e1e5ea !important;
+    color: #344767 !important;
+    font-size: 1rem !important;
+}
+
+.attack-planning-content select:focus,
+.attack-planning-content textarea:focus,
+.attack-planning-content input:focus {
+    background: #ffffff !important;
+    border-color: #00bcd4 !important;
+}
+
+/* Button font sizes */
+.gameplay-modal .btn,
+.attack-planning-content .btn,
+#attackPlanningModal .btn {
+    font-size: 0.95rem !important;
+}
+
+/* Info banners and alerts */
+.info-banner,
+.alert-info,
+.form-info-banner {
+    background: #e3f2fd !important;
+    border: 1px solid #00bcd4 !important;
+    border-left: 4px solid #00bcd4 !important;
+    color: #344767 !important;
+    font-size: 0.95rem !important;
+}
+
+/* Table overrides for light theme */
+.attack-planning-content table,
+.gameplay-modal table {
+    background: #ffffff !important;
+    color: #344767 !important;
+}
+
+.attack-planning-content table th,
+.gameplay-modal table th {
+    background: #f8f9fa !important;
+    color: #344767 !important;
+    border-color: #e1e5ea !important;
+    font-size: 0.95rem !important;
+}
+
+.attack-planning-content table td,
+.gameplay-modal table td {
+    background: #ffffff !important;
+    color: #344767 !important;
+    border-color: #e1e5ea !important;
+    font-size: 0.9rem !important;
 }
 
 /* Accent button (use on Edit Data) */

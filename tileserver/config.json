@@ -4,10 +4,10 @@
                },
     "data":  {
                  "satellite":  {
-                                   "mbtiles":  "E:\\Strategy Game\\GameDevelopment\\wwwroot\\maps\\first-test\\satellite.mbtiles"
+                                   "mbtiles":  "D:\\KSAGame\\wwwroot\\maps\\202511one\\satellite.mbtiles"
                                },
                  "street":  {
-                                "mbtiles":  "E:\\Strategy Game\\GameDevelopment\\wwwroot\\maps\\first-test\\street.mbtiles"
+                                "mbtiles":  "D:\\KSAGame\\wwwroot\\maps\\202511one\\street.mbtiles"
                             }
              },
     "options":  {
